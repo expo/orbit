@@ -2,6 +2,7 @@
 
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTRootView.h>
 
 @interface AppDelegate () <RCTBridgeDelegate>
 
@@ -13,14 +14,35 @@
   [super awakeFromNib];
 
   _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:nil];
-  
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-  // Insert code here to initialize your application
-  
-  
+  statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
+  statusItem.button.image = [NSImage imageNamed:@"icon.png"];
+  [statusItem.button setTarget:self];
+  [statusItem.button setAction:@selector(onPressStatusItem:)];
+
+  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
+                                                moduleName:@"ExpoMenuBar"
+                                        initialProperties:@{}];
+   
+  NSViewController *rootViewController = [[NSViewController alloc] init];
+  rootViewController.view = rootView;
+
+  popover = [[NSPopover alloc] init];
+  popover.contentViewController = rootViewController;
+  popover.behavior = NSPopoverBehaviorTransient;
 }
+
+- (void)onPressStatusItem:(id)sender {
+  if (popover.isShown) {
+    [popover close];
+  } else {
+    [popover showRelativeToRect:statusItem.button.bounds
+                         ofView:statusItem.button
+                  preferredEdge:NSMinYEdge];
+  }
+} 
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
   // Insert code here to tear down your application
