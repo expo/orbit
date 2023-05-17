@@ -3,10 +3,11 @@ import {
   Text,
   TouchableOpacity,
   View,
-  BackHandler,
   PlatformColor,
   StyleSheet,
 } from 'react-native';
+
+import MenuBarModule from './MenuBarModule';
 
 function App(): JSX.Element {
   return (
@@ -17,7 +18,7 @@ function App(): JSX.Element {
         <View style={styles.separator} />
         <TouchableOpacity
           onPress={() => {
-            BackHandler.exitApp();
+            MenuBarModule.exitApp();
           }}>
           <Text>Quit EAS Menu</Text>
         </TouchableOpacity>
