@@ -41,6 +41,7 @@
     [popover showRelativeToRect:statusItem.button.bounds
                          ofView:statusItem.button
                   preferredEdge:NSMinYEdge];
+    [popover.contentViewController.view.window makeKeyWindow];
   }
 } 
 
