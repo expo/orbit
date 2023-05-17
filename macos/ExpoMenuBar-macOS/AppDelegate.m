@@ -18,14 +18,16 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
   statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
-  statusItem.button.image = [NSImage imageNamed:@"icon.png"];
+  NSImage *image = [NSImage imageNamed:@"icon"];
+  [image setTemplate:YES];
+  statusItem.button.image = image;
   [statusItem.button setTarget:self];
   [statusItem.button setAction:@selector(onPressStatusItem:)];
 
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
                                                 moduleName:@"ExpoMenuBar"
                                         initialProperties:@{}];
-   
+
   NSViewController *rootViewController = [[NSViewController alloc] init];
   rootViewController.view = rootView;
 
@@ -43,7 +45,7 @@
                   preferredEdge:NSMinYEdge];
     [popover.contentViewController.view.window makeKeyWindow];
   }
-} 
+}
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
   // Insert code here to tear down your application
