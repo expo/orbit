@@ -3,6 +3,7 @@
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
+#import <React/RCTLinkingManager.h>
 
 @interface AppDelegate () <RCTBridgeDelegate>
 
@@ -49,6 +50,16 @@
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
   // Insert code here to tear down your application
+}
+
+- (void)applicationWillFinishLaunching:(NSNotification *)__unused aNotification
+{
+  [NSUserNotificationCenter defaultUserNotificationCenter].delegate = self;
+
+  [[NSAppleEventManager sharedAppleEventManager] setEventHandler:[RCTLinkingManager class]
+                                                     andSelector:@selector(getUrlEventHandler:withReplyEvent:)
+                                                   forEventClass:kInternetEventClass
+                                                      andEventID:kAEGetURL];
 }
 
 #pragma mark - RCTBridgeDelegate Methods
