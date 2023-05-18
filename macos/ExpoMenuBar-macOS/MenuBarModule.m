@@ -3,8 +3,28 @@
 #import <React/RCTLog.h>
 
 @implementation MenuBarModule
+{
+  bool hasListeners;
+}
 
 RCT_EXPORT_MODULE();
+
+
+// Will be called when this module's first listener is added.
+-(void)startObserving {
+    hasListeners = YES;
+    // Set up any upstream listeners or background tasks as necessary
+}
+
+// Will be called when this module's last listener is removed, or on dealloc.
+-(void)stopObserving {
+    hasListeners = NO;
+    // Remove upstream listeners, stop unnecessary background tasks
+}
+
+- (NSArray<NSString *> *)supportedEvents {
+  return @[@"onNewCommandLine"];
+}
 
 RCT_EXPORT_METHOD(exitApp)
 {
@@ -27,11 +47,30 @@ RCT_EXPORT_METHOD(runCommand:(NSString *)command
 
   NSFileHandle *file = [pipe fileHandleForReading];
   [task launch];
+ 
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserverForName:NSFileHandleReadCompletionNotification
+                                  object:file
+                                    queue:nil
+                              usingBlock:^(NSNotification *notification) {
+                                  NSData *chunk = notification.userInfo[NSFileHandleNotificationDataItem];
+                                  NSString *output = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
+                                  if(self->hasListeners){
+                                    [self sendEventWithName:@"onNewCommandLine" body:output];
+                                  }
+                                  [file readInBackgroundAndNotify];
+                              }];
+  [notificationCenter addObserverForName:NSTaskDidTerminateNotification
+                                  object:task
+                                    queue:nil
+                              usingBlock:^(NSNotification *notification) {
+                                  [notificationCenter removeObserver:self];
+                              }];
 
-  NSData *data = [file readDataToEndOfFile];
-  NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+  [file readInBackgroundAndNotify];
+  [task waitUntilExit];
 
-  resolve(output);
+  resolve(nil);
 }
 
 @end

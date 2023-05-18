@@ -1,8 +1,23 @@
-import {NativeModules} from 'react-native';
+import {NativeEventEmitter, NativeModule, NativeModules} from 'react-native';
 
-type MenuBarModule = {
+type MenuBarModule = NativeModule & {
   exitApp(): void;
-  runCommand: (command: string, args: string[]) => Promise<string>;
+  runCommand: (command: string, args: string[]) => Promise<void>;
 };
 
-export default NativeModules.MenuBarModule as MenuBarModule;
+const MenuBarModule: MenuBarModule = NativeModules.MenuBarModule;
+
+const emitter = new NativeEventEmitter(MenuBarModule);
+
+export default {
+  ...MenuBarModule,
+  runCommand: async (
+    command: string,
+    args: string[],
+    callback: (status: string) => void,
+  ) => {
+    const listener = emitter.addListener('onNewCommandLine', callback);
+    await NativeModules.MenuBarModule.runCommand(command, args);
+    listener.remove();
+  },
+};

@@ -1,3 +1,5 @@
 #import <React/RCTBridgeModule.h>
-@interface MenuBarModule : NSObject <RCTBridgeModule>
+#import <React/RCTEventEmitter.h>
+
+@interface MenuBarModule : RCTEventEmitter <RCTBridgeModule>
 @end
