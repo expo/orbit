@@ -341,7 +341,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export NODE_BINARY=/Users/gabriel/.volta/bin/node\n../node_modules/react-native-macos/scripts/react-native-xcode.sh\n";
+			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi \n\npath=\"$($NODE_BINARY --print \"require.resolve('react-native-macos/package.json')\")\"\n$(dirname \"$path\")/scripts/react-native-xcode.sh\n";
 		};
 		381D8A6F24576A6C00465D17 /* Start Packager */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -648,7 +648,7 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native-macos";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -702,7 +702,7 @@
 					"\"$(inherited)\"",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../node_modules/react-native-macos";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
