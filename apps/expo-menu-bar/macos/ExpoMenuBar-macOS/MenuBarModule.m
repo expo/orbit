@@ -23,7 +23,7 @@ RCT_EXPORT_MODULE();
 }
 
 - (NSArray<NSString *> *)supportedEvents {
-  return @[@"onNewCommandLine"];
+  return @[@"onNewCommandLine", @"onCLIOutput"];
 }
 
 RCT_EXPORT_METHOD(exitApp)
@@ -47,7 +47,7 @@ RCT_EXPORT_METHOD(runCommand:(NSString *)command
 
   NSFileHandle *file = [pipe fileHandleForReading];
   [task launch];
- 
+
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
   [notificationCenter addObserverForName:NSFileHandleReadCompletionNotification
                                   object:file
@@ -71,6 +71,66 @@ RCT_EXPORT_METHOD(runCommand:(NSString *)command
   [task waitUntilExit];
 
   resolve(nil);
+}
+
+RCT_EXPORT_METHOD(runCli:(NSString *)command
+                  arguments:(NSArray *)arguments
+                  listenerId:(nonnull NSNumber *)listenerId
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  NSTask *task = [[NSTask alloc] init];
+  NSPipe *pipe = [NSPipe pipe];
+
+  NSString *executablePath = [[NSBundle mainBundle] pathForResource:@"expo-menu-cli" ofType:nil];
+
+  [task setLaunchPath:executablePath];
+  [task setArguments:@[command,[arguments componentsJoinedByString:@" "]]];
+
+  [task setStandardOutput:pipe];
+  [task setStandardError:pipe];
+
+  NSFileHandle *file = [pipe fileHandleForReading];
+  __block NSString *returnOutput = @"";
+  __block BOOL hasReachedReturnOutput = false;
+
+  [task launch];
+
+  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserverForName:NSFileHandleReadCompletionNotification
+                                  object:file
+                                    queue:nil
+                              usingBlock:^(NSNotification *notification) {
+                                  NSData *chunk = notification.userInfo[NSFileHandleNotificationDataItem];
+                                  NSString *output = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
+                                  
+                                  if([output isEqualToString:@"---- return output ----\n"]){
+                                    hasReachedReturnOutput = true;
+                                  }
+    
+                                  if(hasReachedReturnOutput){
+                                    returnOutput = [returnOutput stringByAppendingString:output];
+                                  } else if(self->hasListeners && output.length > 0 && ![output isEqualToString:@"\n"]){
+                                    NSDictionary *eventData = @{
+                                      @"listenerId": listenerId,
+                                      @"output": output
+                                    };
+                                    [self sendEventWithName:@"onCLIOutput" body:eventData];
+                                  }
+                               
+                                  [file readInBackgroundAndNotify];
+                              }];
+  [notificationCenter addObserverForName:NSTaskDidTerminateNotification
+                                  object:task
+                                    queue:nil
+                              usingBlock:^(NSNotification *notification) {
+                                  [notificationCenter removeObserver:self];
+                              }];
+
+  [file readInBackgroundAndNotify];
+  [task waitUntilExit];
+
+  resolve(returnOutput);
 }
 
 @end

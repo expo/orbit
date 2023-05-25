@@ -16,6 +16,7 @@
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
 		AE53E0C9D785C10B07665EE4 /* libPods-ExpoMenuBar-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 05709BB08589B3B3ED04796F /* libPods-ExpoMenuBar-iOS.a */; };
+		C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* expo-menu-cli */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
 		C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C0E7CF4D2A15440100C59DE5 /* icon.png */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
@@ -47,6 +48,7 @@
 		9D32DFD059D5DB6DDEF38881 /* Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		A82DFB63B157C65E5D698CA2 /* Pods-Shared-ExpoMenuBar-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		ABC3C4796045E98D35BFAA3A /* Pods-ExpoMenuBar-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-iOS.debug.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-iOS/Pods-ExpoMenuBar-iOS.debug.xcconfig"; sourceTree = "<group>"; };
+		C032EDB62A1FE6F300FBC597 /* expo-menu-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-menu-cli"; path = "../../cli/expo-menu-cli"; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
 		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/icon.png; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 		5142014A2437B4B30078DB4F /* ExpoMenuBar-macOS */ = {
 			isa = PBXGroup;
 			children = (
+				C032EDB62A1FE6F300FBC597 /* expo-menu-cli */,
 				C0E7CF4D2A15440100C59DE5 /* icon.png */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
 				5142014B2437B4B30078DB4F /* AppDelegate.h */,
@@ -262,6 +265,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */,
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,
 				C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */,
