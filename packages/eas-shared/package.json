@@ -1,0 +1,33 @@
+{
+  "name": "eas-shared",
+  "version": "1.0.0",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "watch": "yarn build --watch --preserveWatchOutput",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@types/cli-progress": "^3.11.0",
+    "@types/fs-extra": "^11.0.1",
+    "@types/getenv": "^1.0.0",
+    "@types/node-fetch": "^2.6.4",
+    "@types/prompts": "^2.4.4",
+    "@types/tar": "^6.1.5",
+    "@types/uuid": "^9.0.1",
+    "typescript": "4.9.4"
+  },
+  "dependencies": {
+    "@expo/spawn-async": "^1.7.2",
+    "cli-progress": "^3.12.0",
+    "env-paths": "2.2.0",
+    "figures": "3.2.0",
+    "getenv": "^1.0.0",
+    "node-fetch": "2.6.7",
+    "ora": "5.1.0",
+    "prompts": "^2.4.2",
+    "tar": "6.1.13",
+    "terminal-link": "2.1.1",
+    "uuid": "9.0.0"
+  }
+}
