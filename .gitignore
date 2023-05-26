@@ -6,3 +6,5 @@ apps/*/node_modules
 
 packages/*/build
 apps/*/build
+
+apps/expo-menu-bar/cli/expo-menu-cli
