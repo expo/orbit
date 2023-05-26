@@ -1,0 +1,26 @@
+{
+  "name": "expo-menu-cli",
+  "version": "0.0.1",
+  "description": "The command-line tool used internally by expo-menu-bar",
+  "license": "MIT",
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "cli": "node ./build/index.js",
+    "start": "yarn run prepare && yarn run watch",
+    "build": "tsc --project tsconfig.build.json",
+    "archive": "yarn build && pkg build/index.js -o dist/expo-menu-cli",
+    "clean": "rimraf build ./tsconfig.tsbuildinfo",
+    "prepare": "yarn run clean && yarn run build",
+    "watch": "tsc --watch --preserveWatchOutput"
+  },
+  "dependencies": {
+    "commander": "^10.0.1",
+    "eas-shared": "*"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1",
+    "typescript": "4.9.4"
+  }
+}

@@ -93,6 +93,7 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   NSFileHandle *file = [pipe fileHandleForReading];
   __block NSString *returnOutput = @"";
   __block BOOL hasReachedReturnOutput = false;
+  __block BOOL hasReachedError = false;
 
   [task launch];
 
@@ -103,13 +104,13 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
                               usingBlock:^(NSNotification *notification) {
                                   NSData *chunk = notification.userInfo[NSFileHandleNotificationDataItem];
                                   NSString *output = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
-                                  
-                                  if([output isEqualToString:@"---- return output ----\n"]){
-                                    hasReachedReturnOutput = true;
-                                  }
-    
-                                  if(hasReachedReturnOutput){
+
+                                  if(hasReachedReturnOutput || hasReachedError){
                                     returnOutput = [returnOutput stringByAppendingString:output];
+                                  } else if([output isEqualToString:@"---- return output ----\n"]){
+                                    hasReachedReturnOutput = true;
+                                  } else if([output isEqualToString:@"---- thrown error ----\n"]){
+                                    hasReachedError = true;
                                   } else if(self->hasListeners && output.length > 0 && ![output isEqualToString:@"\n"]){
                                     NSDictionary *eventData = @{
                                       @"listenerId": listenerId,
@@ -117,7 +118,7 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
                                     };
                                     [self sendEventWithName:@"onCLIOutput" body:eventData];
                                   }
-                               
+
                                   [file readInBackgroundAndNotify];
                               }];
   [notificationCenter addObserverForName:NSTaskDidTerminateNotification
@@ -130,7 +131,12 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   [file readInBackgroundAndNotify];
   [task waitUntilExit];
 
-  resolve(returnOutput);
+  if(hasReachedError){
+    reject(@"CLI_ERROR", returnOutput, nil);
+    return;
+  }
+
+  resolve(hasReachedReturnOutput ? returnOutput : nil);
 }
 
 @end

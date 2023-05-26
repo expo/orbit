@@ -28,10 +28,14 @@ async function runCli(
     callback(event.output);
   };
   const listener = emitter.addListener('onCLIOutput', filteredCallback);
-  const result = await NativeModules.MenuBarModule.runCli(command, args, id);
-  listener.remove();
-
-  return result;
+  try {
+    const result = await NativeModules.MenuBarModule.runCli(command, args, id);
+    return result;
+  } catch (error) {
+    throw error;
+  } finally {
+    listener.remove();
+  }
 }
 
 export default {

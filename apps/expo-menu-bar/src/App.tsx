@@ -10,6 +10,7 @@ import {
 
 import MenuBarModule from './MenuBarModule';
 import {useDeepLinking} from './hooks/useDeepLinking';
+import {downloadBuildAsync} from './utils';
 
 enum Status {
   LISTENING,
@@ -25,25 +26,18 @@ function App(): JSX.Element {
     useCallback(async ({url}) => {
       const zipUrl = `https://${url.substring(url.indexOf('://') + 3)}`;
 
-      await MenuBarModule.runCommand(
-        'node',
-        [
-          '/Users/gabriel/Workspace/expo/eas-cli/packages/eas-cli/build/test.js',
-          zipUrl,
-        ],
-        data => {
-          if (data.includes('Downloading app archive')) {
-            setStatus(Status.DOWNLOADING);
-          }
-          if (data.includes('Installing your app')) {
-            setStatus(Status.INSTALLING);
-          }
-          if (data.includes('Successfully launched')) {
-            setStatus(Status.SUCCESS);
-          }
-          console.log(data);
-        },
-      );
+      await downloadBuildAsync(zipUrl, data => {
+        if (data.includes('Downloading app archive')) {
+          setStatus(Status.DOWNLOADING);
+        }
+        if (data.includes('Installing your app')) {
+          setStatus(Status.INSTALLING);
+        }
+        if (data.includes('Successfully launched')) {
+          setStatus(Status.SUCCESS);
+        }
+        console.log(data);
+      });
 
       setTimeout(() => {
         setStatus(Status.LISTENING);
