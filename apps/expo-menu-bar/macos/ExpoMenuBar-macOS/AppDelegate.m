@@ -5,7 +5,12 @@
 #import <React/RCTRootView.h>
 #import <React/RCTLinkingManager.h>
 
+#import "DevViewController.h"
+
 @interface AppDelegate () <RCTBridgeDelegate>
+#if RCT_DEV
+  @property (nonatomic, strong) NSWindowController *devWindowController;
+#endif
 
 @end
 
@@ -35,6 +40,18 @@
   popover = [[NSPopover alloc] init];
   popover.contentViewController = rootViewController;
   popover.behavior = NSPopoverBehaviorTransient;
+
+
+  #if RCT_DEV
+    NSStoryboard *storyBoard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
+    self.devWindowController = [storyBoard instantiateControllerWithIdentifier:@"devViewController"];
+    [self.devWindowController showWindow:self];
+    [self.devWindowController.window makeKeyWindow];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp activateIgnoringOtherApps:YES];
+  #endif
+
+
 }
 
 - (void)onPressStatusItem:(id)sender {
