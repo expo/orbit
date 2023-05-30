@@ -10,7 +10,7 @@ import {
 
 import MenuBarModule from './MenuBarModule';
 import {useDeepLinking} from './hooks/useDeepLinking';
-import {downloadBuildAsync} from './utils';
+import {downloadBuildAsync} from './modules/downloadBuildAsync';
 
 enum Status {
   LISTENING,
@@ -21,6 +21,7 @@ enum Status {
 
 function App(): JSX.Element {
   const [status, setStatus] = useState(Status.LISTENING);
+  const [progress, setProgress] = useState(0);
 
   useDeepLinking(
     useCallback(async ({url}) => {
