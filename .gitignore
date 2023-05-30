@@ -3,6 +3,8 @@
 node_modules
 packages/*/node_modules
 apps/*/node_modules
+npm-debug.log
+yarn-error.log
 
 packages/*/build
 apps/*/build

@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { downloadBuild } from "./commands/DownloadBuild";
+import { listDevicesAsync } from "./commands/ListDevices";
 import { returnLoggerMiddleware } from "./utils";
 
 const program = new Command();
@@ -12,13 +13,12 @@ program
 program
   .command("download-build")
   .argument("<string>", "Build URL")
-  .option("--first", "display just the first substring")
-  .option("-s, --separator <char>", "separator character", ",")
   .action(returnLoggerMiddleware(downloadBuild));
 
 program
   .command("list-devices")
-  .option("-p, --platform <string>", "separator character", ",")
-  .action((str, options) => {});
+  .option("-p, --platform <string>", "Selected platform", "all")
+  .option("-od, --one-device", "Only the first available device")
+  .action(returnLoggerMiddleware(listDevicesAsync));
 
 program.parse();

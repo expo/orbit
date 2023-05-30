@@ -18,9 +18,11 @@
     "typescript": "4.9.4"
   },
   "dependencies": {
+    "@expo/osascript": "2.0.33",
     "@expo/spawn-async": "^1.7.2",
     "cli-progress": "^3.12.0",
     "env-paths": "2.2.0",
+    "exec-async": "2.2.0",
     "figures": "3.2.0",
     "getenv": "^1.0.0",
     "node-fetch": "2.6.7",

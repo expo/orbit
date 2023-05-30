@@ -1,5 +1,5 @@
 export function returnLoggerMiddleware(
-  fn: (...args: any[]) => string | Promise<string>
+  fn: (...args: any[]) => any | Promise<any>
 ) {
   return async function (...args: any[]) {
     try {
