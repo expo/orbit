@@ -79,6 +79,10 @@
                                                       andEventID:kAEGetURL];
 }
 
+- (NSPopover *)popover {
+    return popover;
+}
+
 #pragma mark - RCTBridgeDelegate Methods
 
 - (NSURL *)sourceURLForBridge:(__unused RCTBridge *)bridge {

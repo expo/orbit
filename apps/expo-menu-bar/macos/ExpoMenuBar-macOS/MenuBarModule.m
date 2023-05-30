@@ -1,4 +1,5 @@
 #import "MenuBarModule.h"
+#import "AppDelegate.h"
 
 #import <React/RCTLog.h>
 
@@ -137,6 +138,19 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   }
 
   resolve(hasReachedReturnOutput ? returnOutput : nil);
+}
+
+RCT_EXPORT_METHOD(setPopoverSize:(double) width
+                  height:(double) height
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [[appDelegate popover] setContentSize:CGSizeMake(width, height)];
+    resolve(nil);
+  });
 }
 
 @end

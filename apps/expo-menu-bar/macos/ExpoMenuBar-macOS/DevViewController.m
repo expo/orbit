@@ -9,7 +9,7 @@
   [super viewDidLoad];
 
   RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
-  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge moduleName:@"ExpoMenuBar" initialProperties:nil];
+  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge moduleName:@"ExpoMenuBar" initialProperties:@{@"shouldAutoResize" : @NO}];
 
   NSView *view = [self view];
 

@@ -47,7 +47,7 @@ function App(): JSX.Element {
   );
 
   return (
-    <View style={styles.container}>
+    <AutoResizerView style={styles.container} enabled={props.shouldAutoResize}>
       <Text style={styles.title}>EAS Quick Launcher</Text>
       <View style={styles.center}>
         {status === Status.LISTENING ? (

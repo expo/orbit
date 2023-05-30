@@ -9,5 +9,6 @@
 }
 
 @property(nonatomic, readonly) RCTBridge *bridge;
+@property(nonatomic, strong, readonly) NSPopover *popover;
 
 @end

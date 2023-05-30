@@ -8,6 +8,7 @@ type MenuBarModule = NativeModule & {
     listenerId: string,
   ) => Promise<void>;
   runCommand: (command: string, args: string[]) => Promise<void>;
+  setPopoverSize: (width: number, height: number) => Promise<void>;
 };
 
 const MenuBarModule: MenuBarModule = NativeModules.MenuBarModule;
