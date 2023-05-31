@@ -145,9 +145,8 @@ RCT_EXPORT_METHOD(setPopoverSize:(double) width
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-
   dispatch_async(dispatch_get_main_queue(), ^{
+    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     [[appDelegate popover] setContentSize:CGSizeMake(width, height)];
     resolve(nil);
   });
