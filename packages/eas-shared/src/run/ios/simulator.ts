@@ -89,7 +89,7 @@ export async function getAvaliableIosSimulatorsListAsync(
             osType: "iOS" as const,
             state: device.state as "Booted" | "Shutdown",
             lastBootedAt: device.lastBootedAt
-              ? new Date(device.lastBootedAt)
+              ? new Date(device.lastBootedAt).getTime()
               : undefined,
           });
         }

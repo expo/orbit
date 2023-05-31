@@ -19,18 +19,22 @@ let listenerCounter = 0;
 async function runCli(
   command: string,
   args: string[],
-  callback: (status: string) => void,
+  callback?: (status: string) => void,
 ) {
   const id = listenerCounter++;
   const filteredCallback = (event: {listenerId: number; output: string}) => {
     if (event.listenerId !== id) {
       return;
     }
-    callback(event.output);
+    callback?.(event.output);
   };
   const listener = emitter.addListener('onCLIOutput', filteredCallback);
   try {
-    const result = await NativeModules.MenuBarModule.runCli(command, args, id);
+    const result: string | undefined = await NativeModules.MenuBarModule.runCli(
+      command,
+      args,
+      id,
+    );
     return result;
   } catch (error) {
     throw error;
