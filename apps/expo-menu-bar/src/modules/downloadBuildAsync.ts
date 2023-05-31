@@ -17,7 +17,6 @@ function extractDownloadProgress(string: string) {
     const currentSize = parseFloat(matches[1]);
     const totalSize = parseFloat(matches[2]);
     const progress = (currentSize / totalSize) * 100;
-    console.log(`progress ${progress}`);
     return progress;
   }
 

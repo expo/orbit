@@ -19,6 +19,7 @@ export async function installAndLaunchAppAsync({
     );
     await Simulator.installAppAsync(deviceId, appPath);
     await Simulator.launchAppAsync(deviceId, bundleIdentifier);
+    return;
   }
 
   const runningEmulators = await getRunningEmulatorsAsync();
