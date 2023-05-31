@@ -86,7 +86,8 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   NSString *executablePath = [[NSBundle mainBundle] pathForResource:@"expo-menu-cli" ofType:nil];
 
   [task setLaunchPath:executablePath];
-  [task setArguments:@[command,[arguments componentsJoinedByString:@" "]]];
+  [task setArguments:[@[command] arrayByAddingObjectsFromArray:arguments]];
+
 
   [task setStandardOutput:pipe];
   [task setStandardError:pipe];
