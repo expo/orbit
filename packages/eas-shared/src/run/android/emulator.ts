@@ -58,7 +58,7 @@ export async function getAvaliableAndroidEmulatorsAsync(): Promise<
 }
 
 /** Start an Android device and wait until it is booted. */
-async function bootEmulatorAsync(
+export async function bootEmulatorAsync(
   emulator: AndroidEmulator,
   {
     timeout = EMULATOR_MAX_WAIT_TIMEOUT_MS,

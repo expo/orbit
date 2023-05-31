@@ -2,6 +2,7 @@ import { Command } from "commander";
 
 import { downloadBuild } from "./commands/DownloadBuild";
 import { listDevicesAsync } from "./commands/ListDevices";
+import { bootDeviceAsync } from "./commands/BootDevice";
 import { returnLoggerMiddleware } from "./utils";
 
 const program = new Command();
@@ -20,5 +21,11 @@ program
   .option("-p, --platform <string>", "Selected platform", "all")
   .option("-od, --one-device", "Only the first available device")
   .action(returnLoggerMiddleware(listDevicesAsync));
+
+program
+  .command("boot-device")
+  .requiredOption("-p, --platform <string>", "Selected platform")
+  .requiredOption("--id  <string>", "UUID of the device")
+  .action(returnLoggerMiddleware(bootDeviceAsync));
 
 program.parse();
