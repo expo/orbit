@@ -20,6 +20,7 @@
 		C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C79D2A251E0C00A53D8D /* DevViewController.m */; };
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
+		C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
 		C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C0E7CF4D2A15440100C59DE5 /* icon.png */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
@@ -58,6 +59,9 @@
 		C061C7A22A26B27E00A53D8D /* AutoResizerRootViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoResizerRootViewManager.h; sourceTree = "<group>"; };
 		C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AutoResizerRootView.m; sourceTree = "<group>"; };
 		C061C7A52A26B55C00A53D8D /* AutoResizerRootView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoResizerRootView.h; sourceTree = "<group>"; };
+		C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemIconViewManager.h; sourceTree = "<group>"; };
+		C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SystemIconViewManager.m; sourceTree = "<group>"; };
+		C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTImageView+Private.h"; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
 		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/icon.png; sourceTree = "<group>"; };
@@ -148,6 +152,9 @@
 				C061C7A22A26B27E00A53D8D /* AutoResizerRootViewManager.h */,
 				C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */,
 				C061C7A52A26B55C00A53D8D /* AutoResizerRootView.h */,
+				C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */,
+				C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */,
+				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -497,6 +504,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
