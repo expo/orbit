@@ -105,20 +105,27 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
                                     queue:nil
                               usingBlock:^(NSNotification *notification) {
                                   NSData *chunk = notification.userInfo[NSFileHandleNotificationDataItem];
-                                  NSString *output = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
+                                  NSString *wholeOutput = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
+                                  NSArray *outputs = [wholeOutput componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 
-                                  if(hasReachedReturnOutput || hasReachedError){
-                                    returnOutput = [returnOutput stringByAppendingString:output];
-                                  } else if([output isEqualToString:@"---- return output ----\n"]){
-                                    hasReachedReturnOutput = true;
-                                  } else if([output isEqualToString:@"---- thrown error ----\n"]){
-                                    hasReachedError = true;
-                                  } else if(self->hasListeners && output.length > 0 && ![output isEqualToString:@"\n"]){
-                                    NSDictionary *eventData = @{
-                                      @"listenerId": listenerId,
-                                      @"output": output
-                                    };
-                                    [self sendEventWithName:@"onCLIOutput" body:eventData];
+                                  for (NSString *output in outputs) {
+                                    if ([output isEqualToString:@""]) {
+                                      continue;
+                                    }
+
+                                    if(hasReachedReturnOutput || hasReachedError){
+                                      returnOutput = [returnOutput stringByAppendingString:output];
+                                    } else if([output isEqualToString:@"---- return output ----"]){
+                                      hasReachedReturnOutput = true;
+                                    } else if([output isEqualToString:@"---- thrown error ----"]){
+                                      hasReachedError = true;
+                                    } else if(self->hasListeners && output.length > 0 && ![output isEqualToString:@"\n"]){
+                                      NSDictionary *eventData = @{
+                                        @"listenerId": listenerId,
+                                        @"output": output
+                                      };
+                                      [self sendEventWithName:@"onCLIOutput" body:eventData];
+                                    }
                                   }
 
                                   [file readInBackgroundAndNotify];
