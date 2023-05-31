@@ -14,7 +14,7 @@ interface ProgressCircleProps {
 }
 
 const ProgressCircle: React.FC<ProgressCircleProps> = ({
-  size = 50,
+  size = 25,
   progress,
   strokeWidth = size / 8,
   activeStrokeColor = '#35f688',

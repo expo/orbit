@@ -1,6 +1,3 @@
-import spawnAsync from "@expo/spawn-async";
-import path from "path";
-
 import * as Emulator from "./android/emulator";
 import * as Simulator from "./ios/simulator";
 import { validateSystemRequirementsAsync } from "./ios/systemRequirements";
@@ -17,31 +14,10 @@ export async function runAppOnIosSimulatorAsync(
 
   await Simulator.ensureSimulatorAppOpenedAsync(simulator.udid);
 
-  const bundleIdentifier = await getAppBundleIdentifierAsync(appPath);
+  const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
   await Simulator.installAppAsync(simulator.udid, appPath);
 
   await Simulator.launchAppAsync(simulator.udid, bundleIdentifier);
-}
-
-async function getAppBundleIdentifierAsync(appPath: string): Promise<string> {
-  const { stdout, stderr } = await spawnAsync("xcrun", [
-    "plutil",
-    "-extract",
-    "CFBundleIdentifier",
-    "raw",
-    path.join(appPath, "Info.plist"),
-  ]);
-
-  if (!stdout) {
-    throw new Error(
-      `Could not read app bundle identifier from ${path.join(
-        appPath,
-        "Info.plist"
-      )}: ${stderr}`
-    );
-  }
-
-  return stdout.trim();
 }
 
 export async function runAppOnAndroidEmulatorAsync(

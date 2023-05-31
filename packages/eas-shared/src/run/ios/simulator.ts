@@ -1,5 +1,6 @@
 import * as osascript from "@expo/osascript";
 import spawnAsync from "@expo/spawn-async";
+import path from "path";
 
 import Log from "../../log";
 import { promptAsync } from "../../prompts";
@@ -216,4 +217,27 @@ export async function getSimulatorAppIdAsync(): Promise<string | undefined> {
   } catch {
     return undefined;
   }
+}
+
+export async function getAppBundleIdentifierAsync(
+  appPath: string
+): Promise<string> {
+  const { stdout, stderr } = await spawnAsync("xcrun", [
+    "plutil",
+    "-extract",
+    "CFBundleIdentifier",
+    "raw",
+    path.join(appPath, "Info.plist"),
+  ]);
+
+  if (!stdout) {
+    throw new Error(
+      `Could not read app bundle identifier from ${path.join(
+        appPath,
+        "Info.plist"
+      )}: ${stderr}`
+    );
+  }
+
+  return stdout.trim();
 }
