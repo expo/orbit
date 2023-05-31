@@ -30,7 +30,7 @@ async function runCli(
   };
   const listener = emitter.addListener('onCLIOutput', filteredCallback);
   try {
-    const result: string | undefined = await NativeModules.MenuBarModule.runCli(
+    const result: string = await NativeModules.MenuBarModule.runCli(
       command,
       args,
       id,

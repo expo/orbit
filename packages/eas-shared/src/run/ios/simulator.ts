@@ -15,7 +15,7 @@ export interface IosSimulator {
   isAvailable: boolean;
   name: string;
   udid: string;
-  lastBootedAt?: Date;
+  lastBootedAt?: number;
 }
 
 export async function selectSimulatorAsync(): Promise<IosSimulator> {

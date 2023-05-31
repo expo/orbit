@@ -35,7 +35,9 @@ export async function listDevicesAsync({
 
     const firstIOSDevice =
       availableIosSimulators?.find(({ state }) => state === "Booted") ||
-      availableIosSimulators?.[0];
+      availableIosSimulators?.sort(
+        (a, b) => (b?.lastBootedAt || 0) - (a.lastBootedAt || 0)
+      )?.[0];
 
     return firstIOSDevice ? [firstIOSDevice] : [];
   }
