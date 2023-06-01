@@ -1,6 +1,6 @@
-import {requireNativeComponent, ViewProps} from 'react-native';
+import {requireNativeComponent, ImageProps} from 'react-native';
 
-type Props = ViewProps & {systemIconName: string};
+type Props = Omit<ImageProps, 'source'> & {systemIconName: string};
 
 const SystemIconViewInternal = requireNativeComponent<Props>('SystemIconView');
 
