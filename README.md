@@ -27,3 +27,7 @@ Finally, run the following command to start the app:
 ```bash
 yarn macos
 ```
+
+### Troubleshooting
+
+If you see an error saying `'butter/map.h' file not found` when running `yarn macos`, delete `Pods` and `build` folders from `apps/expo-menu-bar/macos/`, and run `pod install` again.
