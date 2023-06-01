@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "EAS Quick Launcher",
+  "version": "0.0.1",
+  "description": "Makes launching EAS builds and Snack projects easy.",
+  "icons": {
+    "128": "icons/icon-128x128.png",
+    "48": "icons/icon-48x48.png",
+    "32": "icons/icon-32x32.png"
+  },
+  "permissions": ["scripting", "activeTab"],
+  "content_scripts": [
+    {
+      "js": ["scripts/index.js"],
+      "matches": ["https://expo.dev/*"]
+    }
+  ]
+}
