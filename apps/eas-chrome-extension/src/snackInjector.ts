@@ -1,6 +1,6 @@
 import { canOpenProtocol } from "./canOpenProtocol";
 import { showInstallModal } from "./installModal";
-import { boltIcon, htmlStringToElement } from "./utils";
+import { getBoltIcon, htmlStringToElement } from "./utils";
 
 // Returns a boolean indicating if the button was successfully injected
 export function snackInjector() {
@@ -51,7 +51,7 @@ export function snackInjector() {
   quickLaunchButton.setAttribute("id", "eas-quick-launch");
 
   const icon = quickLaunchButton.querySelector("svg");
-  icon?.parentNode?.replaceChild(htmlStringToElement(boltIcon), icon);
+  icon?.parentNode?.replaceChild(htmlStringToElement(getBoltIcon()), icon);
 
   const span = quickLaunchButton.querySelector("span span");
   if (span?.textContent) {

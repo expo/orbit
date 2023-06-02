@@ -1,5 +1,6 @@
 import { canOpenProtocol } from "./canOpenProtocol";
 import { showInstallModal } from "./installModal";
+import { getBoltIcon, htmlStringToElement } from "./utils";
 
 // Returns a boolean indicating if the button was successfully injected
 export function easInjector() {
@@ -43,7 +44,16 @@ export function easInjector() {
   quickLaunchButton.setAttribute("id", "eas-quick-launch");
 
   while (installButtonClone.firstChild) {
-    quickLaunchButton.appendChild(installButtonClone.firstChild);
+    if (installButtonClone.firstChild instanceof SVGElement) {
+      quickLaunchButton.appendChild(
+        htmlStringToElement(
+          getBoltIcon("var(--expo-theme-button-primary-text)")
+        )
+      );
+      installButtonClone.removeChild(installButtonClone.firstChild);
+    } else {
+      quickLaunchButton.appendChild(installButtonClone.firstChild);
+    }
   }
 
   const span = quickLaunchButton.querySelector("span");
