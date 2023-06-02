@@ -1,24 +1,23 @@
+import { htmlStringToElement } from "./utils";
+
 export function showInstallModal() {
-  const modalContainer = document.createElement("div");
-  modalContainer.classList.add("modal-container");
+  const html = `
+  <div class="modal-container">
+    <div class="modal-content"><span id="close-button">×</span>
+      <h2>It appears that you do not have EAS Quick Launcher installed</h2>
+      <p>Please visit
+        <a href="https://github.com/expo/eas-menu-bar" target="_blank">https://github.com/expo/eas-menu-bar</a>
+        for more information on how you can install it.
+      </p>
+    </div>
+  </div> d
+  `;
 
-  const modalContent = document.createElement("div");
-  modalContent.classList.add("modal-content");
-
-  const closeButton = document.createElement("span");
-  closeButton.classList.add("close-button");
-  closeButton.innerHTML = "&times;"; // Display 'x' symbol
-
-  const installText = document.createElement("p");
-  installText.textContent =
-    "Visit https://github.com/expo/eas-menu-bar to install EAS Quick Launcher.";
-
-  modalContent.appendChild(closeButton);
-  modalContent.appendChild(installText);
-  modalContainer.appendChild(modalContent);
+  const modalContainer = htmlStringToElement(html);
   document.body.appendChild(modalContainer);
 
-  closeButton.addEventListener("click", function () {
+  const closeButton = document.querySelector("#close-button");
+  closeButton?.addEventListener("click", function () {
     document.body.removeChild(modalContainer);
   });
 }
@@ -26,6 +25,7 @@ export function showInstallModal() {
 const style = document.createElement("style");
 style.textContent = `
 .modal-container {
+  z-index: 10;
   position: fixed;
   top: 0;
   left: 0;
@@ -38,24 +38,20 @@ style.textContent = `
 }
 
 .modal-content {
+  position: relative;
   background-color: #fff;
   padding: 20px;
   border-radius: 4px;
   text-align: center;
 }
 
-.close-button {
+#close-button {
   position: absolute;
-  top: 10px;
+  top: 0px;
   right: 10px;
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
-}
-
-p {
-  margin: 0;
-  padding: 10px 0;
 }
 `;
 
