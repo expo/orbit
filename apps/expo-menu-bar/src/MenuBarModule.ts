@@ -5,8 +5,8 @@ type MenuBarModule = NativeModule & {
   runCli: (
     command: string,
     args: string[],
-    listenerId: string,
-  ) => Promise<void>;
+    listenerId: number,
+  ) => Promise<string>;
   runCommand: (command: string, args: string[]) => Promise<void>;
   setPopoverSize: (width: number, height: number) => Promise<void>;
 };
@@ -30,11 +30,7 @@ async function runCli(
   };
   const listener = emitter.addListener('onCLIOutput', filteredCallback);
   try {
-    const result: string = await NativeModules.MenuBarModule.runCli(
-      command,
-      args,
-      id,
-    );
+    const result = await MenuBarModule.runCli(command, args, id);
     return result;
   } catch (error) {
     throw error;
@@ -45,6 +41,7 @@ async function runCli(
 
 export default {
   ...MenuBarModule,
+  exitApp: () => MenuBarModule.exitApp(),
   runCli,
   runGenericCommand: async (
     command: string,
@@ -52,7 +49,7 @@ export default {
     callback: (status: string) => void,
   ) => {
     const listener = emitter.addListener('onNewCommandLine', callback);
-    await NativeModules.MenuBarModule.runCommand(command, args);
+    await MenuBarModule.runCommand(command, args);
     listener.remove();
   },
 };

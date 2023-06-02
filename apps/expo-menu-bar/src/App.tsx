@@ -1,10 +1,11 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   Text,
   TouchableOpacity,
   View,
   PlatformColor,
   StyleSheet,
+  Image,
 } from 'react-native';
 
 import MenuBarModule from './MenuBarModule';
@@ -12,6 +13,13 @@ import {useDeepLinking} from './hooks/useDeepLinking';
 import {downloadBuildAsync} from './modules/downloadBuildAsync';
 import AutoResizerRootView from './components/AutoResizerRootView';
 import CircularProgress from './components/CircularProgress';
+import {useListDevices} from './hooks/useListDevices';
+import SystemIconView from './components/SystemIconView';
+import Icon from './assets/icon.png';
+import {listDevicesAsync} from './modules/listDevicesAsync';
+import {bootDeviceAsync} from './modules/bootDeviceAsync';
+import {installAndLaunchAppAsync} from './modules/installAndLaunchAppAsync';
+import {launchSnackAsync} from './modules/launchSnackAsync';
 
 enum Status {
   LISTENING,
@@ -21,29 +29,41 @@ enum Status {
 }
 
 type Props = {
-  shouldAutoResize: boolean;
+  isDevWindow: boolean;
 };
 
 function App(props: Props) {
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
-  const [devicesCount, setDevicesCount] = useState(1);
 
-  const main = async () => {
+  const {devices} = useListDevices();
+
+  const handleSnackUrl = async (url: string) => {
+    await launchSnackAsync({url});
+  };
+
+  const handleEASUrl = async (url: string) => {
     try {
+      const platform = url.endsWith('.apk') ? 'android' : 'ios';
       setStatus(Status.DOWNLOADING);
-      const buildPath = await downloadBuildAsync(
-        'http://expo.dev/artifacts/eas/hAo1tq1ieGW2QVjHcjDbAP.tar.gz',
-        setProgress,
-      );
+      const [device] = await listDevicesAsync({platform, oneDevice: true});
+      const deviceId = platform === 'android' ? device.name : device.udid;
+
+      const [buildPath] = await Promise.all([
+        await downloadBuildAsync(url, setProgress),
+        await bootDeviceAsync({
+          platform,
+          id: deviceId,
+        }),
+      ]);
+
       setStatus(Status.INSTALLING);
-      // await installBuildAsync(buildPath, setProgress);
+      await installAndLaunchAppAsync({platform, appPath: buildPath, deviceId});
       setStatus(Status.SUCCESS);
 
       setTimeout(() => {
         setStatus(Status.LISTENING);
       }, 2000);
-      console.log('buildPath', buildPath);
     } catch (error) {
       console.log(`error ${error}`);
     }
@@ -51,32 +71,32 @@ function App(props: Props) {
 
   useDeepLinking(
     useCallback(async ({url}) => {
-      const zipUrl = `https://${url.substring(url.indexOf('://') + 3)}`;
+      if (!props.isDevWindow) {
+        const urlWithoutProtocol = url.substring(url.indexOf('://') + 3);
+        const isSnackUrl = url.includes('exp.host/');
 
-      setStatus(Status.DOWNLOADING);
-      const buildPath = await downloadBuildAsync(zipUrl, () => {});
-      setStatus(Status.INSTALLING);
-      // await installBuildAsync(buildPath, setProgress);
-      setStatus(Status.SUCCESS);
+        if (isSnackUrl) {
+          return handleSnackUrl(`exp://${urlWithoutProtocol}`);
+        }
 
-      setTimeout(() => {
-        setStatus(Status.LISTENING);
-      }, 2000);
+        handleEASUrl(`https://${urlWithoutProtocol}`);
+      }
     }, []),
   );
 
   return (
-    <AutoResizerRootView
-      style={styles.container}
-      enabled={props.shouldAutoResize}>
-      <Text style={styles.title}>EAS Quick Launcher</Text>
-      <View style={styles.center}>
+    <AutoResizerRootView style={styles.container} enabled={!props.isDevWindow}>
+      <View style={styles.titleContainer}>
+        <Image source={Icon} style={styles.icon} resizeMode="contain" />
+        <Text style={styles.title}>EAS Quick Launcher</Text>
+      </View>
+      <View style={styles.listeningContainer}>
         {status === Status.LISTENING ? (
           <Text>Listening for EAS build links</Text>
         ) : status === Status.DOWNLOADING ? (
-          <View style={{alignItems: 'center'}}>
-            <Text>Downloading...</Text>
+          <View style={styles.downloading}>
             <CircularProgress progress={progress} />
+            <Text>Downloading...</Text>
           </View>
         ) : status === Status.INSTALLING ? (
           <View>
@@ -88,35 +108,25 @@ function App(props: Props) {
           </View>
         )}
       </View>
-      <View>
-        {Array.from({length: devicesCount})
-          .fill('')
-          .map((_, i) => (
-            <Text key={i}>Device {i}</Text>
-          ))}
-      </View>
-      <View>
-        <View style={styles.separator} />
-        <TouchableOpacity onPress={() => setDevicesCount(prev => prev + 1)}>
-          <Text>Add devices</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={main}>
-          <Text>Download</Text>
-        </TouchableOpacity>
-        <View style={styles.separator} />
-        <TouchableOpacity
-          onPress={() => {
-            MenuBarModule.exitApp();
-          }}>
-          <Text>Quit</Text>
-        </TouchableOpacity>
-      </View>
+      <Text>Devices</Text>
+      {devices.slice(0, 5).map(device => {
+        return (
+          <TouchableOpacity key={device.name} style={styles.row}>
+            <SystemIconView systemIconName="iphone" />
+            <Text>{device.name}</Text>
+          </TouchableOpacity>
+        );
+      })}
+      <View style={styles.separator} />
+      <TouchableOpacity onPress={MenuBarModule.exitApp}>
+        <Text>Quit</Text>
+      </TouchableOpacity>
     </AutoResizerRootView>
   );
 }
 
 App.defaultProps = {
-  shouldAutoResize: true,
+  isDevWindow: false,
 };
 
 export default App;
@@ -125,6 +135,11 @@ const styles = StyleSheet.create({
   container: {
     padding: 10,
   },
+  icon: {
+    tintColor: PlatformColor('text'),
+    height: 15,
+    width: 15,
+  },
   center: {
     alignItems: 'center',
   },
@@ -132,11 +147,38 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   separator: {
     backgroundColor: PlatformColor('text'),
     height: 1,
     marginVertical: 5,
     opacity: 0.5,
     borderRadius: 10,
+  },
+  row: {
+    height: 40,
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
+  },
+  listeningContainer: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: PlatformColor('secondaryLabelColor'),
+    borderRadius: 5,
+    marginVertical: 10,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  downloading: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
   },
 });
