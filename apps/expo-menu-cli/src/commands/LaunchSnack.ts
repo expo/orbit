@@ -1,4 +1,7 @@
 import { SimControl } from "xdl";
+import { listDevicesAsync } from "./ListDevices";
+import { Platform } from "../utils";
+import { bootDeviceAsync } from "./BootDevice";
 
 type launchSnackAsyncOptions = {
   platform?: "android" | "ios";
@@ -13,9 +16,21 @@ export async function launchSnackAsync(
     return;
   }
 
-  // [TODO] - Copy openURLAsync and remove xdl dependency
+  const response = await listDevicesAsync({
+    platform: Platform.Ios,
+    oneDevice: true,
+  });
+  if (!response.length) {
+    return;
+  }
+
+  const [device] = response;
+  if (device.state !== "Booted") {
+    await bootDeviceAsync({ platform: Platform.Ios, id: device.udid });
+  }
+
   await SimControl.openURLAsync({
     url: snackURl,
-    udid: deviceId,
+    udid: device.udid,
   });
 }

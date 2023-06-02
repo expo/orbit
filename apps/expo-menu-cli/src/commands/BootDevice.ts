@@ -26,7 +26,7 @@ export async function bootDeviceAsync({
       throw error;
     }
 
-    await Simulator.ensureSimulatorAppOpenedAsync(id);
+    return await Simulator.ensureSimulatorAppOpenedAsync(id);
   }
 
   const runningEmulators = await getRunningEmulatorsAsync();
