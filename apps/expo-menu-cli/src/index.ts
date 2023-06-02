@@ -1,9 +1,10 @@
 import { Command } from "commander";
 
-import { downloadBuild } from "./commands/DownloadBuild";
+import { downloadBuildAsync } from "./commands/DownloadBuild";
 import { listDevicesAsync } from "./commands/ListDevices";
 import { bootDeviceAsync } from "./commands/BootDevice";
 import { installAndLaunchAppAsync } from "./commands/InstallAndLaunchApp";
+import { launchSnackAsync } from "./commands/LaunchSnack";
 import { returnLoggerMiddleware } from "./utils";
 
 const program = new Command();
@@ -15,7 +16,7 @@ program
 program
   .command("download-build")
   .argument("<string>", "Build URL")
-  .action(returnLoggerMiddleware(downloadBuild));
+  .action(returnLoggerMiddleware(downloadBuildAsync));
 
 program
   .command("list-devices")
@@ -35,5 +36,12 @@ program
   .requiredOption("--app-path  <string>", "Local path of the app")
   .requiredOption("--device-id  <string>", "UDID or name of the device")
   .action(returnLoggerMiddleware(installAndLaunchAppAsync));
+
+program
+  .command("launch-snack")
+  .argument("<string>", "Snack URL")
+  .option("-p, --platform <string>", "Selected platform")
+  .option("--device-id  <string>", "UDID or name of the device")
+  .action(returnLoggerMiddleware(launchSnackAsync));
 
 program.parse();
