@@ -12,7 +12,7 @@
   "content_scripts": [
     {
       "js": ["scripts/index.js"],
-      "matches": ["https://expo.dev/*"]
+      "matches": ["https://expo.dev/*", "https://snack.expo.dev/*"]
     }
   ]
 }
