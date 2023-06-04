@@ -11,7 +11,7 @@ export async function promptAsync<T extends string = string>(
   questions: PromptObject<T> | PromptObject<T>[],
   options: Options = {}
 ): Promise<Answers<T>> {
-  if (!process.stdin.isTTY && !global.test) {
+  if (!process.stdin.isTTY && !(global as any).test) {
     const message = Array.isArray(questions)
       ? questions[0]?.message
       : questions.message;
