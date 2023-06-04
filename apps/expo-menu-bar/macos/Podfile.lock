@@ -432,6 +432,8 @@ PODS:
     - React-Core
   - RNSVG (13.9.0):
     - React-Core
+  - RNVectorIcons (9.2.0):
+    - React-Core
   - SocketRocket (0.6.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -497,6 +499,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native-macos/ReactCommon`)
   - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - RNSVG (from `../../../node_modules/react-native-svg`)
+  - RNVectorIcons (from `../../../node_modules/react-native-vector-icons`)
   - Yoga (from `../../../node_modules/react-native-macos/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -588,6 +591,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNSVG:
     :path: "../../../node_modules/react-native-svg"
+  RNVectorIcons:
+    :path: "../../../node_modules/react-native-vector-icons"
   Yoga:
     :path: "../../../node_modules/react-native-macos/ReactCommon/yoga"
 
@@ -640,6 +645,7 @@ SPEC CHECKSUMS:
   ReactCommon: 6f818c11f4e4b7b678fbcbf2690a2d07bac2bb2d
   RNCClipboard: 3f0451a8100393908bea5c5c5b16f96d45f30bfc
   RNSVG: 53c661b76829783cdaf9b7a57258f3d3b4c28315
+  RNVectorIcons: fcc2f6cb32f5735b586e66d14103a74ce6ad61f8
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: 4e076ec2978a0800817878be120de7e97b79bcf3
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a

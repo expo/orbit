@@ -21,6 +21,7 @@
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
 		C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */; };
+		C061C7B22A2D420D00A53D8D /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = C061C7B12A2D420D00A53D8D /* Fonts */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
 		C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C0E7CF4D2A15440100C59DE5 /* icon.png */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
@@ -62,6 +63,7 @@
 		C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemIconViewManager.h; sourceTree = "<group>"; };
 		C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SystemIconViewManager.m; sourceTree = "<group>"; };
 		C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTImageView+Private.h"; sourceTree = "<group>"; };
+		C061C7B12A2D420D00A53D8D /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = "../../../../node_modules/react-native-vector-icons/Fonts"; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
 		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/icon.png; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 				C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */,
 				C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */,
 				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
+				C061C7B12A2D420D00A53D8D /* Fonts */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -250,6 +253,7 @@
 					};
 					514201482437B4B30078DB4F = {
 						CreatedOnToolsVersion = 11.4;
+						LastSwiftMigration = 1430;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -287,6 +291,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C061C7B22A2D420D00A53D8D /* Fonts in Resources */,
 				C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */,
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,
@@ -459,10 +464,42 @@
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ExpoMenuBar-iOS/Pods-ExpoMenuBar-iOS-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core-iOS/AccessibilityResources.bundle",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/AntDesign.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/Entypo.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/EvilIcons.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/Feather.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/Fontisto.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/Foundation.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/Ionicons.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/MaterialIcons.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/Octicons.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf",
+				"${PODS_ROOT}/../../../../node_modules/react-native-vector-icons/Fonts/Zocial.ttf",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AntDesign.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Entypo.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EvilIcons.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Feather.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FontAwesome.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FontAwesome5_Brands.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FontAwesome5_Regular.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FontAwesome5_Solid.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Fontisto.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Foundation.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Ionicons.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/MaterialCommunityIcons.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/MaterialIcons.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Octicons.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SimpleLineIcons.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Zocial.ttf",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
