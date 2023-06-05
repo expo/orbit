@@ -6,20 +6,22 @@ import {
   PlatformColor,
   StyleSheet,
   Image,
+  DeviceEventEmitter,
 } from 'react-native';
 
-import MenuBarModule from './MenuBarModule';
 import {useDeepLinking} from './hooks/useDeepLinking';
 import {downloadBuildAsync} from './modules/downloadBuildAsync';
 import AutoResizerRootView from './components/AutoResizerRootView';
 import CircularProgress from './components/CircularProgress';
 import {useListDevices} from './hooks/useListDevices';
-import SystemIconView from './components/SystemIconView';
-import Icon from './assets/icon.png';
-import {listDevicesAsync} from './modules/listDevicesAsync';
+import ExpoIcon from './assets/icon.png';
+import {getDeviceOS, listDevicesAsync} from './modules/listDevicesAsync';
 import {bootDeviceAsync} from './modules/bootDeviceAsync';
 import {installAndLaunchAppAsync} from './modules/installAndLaunchAppAsync';
 import {launchSnackAsync} from './modules/launchSnackAsync';
+import Icon from 'react-native-vector-icons/Ionicons';
+import NativeColorPalette from './components/NativeColorPalette';
+import MenuBarModule from './MenuBarModule';
 
 enum Status {
   LISTENING,
@@ -36,7 +38,7 @@ function App(props: Props) {
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const {devices} = useListDevices();
+  const {devices, refetch: refetchDevices} = useListDevices();
 
   const handleSnackUrl = async (url: string) => {
     await launchSnackAsync({url});
@@ -47,7 +49,7 @@ function App(props: Props) {
       const platform = url.endsWith('.apk') ? 'android' : 'ios';
       setStatus(Status.DOWNLOADING);
       const [device] = await listDevicesAsync({platform, oneDevice: true});
-      const deviceId = platform === 'android' ? device.name : device.udid;
+      const deviceId = device.osType === 'iOS' ? device.udid : device.name;
 
       const [buildPath] = await Promise.all([
         await downloadBuildAsync(url, setProgress),
@@ -87,33 +89,68 @@ function App(props: Props) {
   return (
     <AutoResizerRootView style={styles.container} enabled={!props.isDevWindow}>
       <View style={styles.titleContainer}>
-        <Image source={Icon} style={styles.icon} resizeMode="contain" />
+        <Image source={ExpoIcon} style={styles.icon} resizeMode="contain" />
         <Text style={styles.title}>EAS Quick Launcher</Text>
       </View>
-      <View style={styles.listeningContainer}>
-        {status === Status.LISTENING ? (
-          <Text>Listening for EAS build links</Text>
-        ) : status === Status.DOWNLOADING ? (
+      <View style={{paddingVertical: 10}}>
+        {status === Status.DOWNLOADING ? (
           <View style={styles.downloading}>
-            <CircularProgress progress={progress} />
+            <CircularProgress size={12} progress={progress} />
             <Text>Downloading...</Text>
           </View>
         ) : status === Status.INSTALLING ? (
           <View>
-            <Text>Installing</Text>
+            <Text>Installing..</Text>
           </View>
-        ) : (
-          <View>
-            <Text>Success ✅</Text>
-          </View>
-        )}
+        ) : null}
       </View>
-      <Text>Devices</Text>
+      <Text style={{fontWeight: '600'}}>Devices</Text>
       {devices.slice(0, 5).map(device => {
         return (
-          <TouchableOpacity key={device.name} style={styles.row}>
-            <SystemIconView systemIconName="iphone" />
-            <Text>{device.name}</Text>
+          <TouchableOpacity
+            key={device.name}
+            style={styles.row}
+            onPress={async () => {
+              bootDeviceAsync({
+                platform: getDeviceOS(device),
+                id: device.osType === 'iOS' ? device.udid : device.name,
+              });
+              refetchDevices();
+            }}>
+            <View
+              style={{
+                backgroundColor:
+                  device.state === 'Booted'
+                    ? PlatformColor('controlAccentColor')
+                    : PlatformColor('tertiaryLabelColor'),
+                borderRadius: 50,
+                height: 30,
+                width: 30,
+                justifyContent: 'center',
+              }}>
+              <Icon
+                name={
+                  device.osType === 'iOS'
+                    ? 'phone-portrait-outline'
+                    : 'phone-portrait-sharp'
+                }
+                size={15}
+                style={{
+                  color: PlatformColor('alternateSelectedControlTextColor'),
+                  textAlign: 'center',
+                }}
+              />
+            </View>
+            <View>
+              <Text>{device.name}</Text>
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: PlatformColor('secondaryLabelColor'),
+                }}>
+                {device.osType} {device.osVersion}
+              </Text>
+            </View>
           </TouchableOpacity>
         );
       })}
@@ -163,7 +200,7 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 5,
+    gap: 8,
   },
   listeningContainer: {
     minHeight: 50,
@@ -177,8 +214,7 @@ const styles = StyleSheet.create({
   },
   downloading: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    gap: 5,
   },
 });
