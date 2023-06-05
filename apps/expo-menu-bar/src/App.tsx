@@ -6,7 +6,6 @@ import {
   PlatformColor,
   StyleSheet,
   Image,
-  DeviceEventEmitter,
 } from 'react-native';
 
 import {useDeepLinking} from './hooks/useDeepLinking';
@@ -19,9 +18,8 @@ import {getDeviceOS, listDevicesAsync} from './modules/listDevicesAsync';
 import {bootDeviceAsync} from './modules/bootDeviceAsync';
 import {installAndLaunchAppAsync} from './modules/installAndLaunchAppAsync';
 import {launchSnackAsync} from './modules/launchSnackAsync';
-import Icon from 'react-native-vector-icons/Ionicons';
-import NativeColorPalette from './components/NativeColorPalette';
 import MenuBarModule from './MenuBarModule';
+import RoundedIcon from './components/RoundedIcon';
 
 enum Status {
   LISTENING,
@@ -100,7 +98,7 @@ function App(props: Props) {
           </View>
         ) : status === Status.INSTALLING ? (
           <View>
-            <Text>Installing..</Text>
+            <Text>Installing...</Text>
           </View>
         ) : null}
       </View>
@@ -117,36 +115,20 @@ function App(props: Props) {
               });
               refetchDevices();
             }}>
-            <View
-              style={{
-                backgroundColor:
-                  device.state === 'Booted'
-                    ? PlatformColor('controlAccentColor')
-                    : PlatformColor('tertiaryLabelColor'),
-                borderRadius: 50,
-                height: 30,
-                width: 30,
-                justifyContent: 'center',
-              }}>
-              <Icon
-                name={
-                  device.osType === 'iOS'
-                    ? 'phone-portrait-outline'
-                    : 'phone-portrait-sharp'
-                }
-                size={15}
-                style={{
-                  color: PlatformColor('alternateSelectedControlTextColor'),
-                  textAlign: 'center',
-                }}
-              />
-            </View>
+            <RoundedIcon
+              name={
+                device.osType === 'iOS'
+                  ? 'phone-portrait-outline'
+                  : 'phone-portrait-sharp'
+              }
+              selected={device.state === 'Booted'}
+            />
             <View>
               <Text>{device.name}</Text>
               <Text
                 style={{
                   fontSize: 11,
-                  color: PlatformColor('secondaryLabelColor'),
+                  opacity: 0.5,
                 }}>
                 {device.osType} {device.osVersion}
               </Text>
