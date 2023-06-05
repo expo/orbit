@@ -41,17 +41,21 @@
   popover.contentViewController = rootViewController;
   popover.behavior = NSPopoverBehaviorTransient;
 
-
+#ifdef SHOW_DEV_WINDOW
   #if RCT_DEV
     NSStoryboard *storyBoard = [NSStoryboard storyboardWithName:@"Main" bundle:nil];
     self.devWindowController = [storyBoard instantiateControllerWithIdentifier:@"devViewController"];
     [self.devWindowController showWindow:self];
     [self.devWindowController.window makeKeyWindow];
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps:YES];
   #endif
+#endif
 
-
+#ifdef SHOW_DOCK_ICON
+  #if RCT_DEV
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+  #endif
+#endif
 }
 
 - (void)onPressStatusItem:(id)sender {
