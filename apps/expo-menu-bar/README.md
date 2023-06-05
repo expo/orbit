@@ -1,5 +1,10 @@
 # EAS Menu bar
 
+## Installation instructions
+
+- Download the latest release from [expo-menu-bar/releases](https://github.com/expo/eas-menu-bar/releases?q=expo-menu-bar)
+- Unzip the file and drag ExpoMenuBar to the Applications folder.
+
 ## How to run locally
 
 At the root of the repo run:
