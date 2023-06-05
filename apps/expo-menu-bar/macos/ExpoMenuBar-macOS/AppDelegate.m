@@ -47,7 +47,6 @@
     self.devWindowController = [storyBoard instantiateControllerWithIdentifier:@"devViewController"];
     [self.devWindowController showWindow:self];
     [self.devWindowController.window makeKeyWindow];
-    [NSApp activateIgnoringOtherApps:YES];
   #endif
 #endif
 
@@ -56,18 +55,23 @@
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
   #endif
 #endif
+  [NSApp activateIgnoringOtherApps:YES];
+}
+
+- (void)openPopover {
+    [popover showRelativeToRect:statusItem.button.bounds
+                         ofView:statusItem.button
+                  preferredEdge:NSMinYEdge];
+    [popover.contentViewController.view.window makeKeyWindow];
+    [_bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
+                            args:@[@"popoverFocused"]];
 }
 
 - (void)onPressStatusItem:(id)sender {
   if (popover.isShown) {
     [popover close];
   } else {
-    [_bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
-                            args:@[@"popoverFocused"]];
-    [popover showRelativeToRect:statusItem.button.bounds
-                         ofView:statusItem.button
-                  preferredEdge:NSMinYEdge];
-    [popover.contentViewController.view.window makeKeyWindow];
+    [self openPopover];
   }
 }
 
@@ -79,10 +83,16 @@
 {
   [NSUserNotificationCenter defaultUserNotificationCenter].delegate = self;
 
-  [[NSAppleEventManager sharedAppleEventManager] setEventHandler:[RCTLinkingManager class]
+  [[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
                                                      andSelector:@selector(getUrlEventHandler:withReplyEvent:)
                                                    forEventClass:kInternetEventClass
                                                       andEventID:kAEGetURL];
+}
+
+- (void)getUrlEventHandler:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent
+{
+    [self openPopover];
+    [RCTLinkingManager getUrlEventHandler:event withReplyEvent:replyEvent];
 }
 
 - (NSPopover *)popover {
