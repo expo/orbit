@@ -58,6 +58,8 @@
   if (popover.isShown) {
     [popover close];
   } else {
+    [_bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
+                            args:@[@"popoverFocused"]];
     [popover showRelativeToRect:statusItem.button.bounds
                          ofView:statusItem.button
                   preferredEdge:NSMinYEdge];

@@ -1,5 +1,21 @@
 import MenuBarModule from '../MenuBarModule';
 
+export type Device = {
+  name: string;
+  osVersion?: string;
+  osType: 'iOS' | 'android';
+  state: 'Booted' | 'Shutdown';
+} & (
+  | {
+      osType: 'iOS';
+      udid: string;
+    }
+  | {
+      osType: 'android';
+      pid?: number;
+    }
+);
+
 type ListDevicesAsyncOptions = {
   platform: 'android' | 'ios' | 'all';
   oneDevice?: boolean;
@@ -28,5 +44,9 @@ export const listDevicesAsync = async ({
     return [];
   }
 
-  return eval(stringResult);
+  return eval(stringResult) as Device[];
 };
+
+export function getDeviceOS(device: Device): 'android' | 'ios' {
+  return device.osType.toLowerCase() as 'android' | 'ios';
+}

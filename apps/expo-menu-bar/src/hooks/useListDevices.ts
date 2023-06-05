@@ -1,8 +1,9 @@
 import {useCallback, useEffect, useState} from 'react';
-import {listDevicesAsync} from '../modules/listDevicesAsync';
+import {Device, listDevicesAsync} from '../modules/listDevicesAsync';
+import {DeviceEventEmitter} from 'react-native';
 
 export const useListDevices = () => {
-  const [devices, setDevices] = useState<any[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error>();
 
@@ -19,7 +20,14 @@ export const useListDevices = () => {
   }, []);
 
   useEffect(() => {
+    const listener = DeviceEventEmitter.addListener('popoverFocused', () => {
+      updateDevicesList();
+    });
     updateDevicesList();
+
+    return () => {
+      listener.remove();
+    };
   }, []);
 
   return {

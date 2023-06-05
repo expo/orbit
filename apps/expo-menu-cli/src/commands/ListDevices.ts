@@ -1,5 +1,6 @@
 import { Emulator, Simulator } from "eas-shared";
 import { Platform } from "../utils";
+import { getRunningEmulatorsAsync } from "eas-shared/build/run/android/adb";
 
 type Device<P> = P extends Platform.Ios
   ? Simulator.IosSimulator
@@ -23,8 +24,20 @@ export async function listDevicesAsync<P extends Platform>({
   }
 
   if (platform === Platform.Android || platform === "all") {
-    availableAndroidEmulators =
-      await Emulator.getAvaliableAndroidEmulatorsAsync();
+    const runningEmulators = await getRunningEmulatorsAsync();
+
+    availableAndroidEmulators = (
+      await Emulator.getAvaliableAndroidEmulatorsAsync()
+    )?.map((emulator) => {
+      const runningEmulator = runningEmulators.find(
+        (r) => r.name === emulator.name
+      );
+      return {
+        ...emulator,
+        state: runningEmulator ? "Booted" : "Shutdown",
+        pid: runningEmulator?.pid,
+      };
+    });
   }
 
   if (oneDevice) {
