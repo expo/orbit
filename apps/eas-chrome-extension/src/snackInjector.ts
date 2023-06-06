@@ -15,7 +15,14 @@ export function snackInjector() {
   const iframe = document.querySelector("iframe");
   if (iframe && iframe instanceof HTMLIFrameElement) {
     const iframeSrc = new URL(iframe.src);
-    expoGoURL = new URLSearchParams(iframeSrc.search).get("initialUrl");
+    const searchParams = new URLSearchParams(iframeSrc.search);
+    const iframeParams = searchParams.get("params");
+    if (iframeParams) {
+      expoGoURL = JSON.parse(iframeParams).EXKernelLaunchUrlDefaultsKey;
+    } else {
+      expoGoURL =
+        searchParams.get("initialUrl") || searchParams.get("launchUrl");
+    }
   } else {
     const divElements = document.getElementsByTagName("div");
     for (const divElement of divElements) {
@@ -31,11 +38,6 @@ export function snackInjector() {
   }
 
   const url = expoGoURL.replace("exp://", "expomenubar://");
-  console.log("url", url);
-
-  if (iframe) {
-    return true;
-  }
 
   // Copy run button style and attributes
   const runButton = Array.from(
