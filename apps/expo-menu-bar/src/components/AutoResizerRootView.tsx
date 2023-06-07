@@ -1,7 +1,10 @@
-import {requireNativeComponent, ViewProps} from 'react-native';
+import {requireNativeComponent, ViewProps, View, Platform} from 'react-native';
 
-const AutoResizerRootView = requireNativeComponent<
-  ViewProps & {enabled: boolean}
->('AutoResizerRootView');
+const AutoResizerRootView =
+  Platform.OS === 'windows'
+    ? View
+    : requireNativeComponent<ViewProps & {enabled: boolean}>(
+        'AutoResizerRootView',
+      );
 
 export default AutoResizerRootView;

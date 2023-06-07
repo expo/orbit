@@ -1,12 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  PlatformColor,
-  StyleSheet,
-  Image,
-} from 'react-native';
+import {Text, TouchableOpacity, View, StyleSheet, Image} from 'react-native';
 
 import {useDeepLinking} from './hooks/useDeepLinking';
 import {downloadBuildAsync} from './modules/downloadBuildAsync';
@@ -20,6 +13,7 @@ import {installAndLaunchAppAsync} from './modules/installAndLaunchAppAsync';
 import {launchSnackAsync} from './modules/launchSnackAsync';
 import MenuBarModule from './MenuBarModule';
 import RoundedIcon from './components/RoundedIcon';
+import {PlatformColor} from './modules/PlatformColor';
 
 enum Status {
   LISTENING,
