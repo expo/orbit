@@ -7,11 +7,11 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="07aee5dd-a148-47ae-905d-4dd30641b01f"
+    Name="86f7bdaa-8c5f-4b8d-a5fa-9b161955fcb3"
     Publisher="CN=gabriel"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="07aee5dd-a148-47ae-905d-4dd30641b01f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="86f7bdaa-8c5f-4b8d-a5fa-9b161955fcb3" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>ExpoMenuBar</DisplayName>
