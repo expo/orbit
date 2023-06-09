@@ -4,6 +4,8 @@
 #include "MainPage.g.cpp"
 #endif
 
+#include <winrt/Windows.UI.ViewManagement.h>
+
 #include "App.h"
 
 using namespace winrt;
@@ -16,5 +18,10 @@ namespace winrt::ExpoMenuBar::implementation
         InitializeComponent();
         auto app = Application::Current().as<App>();
         ReactRootView().ReactNativeHost(app->Host());
+
+        auto currentView = winrt::Windows::UI::ViewManagement::ApplicationView::GetForCurrentView();
+        auto titleBar = currentView.TitleBar(); 
+        titleBar.BackgroundColor(Windows::UI::Colors::Transparent()); 
     }
+     
 }

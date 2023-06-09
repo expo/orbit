@@ -11,7 +11,7 @@ type MenuBarModule = NativeModule & {
   setPopoverSize: (width: number, height: number) => Promise<void>;
 };
 
-const MenuBarModule: MenuBarModule = NativeModules.MenuBarModule;
+const MenuBarModule: MenuBarModule = NativeModules.MenuBarModule || {runCli:() =>{}  };
 
 const emitter = new NativeEventEmitter(MenuBarModule);
 

@@ -14,6 +14,7 @@ import {launchSnackAsync} from './modules/launchSnackAsync';
 import MenuBarModule from './MenuBarModule';
 import RoundedIcon from './components/RoundedIcon';
 import {PlatformColor} from './modules/PlatformColor';
+import {NativeModuleSample} from './NativeFancyMath';
 
 enum Status {
   LISTENING,
@@ -84,6 +85,7 @@ function App(props: Props) {
         <Image source={ExpoIcon} style={styles.icon} resizeMode="contain" />
         <Text style={styles.title}>EAS Quick Launcher</Text>
       </View>
+      <NativeModuleSample />
       <View style={{paddingVertical: 10}}>
         {status === Status.DOWNLOADING ? (
           <View style={styles.downloading}>

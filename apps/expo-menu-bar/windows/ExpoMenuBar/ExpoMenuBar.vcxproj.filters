@@ -59,4 +59,9 @@
   <ItemGroup>
     <Page Include="MainPage.xaml" />
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\..\..\expo-menu-cli\dist\expo-menu-cli.exe">
+      <Filter>Assets</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
 </Project>
