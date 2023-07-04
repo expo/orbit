@@ -32,7 +32,6 @@ program
 
 program
   .command("install-and-launch")
-  .requiredOption("-p, --platform <string>", "Selected platform")
   .requiredOption("--app-path  <string>", "Local path of the app")
   .requiredOption("--device-id  <string>", "UDID or name of the device")
   .action(returnLoggerMiddleware(installAndLaunchAppAsync));

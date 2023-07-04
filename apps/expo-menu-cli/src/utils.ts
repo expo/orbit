@@ -19,3 +19,10 @@ export enum Platform {
   Ios = "ios",
   All = "all",
 }
+
+export const getPlatformFromURI = (uri: string) => {
+  if (uri.endsWith(".tar.gz") || uri.endsWith(".app")) {
+    return Platform.Ios;
+  }
+  return Platform.Android;
+};
