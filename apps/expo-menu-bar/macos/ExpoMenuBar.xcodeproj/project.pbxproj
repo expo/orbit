@@ -16,6 +16,7 @@
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
 		C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* expo-menu-cli */; };
+		C0523ECA2A545730003371AF /* FilePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523EC92A545730003371AF /* FilePicker.m */; };
 		C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C79D2A251E0C00A53D8D /* DevViewController.m */; };
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
@@ -50,6 +51,8 @@
 		9D32DFD059D5DB6DDEF38881 /* Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		A82DFB63B157C65E5D698CA2 /* Pods-Shared-ExpoMenuBar-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		C032EDB62A1FE6F300FBC597 /* expo-menu-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-menu-cli"; path = "../../cli/expo-menu-cli"; sourceTree = "<group>"; };
+		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
+		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
 		C061C79D2A251E0C00A53D8D /* DevViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DevViewController.m; sourceTree = "<group>"; };
 		C061C79F2A251E3500A53D8D /* DevViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DevViewController.h; sourceTree = "<group>"; };
 		C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AutoResizerRootViewManager.m; sourceTree = "<group>"; };
@@ -150,6 +153,8 @@
 				C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */,
 				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
 				C061C7B12A2D420D00A53D8D /* Fonts */,
+				C0523EC82A54571F003371AF /* FilePicker.h */,
+				C0523EC92A545730003371AF /* FilePicker.m */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -439,6 +444,7 @@
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
 				C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */,
+				C0523ECA2A545730003371AF /* FilePicker.m in Sources */,
 				C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */,
 				C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */,
 			);
