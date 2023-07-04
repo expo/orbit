@@ -1,4 +1,4 @@
-import MenuBarModule from '../MenuBarModule';
+import MenuBarModule from '../modules/MenuBarModule';
 
 type InstallAndLaunchAppAsyncOptions = {
   platform: 'android' | 'ios';

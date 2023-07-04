@@ -9,17 +9,18 @@ import {
 } from 'react-native';
 
 import {useDeepLinking} from './hooks/useDeepLinking';
-import {downloadBuildAsync} from './modules/downloadBuildAsync';
+import {downloadBuildAsync} from './commands/downloadBuildAsync';
 import AutoResizerRootView from './components/AutoResizerRootView';
 import CircularProgress from './components/CircularProgress';
 import {useListDevices} from './hooks/useListDevices';
 import ExpoIcon from './assets/icon.png';
-import {getDeviceOS, listDevicesAsync} from './modules/listDevicesAsync';
-import {bootDeviceAsync} from './modules/bootDeviceAsync';
-import {installAndLaunchAppAsync} from './modules/installAndLaunchAppAsync';
-import {launchSnackAsync} from './modules/launchSnackAsync';
-import MenuBarModule from './MenuBarModule';
+import {getDeviceOS, listDevicesAsync} from './commands/listDevicesAsync';
+import {bootDeviceAsync} from './commands/bootDeviceAsync';
+import {installAndLaunchAppAsync} from './commands/installAndLaunchAppAsync';
+import {launchSnackAsync} from './commands/launchSnackAsync';
+import MenuBarModule from './modules/MenuBarModule';
 import RoundedIcon from './components/RoundedIcon';
+import NativeColorPalette from './components/NativeColorPalette';
 
 enum Status {
   LISTENING,

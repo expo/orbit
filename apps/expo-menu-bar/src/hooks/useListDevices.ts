@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Device, listDevicesAsync} from '../modules/listDevicesAsync';
+import {Device, listDevicesAsync} from '../commands/listDevicesAsync';
 import {DeviceEventEmitter} from 'react-native';
 
 export const useListDevices = () => {

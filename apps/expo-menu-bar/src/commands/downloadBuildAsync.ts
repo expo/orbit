@@ -1,4 +1,4 @@
-import MenuBarModule from '../MenuBarModule';
+import MenuBarModule from '../modules/MenuBarModule';
 
 export async function downloadBuildAsync(
   url: string,
