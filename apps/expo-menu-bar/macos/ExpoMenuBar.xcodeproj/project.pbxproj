@@ -17,6 +17,8 @@
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
 		C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* expo-menu-cli */; };
 		C0523ECA2A545730003371AF /* FilePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523EC92A545730003371AF /* FilePicker.m */; };
+		C0523ECC2A550983003371AF /* WindowsManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowsManager.m */; };
+		C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */; };
 		C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C79D2A251E0C00A53D8D /* DevViewController.m */; };
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
@@ -53,6 +55,10 @@
 		C032EDB62A1FE6F300FBC597 /* expo-menu-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-menu-cli"; path = "../../cli/expo-menu-cli"; sourceTree = "<group>"; };
 		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
 		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
+		C0523ECB2A550983003371AF /* WindowsManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowsManager.m; sourceTree = "<group>"; };
+		C0523ECD2A550A04003371AF /* WindowsManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowsManager.h; sourceTree = "<group>"; };
+		C0523ECE2A5597FF003371AF /* WindowWithDeallocCallback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowWithDeallocCallback.h; sourceTree = "<group>"; };
+		C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowWithDeallocCallback.m; sourceTree = "<group>"; };
 		C061C79D2A251E0C00A53D8D /* DevViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DevViewController.m; sourceTree = "<group>"; };
 		C061C79F2A251E3500A53D8D /* DevViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DevViewController.h; sourceTree = "<group>"; };
 		C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AutoResizerRootViewManager.m; sourceTree = "<group>"; };
@@ -155,6 +161,10 @@
 				C061C7B12A2D420D00A53D8D /* Fonts */,
 				C0523EC82A54571F003371AF /* FilePicker.h */,
 				C0523EC92A545730003371AF /* FilePicker.m */,
+				C0523ECB2A550983003371AF /* WindowsManager.m */,
+				C0523ECD2A550A04003371AF /* WindowsManager.h */,
+				C0523ECE2A5597FF003371AF /* WindowWithDeallocCallback.h */,
+				C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -440,7 +450,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
+				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
+				C0523ECC2A550983003371AF /* WindowsManager.m in Sources */,
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
 				C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */,
@@ -524,10 +536,7 @@
 				INFOPLIST_FILE = "ExpoMenuBar-macos/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -548,10 +557,7 @@
 				INFOPLIST_FILE = "ExpoMenuBar-macos/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
