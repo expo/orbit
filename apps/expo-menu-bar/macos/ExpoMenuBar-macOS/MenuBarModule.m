@@ -27,6 +27,19 @@ RCT_EXPORT_MODULE();
   return @[@"onNewCommandLine", @"onCLIOutput"];
 }
 
++ (BOOL)requiresMainQueueSetup
+{
+  return YES;
+}
+
+- (NSDictionary *)constantsToExport
+{
+  return @{
+    @"appVersion"      : [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: [NSNull null],
+    @"buildVersion"    : [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] ?: [NSNull null],
+  };
+}
+
 RCT_EXPORT_METHOD(exitApp)
 {
   exit(0);

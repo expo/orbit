@@ -11,6 +11,13 @@ type MenuBarModule = NativeModule & {
   setPopoverSize: (width: number, height: number) => Promise<void>;
 };
 
+type MenuBarModuleConstants = {
+  appVersion?: string;
+  buildVersion?: string;
+};
+const constants: MenuBarModuleConstants =
+  NativeModules.MenuBarModule.getConstants();
+
 const MenuBarModule: MenuBarModule = NativeModules.MenuBarModule;
 
 const emitter = new NativeEventEmitter(MenuBarModule);
@@ -41,6 +48,7 @@ async function runCli(
 
 export default {
   ...MenuBarModule,
+  constants,
   exitApp: () => MenuBarModule.exitApp(),
   runCli,
   runGenericCommand: async (
