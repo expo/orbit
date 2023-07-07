@@ -6,6 +6,7 @@ import {
   PlatformColor,
   StyleSheet,
   Image,
+  Dimensions,
 } from 'react-native';
 
 import {useDeepLinking} from './hooks/useDeepLinking';
@@ -14,13 +15,16 @@ import AutoResizerRootView from './components/AutoResizerRootView';
 import CircularProgress from './components/CircularProgress';
 import {useListDevices} from './hooks/useListDevices';
 import ExpoIcon from './assets/icon.png';
-import {getDeviceOS, listDevicesAsync} from './commands/listDevicesAsync';
+import {listDevicesAsync} from './commands/listDevicesAsync';
 import {bootDeviceAsync} from './commands/bootDeviceAsync';
 import {installAndLaunchAppAsync} from './commands/installAndLaunchAppAsync';
 import {launchSnackAsync} from './commands/launchSnackAsync';
 import MenuBarModule from './modules/MenuBarModule';
-import RoundedIcon from './components/RoundedIcon';
-import NativeColorPalette from './components/NativeColorPalette';
+import FilePicker from './modules/FilePickerModule';
+import {getPlatformFromURI} from './utils/parseUrl';
+import DeviceItem from './components/DeviceItem';
+import {getDeviceOS} from './utils/device';
+import {WindowsNavigator} from './windows';
 
 enum Status {
   LISTENING,
@@ -34,6 +38,11 @@ type Props = {
 };
 
 function App(props: Props) {
+  const [selectedDevices, setSelectedDevices] = useState<{
+    android?: string;
+    ios?: string;
+  }>({android: undefined, ios: undefined});
+
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
@@ -45,7 +54,7 @@ function App(props: Props) {
 
   const handleEASUrl = async (url: string) => {
     try {
-      const platform = url.endsWith('.apk') ? 'android' : 'ios';
+      const platform = getPlatformFromURI(url);
       setStatus(Status.DOWNLOADING);
       const [device] = await listDevicesAsync({platform, oneDevice: true});
       const deviceId = device.osType === 'iOS' ? device.udid : device.name;
@@ -59,7 +68,7 @@ function App(props: Props) {
       ]);
 
       setStatus(Status.INSTALLING);
-      await installAndLaunchAppAsync({platform, appPath: buildPath, deviceId});
+      await installAndLaunchAppAsync({appPath: buildPath, deviceId});
       setStatus(Status.SUCCESS);
 
       setTimeout(() => {
@@ -68,6 +77,19 @@ function App(props: Props) {
     } catch (error) {
       console.log(`error ${error}`);
     }
+  };
+
+  const openFilePicker = async () => {
+    const appPath = await FilePicker.getAppAsync();
+    const platform = getPlatformFromURI(appPath);
+
+    const [device] = await listDevicesAsync({platform, oneDevice: true});
+    const deviceId = device.osType === 'iOS' ? device.udid : device.name;
+
+    await installAndLaunchAppAsync({
+      appPath,
+      deviceId,
+    });
   };
 
   useDeepLinking(
@@ -87,11 +109,18 @@ function App(props: Props) {
 
   return (
     <AutoResizerRootView style={styles.container} enabled={!props.isDevWindow}>
-      <View style={styles.titleContainer}>
-        <Image source={ExpoIcon} style={styles.icon} resizeMode="contain" />
-        <Text style={styles.title}>EAS Quick Launcher</Text>
-      </View>
-      <View style={{paddingVertical: 10}}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+          paddingHorizontal: 10,
+        }}>
+        <View style={styles.titleContainer}>
+          <Image source={ExpoIcon} style={styles.icon} resizeMode="contain" />
+          <Text style={styles.title}>Quick Launcher</Text>
+        </View>
         {status === Status.DOWNLOADING ? (
           <View style={styles.downloading}>
             <CircularProgress size={12} progress={progress} />
@@ -103,44 +132,58 @@ function App(props: Props) {
           </View>
         ) : null}
       </View>
-      <Text style={{fontWeight: '600'}}>Devices</Text>
-      {devices.slice(0, 5).map(device => {
-        return (
-          <TouchableOpacity
-            key={device.name}
-            style={styles.row}
-            onPress={async () => {
-              bootDeviceAsync({
-                platform: getDeviceOS(device),
-                id: device.osType === 'iOS' ? device.udid : device.name,
-              });
-              refetchDevices();
-            }}>
-            <RoundedIcon
-              name={
-                device.osType === 'iOS'
-                  ? 'phone-portrait-outline'
-                  : 'phone-portrait-sharp'
-              }
-              selected={device.state === 'Booted'}
+      <Text
+        style={{
+          paddingHorizontal: 10,
+          fontWeight: '500',
+          color: PlatformColor('secondaryLabelColor'),
+        }}>
+        Devices
+      </Text>
+      <View
+        style={{
+          gap: 5,
+          paddingHorizontal: 5,
+          flexShrink: 1,
+          overflow: 'hidden',
+        }}>
+        {devices.map((device, index) => {
+          const platform = getDeviceOS(device);
+          const id = device.osType === 'iOS' ? device.udid : device.name;
+
+          return (
+            <DeviceItem
+              device={device}
+              key={device.name + index}
+              onPress={async () => {
+                setSelectedDevices(prev => ({
+                  ...prev,
+                  [platform]: id,
+                }));
+                if (device.state !== 'Booted') {
+                  bootDeviceAsync({platform, id});
+                  refetchDevices();
+                }
+              }}
+              selected={selectedDevices[platform] === id}
             />
-            <View>
-              <Text>{device.name}</Text>
-              <Text
-                style={{
-                  fontSize: 11,
-                  opacity: 0.5,
-                }}>
-                {device.osType} {device.osVersion}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-      <View style={styles.separator} />
-      <TouchableOpacity onPress={MenuBarModule.exitApp}>
-        <Text>Quit</Text>
-      </TouchableOpacity>
+          );
+        })}
+      </View>
+      <View style={{paddingHorizontal: 10}}>
+        <View style={styles.separator} />
+        <TouchableOpacity onPress={openFilePicker}>
+          <Text>Launch app from local file</Text>
+        </TouchableOpacity>
+        <View style={styles.separator} />
+        <TouchableOpacity onPress={() => WindowsNavigator.open('Settings')}>
+          <Text>Settings</Text>
+        </TouchableOpacity>
+        <View style={styles.separator} />
+        <TouchableOpacity onPress={MenuBarModule.exitApp}>
+          <Text>Quit</Text>
+        </TouchableOpacity>
+      </View>
     </AutoResizerRootView>
   );
 }
@@ -153,7 +196,9 @@ export default App;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    paddingVertical: 10,
+    minWidth: 300,
+    maxHeight: Dimensions.get('screen').height * 0.85,
   },
   icon: {
     tintColor: PlatformColor('text'),
