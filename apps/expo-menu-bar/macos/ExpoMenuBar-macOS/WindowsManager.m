@@ -101,5 +101,13 @@ RCT_EXPORT_METHOD(openWindow:(NSString *)moduleName
 }
 
 
+RCT_EXPORT_METHOD(closeWindow:(NSString *)moduleName)
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    NSWindow *window = self->_windowsMap[moduleName];
+    [window close]; 
+  });
+}
+
 @end
 

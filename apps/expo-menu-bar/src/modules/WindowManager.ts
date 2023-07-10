@@ -2,6 +2,7 @@ import {AppRegistry, NativeModule, NativeModules} from 'react-native';
 
 type WindowsManager = NativeModule & {
   openWindow: (window: string, options: WindowOptions) => Promise<void>;
+  closeWindow(window: string): void;
 };
 const WindowsManager: WindowsManager = NativeModules.WindowsManager;
 
@@ -47,6 +48,9 @@ export function createWindowsNavigator<T extends WindowsConfig>(config: T) {
     open: (window: keyof T) => {
       const options = config[window].options || {};
       WindowsManager.openWindow(String(window), options);
+    },
+    close: (window: keyof T) => {
+      WindowsManager.closeWindow(String(window));
     },
   };
 }
