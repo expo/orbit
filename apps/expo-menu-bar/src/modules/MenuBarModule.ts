@@ -2,13 +2,14 @@ import {NativeEventEmitter, NativeModule, NativeModules} from 'react-native';
 
 type MenuBarModule = NativeModule & {
   exitApp(): void;
+  openSystemSettingsLoginItems(): void;
   runCli: (
     command: string,
     args: string[],
     listenerId: number,
   ) => Promise<string>;
   runCommand: (command: string, args: string[]) => Promise<void>;
-  setPopoverSize: (width: number, height: number) => Promise<void>;
+  setLoginItemEnabled: (enabled: boolean) => Promise<void>;
 };
 
 type MenuBarModuleConstants = {
@@ -50,6 +51,8 @@ export default {
   ...MenuBarModule,
   constants,
   exitApp: () => MenuBarModule.exitApp(),
+  openSystemSettingsLoginItems: () =>
+    MenuBarModule.openSystemSettingsLoginItems(),
   runCli,
   runGenericCommand: async (
     command: string,

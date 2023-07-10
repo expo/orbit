@@ -24,10 +24,27 @@
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
 		C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */; };
 		C061C7B22A2D420D00A53D8D /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = C061C7B12A2D420D00A53D8D /* Fonts */; };
+		C08E65212A5C411D0079E3A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E65202A5C411D0079E3A9 /* AppDelegate.swift */; };
+		C08E652E2A5C42950079E3A9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E652D2A5C42950079E3A9 /* main.swift */; };
+		C08E65302A5C44870079E3A9 /* AutoLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C08E65322A5C44B90079E3A9 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
 		C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C0E7CF4D2A15440100C59DE5 /* icon.png */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C08E652F2A5C44620079E3A9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LoginItems;
+			dstSubfolderSpec = 1;
+			files = (
+				C08E65302A5C44870079E3A9 /* AutoLauncher.app in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		008F07F21AC5B25A0029DE68 /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
@@ -69,6 +86,11 @@
 		C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SystemIconViewManager.m; sourceTree = "<group>"; };
 		C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTImageView+Private.h"; sourceTree = "<group>"; };
 		C061C7B12A2D420D00A53D8D /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = "../../../../node_modules/react-native-vector-icons/Fonts"; sourceTree = "<group>"; };
+		C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C08E65202A5C411D0079E3A9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C08E65292A5C411E0079E3A9 /* AutoLauncher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncher.entitlements; sourceTree = "<group>"; };
+		C08E652D2A5C42950079E3A9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks/ServiceManagement.framework; sourceTree = DEVELOPER_DIR; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
 		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/icon.png; sourceTree = "<group>"; };
@@ -91,6 +113,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */,
+				C08E65322A5C44B90079E3A9 /* ServiceManagement.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C08E651B2A5C411D0079E3A9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,6 +157,7 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				ED2971642150620600B7C4FE /* JavaScriptCore.framework */,
 				C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */,
@@ -182,6 +213,7 @@
 				5142014A2437B4B30078DB4F /* ExpoMenuBar-macOS */,
 				13B07FAE1A68108700A75B9A /* ExpoMenuBar-iOS */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				C08E651F2A5C411D0079E3A9 /* AutoLauncher */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				1986A43FA6A91CFACDF0A798 /* Pods */,
@@ -196,8 +228,19 @@
 			children = (
 				13B07F961A680F5B00A75B9A /* ExpoMenuBar.app */,
 				514201492437B4B30078DB4F /* ExpoMenuBar.app */,
+				C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C08E651F2A5C411D0079E3A9 /* AutoLauncher */ = {
+			isa = PBXGroup;
+			children = (
+				C08E65202A5C411D0079E3A9 /* AppDelegate.swift */,
+				C08E65292A5C411E0079E3A9 /* AutoLauncher.entitlements */,
+				C08E652D2A5C42950079E3A9 /* main.swift */,
+			);
+			path = AutoLauncher;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -234,6 +277,7 @@
 				381D8A6E24576A4E00465D17 /* Bundle React Native code and images */,
 				105E72B779ED9E1AC4A4098E /* [CP] Copy Pods Resources */,
 				55A19D6078A6749ECCACE680 /* [CP] Embed Pods Frameworks */,
+				C08E652F2A5C44620079E3A9 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -244,12 +288,30 @@
 			productReference = 514201492437B4B30078DB4F /* ExpoMenuBar.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C08E651D2A5C411D0079E3A9 /* AutoLauncher */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C08E652C2A5C411E0079E3A9 /* Build configuration list for PBXNativeTarget "AutoLauncher" */;
+			buildPhases = (
+				C08E651A2A5C411D0079E3A9 /* Sources */,
+				C08E651B2A5C411D0079E3A9 /* Frameworks */,
+				C08E651C2A5C411D0079E3A9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AutoLauncher;
+			productName = AutoLauncher;
+			productReference = C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
@@ -258,6 +320,10 @@
 					514201482437B4B30078DB4F = {
 						CreatedOnToolsVersion = 11.4;
 						LastSwiftMigration = 1430;
+						ProvisioningStyle = Automatic;
+					};
+					C08E651D2A5C411D0079E3A9 = {
+						CreatedOnToolsVersion = 15.0;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -277,6 +343,7 @@
 			targets = (
 				13B07F861A680F5B00A75B9A /* ExpoMenuBar-iOS */,
 				514201482437B4B30078DB4F /* ExpoMenuBar-macOS */,
+				C08E651D2A5C411D0079E3A9 /* AutoLauncher */,
 			);
 		};
 /* End PBXProject section */
@@ -300,6 +367,13 @@
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,
 				C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C08E651C2A5C411D0079E3A9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -459,6 +533,15 @@
 				C0523ECA2A545730003371AF /* FilePicker.m in Sources */,
 				C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */,
 				C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C08E651A2A5C411D0079E3A9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C08E652E2A5C42950079E3A9 /* main.swift in Sources */,
+				C08E65212A5C411D0079E3A9 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -690,6 +773,87 @@
 			};
 			name = Release;
 		};
+		C08E652A2A5C411E0079E3A9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = AutoLauncher/AutoLauncher.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSBackgroundOnly = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.4;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.AutoLauncher;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C08E652B2A5C411E0079E3A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = AutoLauncher/AutoLauncher.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSBackgroundOnly = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.4;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.AutoLauncher;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -716,6 +880,15 @@
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
 				83CBBA211A601CBA00E9B192 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C08E652C2A5C411E0079E3A9 /* Build configuration list for PBXNativeTarget "AutoLauncher" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C08E652A2A5C411E0079E3A9 /* Debug */,
+				C08E652B2A5C411E0079E3A9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

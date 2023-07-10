@@ -2,6 +2,7 @@
 #import "AppDelegate.h"
 
 #import <React/RCTLog.h>
+#import <ServiceManagement/ServiceManagement.h>
 
 @implementation MenuBarModule
 {
@@ -161,16 +162,27 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   resolve(hasReachedReturnOutput ? returnOutput : nil);
 }
 
-RCT_EXPORT_METHOD(setPopoverSize:(double) width
-                  height:(double) height
+RCT_EXPORT_METHOD(setLoginItemEnabled:(BOOL)enabled
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[appDelegate popover] setContentSize:CGSizeMake(width, height)];
+  if (SMLoginItemSetEnabled((__bridge CFStringRef)@"dev.expo.AutoLauncher", enabled)) {
     resolve(nil);
-  });
+  } else {
+    reject(@"AUTO_LAUNCHER_ERROR", @"Failed to update login item status.", nil);
+  }
 }
+
+
+RCT_EXPORT_METHOD(openSystemSettingsLoginItems)
+{
+  if (@available(macOS 13.0, *)) {
+    [SMAppService openSystemSettingsLoginItems];
+  } else {
+    NSString *url = @"x-apple.systempreferences:com.apple.LoginItems-Settings.extension";
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
+  }
+}
+
 
 @end
