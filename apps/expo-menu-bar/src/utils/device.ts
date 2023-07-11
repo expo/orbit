@@ -2,7 +2,7 @@ export type Device = {
   name: string;
   osVersion?: string;
   osType: 'iOS' | 'android';
-  state: 'Booted' | 'Shutdown';
+  state?: 'Booted' | 'Shutdown';
 } & (
   | {
       osType: 'iOS';

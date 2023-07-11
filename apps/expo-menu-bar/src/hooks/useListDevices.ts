@@ -1,6 +1,8 @@
 import {useCallback, useEffect, useState} from 'react';
-import {Device, listDevicesAsync} from '../commands/listDevicesAsync';
 import {DeviceEventEmitter} from 'react-native';
+
+import {listDevicesAsync} from '../commands/listDevicesAsync';
+import {Device} from '../utils/device';
 
 export const useListDevices = () => {
   const [devices, setDevices] = useState<Device[]>([]);

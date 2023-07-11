@@ -31,7 +31,7 @@ const DeviceItem = ({device, onPress, selected}: Props) => {
         <View>
           <Text>{device.name}</Text>
           <Text style={styles.description}>
-            {device.osType} {device.osVersion} - {device.state}
+            {device.osType} {device.osVersion} - {device.state ?? 'Connected'}
           </Text>
         </View>
       </>

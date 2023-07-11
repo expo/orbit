@@ -174,7 +174,7 @@ function App(props: Props) {
                     ...prev,
                     [platform]: id,
                   }));
-                  if (device.state !== 'Booted') {
+                  if (device.state === 'Shutdown') {
                     await bootDeviceAsync({platform, id});
                     refetchDevices();
                   }
