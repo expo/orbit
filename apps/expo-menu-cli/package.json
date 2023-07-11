@@ -18,6 +18,7 @@
   "dependencies": {
     "commander": "^10.0.1",
     "eas-shared": "*",
+    "strip-ansi": "^6.0.0",
     "xdl": "^60.0.9"
   },
   "devDependencies": {

@@ -5,6 +5,7 @@ import { listDevicesAsync } from "./commands/ListDevices";
 import { bootDeviceAsync } from "./commands/BootDevice";
 import { installAndLaunchAppAsync } from "./commands/InstallAndLaunchApp";
 import { launchSnackAsync } from "./commands/LaunchSnack";
+import { checkToolsAsync } from "./commands/CheckTools";
 import { returnLoggerMiddleware } from "./utils";
 
 const program = new Command();
@@ -42,5 +43,10 @@ program
   .option("-p, --platform <string>", "Selected platform")
   .option("--device-id  <string>", "UDID or name of the device")
   .action(returnLoggerMiddleware(launchSnackAsync));
+
+program
+  .command("check-tools")
+  .option("-p, --platform <string>", "Selected platform")
+  .action(returnLoggerMiddleware(checkToolsAsync));
 
 program.parse();
