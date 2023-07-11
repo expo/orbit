@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   Dimensions,
+  FlatList,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -157,28 +158,32 @@ function App(props: Props) {
           flexShrink: 1,
           overflow: 'hidden',
         }}>
-        {devices.map((device, index) => {
-          const platform = getDeviceOS(device);
-          const id = device.osType === 'iOS' ? device.udid : device.name;
+        <FlatList
+          data={devices}
+          alwaysBounceVertical={false}
+          renderItem={({item: device}) => {
+            const platform = getDeviceOS(device);
+            const id = device.osType === 'iOS' ? device.udid : device.name;
 
-          return (
-            <DeviceItem
-              device={device}
-              key={device.name + index}
-              onPress={async () => {
-                setSelectedDevices(prev => ({
-                  ...prev,
-                  [platform]: id,
-                }));
-                if (device.state !== 'Booted') {
-                  bootDeviceAsync({platform, id});
-                  refetchDevices();
-                }
-              }}
-              selected={selectedDevices[platform] === id}
-            />
-          );
-        })}
+            return (
+              <DeviceItem
+                device={device}
+                key={device.name}
+                onPress={async () => {
+                  setSelectedDevices(prev => ({
+                    ...prev,
+                    [platform]: id,
+                  }));
+                  if (device.state !== 'Booted') {
+                    await bootDeviceAsync({platform, id});
+                    refetchDevices();
+                  }
+                }}
+                selected={selectedDevices[platform] === id}
+              />
+            );
+          }}
+        />
       </View>
       <View style={{paddingHorizontal: 10}}>
         <View style={styles.separator} />
