@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {useDeepLinking} from './hooks/useDeepLinking';
 import {downloadBuildAsync} from './commands/downloadBuildAsync';
@@ -25,6 +26,7 @@ import {getPlatformFromURI} from './utils/parseUrl';
 import DeviceItem from './components/DeviceItem';
 import {getDeviceOS} from './utils/device';
 import {WindowsNavigator} from './windows';
+import {hasSeenOnboardingStorageKey} from './windows/Onboarding';
 
 enum Status {
   LISTENING,
@@ -47,6 +49,14 @@ function App(props: Props) {
   const [progress, setProgress] = useState(0);
 
   const {devices, refetch: refetchDevices} = useListDevices();
+
+  useEffect(() => {
+    AsyncStorage.getItem(hasSeenOnboardingStorageKey).then(value => {
+      if (!value) {
+        WindowsNavigator.open('Onboarding');
+      }
+    });
+  }, []);
 
   const handleSnackUrl = async (url: string) => {
     await launchSnackAsync({url});
