@@ -17,7 +17,7 @@
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
 		C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* expo-menu-cli */; };
 		C0523ECA2A545730003371AF /* FilePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523EC92A545730003371AF /* FilePicker.m */; };
-		C0523ECC2A550983003371AF /* WindowsManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowsManager.m */; };
+		C0523ECC2A550983003371AF /* WindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowManager.m */; };
 		C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */; };
 		C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C79D2A251E0C00A53D8D /* DevViewController.m */; };
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
@@ -28,6 +28,7 @@
 		C08E652E2A5C42950079E3A9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E652D2A5C42950079E3A9 /* main.swift */; };
 		C08E65302A5C44870079E3A9 /* AutoLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C08E65322A5C44B90079E3A9 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */; };
+		C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */ = {isa = PBXBuildFile; fileRef = C08E65332A5D04910079E3A9 /* WindowNavigator.m */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
 		C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C0E7CF4D2A15440100C59DE5 /* icon.png */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
@@ -59,7 +60,7 @@
 		214F660AED31B4554BE29100 /* Pods-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		38423A3E24576CBC00BC2EAC /* main.jsbundle */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
 		4D47B0298808748D37D9C46D /* Pods-ExpoMenuBar-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.debug.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		514201492437B4B30078DB4F /* ExpoMenuBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExpoMenuBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		514201492437B4B30078DB4F /* Expo Launcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Expo Launcher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5142014B2437B4B30078DB4F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		5142014C2437B4B30078DB4F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		514201512437B4B40078DB4F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -72,8 +73,8 @@
 		C032EDB62A1FE6F300FBC597 /* expo-menu-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-menu-cli"; path = "../../cli/expo-menu-cli"; sourceTree = "<group>"; };
 		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
 		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
-		C0523ECB2A550983003371AF /* WindowsManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowsManager.m; sourceTree = "<group>"; };
-		C0523ECD2A550A04003371AF /* WindowsManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowsManager.h; sourceTree = "<group>"; };
+		C0523ECB2A550983003371AF /* WindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowManager.m; sourceTree = "<group>"; };
+		C0523ECD2A550A04003371AF /* WindowManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowManager.h; sourceTree = "<group>"; };
 		C0523ECE2A5597FF003371AF /* WindowWithDeallocCallback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowWithDeallocCallback.h; sourceTree = "<group>"; };
 		C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowWithDeallocCallback.m; sourceTree = "<group>"; };
 		C061C79D2A251E0C00A53D8D /* DevViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DevViewController.m; sourceTree = "<group>"; };
@@ -91,6 +92,8 @@
 		C08E65292A5C411E0079E3A9 /* AutoLauncher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncher.entitlements; sourceTree = "<group>"; };
 		C08E652D2A5C42950079E3A9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks/ServiceManagement.framework; sourceTree = DEVELOPER_DIR; };
+		C08E65332A5D04910079E3A9 /* WindowNavigator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowNavigator.m; sourceTree = "<group>"; };
+		C08E65352A5D0A580079E3A9 /* WindowNavigator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowNavigator.h; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
 		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/icon.png; sourceTree = "<group>"; };
@@ -192,10 +195,12 @@
 				C061C7B12A2D420D00A53D8D /* Fonts */,
 				C0523EC82A54571F003371AF /* FilePicker.h */,
 				C0523EC92A545730003371AF /* FilePicker.m */,
-				C0523ECB2A550983003371AF /* WindowsManager.m */,
-				C0523ECD2A550A04003371AF /* WindowsManager.h */,
+				C0523ECB2A550983003371AF /* WindowManager.m */,
+				C0523ECD2A550A04003371AF /* WindowManager.h */,
 				C0523ECE2A5597FF003371AF /* WindowWithDeallocCallback.h */,
 				C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */,
+				C08E65332A5D04910079E3A9 /* WindowNavigator.m */,
+				C08E65352A5D0A580079E3A9 /* WindowNavigator.h */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -227,7 +232,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* ExpoMenuBar.app */,
-				514201492437B4B30078DB4F /* ExpoMenuBar.app */,
+				514201492437B4B30078DB4F /* Expo Launcher.app */,
 				C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */,
 			);
 			name = Products;
@@ -285,7 +290,7 @@
 			);
 			name = "ExpoMenuBar-macOS";
 			productName = ExpoMenuBar;
-			productReference = 514201492437B4B30078DB4F /* ExpoMenuBar.app */;
+			productReference = 514201492437B4B30078DB4F /* Expo Launcher.app */;
 			productType = "com.apple.product-type.application";
 		};
 		C08E651D2A5C411D0079E3A9 /* AutoLauncher */ = {
@@ -526,11 +531,12 @@
 				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
-				C0523ECC2A550983003371AF /* WindowsManager.m in Sources */,
+				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
 				C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */,
 				C0523ECA2A545730003371AF /* FilePicker.m in Sources */,
+				C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */,
 				C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */,
 				C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */,
 			);
@@ -619,6 +625,7 @@
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "ExpoMenuBar-macos/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_CFLAGS = "$(inherited)  ";
@@ -628,7 +635,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.MenuBar;
-				PRODUCT_NAME = ExpoMenuBar;
+				PRODUCT_NAME = "Expo Launcher";
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -642,6 +649,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "ExpoMenuBar-macos/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_CFLAGS = "$(inherited)  ";
@@ -651,7 +659,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.MenuBar;
-				PRODUCT_NAME = ExpoMenuBar;
+				PRODUCT_NAME = "Expo Launcher";
 				SDKROOT = macosx;
 			};
 			name = Release;
