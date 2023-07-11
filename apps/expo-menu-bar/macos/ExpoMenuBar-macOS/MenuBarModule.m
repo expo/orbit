@@ -61,6 +61,7 @@ RCT_EXPORT_METHOD(runCommand:(NSString *)command
   [task setStandardError:pipe];
 
   NSFileHandle *file = [pipe fileHandleForReading];
+   __block NSString *returnOutput = @"";
   [task launch];
 
   NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
@@ -69,10 +70,21 @@ RCT_EXPORT_METHOD(runCommand:(NSString *)command
                                     queue:nil
                               usingBlock:^(NSNotification *notification) {
                                   NSData *chunk = notification.userInfo[NSFileHandleNotificationDataItem];
-                                  NSString *output = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
-                                  if(self->hasListeners){
-                                    [self sendEventWithName:@"onNewCommandLine" body:output];
+                                  NSString *wholeOutput = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
+                                  NSArray *outputs = [wholeOutput componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+
+                                  for (NSString *output in outputs) {
+                                    if ([output isEqualToString:@""]) {
+                                      continue;
+                                    }
+
+                                    returnOutput = [returnOutput stringByAppendingString:output];
+
+                                    if(self->hasListeners && output.length > 0 && ![output isEqualToString:@"\n"]){
+                                      [self sendEventWithName:@"onNewCommandLine" body:output];
+                                    }
                                   }
+
                                   [file readInBackgroundAndNotify];
                               }];
   [notificationCenter addObserverForName:NSTaskDidTerminateNotification
@@ -85,7 +97,7 @@ RCT_EXPORT_METHOD(runCommand:(NSString *)command
   [file readInBackgroundAndNotify];
   [task waitUntilExit];
 
-  resolve(nil);
+  resolve(returnOutput);
 }
 
 RCT_EXPORT_METHOD(runCli:(NSString *)command

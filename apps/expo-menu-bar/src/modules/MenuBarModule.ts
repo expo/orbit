@@ -60,7 +60,8 @@ export default {
     callback: (status: string) => void,
   ) => {
     const listener = emitter.addListener('onNewCommandLine', callback);
-    await MenuBarModule.runCommand(command, args);
+    const result = await MenuBarModule.runCommand(command, args);
     listener.remove();
+    return result;
   },
 };
