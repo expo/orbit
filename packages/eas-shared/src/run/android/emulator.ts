@@ -7,7 +7,7 @@ import path from "path";
 import Log from "../../log";
 import { promptAsync } from "../../prompts";
 import {
-  AndroidEmulator,
+  AndroidDevice,
   adbAsync,
   getFirstRunningEmulatorAsync,
   isEmulatorBootedAsync,
@@ -16,7 +16,8 @@ import {
 import { getAndroidSdkRootAsync } from "./sdk";
 
 export const EMULATOR_MAX_WAIT_TIMEOUT_MS = 60 * 1000 * 3;
-export { AndroidEmulator } from "./adb";
+export { AndroidDevice, getRunningDevicesAsync } from "./adb";
+export { getAptParametersAsync } from "./aapt";
 
 export async function getEmulatorExecutableAsync(): Promise<string> {
   const sdkRoot = await getAndroidSdkRootAsync();
@@ -39,8 +40,8 @@ async function emulatorAsync(...options: string[]): Promise<SpawnResult> {
   }
 }
 
-export async function getAvaliableAndroidEmulatorsAsync(): Promise<
-  AndroidEmulator[]
+export async function getAvailableAndroidEmulatorsAsync(): Promise<
+  AndroidDevice[]
 > {
   try {
     const { stdout } = await emulatorAsync("-list-avds");
@@ -50,7 +51,8 @@ export async function getAvaliableAndroidEmulatorsAsync(): Promise<
       .filter(Boolean)
       .map((name) => ({
         name,
-        osType: "android" as const,
+        osType: "android",
+        type: "emulator",
       }));
   } catch {
     return [];
@@ -59,7 +61,7 @@ export async function getAvaliableAndroidEmulatorsAsync(): Promise<
 
 /** Start an Android device and wait until it is booted. */
 export async function bootEmulatorAsync(
-  emulator: AndroidEmulator,
+  emulator: AndroidDevice,
   {
     timeout = EMULATOR_MAX_WAIT_TIMEOUT_MS,
     interval = 1000,
@@ -68,7 +70,7 @@ export async function bootEmulatorAsync(
     timeout?: number;
     interval?: number;
   } = {}
-): Promise<AndroidEmulator> {
+): Promise<AndroidDevice> {
   Log.newLine();
   Log.log(`Opening emulator ${chalk.bold(emulator.name)}`);
 
@@ -91,7 +93,7 @@ export async function bootEmulatorAsync(
   return await waitForEmulatorToBeBootedAsync(timeout, interval);
 }
 
-export async function selectEmulatorAsync(): Promise<AndroidEmulator> {
+export async function selectEmulatorAsync(): Promise<AndroidDevice> {
   const runningEmulator = await getFirstRunningEmulatorAsync();
 
   if (runningEmulator) {
@@ -101,7 +103,7 @@ export async function selectEmulatorAsync(): Promise<AndroidEmulator> {
     return runningEmulator;
   }
 
-  const emulators = await getAvaliableAndroidEmulatorsAsync();
+  const emulators = await getAvailableAndroidEmulatorsAsync();
 
   Log.newLine();
   const { selectedEmulator } = await promptAsync({
@@ -118,8 +120,8 @@ export async function selectEmulatorAsync(): Promise<AndroidEmulator> {
 }
 
 export async function ensureEmulatorBootedAsync(
-  emulator: AndroidEmulator
-): Promise<AndroidEmulator> {
+  emulator: AndroidDevice
+): Promise<AndroidDevice> {
   if (!emulator.pid || !(await isEmulatorBootedAsync(emulator.pid))) {
     return await bootEmulatorAsync(emulator);
   }
@@ -128,7 +130,7 @@ export async function ensureEmulatorBootedAsync(
 }
 
 export async function installAppAsync(
-  emulator: AndroidEmulator,
+  emulator: AndroidDevice,
   apkFilePath: string
 ): Promise<void> {
   Log.newLine();
@@ -141,7 +143,7 @@ export async function installAppAsync(
 }
 
 export async function startAppAsync(
-  emulator: AndroidEmulator,
+  emulator: AndroidDevice,
   packageName: string,
   activityName: string
 ): Promise<void> {

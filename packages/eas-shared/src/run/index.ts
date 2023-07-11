@@ -22,7 +22,7 @@ export async function runAppOnIosSimulatorAsync(
 
 export async function runAppOnAndroidEmulatorAsync(
   appPath: string,
-  emulator: Emulator.AndroidEmulator
+  emulator: Emulator.AndroidDevice
 ): Promise<void> {
   await assertExecutablesExistAsync();
   const bootedEmulator = await Emulator.ensureEmulatorBootedAsync(emulator);

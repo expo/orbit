@@ -1,12 +1,11 @@
 import { Emulator, Simulator } from "eas-shared";
 import { Platform } from "../utils";
-import { getRunningEmulatorsAsync } from "eas-shared/build/run/android/adb";
 
 type Device<P> = P extends Platform.Ios
   ? Simulator.IosSimulator
   : P extends Platform.Android
-  ? Emulator.AndroidEmulator
-  : Simulator.IosSimulator | Emulator.AndroidEmulator;
+  ? Emulator.AndroidDevice
+  : Simulator.IosSimulator | Emulator.AndroidDevice;
 
 export async function listDevicesAsync<P extends Platform>({
   platform,
@@ -15,7 +14,7 @@ export async function listDevicesAsync<P extends Platform>({
   platform: P;
   oneDevice?: boolean;
 }): Promise<Device<P>[]> {
-  let availableAndroidEmulators: Emulator.AndroidEmulator[] | undefined;
+  let availableAndroidDevices: Emulator.AndroidDevice[] | undefined;
   let availableIosSimulators: Simulator.IosSimulator[] | undefined;
 
   if (platform === "ios" || platform === "all") {
@@ -24,13 +23,13 @@ export async function listDevicesAsync<P extends Platform>({
   }
 
   if (platform === Platform.Android || platform === "all") {
-    const runningEmulators = await getRunningEmulatorsAsync();
+    const runningDevices = await Emulator.getRunningDevicesAsync();
 
-    availableAndroidEmulators = (
-      await Emulator.getAvaliableAndroidEmulatorsAsync()
+    availableAndroidDevices = (
+      await Emulator.getAvailableAndroidEmulatorsAsync()
     )?.map((emulator) => {
-      const runningEmulator = runningEmulators.find(
-        (r) => r.name === emulator.name
+      const runningEmulator = runningDevices.find(
+        (r) => r.type === "emulator" && r.name === emulator.name
       );
       return {
         ...emulator,
@@ -38,10 +37,13 @@ export async function listDevicesAsync<P extends Platform>({
         pid: runningEmulator?.pid,
       };
     });
+    availableAndroidDevices = availableAndroidDevices.concat(
+      runningDevices.filter((r) => r.type === "device")
+    );
   }
 
   if (oneDevice) {
-    const firstAndroidDevice = availableAndroidEmulators?.[0];
+    const firstAndroidDevice = availableAndroidDevices?.[0];
     if (platform === Platform.Android) {
       return firstAndroidDevice ? [firstAndroidDevice as Device<P>] : [];
     }
@@ -65,9 +67,9 @@ export async function listDevicesAsync<P extends Platform>({
 
   if (
     (platform === "all" || platform === Platform.Android) &&
-    availableAndroidEmulators
+    availableAndroidDevices
   ) {
-    result = result.concat(availableAndroidEmulators as Device<P>[]);
+    result = result.concat(availableAndroidDevices as Device<P>[]);
   }
 
   return result;

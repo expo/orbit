@@ -6,9 +6,11 @@ import Log from "../../log";
 import { sleepAsync } from "../../utils/promise";
 import { getAndroidSdkRootAsync } from "./sdk";
 
-export interface AndroidEmulator {
+export interface AndroidDevice {
   pid?: string;
   name: string;
+  type: "emulator" | "device";
+  osType: "android";
 }
 
 const BEGINNING_OF_ADB_ERROR_MESSAGE = "error: ";
@@ -50,7 +52,7 @@ export function sanitizeAdbDeviceName(deviceName: string): string | undefined {
  *
  * @param devicePid a value like `emulator-5554` from `abd devices`
  */
-export async function getAdbNameForDeviceIdAsync(
+export async function getAdbNameForEmulatorIdAsync(
   emulatorPid: string
 ): Promise<string | null> {
   const { stdout } = await adbAsync("-s", emulatorPid, "emu", "avd", "name");
@@ -64,33 +66,40 @@ export async function getAdbNameForDeviceIdAsync(
 }
 
 // TODO: This is very expensive for some operations.
-export async function getRunningEmulatorsAsync(): Promise<AndroidEmulator[]> {
+export async function getRunningDevicesAsync(): Promise<AndroidDevice[]> {
   const { stdout } = await adbAsync("devices", "-l");
 
   const splitItems = stdout.trim().split(os.EOL);
 
-  const attachedDevices: {
-    pid: string;
-    type: string;
-  }[] = splitItems
+  const attachedDevices = splitItems
     // First line is `"List of devices attached"`, remove it
     .slice(1, splitItems.length)
     .map((line) => {
       // unauthorized: ['FA8251A00719', 'unauthorized', 'usb:338690048X', 'transport_id:5']
       // authorized: ['FA8251A00719', 'device', 'usb:336592896X', 'product:walleye', 'model:Pixel_2', 'device:walleye', 'transport_id:4']
       // emulator: ['emulator-5554', 'offline', 'transport_id:1']
-      const [pid] = line.split(" ").filter(Boolean);
-      const type = line.includes("emulator") ? "emulator" : "device";
-      return { pid, type };
+      const [pid, ...remainder] = line.split(" ").filter(Boolean);
+      const model = remainder
+        .find((item) => item.startsWith("model:"))
+        ?.substring(6);
+      const type: "emulator" | "device" = line.includes("emulator")
+        ? "emulator"
+        : "device";
+      return { pid, type, model };
     })
-    .filter(({ pid, type }) => !!pid && type === "emulator");
+    .filter(({ pid }) => !!pid);
 
-  const devicePromises = attachedDevices.map<Promise<AndroidEmulator>>(
-    async ({ pid }) => {
-      const name = (await getAdbNameForDeviceIdAsync(pid)) ?? "";
+  const devicePromises = attachedDevices.map<Promise<AndroidDevice>>(
+    async ({ pid, type, model }) => {
+      let name = model ?? "";
+      if (type === "emulator") {
+        name = (await getAdbNameForEmulatorIdAsync(pid)) ?? name;
+      }
       return {
         pid,
         name,
+        type,
+        osType: "android",
       };
     }
   );
@@ -98,8 +107,10 @@ export async function getRunningEmulatorsAsync(): Promise<AndroidEmulator[]> {
   return Promise.all(devicePromises);
 }
 
-export async function getFirstRunningEmulatorAsync(): Promise<AndroidEmulator | null> {
-  const emulators = await getRunningEmulatorsAsync();
+export async function getFirstRunningEmulatorAsync(): Promise<AndroidDevice | null> {
+  const emulators = (await getRunningDevicesAsync()).filter(
+    ({ type }) => type === "emulator"
+  );
   return emulators[0] ?? null;
 }
 
@@ -131,7 +142,7 @@ export async function isEmulatorBootedAsync(
 export async function waitForEmulatorToBeBootedAsync(
   maxWaitTimeMs: number,
   intervalMs: number
-): Promise<AndroidEmulator> {
+): Promise<AndroidDevice> {
   Log.newLine();
   Log.log("Waiting for the Android emulator to start...");
 

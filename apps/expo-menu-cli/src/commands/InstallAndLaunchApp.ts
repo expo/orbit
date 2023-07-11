@@ -4,8 +4,6 @@ import {
   Simulator,
   extractAppFromLocalArchiveAsync,
 } from "eas-shared";
-import { getRunningEmulatorsAsync } from "eas-shared/build/run/android/adb";
-import { getAptParametersAsync } from "eas-shared/build/run/android/aapt";
 import { Platform, getPlatformFromURI } from "../utils";
 
 type InstallAndLaunchAppAsyncOptions = {
@@ -40,13 +38,15 @@ async function installAndLaunchAndroidAppAsync({
   appPath,
   deviceId,
 }: InstallAndLaunchAppAsyncOptions) {
-  const runningEmulators = await getRunningEmulatorsAsync();
+  const runningEmulators = await Emulator.getRunningDevicesAsync();
   const emulator = runningEmulators.find(({ name }) => name === deviceId);
   if (!emulator) {
     throw new Error(`Emulator ${deviceId} is not running`);
   }
 
   await Emulator.installAppAsync(emulator, appPath);
-  const { packageName, activityName } = await getAptParametersAsync(appPath);
+  const { packageName, activityName } = await Emulator.getAptParametersAsync(
+    appPath
+  );
   await Emulator.startAppAsync(emulator, packageName, activityName);
 }
