@@ -25,7 +25,7 @@ import MenuBarModule from './modules/MenuBarModule';
 import FilePicker from './modules/FilePickerModule';
 import {getPlatformFromURI} from './utils/parseUrl';
 import DeviceItem from './components/DeviceItem';
-import {getDeviceOS} from './utils/device';
+import {getDeviceId, getDeviceOS} from './utils/device';
 import {WindowsNavigator} from './windows';
 import {hasSeenOnboardingStorageKey} from './windows/Onboarding';
 
@@ -67,26 +67,32 @@ function App(props: Props) {
     try {
       const platform = getPlatformFromURI(url);
       setStatus(Status.DOWNLOADING);
-      const [device] = await listDevicesAsync({platform, oneDevice: true});
-      const deviceId = device.osType === 'iOS' ? device.udid : device.name;
+      let device =
+        devices.find(d => getDeviceId(d) === selectedDevicesIds[platform]) ??
+        devices[0];
+      const deviceId = getDeviceId(device);
 
       const [buildPath] = await Promise.all([
         await downloadBuildAsync(url, setProgress),
-        await bootDeviceAsync({
-          platform,
-          id: deviceId,
-        }),
+        (async () => {
+          if (device.state === 'Shutdown') {
+            await bootDeviceAsync({
+              platform,
+              id: deviceId,
+            });
+          }
+        })(),
       ]);
 
       setStatus(Status.INSTALLING);
       await installAndLaunchAppAsync({appPath: buildPath, deviceId});
       setStatus(Status.SUCCESS);
-
+    } catch (error) {
+      console.log(`error ${error}`);
+    } finally {
       setTimeout(() => {
         setStatus(Status.LISTENING);
       }, 2000);
-    } catch (error) {
-      console.log(`error ${error}`);
     }
   };
 
@@ -95,7 +101,7 @@ function App(props: Props) {
     const platform = getPlatformFromURI(appPath);
 
     const [device] = await listDevicesAsync({platform, oneDevice: true});
-    const deviceId = device.osType === 'iOS' ? device.udid : device.name;
+    const deviceId = getDeviceId(device);
 
     await installAndLaunchAppAsync({
       appPath,
@@ -163,14 +169,14 @@ function App(props: Props) {
           alwaysBounceVertical={false}
           renderItem={({item: device}) => {
             const platform = getDeviceOS(device);
-            const id = device.osType === 'iOS' ? device.udid : device.name;
+            const id = getDeviceId(device);
 
             return (
               <DeviceItem
                 device={device}
                 key={device.name}
                 onPress={async () => {
-                  setSelectedDevices(prev => ({
+                  setSelectedDevicesIds(prev => ({
                     ...prev,
                     [platform]: id,
                   }));
@@ -179,7 +185,7 @@ function App(props: Props) {
                     refetchDevices();
                   }
                 }}
-                selected={selectedDevices[platform] === id}
+                selected={selectedDevicesIds[platform] === id}
               />
             );
           }}
