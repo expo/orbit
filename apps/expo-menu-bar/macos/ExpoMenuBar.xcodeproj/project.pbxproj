@@ -15,6 +15,8 @@
 		514201522437B4B40078DB4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 514201512437B4B40078DB4F /* Assets.xcassets */; };
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
+		C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */; };
+		C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */; };
 		C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* expo-menu-cli */; };
 		C0523ECA2A545730003371AF /* FilePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523EC92A545730003371AF /* FilePicker.m */; };
 		C0523ECC2A550983003371AF /* WindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowManager.m */; };
@@ -70,6 +72,10 @@
 		514201592437B4B40078DB4F /* ExpoMenuBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExpoMenuBar.entitlements; sourceTree = "<group>"; };
 		9D32DFD059D5DB6DDEF38881 /* Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		A82DFB63B157C65E5D698CA2 /* Pods-Shared-ExpoMenuBar-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		C0271C562A602CCB0065AB11 /* ProgressIndicatorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorManager.h; sourceTree = "<group>"; };
+		C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorManager.m; sourceTree = "<group>"; };
+		C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorView.h; sourceTree = "<group>"; };
+		C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorView.m; sourceTree = "<group>"; };
 		C032EDB62A1FE6F300FBC597 /* expo-menu-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-menu-cli"; path = "../../cli/expo-menu-cli"; sourceTree = "<group>"; };
 		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
 		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
@@ -201,6 +207,10 @@
 				C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */,
 				C08E65332A5D04910079E3A9 /* WindowNavigator.m */,
 				C08E65352A5D0A580079E3A9 /* WindowNavigator.h */,
+				C0271C562A602CCB0065AB11 /* ProgressIndicatorManager.h */,
+				C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */,
+				C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */,
+				C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -530,7 +540,9 @@
 			files = (
 				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
+				C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
+				C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
@@ -628,7 +640,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = "$(inherited)  ";
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -652,7 +667,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = "$(inherited)  ";
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
