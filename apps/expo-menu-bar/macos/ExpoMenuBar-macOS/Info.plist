@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>ATSApplicationFontsPath</key>
-	<string>Fonts</string>
+	<string>fonts</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>

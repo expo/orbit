@@ -25,7 +25,7 @@
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
 		C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */; };
-		C061C7B22A2D420D00A53D8D /* Fonts in Resources */ = {isa = PBXBuildFile; fileRef = C061C7B12A2D420D00A53D8D /* Fonts */; };
+		C081507F2A610E9C00E8890F /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = C081507E2A610E9C00E8890F /* fonts */; };
 		C08E65212A5C411D0079E3A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E65202A5C411D0079E3A9 /* AppDelegate.swift */; };
 		C08E652E2A5C42950079E3A9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E652D2A5C42950079E3A9 /* main.swift */; };
 		C08E65302A5C44870079E3A9 /* AutoLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -92,7 +92,7 @@
 		C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemIconViewManager.h; sourceTree = "<group>"; };
 		C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SystemIconViewManager.m; sourceTree = "<group>"; };
 		C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTImageView+Private.h"; sourceTree = "<group>"; };
-		C061C7B12A2D420D00A53D8D /* Fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Fonts; path = "../../../../node_modules/react-native-vector-icons/Fonts"; sourceTree = "<group>"; };
+		C081507E2A610E9C00E8890F /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../src/assets/fonts; sourceTree = "<group>"; };
 		C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C08E65202A5C411D0079E3A9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C08E65292A5C411E0079E3A9 /* AutoLauncher.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncher.entitlements; sourceTree = "<group>"; };
@@ -102,7 +102,7 @@
 		C08E65352A5D0A580079E3A9 /* WindowNavigator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowNavigator.h; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
-		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/icon.png; sourceTree = "<group>"; };
+		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/images/icon.png; sourceTree = "<group>"; };
 		C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoMenuBar-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE0E74F571E1F48FF00A8324 /* Pods-Shared-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-macOS/Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -177,6 +177,7 @@
 		5142014A2437B4B30078DB4F /* ExpoMenuBar-macOS */ = {
 			isa = PBXGroup;
 			children = (
+				C081507C2A610E2F00E8890F /* Resources */,
 				C032EDB62A1FE6F300FBC597 /* expo-menu-cli */,
 				C0E7CF4D2A15440100C59DE5 /* icon.png */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
@@ -198,7 +199,6 @@
 				C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */,
 				C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */,
 				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
-				C061C7B12A2D420D00A53D8D /* Fonts */,
 				C0523EC82A54571F003371AF /* FilePicker.h */,
 				C0523EC92A545730003371AF /* FilePicker.m */,
 				C0523ECB2A550983003371AF /* WindowManager.m */,
@@ -246,6 +246,14 @@
 				C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C081507C2A610E2F00E8890F /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C081507E2A610E9C00E8890F /* fonts */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		C08E651F2A5C411D0079E3A9 /* AutoLauncher */ = {
@@ -377,8 +385,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C061C7B22A2D420D00A53D8D /* Fonts in Resources */,
 				C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */,
+				C081507F2A610E9C00E8890F /* fonts in Resources */,
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,
 				C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */,
@@ -640,10 +648,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -667,10 +672,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
