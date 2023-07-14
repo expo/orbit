@@ -1,20 +1,19 @@
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  PlatformColor,
-  StyleSheet,
-} from 'react-native';
+import {Image, StyleSheet} from 'react-native';
 import {useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {lightTheme} from '@expo/styleguide-native';
 
-import ExpoIcon from '../assets/icon.png';
 import {WindowsNavigator} from './index';
 import CommandCheckItem from '../components/CommandCheckItem';
 import MenuBarModule from '../modules/MenuBarModule';
-import AndroidStudio from '../assets/android-studio.png';
-import Xcode from '../assets/xcode.png';
+import AndroidStudio from '../assets/images/android-studio.png';
+import Xcode from '../assets/images/xcode.png';
+import Background from '../assets/images/onboarding/background.png';
+import Logo from '../assets/images/onboarding/logo.svg';
+import ExpoOrbitText from '../assets/images/onboarding/expo-orbit-text.svg';
+import {Text, View} from '../components';
+import Button from '../components/Button';
+import {useExpoTheme} from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
 
@@ -24,6 +23,7 @@ type PlatformToolsCheck = {
 };
 
 const Onboarding = () => {
+  const theme = useExpoTheme();
   const [platformToolsCheck, setPlatformToolsCheck] =
     useState<PlatformToolsCheck>({});
 
@@ -40,17 +40,29 @@ const Onboarding = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Image source={ExpoIcon} style={styles.icon} />
-      <Text style={styles.title}>Welcome to Quick Launcher</Text>
-      <Text style={{marginBottom: 5}}>
-        To get the most out Quick Launcher make sure all necessary tools
-        installed
-      </Text>
-      <View style={{width: '100%', gap: 10, marginTop: 20}}>
+    <View flex="1" bg="default">
+      <View style={styles.header} pt="2.5">
+        <Image source={Background} style={styles.background} />
+        <Logo />
+        <View mt="medium" mb="2">
+          <ExpoOrbitText />
+        </View>
+        <Text size="small" style={styles.subtitle}>
+          Download and launch builds.
+        </Text>
+      </View>
+      <View
+        padding="large"
+        style={[styles.container, {borderBottomColor: theme.border.default}]}>
+        <View>
+          <Text weight="bold">Pre-flight checklist</Text>
+          <Text size="small" color="secondary">
+            Configure developer tools to get the most out of Orbit.
+          </Text>
+        </View>
         <CommandCheckItem
           title="Android Studio"
-          description="Install Android studio to manage devices and install apps on Android"
+          description="Install Android Studio to manage devices and install apps on Android"
           icon={AndroidStudio}
           {...platformToolsCheck?.android}
         />
@@ -61,17 +73,9 @@ const Onboarding = () => {
           {...platformToolsCheck?.ios}
         />
       </View>
-      <TouchableOpacity
-        onPress={closeOnboarding}
-        style={{
-          marginTop: 'auto',
-          paddingHorizontal: 15,
-          paddingVertical: 5,
-          borderRadius: 5,
-          backgroundColor: PlatformColor('controlAccentColor'),
-        }}>
-        <Text>Start using Quick Launcher</Text>
-      </TouchableOpacity>
+      <View px="large" py="medium">
+        <Button onPress={closeOnboarding}>Get Started</Button>
+      </View>
     </View>
   );
 };
@@ -79,18 +83,26 @@ const Onboarding = () => {
 export default Onboarding;
 
 const styles = StyleSheet.create({
+  header: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 250,
+    overflow: 'hidden',
+    backgroundColor: 'black',
+  },
   container: {
     flex: 1,
-    paddingHorizontal: 15,
-    paddingBottom: 25,
-    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: lightTheme.border.default,
+    gap: 14,
   },
-  icon: {
-    tintColor: PlatformColor('text'),
+  subtitle: {
+    color: '#E1EDFF',
   },
-  title: {
-    textAlign: 'center',
-    fontSize: 30,
-    marginVertical: 20,
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
 });

@@ -1,16 +1,14 @@
 import * as React from 'react';
-import { StyleSheet, ViewStyle, ImageStyle, TextStyle } from 'react-native';
+import {StyleSheet, ViewStyle, ImageStyle, TextStyle} from 'react-native';
 
-import { useTheme } from './useExpoTheme';
+import {useTheme} from './useExpoTheme';
 
 type StyleType = ViewStyle | TextStyle | ImageStyle;
 
 type Options = {
   base?: StyleType;
-  variants?: VariantMap<StyleType>;
+  variants?: SelectorMap<StyleType>;
 };
-
-type VariantMap<T> = { [key: string]: { [key: string]: T } };
 
 type Nested<Type> = {
   [Property in keyof Type]?: keyof Type[Property];
@@ -34,29 +32,32 @@ type SelectorProps = {
 
 export function create<T extends object, O extends Options>(
   component: React.ComponentType<T>,
-  config: O & { selectors?: Selectors<O['variants']>; props?: T }
+  config: O & {selectors?: Selectors<O['variants']>; props?: T},
 ) {
   config.selectors = config.selectors ?? {};
   config.variants = config.variants ?? {};
 
   const Component = React.forwardRef<
     T,
-    React.PropsWithChildren<T> & Nested<typeof config['variants']> & { selectors?: SelectorProps }
+    React.PropsWithChildren<T> &
+      Nested<(typeof config)['variants']> & {selectors?: SelectorProps}
   >((props, ref) => {
     const theme = useTheme();
 
     const variantStyles = stylesForVariants(props, config.variants);
-    const selectorStyles = stylesForSelectors(props, config.selectors, { theme });
-    const selectorPropsStyles = stylesForSelectorProps(props.selectors, { theme });
+    const selectorStyles = stylesForSelectors(props, config.selectors, {theme});
+    const selectorPropsStyles = stylesForSelectorProps(props.selectors, {
+      theme,
+    });
 
-    const variantFreeProps: any = { ...props };
+    const variantFreeProps: any = {...props};
 
     // @ts-ignore
     // there could be a conflict between the primitive prop and the variant name
     // for example - variant name "width" and prop "width"
     // in these cases, favor the variant because it is under the users control (e.g they can update the conflicting name)
 
-    Object.keys(config.variants).forEach((variant) => {
+    Object.keys(config.variants).forEach(variant => {
       delete variantFreeProps[variant];
     });
 

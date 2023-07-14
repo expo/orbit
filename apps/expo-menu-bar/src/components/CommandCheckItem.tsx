@@ -1,12 +1,15 @@
 import {
-  Text,
-  View,
   ActivityIndicator,
-  PlatformColor,
   Image,
   ImageSourcePropType,
   StyleSheet,
 } from 'react-native';
+import {spacing} from '@expo/styleguide-native';
+
+import AlertIcon from '../assets/images/alert-triangle.svg';
+import CheckIcon from '../assets/images/check-circle.svg';
+import {View} from './View';
+import {Text} from './Text';
 
 interface Props {
   title: string;
@@ -24,17 +27,28 @@ const CommandCheckItem = ({
   success,
 }: Props) => {
   return (
-    <View style={styles.container}>
+    <View
+      align="centered"
+      padding="small"
+      border="default"
+      rounded="medium"
+      bg="default"
+      shadow="tiny"
+      style={styles.container}>
       <Image source={icon} />
-      <View style={{flex: 1, marginHorizontal: 5}}>
-        <Text>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
+      <View flex="1">
+        <Text weight="medium">{title}</Text>
+        <Text size="tiny" color="secondary">
+          {description}
+        </Text>
         {reason ? <Text>{reason}</Text> : null}
       </View>
       {success === undefined ? (
         <ActivityIndicator />
+      ) : success ? (
+        <CheckIcon />
       ) : (
-        <Text>{success ? '✅' : '❌'}</Text>
+        <AlertIcon />
       )}
     </View>
   );
@@ -44,11 +58,9 @@ export default CommandCheckItem;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
-    backgroundColor: PlatformColor('quaternaryLabelColor'),
-    borderRadius: 5,
     flexDirection: 'row',
-    alignItems: 'center',
+    paddingRight: spacing[5],
+    gap: spacing[3],
   },
   description: {
     fontSize: 12,

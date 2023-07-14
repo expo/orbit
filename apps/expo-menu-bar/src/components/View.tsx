@@ -95,7 +95,7 @@ export const View = create(RNView, {
 
     shadow: {
       micro: shadows.micro,
-      tiny: shadows.tiny,
+      tiny: {...shadows.tiny, shadowOpacity: 0.075},
       small: shadows.small,
       medium: shadows.medium,
       button: shadows.button,

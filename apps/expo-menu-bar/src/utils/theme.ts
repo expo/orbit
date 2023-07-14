@@ -108,6 +108,7 @@ export const text = {
   },
 
   size: {
+    tiny: typography.fontSizes[12],
     small: typography.fontSizes[14],
     medium: typography.fontSizes[16],
     large: typography.fontSizes[18],
@@ -145,10 +146,10 @@ export const text = {
     thin: {fontFamily: 'Inter-Thin'},
     extralight: {fontFamily: 'Inter-ExtraLight'},
     light: {fontFamily: 'Inter-Light'},
-    normal: {fontFamily: 'Inter-Regular'},
-    medium: {fontFamily: 'Inter-Medium'},
-    semibold: {fontFamily: 'Inter-SemiBold'},
-    bold: {fontFamily: 'Inter-Bold'},
+    normal: {fontFamily: 'Inter-Regular', fontWeight: '400'},
+    medium: {fontFamily: 'Inter-Medium', fontWeight: '500'},
+    semibold: {fontFamily: 'Inter-SemiBold', fontWeight: '600'},
+    bold: {fontFamily: 'Inter-Bold', fontWeight: '700'},
     extrabold: {fontFamily: 'Inter-ExtraBold'},
     black: {fontFamily: 'Inter-Black'},
   },

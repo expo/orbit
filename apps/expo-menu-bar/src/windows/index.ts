@@ -14,10 +14,10 @@ export const WindowsNavigator = createWindowsNavigator({
     options: {
       title: '',
       windowStyle: {
-        mask: WindowStyleMask.Titled,
+        mask: WindowStyleMask.Titled | WindowStyleMask.FullSizeContentView,
         titlebarAppearsTransparent: true,
-        height: 450,
-        width: 520,
+        height: 618,
+        width: 400,
       },
     },
   },

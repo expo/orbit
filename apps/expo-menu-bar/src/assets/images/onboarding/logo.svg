@@ -1,0 +1,27 @@
+<svg width="116" height="76" viewBox="0 0 116 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 1" filter="url(#filter0_b_2_2049)">
+<path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M98.8123 56.4653C102.06 50.9095 103.922 44.4443 103.922 37.5444C103.922 16.8092 87.1124 0 66.3772 0C51.385 0 38.4452 8.78742 32.4275 21.4926C32.4114 21.5512 32.3951 21.6102 32.3784 21.6696C29.3403 32.4962 66.194 48.9377 98.432 56.3772C98.5599 56.4067 98.6866 56.4361 98.8123 56.4653ZM94.4935 62.4258C87.6151 70.1927 77.5679 75.0887 66.3772 75.0887C48.4365 75.0887 33.435 62.5051 29.7172 45.6825C39.6004 50.8177 65.6252 60.1026 93.861 62.4046C93.861 62.4046 94.0891 62.4133 94.4935 62.4258Z" fill="url(#paint0_linear_2_2049)"/>
+<path id="Subtract_2" fill-rule="evenodd" clip-rule="evenodd" d="M115.593 60.5137C105.611 59.4042 94.078 57.1539 81.9917 53.7798C47.6265 44.1862 21.7973 29.1403 24.3005 20.1737C25.0711 17.4133 28.437 15.5509 33.7299 14.5751C15.3299 12.5299 2.19773 14.3607 0.574942 20.1737C-1.92822 29.1403 23.901 44.1862 58.2661 53.7798C82.0519 60.42 103.693 62.7077 115.593 60.5137Z" fill="url(#paint1_linear_2_2049)"/>
+<path id="Subtract_3" fill-rule="evenodd" clip-rule="evenodd" d="M115.593 60.5137C105.611 59.4042 94.078 57.1539 81.9917 53.7798C47.6265 44.1862 21.7973 29.1403 24.3005 20.1737C25.0711 17.4133 28.437 15.5509 33.7299 14.5751C15.3299 12.5299 2.19773 14.3607 0.574942 20.1737C-1.92822 29.1403 23.901 44.1862 58.2661 53.7798C82.0519 60.42 103.693 62.7077 115.593 60.5137Z" fill="url(#paint2_linear_2_2049)"/>
+</g>
+<defs>
+<filter id="filter0_b_2_2049" x="-3.59267" y="-4" width="123.185" height="83.0887" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feGaussianBlur in="BackgroundImageFix" stdDeviation="2"/>
+<feComposite in2="SourceAlpha" operator="in" result="effect1_backgroundBlur_2_2049"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_backgroundBlur_2_2049" result="shape"/>
+</filter>
+<linearGradient id="paint0_linear_2_2049" x1="69.3133" y1="75.0034" x2="102.245" y2="13.1637" gradientUnits="userSpaceOnUse">
+<stop stop-color="#CBDAF1"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+<linearGradient id="paint1_linear_2_2049" x1="61.8712" y1="61.2671" x2="72.3005" y2="13.2639" gradientUnits="userSpaceOnUse">
+<stop stop-color="#CBDAF1"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+<linearGradient id="paint2_linear_2_2049" x1="61.8712" y1="61.2671" x2="72.3005" y2="13.2639" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+</defs>
+</svg>
