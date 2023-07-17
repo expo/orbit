@@ -24,7 +24,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
   statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
-  NSImage *image = [NSImage imageNamed:@"icon"];
+  NSImage *image = [NSImage imageNamed:@"menu-bar-icon"];
   [image setTemplate:YES];
   statusItem.button.image = image;
   [statusItem.button setTarget:self];

@@ -32,7 +32,6 @@
 		C08E65322A5C44B90079E3A9 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */; };
 		C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */ = {isa = PBXBuildFile; fileRef = C08E65332A5D04910079E3A9 /* WindowNavigator.m */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
-		C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C0E7CF4D2A15440100C59DE5 /* icon.png */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
 /* End PBXBuildFile section */
 
@@ -102,7 +101,6 @@
 		C08E65352A5D0A580079E3A9 /* WindowNavigator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowNavigator.h; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
-		C0E7CF4D2A15440100C59DE5 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../src/assets/images/icon.png; sourceTree = "<group>"; };
 		C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoMenuBar-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE0E74F571E1F48FF00A8324 /* Pods-Shared-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-macOS/Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -179,7 +177,6 @@
 			children = (
 				C081507C2A610E2F00E8890F /* Resources */,
 				C032EDB62A1FE6F300FBC597 /* expo-menu-cli */,
-				C0E7CF4D2A15440100C59DE5 /* icon.png */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
 				5142014B2437B4B30078DB4F /* AppDelegate.h */,
 				5142014C2437B4B30078DB4F /* AppDelegate.m */,
@@ -389,7 +386,6 @@
 				C081507F2A610E9C00E8890F /* fonts in Resources */,
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,
-				C0E7CF4E2A15440100C59DE5 /* icon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
