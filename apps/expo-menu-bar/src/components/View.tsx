@@ -1,4 +1,4 @@
-import {lightTheme, darkTheme, shadows} from '@expo/styleguide-native';
+import {lightTheme, darkTheme, shadows, palette} from '@expo/styleguide-native';
 import {View as RNView, StyleSheet} from 'react-native';
 
 import {create} from '../utils/create-component-primitive';
@@ -106,6 +106,14 @@ export const View = create(RNView, {
 
     ...padding,
     ...margin,
+
+    justify: {
+      center: {justifyContent: 'center'},
+      start: {justifyContent: 'flex-start'},
+      end: {justifyContent: 'flex-end'},
+      between: {justifyContent: 'space-between'},
+      around: {justifyContent: 'space-around'},
+    },
   },
 
   selectors: {
@@ -227,8 +235,9 @@ export const Spacer = {
 
 export const Divider = create(RNView, {
   base: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: lightTheme.border.default,
+    height: 1,
+    backgroundColor: palette.light.gray['700'],
+    opacity: 0.4,
   },
 
   variants: {
@@ -245,7 +254,7 @@ export const Divider = create(RNView, {
     dark: {
       base: {
         height: StyleSheet.hairlineWidth,
-        backgroundColor: darkTheme.border.default,
+        backgroundColor: palette.dark.gray['700'],
       },
     },
   },
