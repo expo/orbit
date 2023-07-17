@@ -13,8 +13,8 @@ type MenuBarModule = NativeModule & {
 };
 
 type MenuBarModuleConstants = {
-  appVersion?: string;
-  buildVersion?: string;
+  appVersion: string;
+  buildVersion: string;
 };
 const constants: MenuBarModuleConstants =
   NativeModules.MenuBarModule.getConstants();
