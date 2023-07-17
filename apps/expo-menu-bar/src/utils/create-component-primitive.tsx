@@ -7,8 +7,10 @@ type StyleType = ViewStyle | TextStyle | ImageStyle;
 
 type Options = {
   base?: StyleType;
-  variants?: SelectorMap<StyleType>;
+  variants?: VariantMap<StyleType>;
 };
+
+type VariantMap<T> = {[key: string]: {[key: string]: T}};
 
 type Nested<Type> = {
   [Property in keyof Type]?: keyof Type[Property];

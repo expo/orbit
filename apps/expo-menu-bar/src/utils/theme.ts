@@ -143,15 +143,42 @@ export const text = {
   },
 
   weight: {
-    thin: {fontFamily: 'Inter-Thin'},
-    extralight: {fontFamily: 'Inter-ExtraLight'},
-    light: {fontFamily: 'Inter-Light'},
-    normal: {fontFamily: 'Inter-Regular', fontWeight: '400'},
-    medium: {fontFamily: 'Inter-Medium', fontWeight: '500'},
-    semibold: {fontFamily: 'Inter-SemiBold', fontWeight: '600'},
-    bold: {fontFamily: 'Inter-Bold', fontWeight: '700'},
-    extrabold: {fontFamily: 'Inter-ExtraBold'},
-    black: {fontFamily: 'Inter-Black'},
+    thin: {
+      fontFamily: 'Inter-Thin',
+      fontWeight: '100' as TextStyle['fontWeight'],
+    },
+    extralight: {
+      fontFamily: 'Inter-ExtraLight',
+      fontWeight: '200' as TextStyle['fontWeight'],
+    },
+    light: {
+      fontFamily: 'Inter-Light',
+      fontWeight: '300' as TextStyle['fontWeight'],
+    },
+    normal: {
+      fontFamily: 'Inter-Regular',
+      fontWeight: '400' as TextStyle['fontWeight'],
+    },
+    medium: {
+      fontFamily: 'Inter-Medium',
+      fontWeight: '500' as TextStyle['fontWeight'],
+    },
+    semibold: {
+      fontFamily: 'Inter-SemiBold',
+      fontWeight: '600' as TextStyle['fontWeight'],
+    },
+    bold: {
+      fontFamily: 'Inter-Bold',
+      fontWeight: '700' as TextStyle['fontWeight'],
+    },
+    extrabold: {
+      fontFamily: 'Inter-ExtraBold',
+      fontWeight: '800' as TextStyle['fontWeight'],
+    },
+    black: {
+      fontFamily: 'Inter-Black',
+      fontWeight: '900' as TextStyle['fontWeight'],
+    },
   },
 
   color: {
