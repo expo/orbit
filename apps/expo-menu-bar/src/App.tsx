@@ -1,11 +1,8 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
-  Text,
   TouchableOpacity,
-  View,
   PlatformColor,
   StyleSheet,
-  Image,
   Dimensions,
   FlatList,
 } from 'react-native';
@@ -14,9 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useDeepLinking} from './hooks/useDeepLinking';
 import {downloadBuildAsync} from './commands/downloadBuildAsync';
 import AutoResizerRootView from './components/AutoResizerRootView';
-import CircularProgress from './components/CircularProgress';
 import {useListDevices} from './hooks/useListDevices';
-import ExpoIcon from './assets/icon.png';
 import {listDevicesAsync} from './commands/listDevicesAsync';
 import {bootDeviceAsync} from './commands/bootDeviceAsync';
 import {installAndLaunchAppAsync} from './commands/installAndLaunchAppAsync';
@@ -25,9 +20,17 @@ import MenuBarModule from './modules/MenuBarModule';
 import FilePicker from './modules/FilePickerModule';
 import {getPlatformFromURI} from './utils/parseUrl';
 import DeviceItem from './components/DeviceItem';
-import {getDeviceId, getDeviceOS} from './utils/device';
+import {Device, getDeviceId, getDeviceOS} from './utils/device';
 import {WindowsNavigator} from './windows';
 import {hasSeenOnboardingStorageKey} from './windows/Onboarding';
+import ProgressIndicator from './components/ProgressIndicator';
+import {ThemeProvider} from './utils/useExpoTheme';
+import {Divider, Text, View} from './components';
+import {Row, Spacer} from './components/View';
+import File05Icon from './assets/icons/file-05.svg';
+import Earth02Icon from './assets/icons/earth-02.svg';
+import ExpoOrbitIcon from './assets/images/expo-orbit-text.svg';
+import {openProjectsSelectorURL} from './utils/constants';
 
 enum Status {
   LISTENING,
@@ -41,7 +44,7 @@ type Props = {
 };
 
 function App(props: Props) {
-  const [selectedDevices, setSelectedDevices] = useState<{
+  const [selectedDevicesIds, setSelectedDevicesIds] = useState<{
     android?: string;
     ios?: string;
   }>({android: undefined, ios: undefined});
@@ -49,7 +52,7 @@ function App(props: Props) {
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const {devices, refetch: refetchDevices} = useListDevices();
+  const {devices} = useListDevices();
 
   useEffect(() => {
     AsyncStorage.getItem(hasSeenOnboardingStorageKey).then(value => {
@@ -124,87 +127,98 @@ function App(props: Props) {
     }, []),
   );
 
+  const onSelectDevice = (device: Device) => {
+    const platform = getDeviceOS(device);
+    const id = getDeviceId(device);
+
+    setSelectedDevicesIds(prev => {
+      return {
+        ...prev,
+        [platform]: prev[platform] === id ? undefined : id,
+      };
+    });
+  };
+
   return (
     <AutoResizerRootView style={styles.container} enabled={!props.isDevWindow}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 10,
-          paddingHorizontal: 10,
-        }}>
-        <View style={styles.titleContainer}>
-          <Image source={ExpoIcon} style={styles.icon} resizeMode="contain" />
-          <Text style={styles.title}>Quick Launcher</Text>
+      <ThemeProvider themePreference="no-preference">
+        <View padding="medium" pb="small">
+          <ExpoOrbitIcon fill={PlatformColor('text')} />
+          <Spacer.Vertical size="small" />
+          <Divider />
         </View>
-        {status === Status.DOWNLOADING ? (
-          <View style={styles.downloading}>
-            <CircularProgress size={12} progress={progress} />
-            <Text>Downloading...</Text>
+        <View px="medium">
+          <Text weight="medium" size="small" color="secondary">
+            Build
+          </Text>
+          {status === Status.LISTENING ? (
+            <View>
+              <TouchableOpacity onPress={openProjectsSelectorURL}>
+                <Row style={{gap: 6}} mt="small" align="center">
+                  <File05Icon />
+                  <Text>Select build from EAS...</Text>
+                </Row>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openFilePicker}>
+                <Row style={{gap: 6}} mt="small">
+                  <Earth02Icon />
+                  <Text>Select build from local file...</Text>
+                </Row>
+              </TouchableOpacity>
+            </View>
+          ) : status === Status.DOWNLOADING ? (
+            <View style={styles.downloading}>
+              <ProgressIndicator indeterminate={true} />
+              <Text>Downloading build...</Text>
+            </View>
+          ) : status === Status.INSTALLING ? (
+            <View>
+              <Text>Installing...</Text>
+            </View>
+          ) : null}
+        </View>
+        <View style={{marginTop: 21}}>
+          <View px="medium">
+            <Text weight="medium" size="small" color="secondary">
+              Devices
+            </Text>
           </View>
-        ) : status === Status.INSTALLING ? (
-          <View>
-            <Text>Installing...</Text>
-          </View>
-        ) : null}
-      </View>
-      <Text
-        style={{
-          paddingHorizontal: 10,
-          fontWeight: '500',
-          color: PlatformColor('secondaryLabelColor'),
-        }}>
-        Devices
-      </Text>
-      <View
-        style={{
-          gap: 5,
-          paddingHorizontal: 5,
-          flexShrink: 1,
-          overflow: 'hidden',
-        }}>
-        <FlatList
-          data={devices}
-          alwaysBounceVertical={false}
-          renderItem={({item: device}) => {
-            const platform = getDeviceOS(device);
-            const id = getDeviceId(device);
+          <View
+            overflow="hidden"
+            shrink="1"
+            style={{marginBottom: 8, marginTop: 4}}>
+            <FlatList
+              data={devices}
+              alwaysBounceVertical={false}
+              renderItem={({item: device}) => {
+                const platform = getDeviceOS(device);
+                const id = getDeviceId(device);
 
-            return (
-              <DeviceItem
-                device={device}
-                key={device.name}
-                onPress={async () => {
-                  setSelectedDevicesIds(prev => ({
-                    ...prev,
-                    [platform]: id,
-                  }));
-                  if (device.state === 'Shutdown') {
-                    await bootDeviceAsync({platform, id});
-                    refetchDevices();
-                  }
-                }}
-                selected={selectedDevicesIds[platform] === id}
-              />
-            );
-          }}
-        />
-      </View>
-      <View style={{paddingHorizontal: 10}}>
-        <View style={styles.separator} />
-        <TouchableOpacity onPress={openFilePicker}>
-          <Text>Launch app from local file</Text>
-        </TouchableOpacity>
-        <View style={styles.separator} />
-        <TouchableOpacity onPress={() => WindowsNavigator.open('Settings')}>
-          <Text>Settings</Text>
-        </TouchableOpacity>
-        <View style={styles.separator} />
-        <TouchableOpacity onPress={MenuBarModule.exitApp}>
-          <Text>Quit</Text>
-        </TouchableOpacity>
-      </View>
+                return (
+                  <DeviceItem
+                    device={device}
+                    key={device.name}
+                    onPress={() => onSelectDevice(device)}
+                    onPressLaunch={() => {}}
+                    selected={selectedDevicesIds[platform] === id}
+                  />
+                );
+              }}
+            />
+          </View>
+        </View>
+        <View px="medium" pb="medium">
+          <Divider style={{height: 1}} />
+          <View py="2">
+            <TouchableOpacity onPress={() => WindowsNavigator.open('Settings')}>
+              <Text>Settings</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={MenuBarModule.exitApp}>
+            <Text>Quit</Text>
+          </TouchableOpacity>
+        </View>
+      </ThemeProvider>
     </AutoResizerRootView>
   );
 }
@@ -217,8 +231,7 @@ export default App;
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 10,
-    minWidth: 300,
+    minWidth: 380,
     maxHeight: Dimensions.get('screen').height * 0.85,
   },
   icon: {
@@ -228,15 +241,6 @@ const styles = StyleSheet.create({
   },
   center: {
     alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
   },
   separator: {
     backgroundColor: PlatformColor('text'),
@@ -262,8 +266,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   downloading: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 5,
   },
 });

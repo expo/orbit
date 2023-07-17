@@ -6,8 +6,8 @@ import {
 } from 'react-native';
 import {spacing} from '@expo/styleguide-native';
 
-import AlertIcon from '../assets/images/alert-triangle.svg';
-import CheckIcon from '../assets/images/check-circle.svg';
+import AlertIcon from '../assets/icons/alert-triangle.svg';
+import CheckIcon from '../assets/icons/check-circle.svg';
 import {View} from './View';
 import {Text} from './Text';
 
