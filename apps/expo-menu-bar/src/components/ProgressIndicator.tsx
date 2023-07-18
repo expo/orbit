@@ -6,15 +6,13 @@ import {
   ViewStyle,
 } from 'react-native';
 
-type NativeProps =
-  | {
-      color?: ColorValue;
-      size?: 'small' | 'large';
-      style?: StyleProp<ViewStyle>;
-    } & (
-      | {indeterminate: true; progress?: never}
-      | {indeterminate?: never; progress: number}
-    );
+type NativeProps = {
+  color?: ColorValue;
+  size?: 'small' | 'large';
+  style?: StyleProp<ViewStyle>;
+  indeterminate?: boolean;
+  progress?: number;
+};
 
 const NativeProgressIndicator =
   requireNativeComponent<NativeProps>('ProgressIndicator');

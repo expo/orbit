@@ -8,7 +8,7 @@ import {
   UserPreferences,
   getUserPreferences,
   saveUserPreferences,
-} from '../utils/userPreferences';
+} from '../modules/Storage';
 
 const Settings = () => {
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({});

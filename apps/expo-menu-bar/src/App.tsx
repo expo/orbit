@@ -31,6 +31,11 @@ import File05Icon from './assets/icons/file-05.svg';
 import Earth02Icon from './assets/icons/earth-02.svg';
 import ExpoOrbitIcon from './assets/images/expo-orbit-text.svg';
 import {openProjectsSelectorURL} from './utils/constants';
+import {
+  SelectedDevicesIds,
+  getSelectedDevicesIds,
+  saveSelectedDevicesIds,
+} from './modules/Storage';
 
 enum Status {
   LISTENING,
@@ -44,17 +49,17 @@ type Props = {
 };
 
 function App(props: Props) {
-  const [selectedDevicesIds, setSelectedDevicesIds] = useState<{
-    android?: string;
-    ios?: string;
-  }>({android: undefined, ios: undefined});
+  const [selectedDevicesIds, setSelectedDevicesIds] =
+    useState<SelectedDevicesIds>({android: undefined, ios: undefined});
 
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
   const {devices} = useListDevices();
 
+  // @TODO: Create a hook
   useEffect(() => {
+    getSelectedDevicesIds().then(setSelectedDevicesIds);
     AsyncStorage.getItem(hasSeenOnboardingStorageKey).then(value => {
       if (!value) {
         WindowsNavigator.open('Onboarding');
@@ -62,29 +67,43 @@ function App(props: Props) {
     });
   }, []);
 
+  // @TODO: create another hook
   const handleSnackUrl = async (url: string) => {
     await launchSnackAsync({url});
+  };
+
+  const getDeviceByPlatform = (platform: 'android' | 'ios') => {
+    return (
+      devices.find(d => getDeviceId(d) === selectedDevicesIds[platform]) ??
+      devices.find(d => getDeviceOS(d) === platform)
+    );
+  };
+
+  const ensureDeviceIsRunning = async (device: Device) => {
+    if (device.state !== 'Shutdown') {
+      return;
+    }
+
+    const deviceId = getDeviceId(device);
+    await bootDeviceAsync({
+      platform: getDeviceOS(device),
+      id: deviceId,
+    });
   };
 
   const handleEASUrl = async (url: string) => {
     try {
       const platform = getPlatformFromURI(url);
-      setStatus(Status.DOWNLOADING);
-      let device =
-        devices.find(d => getDeviceId(d) === selectedDevicesIds[platform]) ??
-        devices[0];
-      const deviceId = getDeviceId(device);
+      let device = getDeviceByPlatform(platform);
+      if (!device) {
+        return; // handle error
+      }
 
+      const deviceId = getDeviceId(device);
+      setStatus(Status.DOWNLOADING);
       const [buildPath] = await Promise.all([
-        await downloadBuildAsync(url, setProgress),
-        (async () => {
-          if (device.state === 'Shutdown') {
-            await bootDeviceAsync({
-              platform,
-              id: deviceId,
-            });
-          }
-        })(),
+        downloadBuildAsync(url, setProgress),
+        ensureDeviceIsRunning(device),
       ]);
 
       setStatus(Status.INSTALLING);
@@ -100,16 +119,29 @@ function App(props: Props) {
   };
 
   const openFilePicker = async () => {
-    const appPath = await FilePicker.getAppAsync();
-    const platform = getPlatformFromURI(appPath);
+    try {
+      const appPath = await FilePicker.getAppAsync();
+      const platform = getPlatformFromURI(appPath);
 
-    const [device] = await listDevicesAsync({platform, oneDevice: true});
-    const deviceId = getDeviceId(device);
+      const device = getDeviceByPlatform(platform);
+      if (!device) {
+        return; // handle error
+      }
 
-    await installAndLaunchAppAsync({
-      appPath,
-      deviceId,
-    });
+      await ensureDeviceIsRunning(device);
+
+      const deviceId = getDeviceId(device);
+      setStatus(Status.INSTALLING);
+      await installAndLaunchAppAsync({
+        appPath,
+        deviceId,
+      });
+    } catch (error) {
+    } finally {
+      setTimeout(() => {
+        setStatus(Status.LISTENING);
+      }, 2000);
+    }
   };
 
   useDeepLinking(
@@ -132,10 +164,13 @@ function App(props: Props) {
     const id = getDeviceId(device);
 
     setSelectedDevicesIds(prev => {
-      return {
+      const newValue = {
         ...prev,
         [platform]: prev[platform] === id ? undefined : id,
       };
+
+      saveSelectedDevicesIds(newValue);
+      return newValue;
     });
   };
 
@@ -166,14 +201,17 @@ function App(props: Props) {
                 </Row>
               </TouchableOpacity>
             </View>
-          ) : status === Status.DOWNLOADING ? (
+          ) : status === Status.DOWNLOADING || status === Status.INSTALLING ? (
             <View style={styles.downloading}>
-              <ProgressIndicator indeterminate={true} />
-              <Text>Downloading build...</Text>
-            </View>
-          ) : status === Status.INSTALLING ? (
-            <View>
-              <Text>Installing...</Text>
+              <ProgressIndicator
+                progress={status === Status.DOWNLOADING ? progress : undefined}
+                indeterminate={status === Status.INSTALLING}
+              />
+              <Text>
+                {status === Status.DOWNLOADING
+                  ? 'Downloading build...'
+                  : 'Installing...'}
+              </Text>
             </View>
           ) : null}
         </View>

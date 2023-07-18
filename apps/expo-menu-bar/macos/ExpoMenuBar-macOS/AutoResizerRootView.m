@@ -17,7 +17,7 @@ const CGFloat minimumViewSize = 40.0;
 
 - (void)layout
 {
-  if(!_enabled || (self.frame.size.height <= minimumViewSize && self.frame.size.width <= minimumViewSize)){
+  if(!_enabled || (self.frame.size.height <= minimumViewSize || self.frame.size.width <= minimumViewSize)){
     return;
   }
 

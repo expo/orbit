@@ -19,3 +19,23 @@ export const saveUserPreferences = async (preferences: UserPreferences) => {
     JSON.stringify(preferences),
   );
 };
+
+const selectedDevicesIdsStorageKey = 'selected-devices-ids';
+export type SelectedDevicesIds = {
+  android?: string;
+  ios?: string;
+};
+
+export const getSelectedDevicesIds = async () => {
+  const value = await AsyncStorage.getItem(selectedDevicesIdsStorageKey);
+  return JSON.parse(value ?? '{}') as SelectedDevicesIds;
+};
+
+export const saveSelectedDevicesIds = async (
+  devicesIds: SelectedDevicesIds,
+) => {
+  await AsyncStorage.setItem(
+    selectedDevicesIdsStorageKey,
+    JSON.stringify(devicesIds),
+  );
+};
