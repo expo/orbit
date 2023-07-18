@@ -13,6 +13,7 @@ import {
   height,
   borderDark,
   border,
+  gap,
 } from '../utils/theme';
 
 export const View = create(RNView, {
@@ -106,6 +107,7 @@ export const View = create(RNView, {
 
     ...padding,
     ...margin,
+    gap,
 
     justify: {
       center: {justifyContent: 'center'},
@@ -168,6 +170,7 @@ export const Row = create(RNView, {
 
     ...padding,
     ...margin,
+    gap,
 
     ...rounded,
 

@@ -69,7 +69,7 @@ const Checkbox = ({onChange, onValueChange, ...props}: CheckboxProps) => {
   return (
     <NativeCheckbox
       {...props}
-      style={styles.checkbox}
+      style={[styles.checkbox, props.style]}
       onChange={handleChange}
       ref={nativeSwitchRef}
     />
