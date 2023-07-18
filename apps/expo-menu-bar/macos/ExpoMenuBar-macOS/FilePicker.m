@@ -11,6 +11,7 @@ RCT_EXPORT_METHOD(pickFileWithFilenameExtension:(NSArray<NSString *> *)filenameE
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
   dispatch_async(dispatch_get_main_queue(), ^{
+    [NSApp activateIgnoringOtherApps:YES];
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     [panel setAllowsMultipleSelection:NO];
     [panel setCanChooseDirectories:YES];
@@ -26,25 +27,13 @@ RCT_EXPORT_METHOD(pickFileWithFilenameExtension:(NSArray<NSString *> *)filenameE
       }
       [panel setAllowedContentTypes:allowedTypes];
     }
-
-    // Get the main window from the application
-    NSWindow *mainWindow = [NSApplication sharedApplication].mainWindow;
-    if (mainWindow) {
-      [panel beginSheetModalForWindow:mainWindow completionHandler:^(NSModalResponse result) {
-        if (result == NSModalResponseOK) {
-          resolve(panel.URL.path);
-        } else {
-          reject(@"FILE_PICKER_ERROR", @"NSModalResponseCancel", nil);
-        }
-      }];
+    
+    if ([panel runModal] == NSModalResponseOK){
+      resolve(panel.URL.path);
     } else {
-      // Fallback to runModal if the main window is not available
-      if ([panel runModal] == NSModalResponseOK){
-        resolve(panel.URL.path);
-      } else {
-        reject(@"FILE_PICKER_ERROR", @"NSModalResponseCancel", nil);
-      }
+      reject(@"FILE_PICKER_ERROR", @"NSModalResponseCancel", nil);
     }
+    
   });
 }
 
