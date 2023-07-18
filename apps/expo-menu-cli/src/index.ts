@@ -29,6 +29,7 @@ program
   .command("boot-device")
   .requiredOption("-p, --platform <string>", "Selected platform")
   .requiredOption("--id  <string>", "UDID or name of the device")
+  .option("--no-audio", "Launch Android emulator without audio")
   .action(returnLoggerMiddleware(bootDeviceAsync));
 
 program

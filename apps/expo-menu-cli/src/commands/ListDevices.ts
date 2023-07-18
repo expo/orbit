@@ -15,11 +15,10 @@ export async function listDevicesAsync<P extends Platform>({
   oneDevice?: boolean;
 }): Promise<Device<P>[]> {
   let availableAndroidDevices: Emulator.AndroidDevice[] | undefined;
-  let availableIosSimulators: Simulator.IosSimulator[] | undefined;
+  let availableIosDevices: Simulator.IosSimulator[] | undefined;
 
   if (platform === "ios" || platform === "all") {
-    availableIosSimulators =
-      await Simulator.getAvaliableIosSimulatorsListAsync();
+    availableIosDevices = await Simulator.getAvaliableIosSimulatorsListAsync();
   }
 
   if (platform === Platform.Android || platform === "all") {
@@ -49,8 +48,8 @@ export async function listDevicesAsync<P extends Platform>({
     }
 
     const firstIOSDevice =
-      availableIosSimulators?.find(({ state }) => state === "Booted") ||
-      availableIosSimulators?.sort(
+      availableIosDevices?.find(({ state }) => state === "Booted") ||
+      availableIosDevices?.sort(
         (a, b) => (b?.lastBootedAt || 0) - (a.lastBootedAt || 0)
       )?.[0];
 
@@ -60,9 +59,9 @@ export async function listDevicesAsync<P extends Platform>({
   let result = new Array<Device<P>>();
   if (
     (platform === "all" || platform === Platform.Ios) &&
-    availableIosSimulators
+    availableIosDevices
   ) {
-    result = result.concat(availableIosSimulators as Device<P>[]);
+    result = result.concat(availableIosDevices as Device<P>[]);
   }
 
   if (

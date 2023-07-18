@@ -4,11 +4,13 @@ import { getRunningDevicesAsync } from "eas-shared/build/run/android/adb";
 type BootDeviceAsyncOptions = {
   platform: "android" | "ios";
   id: string;
+  noAudio?: boolean;
 };
 
 export async function bootDeviceAsync({
   platform,
   id,
+  noAudio,
 }: BootDeviceAsyncOptions) {
   if (platform === "ios") {
     try {
@@ -34,7 +36,10 @@ export async function bootDeviceAsync({
     return;
   }
 
-  await Emulator.bootEmulatorAsync({
-    name: id,
-  } as Emulator.AndroidDevice);
+  await Emulator.bootEmulatorAsync(
+    {
+      name: id,
+    } as Emulator.AndroidDevice,
+    { noAudio }
+  );
 }

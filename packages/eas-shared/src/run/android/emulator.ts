@@ -65,26 +65,28 @@ export async function bootEmulatorAsync(
   {
     timeout = EMULATOR_MAX_WAIT_TIMEOUT_MS,
     interval = 1000,
+    noAudio = false,
   }: {
     /** Time in milliseconds to wait before asserting a timeout error. */
     timeout?: number;
     interval?: number;
+    noAudio?: boolean;
   } = {}
 ): Promise<AndroidDevice> {
   Log.newLine();
   Log.log(`Opening emulator ${chalk.bold(emulator.name)}`);
 
   const emulatorExecutable = await getEmulatorExecutableAsync();
+  const spawnArgs = [`@${emulator.name}`];
+  if (noAudio) {
+    spawnArgs.push("-no-audio");
+  }
 
   // Start a process to open an emulator
-  const emulatorProcess = spawnAsync(
-    emulatorExecutable,
-    [`@${emulator.name}`],
-    {
-      stdio: "ignore",
-      detached: true,
-    }
-  );
+  const emulatorProcess = spawnAsync(emulatorExecutable, spawnArgs, {
+    stdio: "ignore",
+    detached: true,
+  });
 
   // we don't want to wait for the emulator process to exit before we can finish `eas build:run` command
   // https://github.com/expo/eas-cli/pull/1485#discussion_r1007935871

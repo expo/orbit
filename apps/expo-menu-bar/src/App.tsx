@@ -12,7 +12,6 @@ import {useDeepLinking} from './hooks/useDeepLinking';
 import {downloadBuildAsync} from './commands/downloadBuildAsync';
 import AutoResizerRootView from './components/AutoResizerRootView';
 import {useListDevices} from './hooks/useListDevices';
-import {listDevicesAsync} from './commands/listDevicesAsync';
 import {bootDeviceAsync} from './commands/bootDeviceAsync';
 import {installAndLaunchAppAsync} from './commands/installAndLaunchAppAsync';
 import {launchSnackAsync} from './commands/launchSnackAsync';
@@ -36,6 +35,7 @@ import {
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
 } from './modules/Storage';
+import {useDeviceAudioPreferences} from './hooks/useDeviceAudioPreferences';
 
 enum Status {
   LISTENING,
@@ -56,6 +56,7 @@ function App(props: Props) {
   const [progress, setProgress] = useState(0);
 
   const {devices} = useListDevices();
+  const {emulatorWithoutAudio} = useDeviceAudioPreferences();
 
   // @TODO: Create a hook
   useEffect(() => {
@@ -88,6 +89,7 @@ function App(props: Props) {
     await bootDeviceAsync({
       platform: getDeviceOS(device),
       id: deviceId,
+      noAudio: emulatorWithoutAudio,
     });
   };
 
@@ -145,7 +147,7 @@ function App(props: Props) {
   };
 
   useDeepLinking(
-    useCallback(async ({url}) => {
+    useCallback(({url}) => {
       if (!props.isDevWindow) {
         const urlWithoutProtocol = url.substring(url.indexOf('://') + 3);
         const isSnackUrl = url.includes('exp.host/');
@@ -237,7 +239,13 @@ function App(props: Props) {
                     device={device}
                     key={device.name}
                     onPress={() => onSelectDevice(device)}
-                    onPressLaunch={() => {}}
+                    onPressLaunch={() =>
+                      bootDeviceAsync({
+                        platform,
+                        id,
+                        noAudio: emulatorWithoutAudio,
+                      })
+                    }
                     selected={selectedDevicesIds[platform] === id}
                   />
                 );
