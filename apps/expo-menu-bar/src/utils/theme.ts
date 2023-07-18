@@ -246,3 +246,15 @@ export const borderDark = {
     borderWidth: StyleSheet.hairlineWidth,
   },
 };
+
+export function addOpacity(colorString: string, opacity: number) {
+  const opacityHex = Math.round(opacity * 255).toString(16);
+
+  let color = colorString.replace('#', '').substring(0, 6);
+  if (color.length === 3) {
+    const [r, g, b] = color;
+    color = r + r + g + g + b + b;
+  }
+
+  return `#${color}${opacityHex}`;
+}

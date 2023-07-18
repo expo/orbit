@@ -7,11 +7,11 @@ import {
   TouchableOpacityProps,
   ViewStyle,
 } from 'react-native';
-import {palette, shadows} from '@expo/styleguide-native';
+import {darkTheme, lightTheme, palette} from '@expo/styleguide-native';
 
 import {Text} from './Text';
-import {View} from './View';
-import {ExpoTheme, useExpoTheme} from '../utils/useExpoTheme';
+import {useCurrentTheme} from '../utils/useExpoTheme';
+import {addOpacity} from '../utils/theme';
 
 type Color = 'default' | 'primary';
 interface Props extends TouchableOpacityProps {
@@ -20,35 +20,40 @@ interface Props extends TouchableOpacityProps {
 }
 
 const Button = ({children, color = 'default', ...otherProps}: Props) => {
-  const expoTheme = useExpoTheme();
-  const {textStyle, touchableStyle} = getStylesForColor(color, expoTheme);
+  const theme = useCurrentTheme();
+  const {textStyle, touchableStyle} = getStylesForColor(color, theme);
 
   return (
-    <View shadow="button">
-      <TouchableOpacity
-        {...otherProps}
-        style={[styles.base, touchableStyle, otherProps.style]}>
-        <Text style={textStyle} size="tiny" weight="semibold">
-          {children}
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <TouchableOpacity
+      {...otherProps}
+      style={[styles.base, touchableStyle, otherProps.style]}>
+      <Text style={textStyle} size="tiny" weight="semibold">
+        {children}
+      </Text>
+    </TouchableOpacity>
   );
 };
 
 export default Button;
 
-function getStylesForColor(color: Color, theme: ExpoTheme) {
+function getStylesForColor(
+  color: Color,
+  theme: ReturnType<typeof useCurrentTheme>,
+) {
   let textStyle: StyleProp<TextStyle> = {};
   let touchableStyle: StyleProp<ViewStyle> = {};
 
   switch (color) {
     case 'primary':
       touchableStyle = {
-        ...shadows.tiny,
-        shadowOpacity: 0.075,
-        backgroundColor: theme.background.default,
-        borderColor: theme.border.default,
+        backgroundColor:
+          theme === 'light'
+            ? addOpacity(lightTheme.background.default, 0.8)
+            : addOpacity(darkTheme.background.default, 0.4),
+        borderColor:
+          theme === 'light'
+            ? addOpacity(lightTheme.border.default, 1)
+            : 'transparent',
         borderWidth: 1,
       };
 
