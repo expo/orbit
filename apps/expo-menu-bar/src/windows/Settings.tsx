@@ -1,25 +1,34 @@
 import {useEffect, useState} from 'react';
-import {Alert, StyleSheet, Switch, Text, View} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Alert, StyleSheet} from 'react-native';
 
 import MenuBarModule from '../modules/MenuBarModule';
-
-const launchOnLoginStorageKey = 'launch-on-login';
+import {Checkbox, View, Row, Text, Divider} from '../components';
+import PathInput from '../components/PathInput';
+import {
+  UserPreferences,
+  getUserPreferences,
+  saveUserPreferences,
+} from '../utils/userPreferences';
 
 const Settings = () => {
-  const [launchOnLogin, setLaunchOnLogin] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
+  const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(launchOnLoginStorageKey).then(value => {
-      setLaunchOnLogin(value === 'true');
+    getUserPreferences().then(value => {
+      setUserPreferences(value);
+      setCustomSdkPathEnabled(Boolean(value.customSdkPath));
     });
   }, []);
 
   const onPressLaunchOnLogin = async (value: boolean) => {
     try {
       await MenuBarModule.setLoginItemEnabled(value);
-      setLaunchOnLogin(value);
-      AsyncStorage.setItem(launchOnLoginStorageKey, String(value));
+      setUserPreferences(prev => {
+        const newPreferences = {...prev, launchOnLogin: value};
+        saveUserPreferences(newPreferences);
+        return newPreferences;
+      });
     } catch (error: any) {
       if (error.code === 'AUTO_LAUNCHER_ERROR') {
         Alert.alert(
@@ -37,21 +46,53 @@ const Settings = () => {
     }
   };
 
+  const onPressEmulatorWithoutAudio = async (value: boolean) => {
+    setUserPreferences(prev => {
+      const newPreferences = {...prev, emulatorWithoutAudio: value};
+      saveUserPreferences(newPreferences);
+      return newPreferences;
+    });
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.item}>
-        <Text>Launch on login</Text>
-        <Switch value={launchOnLogin} onValueChange={onPressLaunchOnLogin} />
+    <View flex="1" px="medium" py="medium">
+      <View flex="1">
+        <Row mb="3.5" align="center" gap="1">
+          <Checkbox
+            value={userPreferences.launchOnLogin}
+            onValueChange={onPressLaunchOnLogin}
+          />
+          <Text>Launch on login</Text>
+        </Row>
+        <Row mb="3.5" align="center" gap="1">
+          <Checkbox
+            value={userPreferences.emulatorWithoutAudio}
+            onValueChange={onPressEmulatorWithoutAudio}
+          />
+          <Text>Run Android emulator without audio</Text>
+        </Row>
+        <Row mb="2" align="center" gap="1">
+          <Checkbox
+            value={customSdkPathEnabled}
+            onValueChange={setCustomSdkPathEnabled}
+          />
+          <Text>Custom Android Sdk Root location</Text>
+        </Row>
+        <PathInput
+          editable={customSdkPathEnabled}
+          onChangeText={text => {
+            setUserPreferences(prev => ({...prev, customSdkPath: text}));
+          }}
+          value={userPreferences.customSdkPath}
+        />
       </View>
-      <View style={styles.footerContainer}>
-        <Text>
-          Version: {MenuBarModule.constants.appVersion} (
-          {MenuBarModule.constants.buildVersion})
-        </Text>
-        <Text style={styles.footerText}>
-          Copyright © 2023 650 Industries, Inc. All rights reserved.
+      <Divider mb="tiny" />
+      <View py="small">
+        <Text color="secondary">
+          {`Version: ${MenuBarModule.constants.appVersion} (${MenuBarModule.constants.buildVersion})`}
         </Text>
       </View>
+      <Text color="secondary">Copyright 650 Industries Inc, 2023</Text>
     </View>
   );
 };
@@ -59,15 +100,10 @@ const Settings = () => {
 export default Settings;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-  },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  footerContainer: {marginTop: 'auto', alignItems: 'center'},
   footerText: {
     fontSize: 10,
     marginTop: 10,

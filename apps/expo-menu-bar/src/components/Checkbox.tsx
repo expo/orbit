@@ -18,7 +18,7 @@ interface CheckboxChangeEvent
 type NativeCheckboxProps = ViewProps & {
   disabled?: boolean;
   onChange?: (event: CheckboxChangeEvent) => void;
-  value: boolean;
+  value?: boolean;
 };
 
 const NativeCheckbox = requireNativeComponent<NativeCheckboxProps>('Checkbox');
