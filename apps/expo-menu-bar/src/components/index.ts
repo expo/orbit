@@ -1,2 +1,3 @@
+export {default as Checkbox} from './Checkbox';
 export {Text, TextInput} from './Text';
-export {View, Divider} from './View';
+export {Divider, Row, View} from './View';

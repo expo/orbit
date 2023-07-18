@@ -31,6 +31,8 @@
 		C08E65302A5C44870079E3A9 /* AutoLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C08E65322A5C44B90079E3A9 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */; };
 		C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */ = {isa = PBXBuildFile; fileRef = C08E65332A5D04910079E3A9 /* WindowNavigator.m */; };
+		C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36E9F2A65E25A004F2D8C /* Checkbox.m */; };
+		C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
 /* End PBXBuildFile section */
@@ -99,6 +101,10 @@
 		C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks/ServiceManagement.framework; sourceTree = DEVELOPER_DIR; };
 		C08E65332A5D04910079E3A9 /* WindowNavigator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowNavigator.m; sourceTree = "<group>"; };
 		C08E65352A5D0A580079E3A9 /* WindowNavigator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowNavigator.h; sourceTree = "<group>"; };
+		C0B36E9E2A65E25A004F2D8C /* Checkbox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Checkbox.h; sourceTree = "<group>"; };
+		C0B36E9F2A65E25A004F2D8C /* Checkbox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Checkbox.m; sourceTree = "<group>"; };
+		C0B36EA02A65E25A004F2D8C /* CheckboxManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CheckboxManager.h; sourceTree = "<group>"; };
+		C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckboxManager.m; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
 		C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoMenuBar-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -193,6 +199,10 @@
 				C061C7A22A26B27E00A53D8D /* AutoResizerRootViewManager.h */,
 				C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */,
 				C061C7A52A26B55C00A53D8D /* AutoResizerRootView.h */,
+				C0B36E9E2A65E25A004F2D8C /* Checkbox.h */,
+				C0B36E9F2A65E25A004F2D8C /* Checkbox.m */,
+				C0B36EA02A65E25A004F2D8C /* CheckboxManager.h */,
+				C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */,
 				C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */,
 				C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */,
 				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
@@ -542,9 +552,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */,
 				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */,
+				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
 				C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
