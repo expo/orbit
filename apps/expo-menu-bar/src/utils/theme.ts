@@ -55,6 +55,7 @@ export const margin = {
   mt: fullSpacingScaleForAttributes(['marginTop']),
 };
 
+export const gap = fullSpacingScaleForAttributes(['gap']);
 export const width = fullSpacingScaleForAttributes(['width']);
 export const height = fullSpacingScaleForAttributes(['height']);
 

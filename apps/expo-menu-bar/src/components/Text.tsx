@@ -60,7 +60,6 @@ export const TextInput = create(RNTextInput, {
     fontFamily: 'Inter-Regular',
     color: lightTheme.text.default,
     fontSize: 16,
-    lineHeight: 18,
   },
 
   variants: {
