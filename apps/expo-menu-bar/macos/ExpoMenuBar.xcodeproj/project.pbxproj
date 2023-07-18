@@ -63,7 +63,7 @@
 		214F660AED31B4554BE29100 /* Pods-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		38423A3E24576CBC00BC2EAC /* main.jsbundle */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
 		4D47B0298808748D37D9C46D /* Pods-ExpoMenuBar-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.debug.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.debug.xcconfig"; sourceTree = "<group>"; };
-		514201492437B4B30078DB4F /* Expo Launcher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Expo Launcher.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		514201492437B4B30078DB4F /* Expo Orbit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Expo Orbit.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5142014B2437B4B30078DB4F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		5142014C2437B4B30078DB4F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		514201512437B4B40078DB4F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -249,7 +249,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* ExpoMenuBar.app */,
-				514201492437B4B30078DB4F /* Expo Launcher.app */,
+				514201492437B4B30078DB4F /* Expo Orbit.app */,
 				C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */,
 			);
 			name = Products;
@@ -315,7 +315,7 @@
 			);
 			name = "ExpoMenuBar-macOS";
 			productName = ExpoMenuBar;
-			productReference = 514201492437B4B30078DB4F /* Expo Launcher.app */;
+			productReference = 514201492437B4B30078DB4F /* Expo Orbit.app */;
 			productType = "com.apple.product-type.application";
 		};
 		C08E651D2A5C411D0079E3A9 /* AutoLauncher */ = {
@@ -653,7 +653,7 @@
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "ExpoMenuBar-macos/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
+				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_CFLAGS = "$(inherited)  ";
@@ -662,8 +662,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.MenuBar;
-				PRODUCT_NAME = "Expo Launcher";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.orbit;
+				PRODUCT_NAME = "Expo Orbit";
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -677,7 +677,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = "ExpoMenuBar-macos/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Expo Launcher";
+				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_CFLAGS = "$(inherited)  ";
@@ -686,8 +686,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.MenuBar;
-				PRODUCT_NAME = "Expo Launcher";
+				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.orbit;
+				PRODUCT_NAME = "Expo Orbit";
 				SDKROOT = macosx;
 			};
 			name = Release;

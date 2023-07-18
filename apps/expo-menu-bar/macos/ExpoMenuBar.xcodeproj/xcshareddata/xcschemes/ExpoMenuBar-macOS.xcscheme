@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "514201482437B4B30078DB4F"
-               BuildableName = "Expo Launcher.app"
+               BuildableName = "Expo Orbit.app"
                BlueprintName = "ExpoMenuBar-macOS"
                ReferencedContainer = "container:ExpoMenuBar.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "514201482437B4B30078DB4F"
-            BuildableName = "Expo Launcher.app"
+            BuildableName = "Expo Orbit.app"
             BlueprintName = "ExpoMenuBar-macOS"
             ReferencedContainer = "container:ExpoMenuBar.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "514201482437B4B30078DB4F"
-            BuildableName = "Expo Launcher.app"
+            BuildableName = "Expo Orbit.app"
             BlueprintName = "ExpoMenuBar-macOS"
             ReferencedContainer = "container:ExpoMenuBar.xcodeproj">
          </BuildableReference>

@@ -1,4 +1,4 @@
-# EAS Menu Bar Monorepo
+# Expo Orbit Monorepo
 
 A quick way to access EAS builds and snack projects
 
