@@ -27,10 +27,23 @@ RCT_EXPORT_METHOD(pickFileWithFilenameExtension:(NSArray<NSString *> *)filenameE
       [panel setAllowedContentTypes:allowedTypes];
     }
 
-    if ([panel runModal] == NSModalResponseOK){
+    // Get the main window from the application
+    NSWindow *mainWindow = [NSApplication sharedApplication].mainWindow;
+    if (mainWindow) {
+      [panel beginSheetModalForWindow:mainWindow completionHandler:^(NSModalResponse result) {
+        if (result == NSModalResponseOK) {
           resolve(panel.URL.path);
-    }else {
-      reject(@"FILE_PICKER_ERROR", @"NSModalResponseCancel", nil);
+        } else {
+          reject(@"FILE_PICKER_ERROR", @"NSModalResponseCancel", nil);
+        }
+      }];
+    } else {
+      // Fallback to runModal if the main window is not available
+      if ([panel runModal] == NSModalResponseOK){
+        resolve(panel.URL.path);
+      } else {
+        reject(@"FILE_PICKER_ERROR", @"NSModalResponseCancel", nil);
+      }
     }
   });
 }
