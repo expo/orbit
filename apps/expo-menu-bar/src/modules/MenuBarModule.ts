@@ -10,6 +10,7 @@ type MenuBarModule = NativeModule & {
   ) => Promise<string>;
   runCommand: (command: string, args: string[]) => Promise<void>;
   setLoginItemEnabled: (enabled: boolean) => Promise<void>;
+  setEnvVars: (envVars: {[key: string]: string}) => void;
 };
 
 type MenuBarModuleConstants = {

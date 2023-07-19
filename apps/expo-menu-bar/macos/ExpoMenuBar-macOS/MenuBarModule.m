@@ -114,6 +114,19 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   [task setLaunchPath:executablePath];
   [task setArguments:[@[command] arrayByAddingObjectsFromArray:arguments]];
 
+  NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithDictionary:[[NSProcessInfo processInfo] environment]];
+  // Retrieve the envVars from NSUserDefaults
+  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  NSDictionary *envVars = [userDefaults objectForKey:@"envVars"];
+
+  // Check if the retrieved object is indeed a NSDictionary
+  if ([envVars isKindOfClass:[NSDictionary class]] && [envVars count] > 0) {
+    for (NSString *key in envVars) {
+      [environment setObject:envVars[key] forKey:key];
+      NSLog(@"Key: %@ - value: %@", key,envVars[key]);
+    }
+    [task setEnvironment:environment];
+  }
 
   [task setStandardOutput:pipe];
   [task setStandardError:pipe];
@@ -194,6 +207,13 @@ RCT_EXPORT_METHOD(openSystemSettingsLoginItems)
     NSString *url = @"x-apple.systempreferences:com.apple.LoginItems-Settings.extension";
     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];
   }
+}
+
+RCT_EXPORT_METHOD(setEnvVars:(NSDictionary *)envVars)
+{
+  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  [userDefaults setObject:envVars forKey:@"envVars"];
+  [userDefaults synchronize];
 }
 
 

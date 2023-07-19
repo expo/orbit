@@ -54,6 +54,18 @@ const Settings = () => {
     });
   };
 
+  const toggleCustomSdkPath = (value: boolean) => {
+    setCustomSdkPathEnabled(value);
+    if (!value) {
+      setUserPreferences(prev => {
+        const newPreferences = {...prev, customSdkPath: undefined};
+        saveUserPreferences(newPreferences);
+        MenuBarModule.setEnvVars({});
+        return newPreferences;
+      });
+    }
+  };
+
   return (
     <View flex="1" px="medium" py="medium">
       <View flex="1">
@@ -74,14 +86,21 @@ const Settings = () => {
         <Row mb="2" align="center" gap="1">
           <Checkbox
             value={customSdkPathEnabled}
-            onValueChange={setCustomSdkPathEnabled}
+            onValueChange={toggleCustomSdkPath}
           />
-          <Text>Custom Android Sdk Root location</Text>
+          <Text>Custom Android SDK root location</Text>
         </Row>
         <PathInput
           editable={customSdkPathEnabled}
           onChangeText={text => {
-            setUserPreferences(prev => ({...prev, customSdkPath: text}));
+            setUserPreferences(prev => {
+              const newPreferences = {...prev, customSdkPath: text};
+              saveUserPreferences(newPreferences);
+              MenuBarModule.setEnvVars({
+                ANDROID_HOME: text,
+              });
+              return newPreferences;
+            });
           }}
           value={userPreferences.customSdkPath}
         />
