@@ -6,6 +6,7 @@ import Log from "../../log";
 import { promptAsync } from "../../prompts";
 import { sleepAsync } from "../../utils/promise";
 import { simctlAsync } from "./simctl";
+import { xcrunAsync } from "./xcrun";
 
 export interface IosSimulator {
   runtime: string;
@@ -240,4 +241,11 @@ export async function getAppBundleIdentifierAsync(
   }
 
   return stdout.trim();
+}
+
+export async function openURLAsync(options: {
+  udid: string;
+  url: string;
+}): Promise<void> {
+  await xcrunAsync(["simctl", "openurl", options.udid, options.url]);
 }

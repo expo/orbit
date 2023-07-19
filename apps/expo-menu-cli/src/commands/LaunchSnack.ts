@@ -1,4 +1,5 @@
-import { SimControl } from "xdl";
+import { Simulator } from "eas-shared";
+
 import { listDevicesAsync } from "./ListDevices";
 import { Platform } from "../utils";
 import { bootDeviceAsync } from "./BootDevice";
@@ -29,7 +30,7 @@ export async function launchSnackAsync(
     await bootDeviceAsync({ platform: Platform.Ios, id: device.udid });
   }
 
-  await SimControl.openURLAsync({
+  await Simulator.openURLAsync({
     url: snackURl,
     udid: device.udid,
   });
