@@ -9,7 +9,7 @@
     "macos": "react-native run-macos",
     "start": "react-native start",
     "test": "jest",
-    "update-cli": "cp ../expo-menu-cli/dist/expo-menu-cli cli/expo-menu-cli"
+    "update-cli": "cp ../cli/dist/expo-orbit-cli cli/expo-orbit-cli"
   },
   "dependencies": {
     "@expo/styleguide-native": "^1.0.1",

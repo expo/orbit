@@ -17,7 +17,7 @@
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
 		C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */; };
 		C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */; };
-		C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* expo-menu-cli */; };
+		C032EDB72A1FE6F300FBC597 /* expo-orbit-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* expo-orbit-cli */; };
 		C0523ECA2A545730003371AF /* FilePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523EC92A545730003371AF /* FilePicker.m */; };
 		C0523ECC2A550983003371AF /* WindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowManager.m */; };
 		C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */; };
@@ -77,7 +77,7 @@
 		C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorManager.m; sourceTree = "<group>"; };
 		C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorView.h; sourceTree = "<group>"; };
 		C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorView.m; sourceTree = "<group>"; };
-		C032EDB62A1FE6F300FBC597 /* expo-menu-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-menu-cli"; path = "../../cli/expo-menu-cli"; sourceTree = "<group>"; };
+		C032EDB62A1FE6F300FBC597 /* expo-orbit-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-orbit-cli"; path = "../../cli/expo-orbit-cli"; sourceTree = "<group>"; };
 		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
 		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
 		C0523ECB2A550983003371AF /* WindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowManager.m; sourceTree = "<group>"; };
@@ -182,7 +182,7 @@
 			isa = PBXGroup;
 			children = (
 				C081507C2A610E2F00E8890F /* Resources */,
-				C032EDB62A1FE6F300FBC597 /* expo-menu-cli */,
+				C032EDB62A1FE6F300FBC597 /* expo-orbit-cli */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
 				5142014B2437B4B30078DB4F /* AppDelegate.h */,
 				5142014C2437B4B30078DB4F /* AppDelegate.m */,
@@ -392,7 +392,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C032EDB72A1FE6F300FBC597 /* expo-menu-cli in Resources */,
+				C032EDB72A1FE6F300FBC597 /* expo-orbit-cli in Resources */,
 				C081507F2A610E9C00E8890F /* fonts in Resources */,
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,
@@ -656,7 +656,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = "$(inherited)  ";
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -680,7 +683,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = "$(inherited)  ";
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

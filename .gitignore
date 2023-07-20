@@ -9,4 +9,4 @@ yarn-error.log
 packages/*/build
 apps/*/build
 
-apps/expo-menu-bar/cli/expo-menu-cli
+apps/menu-bar/cli/expo-orbit-cli

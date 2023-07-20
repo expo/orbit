@@ -109,7 +109,7 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   NSTask *task = [[NSTask alloc] init];
   NSPipe *pipe = [NSPipe pipe];
 
-  NSString *executablePath = [[NSBundle mainBundle] pathForResource:@"expo-menu-cli" ofType:nil];
+  NSString *executablePath = [[NSBundle mainBundle] pathForResource:@"expo-orbit-cli" ofType:nil];
 
   [task setLaunchPath:executablePath];
   [task setArguments:[@[command] arrayByAddingObjectsFromArray:arguments]];

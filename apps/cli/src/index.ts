@@ -11,8 +11,8 @@ import { returnLoggerMiddleware } from "./utils";
 const program = new Command();
 
 program
-  .name("expo-menu-cli")
-  .description("The command-line tool used internally by expo-menu-bar");
+  .name("expo-orbit-cli")
+  .description("The command-line tool used internally by Expo Orbit menu bar");
 
 program
   .command("download-build")

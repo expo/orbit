@@ -1,7 +1,8 @@
 {
-  "name": "expo-menu-cli",
+  "name": "expo-orbit-cli",
+  "private": true,
   "version": "0.0.1",
-  "description": "The command-line tool used internally by expo-menu-bar",
+  "description": "The command-line tool used internally by Expo Orbit menu bar",
   "license": "MIT",
   "files": [
     "build"
@@ -10,10 +11,10 @@
     "cli": "node ./build/index.js",
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc --project tsconfig.build.json",
-    "archive": "yarn build && pkg build/index.js -o dist/expo-menu-cli",
+    "archive": "yarn build && pkg build/index.js -o dist/expo-orbit-cli",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
-    "watch": "tsc --project tsconfig.build.json --watch --preserveWatchOutput"
+    "watch": "tsc --watch --preserveWatchOutput"
   },
   "dependencies": {
     "commander": "^10.0.1",

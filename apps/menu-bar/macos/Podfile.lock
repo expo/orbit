@@ -501,7 +501,7 @@ SPEC CHECKSUMS:
   boost: 8fa3cd00fa17ef6c3221e5fd283fa93e81d23017
   DoubleConversion: acaf5db79676d2e9119015819153f0f99191de12
   FBLazyVector: e587b6f453346b01cb8fdf40c154362d0593fe6f
-  FBReactNativeSpec: 080133dd44e06a03482bab07bc1003dbab78304b
+  FBReactNativeSpec: 169753e6632051d8a61a27ddce1057c3312f4edd
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 6df0a3d6e2750a50609471fd1a01fd2948d405b5
   hermes-engine: 47986d26692ae75ee7a17ab049caee8864f855de
