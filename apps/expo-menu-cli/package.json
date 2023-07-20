@@ -13,7 +13,7 @@
     "archive": "yarn build && pkg build/index.js -o dist/expo-menu-cli",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
-    "watch": "tsc --watch --preserveWatchOutput"
+    "watch": "tsc --project tsconfig.build.json --watch --preserveWatchOutput"
   },
   "dependencies": {
     "commander": "^10.0.1",

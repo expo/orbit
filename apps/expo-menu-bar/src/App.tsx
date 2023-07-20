@@ -68,57 +68,90 @@ function App(props: Props) {
     });
   }, []);
 
-  // @TODO: create another hook
-  const handleSnackUrl = async (url: string) => {
-    await launchSnackAsync({url});
-  };
+  const getFirstAvailableDevice = useCallback(
+    (simulator?: boolean) => {
+      return (
+        devices.find(d => getDeviceId(d) === selectedDevicesIds.ios) ??
+        devices.find(d => getDeviceId(d) === selectedDevicesIds.android) ??
+        devices?.find(d => d.state === 'Booted')
+      );
+    },
+    [devices, selectedDevicesIds],
+  );
 
-  const getDeviceByPlatform = (platform: 'android' | 'ios') => {
-    return (
-      devices.find(d => getDeviceId(d) === selectedDevicesIds[platform]) ??
-      devices.find(d => getDeviceOS(d) === platform)
-    );
-  };
-
-  const ensureDeviceIsRunning = async (device: Device) => {
-    if (device.state !== 'Shutdown') {
-      return;
-    }
-
-    const deviceId = getDeviceId(device);
-    await bootDeviceAsync({
-      platform: getDeviceOS(device),
-      id: deviceId,
-      noAudio: emulatorWithoutAudio,
-    });
-  };
-
-  const handleEASUrl = async (url: string) => {
-    try {
-      const platform = getPlatformFromURI(url);
-      let device = getDeviceByPlatform(platform);
-      if (!device) {
-        return; // handle error
+  const ensureDeviceIsRunning = useCallback(
+    async (device: Device) => {
+      if (device.state !== 'Shutdown') {
+        return;
       }
 
       const deviceId = getDeviceId(device);
-      setStatus(Status.DOWNLOADING);
-      const [buildPath] = await Promise.all([
-        downloadBuildAsync(url, setProgress),
-        ensureDeviceIsRunning(device),
-      ]);
+      await bootDeviceAsync({
+        platform: getDeviceOS(device),
+        id: deviceId,
+        noAudio: emulatorWithoutAudio,
+      });
+    },
+    [emulatorWithoutAudio],
+  );
 
-      setStatus(Status.INSTALLING);
-      await installAndLaunchAppAsync({appPath: buildPath, deviceId});
-      setStatus(Status.SUCCESS);
-    } catch (error) {
-      console.log(`error ${error}`);
-    } finally {
-      setTimeout(() => {
-        setStatus(Status.LISTENING);
-      }, 2000);
-    }
-  };
+  // @TODO: create another hook
+  const handleSnackUrl = useCallback(
+    async (url: string) => {
+      const device = getFirstAvailableDevice();
+      if (!device) {
+        return;
+      }
+
+      ensureDeviceIsRunning(device);
+      await launchSnackAsync({
+        url,
+        deviceId: getDeviceId(device),
+        platform: getDeviceOS(device),
+      });
+    },
+    [ensureDeviceIsRunning, getFirstAvailableDevice],
+  );
+
+  const getDeviceByPlatform = useCallback(
+    (platform: 'android' | 'ios') => {
+      return (
+        devices.find(d => getDeviceId(d) === selectedDevicesIds[platform]) ??
+        devices.find(d => getDeviceOS(d) === platform)
+      );
+    },
+    [devices, selectedDevicesIds],
+  );
+
+  const handleEASUrl = useCallback(
+    async (url: string) => {
+      try {
+        const platform = getPlatformFromURI(url);
+        let device = getDeviceByPlatform(platform);
+        if (!device) {
+          return; // handle error
+        }
+
+        const deviceId = getDeviceId(device);
+        setStatus(Status.DOWNLOADING);
+        const [buildPath] = await Promise.all([
+          downloadBuildAsync(url, setProgress),
+          ensureDeviceIsRunning(device),
+        ]);
+
+        setStatus(Status.INSTALLING);
+        await installAndLaunchAppAsync({appPath: buildPath, deviceId});
+        setStatus(Status.SUCCESS);
+      } catch (error) {
+        console.log(`error ${error}`);
+      } finally {
+        setTimeout(() => {
+          setStatus(Status.LISTENING);
+        }, 2000);
+      }
+    },
+    [ensureDeviceIsRunning, getDeviceByPlatform],
+  );
 
   const openFilePicker = async () => {
     try {
@@ -147,18 +180,21 @@ function App(props: Props) {
   };
 
   useDeepLinking(
-    useCallback(({url}) => {
-      if (!props.isDevWindow) {
-        const urlWithoutProtocol = url.substring(url.indexOf('://') + 3);
-        const isSnackUrl = url.includes('exp.host/');
+    useCallback(
+      ({url}) => {
+        if (!props.isDevWindow) {
+          const urlWithoutProtocol = url.substring(url.indexOf('://') + 3);
+          const isSnackUrl = url.includes('exp.host/');
 
-        if (isSnackUrl) {
-          return handleSnackUrl(`exp://${urlWithoutProtocol}`);
+          if (isSnackUrl) {
+            return handleSnackUrl(`exp://${urlWithoutProtocol}`);
+          }
+
+          handleEASUrl(`https://${urlWithoutProtocol}`);
         }
-
-        handleEASUrl(`https://${urlWithoutProtocol}`);
-      }
-    }, []),
+      },
+      [props.isDevWindow, handleEASUrl, handleSnackUrl],
+    ),
   );
 
   const onSelectDevice = (device: Device) => {
@@ -254,7 +290,7 @@ function App(props: Props) {
           </View>
         </View>
         <View px="medium" pb="medium">
-          <Divider style={{height: 1}} />
+          <Divider />
           <View py="2">
             <TouchableOpacity onPress={() => WindowsNavigator.open('Settings')}>
               <Text>Settings</Text>

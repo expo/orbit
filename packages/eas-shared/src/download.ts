@@ -219,7 +219,10 @@ async function getAppPathAsync(
   return path.join(outputDir, selectedFile);
 }
 
-async function tarExtractAsync(input: string, output: string): Promise<void> {
+export async function tarExtractAsync(
+  input: string,
+  output: string
+): Promise<void> {
   try {
     if (process.platform !== "win32") {
       await spawnAsync("tar", ["-xf", input, "-C", output], {

@@ -1,19 +1,19 @@
 import MenuBarModule from '../modules/MenuBarModule';
 
 type LaunchSnackAsyncOptions = {
-  platform?: 'android' | 'ios';
+  platform: 'android' | 'ios';
+  deviceId: string;
   url: string;
 };
 
 export const launchSnackAsync = async ({
   url,
   platform,
+  deviceId,
 }: LaunchSnackAsyncOptions) => {
-  const args = [url];
-
-  if (platform) {
-    args.push('-p', platform);
-  }
-
-  await MenuBarModule.runCli('launch-snack', args, undefined);
+  await MenuBarModule.runCli(
+    'launch-snack',
+    [url, '-p', platform, '--device-id', deviceId],
+    console.log,
+  );
 };

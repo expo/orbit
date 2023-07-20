@@ -41,8 +41,8 @@ program
 program
   .command("launch-snack")
   .argument("<string>", "Snack URL")
-  .option("-p, --platform <string>", "Selected platform")
-  .option("--device-id  <string>", "UDID or name of the device")
+  .requiredOption("-p, --platform <string>", "Selected platform")
+  .requiredOption("--device-id  <string>", "UDID or name of the device")
   .action(returnLoggerMiddleware(launchSnackAsync));
 
 program

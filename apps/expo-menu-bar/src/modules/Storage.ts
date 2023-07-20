@@ -28,7 +28,8 @@ export type SelectedDevicesIds = {
 
 export const getSelectedDevicesIds = async () => {
   const value = await AsyncStorage.getItem(selectedDevicesIdsStorageKey);
-  return JSON.parse(value ?? '{}') as SelectedDevicesIds;
+  const selectedDevicesIds = JSON.parse(value ?? '{}') as SelectedDevicesIds;
+  return selectedDevicesIds;
 };
 
 export const saveSelectedDevicesIds = async (
