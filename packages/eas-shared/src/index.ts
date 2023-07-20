@@ -4,10 +4,11 @@ import {
   extractAppFromLocalArchiveAsync,
 } from "./download";
 import { runAppOnIosSimulatorAsync, runAppOnAndroidEmulatorAsync } from "./run";
-import * as Simulator from "./run/ios/simulator";
 import * as Emulator from "./run/android/emulator";
-import { validateSystemRequirementsAsync as validateIOSSystemRequirementsAsync } from "./run/ios/systemRequirements";
 import { assertExecutablesExistAsync as validateAndroidSystemRequirementsAsync } from "./run/android/systemRequirements";
+import AppleDevice, { AppleConnectedDevice } from "./run/ios/device";
+import * as Simulator from "./run/ios/simulator";
+import { validateSystemRequirementsAsync as validateIOSSystemRequirementsAsync } from "./run/ios/systemRequirements";
 
 export {
   AppPlatform,
@@ -19,4 +20,6 @@ export {
   validateIOSSystemRequirementsAsync,
   Emulator,
   Simulator,
+  AppleDevice,
+  AppleConnectedDevice,
 };

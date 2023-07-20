@@ -13,6 +13,7 @@ export const useListDevices = () => {
     setLoading(true);
     try {
       const devicesList = await listDevicesAsync({platform: 'all'});
+      console.log('devicesList', devicesList);
       setDevices(devicesList);
     } catch (error) {
       setError(error as Error);
@@ -30,7 +31,7 @@ export const useListDevices = () => {
     return () => {
       listener.remove();
     };
-  }, []);
+  }, [updateDevicesList]);
 
   return {
     devices,

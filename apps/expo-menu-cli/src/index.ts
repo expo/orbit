@@ -22,7 +22,6 @@ program
 program
   .command("list-devices")
   .option("-p, --platform <string>", "Selected platform", "all")
-  .option("-od, --one-device", "Only the first available device")
   .action(returnLoggerMiddleware(listDevicesAsync));
 
 program

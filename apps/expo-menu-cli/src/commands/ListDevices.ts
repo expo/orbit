@@ -1,4 +1,9 @@
-import { Emulator, Simulator } from "eas-shared";
+import {
+  AppleConnectedDevice,
+  AppleDevice,
+  Emulator,
+  Simulator,
+} from "eas-shared";
 import { Platform } from "../utils";
 
 type Device<P> = P extends Platform.Ios
@@ -9,16 +14,22 @@ type Device<P> = P extends Platform.Ios
 
 export async function listDevicesAsync<P extends Platform>({
   platform,
-  oneDevice,
 }: {
   platform: P;
-  oneDevice?: boolean;
 }): Promise<Device<P>[]> {
-  let availableAndroidDevices: Emulator.AndroidDevice[] | undefined;
-  let availableIosDevices: Simulator.IosSimulator[] | undefined;
+  let availableAndroidDevices: Emulator.AndroidDevice[] = [];
+  let availableIosDevices: Array<
+    Simulator.IosSimulator | AppleConnectedDevice
+  > = [];
 
   if (platform === "ios" || platform === "all") {
-    availableIosDevices = await Simulator.getAvaliableIosSimulatorsListAsync();
+    availableIosDevices = availableIosDevices.concat(
+      await Simulator.getAvaliableIosSimulatorsListAsync()
+    );
+
+    availableIosDevices = availableIosDevices.concat(
+      await AppleDevice.getConnectedDevicesAsync()
+    );
   }
 
   if (platform === Platform.Android || platform === "all") {
@@ -41,32 +52,17 @@ export async function listDevicesAsync<P extends Platform>({
     );
   }
 
-  if (oneDevice) {
-    const firstAndroidDevice = availableAndroidDevices?.[0];
-    if (platform === Platform.Android) {
-      return firstAndroidDevice ? [firstAndroidDevice as Device<P>] : [];
-    }
-
-    const firstIOSDevice =
-      availableIosDevices?.find(({ state }) => state === "Booted") ||
-      availableIosDevices?.sort(
-        (a, b) => (b?.lastBootedAt || 0) - (a.lastBootedAt || 0)
-      )?.[0];
-
-    return firstIOSDevice ? [firstIOSDevice as Device<P>] : [];
-  }
-
   let result = new Array<Device<P>>();
   if (
     (platform === "all" || platform === Platform.Ios) &&
-    availableIosDevices
+    availableIosDevices?.length
   ) {
     result = result.concat(availableIosDevices as Device<P>[]);
   }
 
   if (
     (platform === "all" || platform === Platform.Android) &&
-    availableAndroidDevices
+    availableAndroidDevices.length
   ) {
     result = result.concat(availableAndroidDevices as Device<P>[]);
   }

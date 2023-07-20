@@ -1,19 +1,19 @@
 import * as osascript from "@expo/osascript";
 import spawnAsync from "@expo/spawn-async";
+import fs from "fs-extra";
 import path from "path";
 import semver from "semver";
-import fs from "fs-extra";
 
-import Log from "../../log";
-import { promptAsync } from "../../prompts";
-import { sleepAsync } from "../../utils/promise";
+import * as CoreSimulator from "./CoreSimulator";
 import { simctlAsync } from "./simctl";
 import { xcrunAsync } from "./xcrun";
-import * as Versions from "../../versions";
-import * as CoreSimulator from "./CoreSimulator";
 import { downloadAppAsync } from "../../downloadAppAsync";
+import Log from "../../log";
+import { promptAsync } from "../../prompts";
 import UserSettings from "../../userSettings";
 import { delayAsync } from "../../utils/delayAsync";
+import { sleepAsync } from "../../utils/promise";
+import * as Versions from "../../versions";
 
 export interface IosSimulator {
   runtime: string;
@@ -25,6 +25,7 @@ export interface IosSimulator {
   name: string;
   udid: string;
   lastBootedAt?: number;
+  deviceType: "simulator";
 }
 
 const EXPO_GO_BUNDLE_IDENTIFIER = "host.exp.Exponent";
