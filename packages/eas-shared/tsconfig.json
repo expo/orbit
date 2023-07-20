@@ -15,6 +15,7 @@
     "rootDir": "src",
     "typeRoots": [
       "../../ts-declarations",
+      "src/ts-declarations",
       "./node_modules/@types"
     ]
   },
