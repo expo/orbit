@@ -61,7 +61,7 @@ export function easInjector() {
     span.textContent = "Quick Launch";
   }
 
-  const url = downloadButton.href.replace("https://", "expomenubar://");
+  const url = downloadButton.href.replace("https://", "expo-orbit://");
   quickLaunchButton.removeAttribute("href");
 
   quickLaunchButton.addEventListener("click", function () {

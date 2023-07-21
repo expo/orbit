@@ -37,7 +37,7 @@ export function snackInjector() {
     return false;
   }
 
-  const url = expoGoURL.replace("exp://", "expomenubar://");
+  const url = expoGoURL.replace("exp://", "expo-orbit://");
 
   // Copy run button style and attributes
   const runButton = Array.from(

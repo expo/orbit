@@ -25,6 +25,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>expo-orbit</string>
 				<string>expomenubar</string>
 			</array>
 		</dict>
