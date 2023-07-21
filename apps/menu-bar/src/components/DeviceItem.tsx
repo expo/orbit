@@ -48,7 +48,8 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
           <View flex="1" justify="center">
             <Text numberOfLines={1}>{device.name}</Text>
             <Text style={styles.description} color="secondary">
-              {device.osType} {device.osVersion} - {device.state ?? 'Connected'}
+              {device.osType} {device.osVersion}
+              {device.state === 'Booted' ? ' - Running' : ''}
             </Text>
           </View>
         </Row>
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
   circle: {width: 36, height: 36, marginRight: 8},
   description: {
     fontSize: 11,
-    lineHeight: 11,
+    lineHeight: 13,
     opacity: 0.8,
   },
   button: {

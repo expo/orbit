@@ -10,7 +10,7 @@ export type AndroidDevice = {
   pid?: string;
   model?: string;
   name: string;
-  osType: "android";
+  osType: "Android";
   deviceType: "device" | "emulator";
   connectionType?: "USB" | "Network";
 };
@@ -92,7 +92,7 @@ export async function getRunningDevicesAsync(): Promise<AndroidDevice[]> {
         pid,
         deviceType,
         model,
-        osType: "android",
+        osType: "Android",
       };
 
       if (deviceType === "device") {

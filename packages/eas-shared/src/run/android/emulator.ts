@@ -59,7 +59,7 @@ export async function getAvailableAndroidEmulatorsAsync(): Promise<
       .filter(Boolean)
       .map((name) => ({
         name,
-        osType: "android",
+        osType: "Android",
         deviceType: "emulator",
       }));
   } catch {
