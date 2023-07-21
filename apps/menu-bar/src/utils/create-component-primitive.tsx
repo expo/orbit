@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {StyleSheet, ViewStyle, ImageStyle, TextStyle} from 'react-native';
 
-import {useTheme} from './useExpoTheme';
+import {useTheme} from '../providers/ThemeProvider';
 
 type StyleType = ViewStyle | TextStyle | ImageStyle;
 
@@ -18,6 +18,7 @@ type Nested<Type> = {
 
 type SelectorMap<Variants> = Partial<{
   [K in keyof Variants]?: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     [T in keyof Variants[K]]?: StyleType;
   };
 }>;
