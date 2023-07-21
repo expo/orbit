@@ -27,9 +27,15 @@ export async function listDevicesAsync<P extends Platform>({
       await Simulator.getAvaliableIosSimulatorsListAsync()
     );
 
-    availableIosDevices = availableIosDevices.concat(
-      await AppleDevice.getConnectedDevicesAsync()
-    );
+    const connectedDevices = await AppleDevice.getConnectedDevicesAsync();
+    const uniqueConnectedDevices = connectedDevices.filter((element, index) => {
+      return (
+        connectedDevices.findIndex(({ udid }) => udid === element.udid) !==
+        index
+      );
+    });
+
+    availableIosDevices = availableIosDevices.concat(uniqueConnectedDevices);
   }
 
   if (platform === Platform.Android || platform === "all") {

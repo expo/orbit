@@ -40,3 +40,5 @@ export const saveSelectedDevicesIds = async (
     JSON.stringify(devicesIds),
   );
 };
+
+export const resetStorage = async () => AsyncStorage.clear();

@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Alert, StyleSheet} from 'react-native';
+import {Alert, TouchableOpacity} from 'react-native';
 
 import MenuBarModule from '../modules/MenuBarModule';
 import {Checkbox, View, Row, Text, Divider} from '../components';
@@ -7,6 +7,7 @@ import PathInput from '../components/PathInput';
 import {
   UserPreferences,
   getUserPreferences,
+  resetStorage,
   saveUserPreferences,
 } from '../modules/Storage';
 
@@ -104,6 +105,16 @@ const Settings = () => {
           }}
           value={userPreferences.customSdkPath}
         />
+        {__DEV__ ? (
+          <View py="medium">
+            <Text weight="medium">Dev mode only</Text>
+            <View border="warning" bg="warning" padding="tiny">
+              <TouchableOpacity onPress={resetStorage}>
+                <Text>Reset storage</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
       </View>
       <Divider mb="tiny" />
       <View py="small">
@@ -117,14 +128,3 @@ const Settings = () => {
 };
 
 export default Settings;
-
-const styles = StyleSheet.create({
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 10,
-    marginTop: 10,
-  },
-});
