@@ -45,7 +45,7 @@ export async function listDevicesAsync<P extends Platform>({
       await Emulator.getAvailableAndroidEmulatorsAsync()
     )?.map((emulator) => {
       const runningEmulator = runningDevices.find(
-        (r) => r.type === "emulator" && r.name === emulator.name
+        (r) => r.deviceType === "emulator" && r.name === emulator.name
       );
       return {
         ...emulator,
@@ -54,7 +54,7 @@ export async function listDevicesAsync<P extends Platform>({
       };
     });
     availableAndroidDevices = availableAndroidDevices.concat(
-      runningDevices.filter((r) => r.type === "device")
+      runningDevices.filter((r) => r.deviceType === "device")
     );
   }
 

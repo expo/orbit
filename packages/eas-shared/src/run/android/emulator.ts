@@ -60,7 +60,7 @@ export async function getAvailableAndroidEmulatorsAsync(): Promise<
       .map((name) => ({
         name,
         osType: "android",
-        type: "emulator",
+        deviceType: "emulator",
       }));
   } catch {
     return [];
@@ -271,13 +271,13 @@ function getUnixPID(port: number | string) {
 }
 
 export async function activateEmulatorWindowAsync(
-  device: Pick<AndroidDevice, "type" | "pid">
+  device: Pick<AndroidDevice, "deviceType" | "pid">
 ) {
   if (
     // only mac is supported for now.
     process.platform !== "darwin" ||
     // can only focus emulators
-    device.type !== "emulator"
+    device.deviceType !== "emulator"
   ) {
     return;
   }

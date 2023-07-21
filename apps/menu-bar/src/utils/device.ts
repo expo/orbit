@@ -1,18 +1,31 @@
-export type Device = {
+export type BaseDevice = {
   name: string;
   osVersion?: string;
   osType: 'iOS' | 'android';
   state?: 'Booted' | 'Shutdown';
 } & (
   | {
-      osType: 'iOS';
-      udid: string;
+      deviceType: 'device';
+      connectionType?: 'USB' | 'Network';
     }
   | {
-      osType: 'android';
-      pid?: number;
+      deviceType: 'simulator' | 'emulator';
     }
 );
+
+export type IOSDevice = BaseDevice & {
+  osType: 'iOS';
+  udid: string;
+  deviceType: 'simulator' | 'device';
+};
+
+export type AndroidDevice = BaseDevice & {
+  osType: 'android';
+  pid?: number;
+  deviceType: 'emulator' | 'device';
+};
+
+export type Device = AndroidDevice | IOSDevice;
 
 export function getDeviceOS(device: Device): 'android' | 'ios' {
   return device.osType.toLowerCase() as 'android' | 'ios';

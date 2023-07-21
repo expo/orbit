@@ -101,6 +101,7 @@ export async function getAvaliableIosSimulatorsListAsync(
             windowName: `${device.name} (${osVersion})`,
             osType: "iOS" as const,
             state: device.state as "Booted" | "Shutdown",
+            deviceType: "simulator",
             lastBootedAt: device.lastBootedAt
               ? new Date(device.lastBootedAt).getTime()
               : undefined,

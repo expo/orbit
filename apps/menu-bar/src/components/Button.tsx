@@ -19,14 +19,25 @@ interface Props extends TouchableOpacityProps {
   color?: Color;
 }
 
-const Button = ({children, color = 'default', ...otherProps}: Props) => {
+const Button = ({
+  children,
+  color = 'default',
+  disabled,
+  ...otherProps
+}: Props) => {
   const theme = useCurrentTheme();
   const {textStyle, touchableStyle} = getStylesForColor(color, theme);
 
   return (
     <TouchableOpacity
       {...otherProps}
-      style={[styles.base, touchableStyle, otherProps.style]}>
+      disabled={disabled}
+      style={[
+        styles.base,
+        touchableStyle,
+        disabled && styles.disabled,
+        otherProps.style,
+      ]}>
       <Text style={textStyle} size="tiny" weight="semibold">
         {children}
       </Text>
@@ -82,5 +93,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  disabled: {
+    opacity: 0.7,
   },
 });

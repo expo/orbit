@@ -2,16 +2,18 @@ import spawnAsync, { SpawnResult } from "@expo/spawn-async";
 import os from "os";
 import path from "path";
 
+import { getAndroidSdkRootAsync } from "./sdk";
 import Log from "../../log";
 import { sleepAsync } from "../../utils/promise";
-import { getAndroidSdkRootAsync } from "./sdk";
 
-export interface AndroidDevice {
+export type AndroidDevice = {
   pid?: string;
+  model?: string;
   name: string;
-  type: "emulator" | "device";
   osType: "android";
-}
+  deviceType: "device" | "emulator";
+  connectionType?: "USB" | "Network";
+};
 
 const BEGINNING_OF_ADB_ERROR_MESSAGE = "error: ";
 
@@ -82,24 +84,38 @@ export async function getRunningDevicesAsync(): Promise<AndroidDevice[]> {
       const model = remainder
         .find((item) => item.startsWith("model:"))
         ?.substring(6);
-      const type: "emulator" | "device" = line.includes("emulator")
+      const deviceType: "emulator" | "device" = line.includes("emulator")
         ? "emulator"
         : "device";
-      return { pid, type, model };
+
+      const result: Omit<AndroidDevice, "name"> = {
+        pid,
+        deviceType,
+        model,
+        osType: "android",
+      };
+
+      if (deviceType === "device") {
+        result.connectionType = line.includes("tcp") ? "Network" : "USB";
+
+        if (line.includes("offline")) {
+          result.pid = undefined;
+        }
+      }
+
+      return result;
     })
     .filter(({ pid }) => !!pid);
 
   const devicePromises = attachedDevices.map<Promise<AndroidDevice>>(
-    async ({ pid, type, model }) => {
-      let name = model ?? "";
-      if (type === "emulator") {
-        name = (await getAdbNameForEmulatorIdAsync(pid)) ?? name;
+    async (device) => {
+      let name = device.model ?? "";
+      if (device.deviceType === "emulator" && device.pid) {
+        name = (await getAdbNameForEmulatorIdAsync(device.pid)) ?? name;
       }
       return {
-        pid,
+        ...device,
         name,
-        type,
-        osType: "android",
       };
     }
   );
@@ -109,7 +125,7 @@ export async function getRunningDevicesAsync(): Promise<AndroidDevice[]> {
 
 export async function getFirstRunningEmulatorAsync(): Promise<AndroidDevice | null> {
   const emulators = (await getRunningDevicesAsync()).filter(
-    ({ type }) => type === "emulator"
+    ({ deviceType }) => deviceType === "emulator"
   );
   return emulators[0] ?? null;
 }

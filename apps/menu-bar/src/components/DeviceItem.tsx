@@ -5,6 +5,8 @@ import {Device} from '../utils/device';
 import {Row, View} from './View';
 import {Text} from './Text';
 import IphoneIcon from '../assets/icons/iphone.svg';
+import WifiIcon from '../assets/icons/wifi.svg';
+import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import {useExpoTheme} from '../utils/useExpoTheme';
 import Button from './Button';
 
@@ -50,8 +52,20 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
             </Text>
           </View>
         </Row>
-        {hovering && device.state === 'Shutdown' ? (
-          <Button color="primary" onPress={onPressLaunch}>
+        {device.deviceType === 'device' ? (
+          <>
+            {device.connectionType === 'Network' ? (
+              <WifiIcon height={20} width={20} fill={PlatformColor('text')} />
+            ) : (
+              <CableConnectorIcon
+                height={24}
+                width={24}
+                fill={PlatformColor('text')}
+              />
+            )}
+          </>
+        ) : hovering && device.state === 'Shutdown' ? (
+          <Button color="primary" onPress={onPressLaunch} style={styles.button}>
             Launch
           </Button>
         ) : null}
@@ -74,5 +88,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 11,
     opacity: 0.8,
+  },
+  button: {
+    marginLeft: 8,
   },
 });
