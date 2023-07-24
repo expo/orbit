@@ -256,7 +256,7 @@ export const Divider = create(RNView, {
   selectors: {
     dark: {
       base: {
-        height: StyleSheet.hairlineWidth,
+        height: 1,
         backgroundColor: palette.dark.gray['700'],
       },
     },

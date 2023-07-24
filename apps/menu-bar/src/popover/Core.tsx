@@ -1,10 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {
-  TouchableOpacity,
-  PlatformColor,
-  StyleSheet,
-  FlatList,
-} from 'react-native';
+import {TouchableOpacity, FlatList} from 'react-native';
 
 import {useDeepLinking} from '../hooks/useDeepLinking';
 import {downloadBuildAsync} from '../commands/downloadBuildAsync';
@@ -28,6 +23,7 @@ import {
   saveSelectedDevicesIds,
 } from '../modules/Storage';
 import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
+import {useExpoTheme} from '../utils/useExpoTheme';
 
 enum Status {
   LISTENING,
@@ -48,6 +44,7 @@ function Core(props: Props) {
 
   const {devices} = useListDevices();
   const {emulatorWithoutAudio} = useDeviceAudioPreferences();
+  const theme = useExpoTheme();
 
   useEffect(() => {
     getSelectedDevicesIds().then(setSelectedDevicesIds);
@@ -205,20 +202,20 @@ function Core(props: Props) {
         {status === Status.LISTENING ? (
           <View>
             <TouchableOpacity onPress={openProjectsSelectorURL}>
-              <Row style={{gap: 6}} mt="small" align="center">
-                <File05Icon />
+              <Row gap="1.5" mt="small" align="center">
+                <File05Icon stroke={theme.icon.default} />
                 <Text>Select build from EAS...</Text>
               </Row>
             </TouchableOpacity>
             <TouchableOpacity onPress={openFilePicker}>
-              <Row style={{gap: 6}} mt="small">
-                <Earth02Icon />
+              <Row gap="1.5" mt="small">
+                <Earth02Icon stroke={theme.icon.default} />
                 <Text>Select build from local file...</Text>
               </Row>
             </TouchableOpacity>
           </View>
         ) : status === Status.DOWNLOADING || status === Status.INSTALLING ? (
-          <View style={styles.downloading}>
+          <View>
             <ProgressIndicator
               progress={status === Status.DOWNLOADING ? progress : undefined}
               indeterminate={status === Status.INSTALLING ? true : undefined}
@@ -232,16 +229,13 @@ function Core(props: Props) {
           </View>
         ) : null}
       </View>
-      <View shrink="1" overflow="hidden" style={{paddingTop: 21}}>
+      <View shrink="1" overflow="hidden" pt="small">
         <View px="medium">
           <Text weight="medium" size="small" color="secondary">
             Devices
           </Text>
         </View>
-        <View
-          overflow="hidden"
-          shrink="1"
-          style={{marginBottom: 8, marginTop: 4}}>
+        <View overflow="hidden" shrink="1" mb="2" mt="tiny">
           <FlatList
             data={devices}
             alwaysBounceVertical={false}
@@ -273,17 +267,3 @@ function Core(props: Props) {
 }
 
 export default Core;
-
-const styles = StyleSheet.create({
-  icon: {
-    tintColor: PlatformColor('text'),
-    height: 15,
-    width: 15,
-  },
-  center: {
-    alignItems: 'center',
-  },
-  downloading: {
-    gap: 5,
-  },
-});

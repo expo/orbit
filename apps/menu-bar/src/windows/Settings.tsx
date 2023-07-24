@@ -68,7 +68,7 @@ const Settings = () => {
   };
 
   return (
-    <View flex="1" px="medium" py="medium">
+    <View flex="1" padding="medium">
       <View flex="1">
         <Row mb="3.5" align="center" gap="1">
           <Checkbox
@@ -117,7 +117,7 @@ const Settings = () => {
         ) : null}
       </View>
       <Divider mb="tiny" />
-      <View py="small">
+      <View py="tiny">
         <Text color="secondary">
           {`Version: ${MenuBarModule.constants.appVersion} (${MenuBarModule.constants.buildVersion})`}
         </Text>

@@ -43,7 +43,7 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
                   : PlatformColor('placeholderTextColor'),
               },
             ]}>
-            <IphoneIcon height={36} width={36} />
+            <IphoneIcon height={30} width={30} />
           </View>
           <View flex="1" justify="center">
             <Text numberOfLines={1}>{device.name}</Text>

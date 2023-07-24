@@ -38,7 +38,7 @@ export const Text = create(RNText, {
   base: {
     fontFamily: 'Inter-Regular',
     color: lightTheme.text.default,
-    fontSize: 16,
+    fontSize: 14,
     lineHeight: 18,
   },
 

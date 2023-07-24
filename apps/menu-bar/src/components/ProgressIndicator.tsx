@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     height: 20,
   },
   sizeLarge: {
-    height: 36,
+    height: 24,
   },
 });
 
