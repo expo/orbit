@@ -170,18 +170,14 @@ export async function downloadAndMaybeExtractAppAsync(
 }
 
 export async function extractAppFromLocalArchiveAsync(
-  appArchivePath: string,
-  platform: AppPlatform
+  appArchivePath: string
 ): Promise<string> {
   const outputDir = path.join(getTmpDirectory(), uuidv4());
   await fs.promises.mkdir(outputDir, { recursive: true });
 
   await tarExtractAsync(appArchivePath, outputDir);
 
-  return await getAppPathAsync(
-    outputDir,
-    platform === AppPlatform.Android ? "apk" : "app"
-  );
+  return await getAppPathAsync(outputDir, "(apk|app)");
 }
 
 async function getAppPathAsync(

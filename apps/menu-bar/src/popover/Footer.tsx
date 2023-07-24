@@ -7,7 +7,7 @@ import {WindowsNavigator} from '../windows';
 
 const Footer = () => {
   return (
-    <View px="medium" pb="medium">
+    <View px="medium" pb="small">
       <Divider />
       <View py="2">
         <TouchableOpacity onPress={() => WindowsNavigator.open('Settings')}>

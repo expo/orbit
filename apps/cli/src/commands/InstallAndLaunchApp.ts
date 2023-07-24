@@ -14,30 +14,27 @@ type InstallAndLaunchAppAsyncOptions = {
 export async function installAndLaunchAppAsync(
   options: InstallAndLaunchAppAsyncOptions
 ) {
-  const platform = getPlatformFromURI(options.appPath);
+  let appPath = options.appPath;
+  if (!appPath.endsWith(".app") && !appPath.endsWith(".apk")) {
+    appPath = await extractAppFromLocalArchiveAsync(appPath);
+  }
+  const platform = getPlatformFromURI(appPath);
 
   return platform === Platform.Ios
-    ? installAndLaunchIOSAppAsync(options)
-    : installAndLaunchAndroidAppAsync(options);
+    ? installAndLaunchIOSAppAsync(appPath, options.deviceId)
+    : installAndLaunchAndroidAppAsync(appPath, options.deviceId);
 }
 
-async function installAndLaunchIOSAppAsync(
-  options: InstallAndLaunchAppAsyncOptions
-) {
-  let appPath = options.appPath;
-  if (appPath.endsWith(".tar.gz")) {
-    appPath = await extractAppFromLocalArchiveAsync(appPath, AppPlatform.Ios);
-  }
-
+async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
   const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
-  await Simulator.installAppAsync(options.deviceId, appPath);
-  await Simulator.launchAppAsync(options.deviceId, bundleIdentifier);
+  await Simulator.installAppAsync(deviceId, appPath);
+  await Simulator.launchAppAsync(deviceId, bundleIdentifier);
 }
 
-async function installAndLaunchAndroidAppAsync({
-  appPath,
-  deviceId,
-}: InstallAndLaunchAppAsyncOptions) {
+async function installAndLaunchAndroidAppAsync(
+  appPath: string,
+  deviceId: string
+) {
   const runningEmulators = await Emulator.getRunningDevicesAsync();
   const emulator = runningEmulators.find(({ name }) => name === deviceId);
   if (!emulator) {

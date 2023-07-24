@@ -12,8 +12,10 @@ export default {
   getAppAsync: () => {
     return FilePickerModule.pickFileWithFilenameExtension([
       'apk',
+      'app',
       'gzip',
       'ipa',
+      'tar',
     ]);
   },
   pickFolder: async () => FilePickerModule.pickFolder(),
