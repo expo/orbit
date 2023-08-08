@@ -18,8 +18,6 @@ import {
 } from '../utils/device';
 import ProgressIndicator from '../components/ProgressIndicator';
 import {Spacer, Text, View} from '../components';
-import File05Icon from '../assets/icons/file-05.svg';
-import Earth02Icon from '../assets/icons/earth-02.svg';
 import {openProjectsSelectorURL} from '../utils/constants';
 import {
   SelectedDevicesIds,
@@ -28,10 +26,10 @@ import {
 } from '../modules/Storage';
 import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
 import {useSafeDisplayDimensions} from '../hooks/useSafeDisplayDimensions';
-import {useExpoTheme} from '../utils/useExpoTheme';
 import SectionHeader from './SectionHeader';
 import Item from './Item';
 import {FOOTER_HEIGHT} from './Footer';
+import {SFIcon} from '../components/SFIcon';
 
 enum Status {
   LISTENING,
@@ -54,7 +52,6 @@ function Core(props: Props) {
 
   const {devices} = useListDevices();
   const {emulatorWithoutAudio} = useDeviceAudioPreferences();
-  const theme = useExpoTheme();
 
   const sections = getSectionsFromDeviceList(devices);
 
@@ -223,11 +220,11 @@ function Core(props: Props) {
         {status === Status.LISTENING ? (
           <>
             <Item onPress={openProjectsSelectorURL}>
-              <Earth02Icon stroke={theme.text.default} />
+              <SFIcon icon="􀐘" />
               <Text>Select build from EAS…</Text>
             </Item>
             <Item onPress={openFilePicker}>
-              <File05Icon stroke={theme.text.default} />
+              <SFIcon icon="􁙡" />
               <Text>Select build from local file…</Text>
             </Item>
           </>
