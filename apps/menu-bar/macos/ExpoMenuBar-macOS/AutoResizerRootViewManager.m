@@ -9,6 +9,7 @@
 RCT_EXPORT_MODULE()
 
 RCT_EXPORT_VIEW_PROPERTY(enabled, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(maxRelativeHeight, CGFloat)
 
 - (NSView *)view
 {
