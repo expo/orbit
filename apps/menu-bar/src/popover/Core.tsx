@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {FlatList} from 'react-native';
+import {SectionList} from 'react-native';
 
 import {useDeepLinking} from '../hooks/useDeepLinking';
 import {downloadBuildAsync} from '../commands/downloadBuildAsync';
@@ -10,9 +10,14 @@ import {launchSnackAsync} from '../commands/launchSnackAsync';
 import FilePicker from '../modules/FilePickerModule';
 import {getPlatformFromURI} from '../utils/parseUrl';
 import DeviceItem from '../components/DeviceItem';
-import {Device, getDeviceId, getDeviceOS} from '../utils/device';
+import {
+  Device,
+  getDeviceId,
+  getDeviceOS,
+  getSectionsFromDeviceList,
+} from '../utils/device';
 import ProgressIndicator from '../components/ProgressIndicator';
-import {Text, View} from '../components';
+import {Spacer, Text, View} from '../components';
 import File05Icon from '../assets/icons/file-05.svg';
 import Earth02Icon from '../assets/icons/earth-02.svg';
 import {openProjectsSelectorURL} from '../utils/constants';
@@ -25,7 +30,6 @@ import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
 import {useExpoTheme} from '../utils/useExpoTheme';
 import SectionHeader from './SectionHeader';
 import Item from './Item';
-import {partition} from '../utils/helpers';
 
 enum Status {
   LISTENING,
@@ -48,10 +52,7 @@ function Core(props: Props) {
   const {emulatorWithoutAudio} = useDeviceAudioPreferences();
   const theme = useExpoTheme();
 
-  const partitionedDevices = partition(
-    devices,
-    device => device.osType === 'iOS',
-  );
+  const sections = getSectionsFromDeviceList(devices);
 
   useEffect(() => {
     getSelectedDevicesIds().then(setSelectedDevicesIds);
@@ -201,7 +202,7 @@ function Core(props: Props) {
   };
 
   return (
-    <View>
+    <View shrink="1">
       <View px="medium" pb="tiny">
         <SectionHeader label="Builds" />
       </View>
@@ -230,60 +231,32 @@ function Core(props: Props) {
           </Text>
         </View>
       ) : null}
-      <View shrink="1" overflow="hidden" pt="tiny">
-        <View px="medium">
-          <SectionHeader label="iOS" />
-        </View>
-        <View overflow="hidden" shrink="1" mb="tiny" mt="tiny">
-          <FlatList
-            data={partitionedDevices[0]}
-            alwaysBounceVertical={false}
-            renderItem={({item: device}) => {
-              const id = getDeviceId(device);
-              return (
-                <DeviceItem
-                  device={device}
-                  key={device.name}
-                  onPress={() => onSelectDevice(device)}
-                  onPressLaunch={() =>
-                    bootDeviceAsync({
-                      platform: 'ios',
-                      id,
-                    })
-                  }
-                  selected={selectedDevicesIds.ios === id}
-                />
-              );
-            }}
-          />
-        </View>
-        <View px="medium">
-          <SectionHeader label="Android" />
-        </View>
-        <View overflow="hidden" shrink="1" mb="tiny" mt="tiny">
-          <FlatList
-            data={partitionedDevices[1]}
-            alwaysBounceVertical={false}
-            renderItem={({item: device}) => {
-              const id = getDeviceId(device);
-              return (
-                <DeviceItem
-                  device={device}
-                  key={device.name}
-                  onPress={() => onSelectDevice(device)}
-                  onPressLaunch={() =>
-                    bootDeviceAsync({
-                      platform: 'android',
-                      id,
-                      noAudio: emulatorWithoutAudio,
-                    })
-                  }
-                  selected={selectedDevicesIds.android === id}
-                />
-              );
-            }}
-          />
-        </View>
+      <View shrink="1" pt="tiny">
+        <SectionList
+          sections={sections}
+          alwaysBounceVertical={false}
+          SectionSeparatorComponent={() => <Spacer.Vertical size="tiny" />}
+          renderSectionHeader={({section: {label}}) => {
+            return (
+              <View px="medium">
+                <SectionHeader label={label} />
+              </View>
+            );
+          }}
+          renderItem={({item: device}) => {
+            const platform = getDeviceOS(device);
+            const id = getDeviceId(device);
+            return (
+              <DeviceItem
+                device={device}
+                key={device.name}
+                onPress={() => onSelectDevice(device)}
+                onPressLaunch={() => bootDeviceAsync({platform, id})}
+                selected={selectedDevicesIds[platform] === id}
+              />
+            );
+          }}
+        />
       </View>
     </View>
   );
