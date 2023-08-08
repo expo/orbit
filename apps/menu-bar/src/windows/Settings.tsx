@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {Alert, TouchableOpacity} from 'react-native';
+import {Alert, StyleSheet, TouchableOpacity} from 'react-native';
 
 import MenuBarModule from '../modules/MenuBarModule';
 import {Checkbox, View, Row, Text, Divider} from '../components';
@@ -106,25 +106,31 @@ const Settings = () => {
           value={userPreferences.customSdkPath}
         />
         {__DEV__ ? (
-          <View py="medium">
+          <Row gap="2" py="medium">
             <Text weight="medium">Dev mode only</Text>
-            <View border="warning" bg="warning" padding="tiny">
+            <View border="warning" bg="warning" px="0.5">
               <TouchableOpacity onPress={resetStorage}>
-                <Text>Reset storage</Text>
+                <Text color="warning">Reset storage</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </Row>
         ) : null}
       </View>
       <Divider mb="tiny" />
       <View py="tiny">
-        <Text color="secondary">
+        <Text color="secondary" style={styles.about}>
           {`Version: ${MenuBarModule.constants.appVersion} (${MenuBarModule.constants.buildVersion})`}
         </Text>
       </View>
-      <Text color="secondary">Copyright 650 Industries Inc, 2023</Text>
+      <Text color="secondary" style={styles.about}>Copyright 650 Industries Inc, 2023</Text>
     </View>
   );
 };
 
 export default Settings;
+
+const styles = StyleSheet.create({
+  about: {
+    fontSize: 13,
+  },
+});
