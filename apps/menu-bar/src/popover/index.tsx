@@ -1,20 +1,26 @@
 import React from 'react';
-import {StyleSheet, Dimensions} from 'react-native';
 
 import {Text, View} from '../components';
 import Footer from './Footer';
-import Header from './Header';
 import Core from './Core';
 import {ErrorBoundary, FallbackProps} from './ErrorBoundary';
+import {useSafeDisplayDimensions} from '../hooks/useSafeDisplayDimensions';
 
 type Props = {
   isDevWindow: boolean;
 };
 
 function Popover(props: Props) {
+  const {height} = useSafeDisplayDimensions();
   return (
-    <View style={styles.container}>
-      <Header />
+    <View
+      style={{
+        /**
+         * Need to check dimensions of the screen on render time as the Popover
+         * can be opened from different displays.
+         */
+        maxHeight: height,
+      }}>
       <ErrorBoundary fallback={Fallback}>
         <Core isDevWindow={props.isDevWindow} />
       </ErrorBoundary>
@@ -33,9 +39,3 @@ const Fallback = ({error}: FallbackProps) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    maxHeight: Dimensions.get('screen').height * 0.85,
-  },
-});
