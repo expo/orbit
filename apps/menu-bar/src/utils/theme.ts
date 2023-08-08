@@ -3,7 +3,8 @@ import {
   lightTheme,
   darkTheme,
   borderRadius,
-  typography, palette,
+  typography, 
+  palette,
 } from '@expo/styleguide-native';
 import {TextStyle, Platform, StyleSheet} from 'react-native';
 
