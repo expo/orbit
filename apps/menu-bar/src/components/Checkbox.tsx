@@ -1,12 +1,14 @@
 import {useLayoutEffect, useRef, useState} from 'react';
 import {
   NativeSyntheticEvent,
+  Pressable,
   requireNativeComponent,
   StyleSheet,
   TargetedEvent,
   ViewProps,
 } from 'react-native';
 import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
+import {Text} from './Text';
 
 interface CheckboxChangeEventData extends TargetedEvent {
   value: boolean;
@@ -19,6 +21,7 @@ type NativeCheckboxProps = ViewProps & {
   disabled?: boolean;
   onChange?: (event: CheckboxChangeEvent) => void;
   value?: boolean;
+  label?: string;
 };
 
 const NativeCheckbox = requireNativeComponent<NativeCheckboxProps>('Checkbox');
@@ -38,7 +41,12 @@ export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
   supportedCommands: ['setValue'],
 });
 
-const Checkbox = ({onChange, onValueChange, ...props}: CheckboxProps) => {
+const Checkbox = ({
+  onChange,
+  onValueChange,
+  label,
+  ...props
+}: CheckboxProps) => {
   const [native, setNative] = useState<{value?: boolean}>({value: undefined});
 
   const nativeSwitchRef = useRef<React.ElementRef<
@@ -67,12 +75,23 @@ const Checkbox = ({onChange, onValueChange, ...props}: CheckboxProps) => {
   };
 
   return (
-    <NativeCheckbox
-      {...props}
-      style={[styles.checkbox, props.style]}
-      onChange={handleChange}
-      ref={nativeSwitchRef}
-    />
+    <>
+      <NativeCheckbox
+        {...props}
+        style={[styles.checkbox, props.style]}
+        onChange={handleChange}
+        ref={nativeSwitchRef}
+      />
+      {label && (
+        <Pressable
+          onPress={() => {
+            onValueChange?.(!props.value);
+            setNative({value: !props.value});
+          }}>
+          <Text>{label}</Text>
+        </Pressable>
+      )}
+    </>
   );
 };
 

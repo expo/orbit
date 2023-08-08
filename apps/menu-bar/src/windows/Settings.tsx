@@ -74,22 +74,22 @@ const Settings = () => {
           <Checkbox
             value={userPreferences.launchOnLogin}
             onValueChange={onPressLaunchOnLogin}
+            label="Launch on login"
           />
-          <Text>Launch on login</Text>
         </Row>
         <Row mb="3.5" align="center" gap="1">
           <Checkbox
             value={userPreferences.emulatorWithoutAudio}
             onValueChange={onPressEmulatorWithoutAudio}
+            label="Run Android emulator without audio"
           />
-          <Text>Run Android emulator without audio</Text>
         </Row>
         <Row mb="2" align="center" gap="1">
           <Checkbox
             value={customSdkPathEnabled}
             onValueChange={toggleCustomSdkPath}
+            label="Custom Android SDK root location"
           />
-          <Text>Custom Android SDK root location</Text>
         </Row>
         <PathInput
           editable={customSdkPathEnabled}
