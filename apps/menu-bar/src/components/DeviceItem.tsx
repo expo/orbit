@@ -32,7 +32,7 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
         isHovered && {
           backgroundColor:
             currentTheme === 'dark'
-              ? 'rgba(255,255,255,.08)'
+              ? 'rgba(255,255,255,.11)'
               : 'rgba(0,0,0,.12)',
         },
       ]}
@@ -102,14 +102,14 @@ export default DeviceItem;
 
 const styles = StyleSheet.create({
   row: {
-    height: 46,
+    height: 42,
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
     marginHorizontal: 6,
     borderRadius: 4,
   },
-  circle: {width: 36, height: 36, marginRight: 8, opacity: 0.85},
+  circle: {width: 32, height: 32, marginRight: 8, opacity: 0.85},
   description: {
     fontSize: 11,
     lineHeight: 13,

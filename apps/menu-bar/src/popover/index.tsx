@@ -37,5 +37,6 @@ const Fallback = ({error}: FallbackProps) => {
 const styles = StyleSheet.create({
   container: {
     maxHeight: Dimensions.get('screen').height * 0.85,
+    paddingBottom: 2,
   },
 });

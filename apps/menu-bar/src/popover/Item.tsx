@@ -22,10 +22,10 @@ const Item = ({children, onPress}: PropsWithChildren<PressableProps>) => {
         // eslint-disable-next-line react-native/no-inline-styles
         isHovered && {
           backgroundColor:
-            theme === 'dark' ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.12)',
+            theme === 'dark' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)',
         },
       ]}>
-      <Row gap="1.5" my="tiny" px="2">
+      <Row gap="1.5" my="tiny" px="2.5">
         {children}
       </Row>
     </Pressable>
