@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {memo, useCallback, useEffect, useState} from 'react';
 import {SectionList} from 'react-native';
 
 import {useDeepLinking} from '../hooks/useDeepLinking';
@@ -9,7 +9,7 @@ import {installAndLaunchAppAsync} from '../commands/installAndLaunchAppAsync';
 import {launchSnackAsync} from '../commands/launchSnackAsync';
 import FilePicker from '../modules/FilePickerModule';
 import {getPlatformFromURI} from '../utils/parseUrl';
-import DeviceItem from '../components/DeviceItem';
+import DeviceItem, {DEVICE_ITEM_HEIGHT} from '../components/DeviceItem';
 import {
   Device,
   getDeviceId,
@@ -25,15 +25,19 @@ import {
   saveSelectedDevicesIds,
 } from '../modules/Storage';
 import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
+import {useSafeDisplayDimensions} from '../hooks/useSafeDisplayDimensions';
 import SectionHeader from './SectionHeader';
 import Item from './Item';
-import {SFIcon} from "../components/SFIcon";
+import {FOOTER_HEIGHT} from './Footer';
+import {SFIcon} from '../components/SFIcon';
 
 enum Status {
   LISTENING,
   DOWNLOADING,
   INSTALLING,
 }
+
+const BUILDS_SECTION_HEIGHT = 92;
 
 type Props = {
   isDevWindow: boolean;
@@ -50,6 +54,15 @@ function Core(props: Props) {
   const {emulatorWithoutAudio} = useDeviceAudioPreferences();
 
   const sections = getSectionsFromDeviceList(devices);
+
+  const displayDimensions = useSafeDisplayDimensions();
+  const estimatedAvailableSizeForDevices =
+    displayDimensions.height - FOOTER_HEIGHT - BUILDS_SECTION_HEIGHT - 30;
+  const heightOfAllDevices = DEVICE_ITEM_HEIGHT * devices?.length;
+  const estimatedListHeight =
+    heightOfAllDevices <= estimatedAvailableSizeForDevices
+      ? heightOfAllDevices
+      : estimatedAvailableSizeForDevices;
 
   useEffect(() => {
     getSelectedDevicesIds().then(setSelectedDevicesIds);
@@ -200,38 +213,40 @@ function Core(props: Props) {
 
   return (
     <View shrink="1">
-      <View px="medium" pb="tiny">
-        <SectionHeader label="Builds" />
-      </View>
-      {status === Status.LISTENING ? (
-        <>
-          <Item onPress={openProjectsSelectorURL}>
-            <SFIcon icon="􀐘" />
-            <Text>Select build from EAS…</Text>
-          </Item>
-          <Item onPress={openFilePicker}>
-            <SFIcon icon="􁙡" />
-            <Text>Select build from local file…</Text>
-          </Item>
-        </>
-      ) : status === Status.DOWNLOADING || status === Status.INSTALLING ? (
-        <View px="medium">
-          <ProgressIndicator
-            progress={status === Status.DOWNLOADING ? progress : undefined}
-            indeterminate={status === Status.INSTALLING ? true : undefined}
-            key={status}
-          />
-          <Text>
-            {status === Status.DOWNLOADING
-              ? 'Downloading build...'
-              : 'Installing...'}
-          </Text>
+      <View style={{height: BUILDS_SECTION_HEIGHT}}>
+        <View padding="medium" pb="tiny">
+          <SectionHeader label="Builds" />
         </View>
-      ) : null}
+        {status === Status.LISTENING ? (
+          <>
+            <Item onPress={openProjectsSelectorURL}>
+              <SFIcon icon="􀐘" />
+              <Text>Select build from EAS…</Text>
+            </Item>
+            <Item onPress={openFilePicker}>
+              <SFIcon icon="􁙡" />
+              <Text>Select build from local file…</Text>
+            </Item>
+          </>
+        ) : status === Status.DOWNLOADING || status === Status.INSTALLING ? (
+          <View px="medium">
+            <ProgressIndicator
+              progress={status === Status.DOWNLOADING ? progress : undefined}
+              indeterminate={status === Status.INSTALLING ? true : undefined}
+              key={status}
+            />
+            <Text>
+              {status === Status.DOWNLOADING
+                ? 'Downloading build...'
+                : 'Installing...'}
+            </Text>
+          </View>
+        ) : null}
+      </View>
       <View shrink="1" pt="tiny">
         <SectionList
           sections={sections}
-          alwaysBounceVertical={false}
+          style={{minHeight: estimatedListHeight}}
           SectionSeparatorComponent={() => <Spacer.Vertical size="tiny" />}
           renderSectionHeader={({section: {label}}) => {
             return (
@@ -259,4 +274,4 @@ function Core(props: Props) {
   );
 }
 
-export default Core;
+export default memo(Core);

@@ -1,13 +1,16 @@
 import {memo} from 'react';
+import {StyleSheet} from 'react-native';
 
 import MenuBarModule from '../modules/MenuBarModule';
 import {Divider, Text, View} from '../components';
 import {WindowsNavigator} from '../windows';
 import Item from './Item';
 
+export const FOOTER_HEIGHT = 62;
+
 const Footer = () => {
   return (
-    <>
+    <View style={styles.container}>
       <View px="medium">
         <Divider />
       </View>
@@ -19,8 +22,14 @@ const Footer = () => {
           <Text>Quit</Text>
         </Item>
       </View>
-    </>
+    </View>
   );
 };
 
 export default memo(Footer);
+
+const styles = StyleSheet.create({
+  container: {
+    height: FOOTER_HEIGHT,
+  },
+});

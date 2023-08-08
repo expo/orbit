@@ -13,6 +13,8 @@ import {palette} from '@expo/styleguide-native';
 import {useTheme} from '../providers/ThemeProvider';
 import {capitalize} from '../utils/helpers';
 
+export const DEVICE_ITEM_HEIGHT = 42;
+
 interface Props {
   device: Device;
   onPress: () => void;
@@ -104,7 +106,7 @@ export default DeviceItem;
 
 const styles = StyleSheet.create({
   row: {
-    height: 42,
+    height: DEVICE_ITEM_HEIGHT,
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
