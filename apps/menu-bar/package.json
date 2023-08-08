@@ -3,13 +3,11 @@
   "version": "0.0.2",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
     "lint": "eslint .",
     "macos": "react-native run-macos",
     "start": "react-native start",
     "test": "jest",
-    "update-cli": "cp ../cli/dist/expo-orbit-cli cli/expo-orbit-cli"
+    "update-cli": "mkdir -p cli && cp ../cli/dist/expo-orbit-cli cli/expo-orbit-cli"
   },
   "dependencies": {
     "@expo/styleguide-native": "^1.0.1",
