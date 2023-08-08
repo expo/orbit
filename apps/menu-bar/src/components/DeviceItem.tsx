@@ -11,6 +11,7 @@ import {useExpoTheme} from '../utils/useExpoTheme';
 import Button from './Button';
 import {palette} from '@expo/styleguide-native';
 import {useTheme} from '../providers/ThemeProvider';
+import {capitalize} from '../utils/helpers';
 
 interface Props {
   device: Device;
@@ -71,8 +72,9 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
           <View flex="1" justify="center">
             <Text numberOfLines={1}>{device.name}</Text>
             <Text style={styles.description} color="secondary">
-              {device.osType} {device.osVersion}
-              {device.state === 'Booted' ? ' - Running' : ''}
+              {capitalize(device.deviceType)}
+              {device.osVersion && ` · ${device.osVersion}`}
+              {device.state === 'Booted' ? ' · Running' : ''}
             </Text>
           </View>
         </Row>

@@ -25,6 +25,7 @@ import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
 import {useExpoTheme} from '../utils/useExpoTheme';
 import SectionHeader from './SectionHeader';
 import Item from './Item';
+import {partition} from '../utils/helpers';
 
 enum Status {
   LISTENING,
@@ -46,6 +47,11 @@ function Core(props: Props) {
   const {devices} = useListDevices();
   const {emulatorWithoutAudio} = useDeviceAudioPreferences();
   const theme = useExpoTheme();
+
+  const partitionedDevices = partition(
+    devices,
+    device => device.osType === 'iOS',
+  );
 
   useEffect(() => {
     getSelectedDevicesIds().then(setSelectedDevicesIds);
@@ -226,16 +232,14 @@ function Core(props: Props) {
       ) : null}
       <View shrink="1" overflow="hidden" pt="tiny">
         <View px="medium">
-          <SectionHeader label="Devices" />
+          <SectionHeader label="iOS" />
         </View>
         <View overflow="hidden" shrink="1" mb="tiny" mt="tiny">
           <FlatList
-            data={devices}
+            data={partitionedDevices[0]}
             alwaysBounceVertical={false}
             renderItem={({item: device}) => {
-              const platform = getDeviceOS(device);
               const id = getDeviceId(device);
-
               return (
                 <DeviceItem
                   device={device}
@@ -243,12 +247,38 @@ function Core(props: Props) {
                   onPress={() => onSelectDevice(device)}
                   onPressLaunch={() =>
                     bootDeviceAsync({
-                      platform,
+                      platform: 'ios',
+                      id,
+                    })
+                  }
+                  selected={selectedDevicesIds.ios === id}
+                />
+              );
+            }}
+          />
+        </View>
+        <View px="medium">
+          <SectionHeader label="Android" />
+        </View>
+        <View overflow="hidden" shrink="1" mb="tiny" mt="tiny">
+          <FlatList
+            data={partitionedDevices[1]}
+            alwaysBounceVertical={false}
+            renderItem={({item: device}) => {
+              const id = getDeviceId(device);
+              return (
+                <DeviceItem
+                  device={device}
+                  key={device.name}
+                  onPress={() => onSelectDevice(device)}
+                  onPressLaunch={() =>
+                    bootDeviceAsync({
+                      platform: 'android',
                       id,
                       noAudio: emulatorWithoutAudio,
                     })
                   }
-                  selected={selectedDevicesIds[platform] === id}
+                  selected={selectedDevicesIds.android === id}
                 />
               );
             }}
