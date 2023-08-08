@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {TouchableOpacity, FlatList} from 'react-native';
+import {FlatList} from 'react-native';
 
 import {useDeepLinking} from '../hooks/useDeepLinking';
 import {downloadBuildAsync} from '../commands/downloadBuildAsync';
@@ -13,7 +13,6 @@ import DeviceItem from '../components/DeviceItem';
 import {Device, getDeviceId, getDeviceOS} from '../utils/device';
 import ProgressIndicator from '../components/ProgressIndicator';
 import {Text, View} from '../components';
-import {Row} from '../components/View';
 import File05Icon from '../assets/icons/file-05.svg';
 import Earth02Icon from '../assets/icons/earth-02.svg';
 import {openProjectsSelectorURL} from '../utils/constants';
@@ -24,6 +23,8 @@ import {
 } from '../modules/Storage';
 import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
 import {useExpoTheme} from '../utils/useExpoTheme';
+import SectionHeader from './SectionHeader';
+import Item from './Item';
 
 enum Status {
   LISTENING,
@@ -194,48 +195,40 @@ function Core(props: Props) {
   };
 
   return (
-    <View shrink="1">
-      <View px="medium">
-        <Text weight="medium" size="small" color="secondary">
-          Build
-        </Text>
-        {status === Status.LISTENING ? (
-          <View>
-            <TouchableOpacity onPress={openProjectsSelectorURL}>
-              <Row gap="1.5" mt="small" align="center">
-                <File05Icon stroke={theme.icon.default} />
-                <Text>Select build from EAS...</Text>
-              </Row>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={openFilePicker}>
-              <Row gap="1.5" mt="small">
-                <Earth02Icon stroke={theme.icon.default} />
-                <Text>Select build from local file...</Text>
-              </Row>
-            </TouchableOpacity>
-          </View>
-        ) : status === Status.DOWNLOADING || status === Status.INSTALLING ? (
-          <View>
-            <ProgressIndicator
-              progress={status === Status.DOWNLOADING ? progress : undefined}
-              indeterminate={status === Status.INSTALLING ? true : undefined}
-              key={status}
-            />
-            <Text>
-              {status === Status.DOWNLOADING
-                ? 'Downloading build...'
-                : 'Installing...'}
-            </Text>
-          </View>
-        ) : null}
+    <View>
+      <View px="medium" pb="tiny">
+        <SectionHeader label="Builds" />
       </View>
-      <View shrink="1" overflow="hidden" pt="small">
+      {status === Status.LISTENING ? (
+        <>
+          <Item onPress={openProjectsSelectorURL}>
+            <Earth02Icon stroke={theme.text.default} />
+            <Text>Select build from EAS…</Text>
+          </Item>
+          <Item onPress={openFilePicker}>
+            <File05Icon stroke={theme.text.default} />
+            <Text>Select build from local file…</Text>
+          </Item>
+        </>
+      ) : status === Status.DOWNLOADING || status === Status.INSTALLING ? (
         <View px="medium">
-          <Text weight="medium" size="small" color="secondary">
-            Devices
+          <ProgressIndicator
+            progress={status === Status.DOWNLOADING ? progress : undefined}
+            indeterminate={status === Status.INSTALLING ? true : undefined}
+            key={status}
+          />
+          <Text>
+            {status === Status.DOWNLOADING
+              ? 'Downloading build...'
+              : 'Installing...'}
           </Text>
         </View>
-        <View overflow="hidden" shrink="1" mb="2" mt="tiny">
+      ) : null}
+      <View shrink="1" overflow="hidden" pt="tiny">
+        <View px="medium">
+          <SectionHeader label="Devices" />
+        </View>
+        <View overflow="hidden" shrink="1" mb="tiny" mt="tiny">
           <FlatList
             data={devices}
             alwaysBounceVertical={false}

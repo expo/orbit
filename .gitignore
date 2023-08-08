@@ -10,3 +10,5 @@ packages/*/build
 apps/*/build
 
 apps/menu-bar/cli/expo-orbit-cli
+
+.idea
