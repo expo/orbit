@@ -15,7 +15,7 @@ const Footer = () => {
         <Item onPress={() => WindowsNavigator.open('Settings')}>
           <Text>Settings</Text>
         </Item>
-        <Item onPress={MenuBarModule.exitApp}>
+        <Item onPress={MenuBarModule.exitApp} shortcut="⌘ Q">
           <Text>Quit</Text>
         </Item>
       </View>

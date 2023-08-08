@@ -1,10 +1,14 @@
 import React, {memo, PropsWithChildren, useState} from 'react';
 
-import {Pressable, PressableProps} from 'react-native';
-import {Row} from '../components';
+import {Pressable, PressableProps, StyleSheet} from 'react-native';
+import {Row, Text} from '../components';
 import {useCurrentTheme} from '../utils/useExpoTheme';
 
-const Item = ({children, onPress}: PropsWithChildren<PressableProps>) => {
+type Props = PropsWithChildren<PressableProps> & {
+  shortcut?: string;
+};
+
+const Item = ({children, onPress, shortcut}: Props) => {
   const [isHovered, setHovered] = useState(false);
   const theme = useCurrentTheme();
 
@@ -14,11 +18,7 @@ const Item = ({children, onPress}: PropsWithChildren<PressableProps>) => {
       onHoverOut={() => setHovered(false)}
       onPress={onPress}
       style={[
-        // eslint-disable-next-line react-native/no-inline-styles
-        {
-          borderRadius: 4,
-          marginHorizontal: 6,
-        },
+        styles.itemContainer,
         // eslint-disable-next-line react-native/no-inline-styles
         isHovered && {
           backgroundColor:
@@ -27,9 +27,21 @@ const Item = ({children, onPress}: PropsWithChildren<PressableProps>) => {
       ]}>
       <Row gap="1.5" my="tiny" px="2.5">
         {children}
+        {shortcut && <Text style={styles.shortcut}>{shortcut}</Text>}
       </Row>
     </Pressable>
   );
 };
 
 export default memo(Item);
+
+const styles = StyleSheet.create({
+  itemContainer: {
+    borderRadius: 4,
+    marginHorizontal: 6,
+  },
+  shortcut: {
+    marginLeft: 'auto',
+    opacity: 0.4,
+  },
+});
