@@ -9,6 +9,8 @@ import WifiIcon from '../assets/icons/wifi.svg';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import {useExpoTheme} from '../utils/useExpoTheme';
 import Button from './Button';
+import {palette} from '@expo/styleguide-native';
+import {useTheme} from '../providers/ThemeProvider';
 
 interface Props {
   device: Device;
@@ -19,31 +21,52 @@ interface Props {
 
 const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
   const theme = useExpoTheme();
-  const [hovering, setHovering] = useState(false);
+  const currentTheme = useTheme();
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <Pressable
       style={[
         styles.row,
-        hovering ? {backgroundColor: `${theme.code.comment}50`} : null,
+        // eslint-disable-next-line react-native/no-inline-styles
+        isHovered && {
+          backgroundColor:
+            currentTheme === 'dark'
+              ? 'rgba(255,255,255,.11)'
+              : 'rgba(0,0,0,.12)',
+        },
       ]}
       onPress={onPress}
-      onHoverIn={() => setHovering(true)}
-      onHoverOut={() => setHovering(false)}>
-      <Row flex="1" px="medium" align="center">
+      onHoverIn={() => setIsHovered(true)}
+      onHoverOut={() => setIsHovered(false)}>
+      <Row flex="1" px="2" align="center">
         <Row flex="1">
           <View
             rounded="full"
             align="centered"
             style={[
               styles.circle,
+              // eslint-disable-next-line react-native/no-inline-styles
+              (isHovered || selected) && {opacity: 1},
               {
                 backgroundColor: selected
-                  ? PlatformColor('controlAccentColor')
-                  : PlatformColor('placeholderTextColor'),
+                  ? PlatformColor('selectedContentBackground')
+                  : currentTheme === 'dark'
+                  ? 'rgba(255,255,255,.23)'
+                  : 'rgba(0,0,0,.16)',
               },
             ]}>
-            <IphoneIcon height={30} width={30} />
+            <IphoneIcon
+              height={30}
+              width={30}
+              fill={
+                selected
+                  ? palette.dark.white
+                  : currentTheme === 'dark'
+                  ? palette.dark.gray['900']
+                  : theme.text.default
+              }
+            />
           </View>
           <View flex="1" justify="center">
             <Text numberOfLines={1}>{device.name}</Text>
@@ -65,7 +88,7 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
               />
             )}
           </>
-        ) : hovering && device.state === 'Shutdown' ? (
+        ) : isHovered && device.state === 'Shutdown' ? (
           <Button color="primary" onPress={onPressLaunch} style={styles.button}>
             Launch
           </Button>
@@ -79,12 +102,14 @@ export default DeviceItem;
 
 const styles = StyleSheet.create({
   row: {
-    height: 46,
+    height: 42,
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
+    marginHorizontal: 6,
+    borderRadius: 4,
   },
-  circle: {width: 36, height: 36, marginRight: 8},
+  circle: {width: 32, height: 32, marginRight: 8, opacity: 0.85},
   description: {
     fontSize: 11,
     lineHeight: 13,

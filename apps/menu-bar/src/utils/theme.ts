@@ -3,7 +3,8 @@ import {
   lightTheme,
   darkTheme,
   borderRadius,
-  typography,
+  typography, 
+  palette,
 } from '@expo/styleguide-native';
 import {TextStyle, Platform, StyleSheet} from 'react-native';
 
@@ -183,27 +184,23 @@ export const text = {
   },
 
   color: {
-    default: {color: lightTheme.text.default},
+    default: {color: {semantic: 'labelColor'}},
     error: {color: lightTheme.text.error},
     warning: {color: lightTheme.text.warning},
     success: {color: lightTheme.text.success},
-    secondary: {color: lightTheme.text.secondary},
+    secondary: {color: palette.light.gray["800"]},
     primary: {color: lightTheme.button.primary.background},
     link: {color: lightTheme.link.default},
   },
 };
 
 export const textDark = {
-  base: {
-    color: darkTheme.text.default,
-  },
-
   color: {
-    default: {color: darkTheme.text.default},
+    default: {color: {semantic: 'labelColor'}},
     error: {color: darkTheme.text.error},
     warning: {color: darkTheme.text.warning},
     success: {color: darkTheme.text.success},
-    secondary: {color: darkTheme.text.secondary},
+    secondary: {color: palette.dark.gray["800"]},
     primary: {color: darkTheme.button.primary.background},
     link: {color: darkTheme.link.default},
   },

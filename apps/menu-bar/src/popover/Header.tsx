@@ -6,7 +6,7 @@ import {Divider, Spacer, View} from '../components';
 
 const Header = () => {
   return (
-    <View padding="medium" pb="small">
+    <View padding="medium" pb="2">
       <ExpoOrbitIcon fill={PlatformColor('text')} />
       <Spacer.Vertical size="small" />
       <Divider />
