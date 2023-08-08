@@ -3,7 +3,7 @@ import {
   lightTheme,
   darkTheme,
   borderRadius,
-  typography, 
+  typography,
   palette,
 } from '@expo/styleguide-native';
 import {TextStyle, Platform, StyleSheet} from 'react-native';
@@ -226,7 +226,12 @@ export const bgDark = {
 };
 
 export const border = {
-  default: {borderColor: lightTheme.border.default, borderWidth: 1},
+  default: {
+    borderColor: {
+      semantic: 'gridColor',
+    },
+    borderWidth: 1,
+  },
   warning: {borderColor: lightTheme.border.warning, borderWidth: 1},
   hairline: {
     borderColor: lightTheme.border.default,
@@ -235,7 +240,12 @@ export const border = {
 };
 
 export const borderDark = {
-  default: {borderColor: darkTheme.border.default, borderWidth: 1},
+  default: {
+    borderColor: {
+      semantic: 'controlColor',
+    },
+    borderWidth: 1,
+  },
   warning: {borderColor: darkTheme.border.warning, borderWidth: 1},
   error: {borderColor: darkTheme.border.error, borderWidth: 1},
   hairline: {

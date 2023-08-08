@@ -8,6 +8,15 @@ import Settings from './Settings';
 export const WindowsNavigator = createWindowsNavigator({
   Settings: {
     component: Settings,
+    options: {
+      title: 'Settings',
+      windowStyle: {
+        mask: WindowStyleMask.Titled | WindowStyleMask.Closable,
+        titlebarAppearsTransparent: true,
+        height: 275,
+        width: 400,
+      },
+    },
   },
   Onboarding: {
     component: Onboarding,

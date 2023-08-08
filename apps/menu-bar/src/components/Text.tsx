@@ -62,7 +62,9 @@ export const TextInput = create(RNTextInput, {
     border: {
       default: {
         borderWidth: 1,
-        borderColor: lightTheme.border.default,
+        borderColor: {
+          semantic: 'gridColor',
+        },
       },
     },
 
@@ -81,8 +83,9 @@ export const TextInput = create(RNTextInput, {
 
       border: {
         default: {
-          borderColor: darkTheme.border.default,
-          borderWidth: 1,
+          borderColor: {
+            semantic: 'gridColor',
+          },
         },
       },
     },
