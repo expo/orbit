@@ -11,7 +11,7 @@ const Footer = () => {
       <View px="medium">
         <Divider />
       </View>
-      <View py="tiny">
+      <View py="tiny" pb="1.5">
         <Item onPress={() => WindowsNavigator.open('Settings')}>
           <Text>Settings</Text>
         </Item>
