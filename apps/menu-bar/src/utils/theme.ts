@@ -118,6 +118,8 @@ export const text = {
 
   leading: {
     large: {lineHeight: 18},
+    medium: {lineHeight: 15},
+    small: {lineHeight: 13},
   },
 
   type: {
