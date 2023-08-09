@@ -1,5 +1,8 @@
 <p align="center">
-  <img alt="Expo Orbit" height="96" src="./.github/resources/banner.png">
+  <picture >
+    <source height="96" media="(prefers-color-scheme: dark)" srcset="./.github/resources/banner-dark.png">
+    <img height="96" alt="Expo Orbit" src="./.github/resources/banner-light.png">
+  </picture>
   <h1 align="center">Expo Orbit</h1>
 </p>
 
