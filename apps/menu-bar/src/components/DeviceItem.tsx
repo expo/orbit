@@ -73,14 +73,13 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
           </View>
           <View flex="1" justify="center">
             <Text numberOfLines={1}>{device.name}</Text>
-            <Text style={styles.description} color="secondary">
+            <Text style={styles.description} color="secondary" leading="small">
               {capitalize(device.deviceType)}
               {device.osVersion && ` · ${device.osVersion}`}
-              {device.state === 'Booted' ? ' · Running' : ''}
             </Text>
           </View>
         </Row>
-        {device.deviceType === 'device' ? (
+        {device.deviceType === 'device' && (
           <>
             {device.connectionType === 'Network' ? (
               <WifiIcon height={20} width={20} fill={PlatformColor('text')} />
@@ -92,11 +91,28 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
               />
             )}
           </>
-        ) : isHovered && device.state === 'Shutdown' ? (
-          <Button color="primary" onPress={onPressLaunch} style={styles.button}>
-            Launch
-          </Button>
-        ) : null}
+        )}
+        {device.deviceType !== 'device' && device.state === 'Booted' && (
+          <>
+            <Text color="success" style={styles.runIndicator}>
+              ●
+            </Text>
+            <Text color="secondary" style={styles.runIndicator}>
+              {' '}
+              Running
+            </Text>
+          </>
+        )}
+        {isHovered &&
+          device.deviceType !== 'device' &&
+          device.state === 'Shutdown' && (
+            <Button
+              color="primary"
+              onPress={onPressLaunch}
+              style={styles.button}>
+              Launch
+            </Button>
+          )}
       </Row>
     </Pressable>
   );
@@ -113,13 +129,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
     borderRadius: 4,
   },
-  circle: {width: 32, height: 32, marginRight: 8, opacity: 0.85},
+  circle: {width: 32, height: 32, marginRight: 8, opacity: 0.8},
   description: {
     fontSize: 11,
-    lineHeight: 13,
     opacity: 0.8,
   },
   button: {
     marginLeft: 8,
+  },
+  runIndicator: {
+    fontSize: 11,
   },
 });
