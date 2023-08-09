@@ -1,5 +1,6 @@
 #import "MenuBarModule.h"
 #import "AppDelegate.h"
+#import <sys/utsname.h>
 
 #import <React/RCTLog.h>
 #import <ServiceManagement/ServiceManagement.h>
@@ -100,6 +101,23 @@ RCT_EXPORT_METHOD(runCommand:(NSString *)command
   resolve(returnOutput);
 }
 
+NSString *getMachineHardwareName(void) {
+    struct utsname sysinfo;
+    int retVal = uname(&sysinfo);
+    if (EXIT_SUCCESS != retVal) return nil;
+
+    return [NSString stringWithUTF8String:sysinfo.machine];
+}
+
+NSString *getCliResourceNameForArch(void) {
+    NSString *arch = getMachineHardwareName();
+    if([arch compare:@"arm64"]){
+      return @"orbit-cli-arm64";
+    }
+
+    return @"orbit-cli-x64";
+}
+
 RCT_EXPORT_METHOD(runCli:(NSString *)command
                   arguments:(NSArray *)arguments
                   listenerId:(nonnull NSNumber *)listenerId
@@ -109,7 +127,7 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
   NSTask *task = [[NSTask alloc] init];
   NSPipe *pipe = [NSPipe pipe];
 
-  NSString *executablePath = [[NSBundle mainBundle] pathForResource:@"expo-orbit-cli" ofType:nil];
+  NSString *executablePath = [[NSBundle mainBundle] pathForResource:getCliResourceNameForArch() ofType:nil];
 
   [task setLaunchPath:executablePath];
   [task setArguments:[@[command] arrayByAddingObjectsFromArray:arguments]];
