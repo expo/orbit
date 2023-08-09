@@ -10,7 +10,7 @@ import Cocoa
 class AutoLauncherAppDelegate: NSObject, NSApplicationDelegate {
 
     struct Constants {
-        static let menuBarBundleID = "dev.expo.MenuBar"
+        static let menuBarBundleID = "dev.expo.orbit"
     }
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -20,15 +20,12 @@ class AutoLauncherAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if !isRunning {
-            var path = Bundle.main.bundlePath as NSString
-            for _ in 1...4 {
-                path = path.deletingLastPathComponent as NSString
-            }
-            let applicationPathString = path as String
-            guard let pathURL = URL(string: applicationPathString) else { return }
-            NSWorkspace.shared.openApplication(at: pathURL,
-                                               configuration: NSWorkspace.OpenConfiguration(),
-                                               completionHandler: nil)
+          guard let mainAppURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: Constants.menuBarBundleID) else { return }
+          
+          NSWorkspace.shared.openApplication(at: mainAppURL,
+                                             configuration: NSWorkspace.OpenConfiguration(),
+                                             completionHandler: nil
+          )
         }
     }
 
