@@ -66,6 +66,8 @@
 		C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorView.h; sourceTree = "<group>"; };
 		C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorView.m; sourceTree = "<group>"; };
 		C032EDB62A1FE6F300FBC597 /* expo-orbit-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "expo-orbit-cli"; path = "../../cli/expo-orbit-cli"; sourceTree = "<group>"; };
+		C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ExpoMenuBar-macOSRelease.entitlements"; sourceTree = "<group>"; };
+		C051E6B42A8340AF00C6D615 /* AutoLauncherRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncherRelease.entitlements; sourceTree = "<group>"; };
 		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
 		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
 		C0523ECB2A550983003371AF /* WindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowManager.m; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 		5142014A2437B4B30078DB4F /* ExpoMenuBar-macOS */ = {
 			isa = PBXGroup;
 			children = (
+				C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */,
 				C081507C2A610E2F00E8890F /* Resources */,
 				C032EDB62A1FE6F300FBC597 /* expo-orbit-cli */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
@@ -231,6 +234,7 @@
 		C08E651F2A5C411D0079E3A9 /* AutoLauncher */ = {
 			isa = PBXGroup;
 			children = (
+				C051E6B42A8340AF00C6D615 /* AutoLauncherRelease.entitlements */,
 				C08E65202A5C411D0079E3A9 /* AppDelegate.swift */,
 				C08E65292A5C411E0079E3A9 /* AutoLauncher.entitlements */,
 				C08E652D2A5C42950079E3A9 /* main.swift */,
@@ -293,7 +297,6 @@
 					514201482437B4B30078DB4F = {
 						CreatedOnToolsVersion = 11.4;
 						LastSwiftMigration = 1430;
-						ProvisioningStyle = Automatic;
 					};
 					C08E651D2A5C411D0079E3A9 = {
 						CreatedOnToolsVersion = 15.0;
@@ -514,9 +517,13 @@
 			baseConfigurationReference = 214F660AED31B4554BE29100 /* Pods-ExpoMenuBar-macOS.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_ENTITLEMENTS = "ExpoMenuBar-macOS/ExpoMenuBar-macOSRelease.entitlements";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = C8D8QTF339;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = "ExpoMenuBar-macos/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -529,6 +536,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.orbit;
 				PRODUCT_NAME = "Expo Orbit";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -704,12 +712,16 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = AutoLauncher/AutoLauncher.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = AutoLauncher/AutoLauncherRelease.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = C8D8QTF339;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -723,6 +735,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.AutoLauncher;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
