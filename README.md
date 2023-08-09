@@ -11,8 +11,6 @@ Try out Expo Orbit now, explore its capabilities, and share your feedback. Your 
 
 ## Install
 
-You can find the latest version of Orbit to download at https://github.com/expo/orbit/releases and you can enable this experimental feature by going to www.expo.dev/settings and selecting the "Expo Orbit" experiment under the Experiments section.
-
 1. Go to [orbit/releases](https://github.com/expo/eas-menu-bar/releases?q=expo-menu-bar) and download the latest release.
 
 2. Unzip the file and drag Expo Orbit to the Applications folder.
