@@ -10,7 +10,7 @@
   "scripts": {
     "cli": "node ./build/index.js",
     "start": "yarn run prepare && yarn run watch",
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc",
     "archive": "yarn build && pkg build/index.js --targets macos-arm64,macos-x64 -o dist/orbit-cli",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
