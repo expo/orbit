@@ -39,7 +39,7 @@ enum Status {
   INSTALLING,
 }
 
-const BUILDS_SECTION_HEIGHT = 92;
+const BUILDS_SECTION_HEIGHT = 88;
 
 type Props = {
   isDevWindow: boolean;
@@ -217,7 +217,7 @@ function Core(props: Props) {
   return (
     <View shrink="1">
       <View style={{height: BUILDS_SECTION_HEIGHT}}>
-        <View padding="medium" pb="tiny">
+        <View px="medium" pt="2.5" pb="tiny">
           <SectionHeader label="Builds" />
         </View>
         {status === Status.LISTENING ? (
