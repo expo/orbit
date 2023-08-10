@@ -1,0 +1,30 @@
+name: "\U0001F41B Bug Report"
+description: "Report a reproducible bug in Expo Orbit"
+labels: ["needs review"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to file a bug report! If you are convinced that you have found a bug in Orbit, this is the right place. Please fill out this entire form. The most important piece is the Steps to reproduce.
+  - type: markdown
+    attributes:
+      value: If you have a question about how to use Orbit, you can get help from the community on the [forums](https://forums.expo.dev/) or on [Discord](https://chat.expo.dev).
+  - type: textarea
+    attributes:
+      label: Summary
+      description: |
+        Clearly describe what the expected behavior is and what instead is actually happening. Be concise and precise in your description. Include any affected platforms (iOS, Android).
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Explain in a few steps how to reproduce the issue reported.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Environment
+      description: Run the `npx expo-env-info` command and paste its output in the field below.
+    validations:
+      required: true
