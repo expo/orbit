@@ -239,7 +239,7 @@ function Core(props: Props) {
           <View px="medium">
             <ProgressIndicator
               progress={status === Status.DOWNLOADING ? progress : undefined}
-              indeterminate={status === Status.INSTALLING ? true : undefined}
+              indeterminate={status === Status.INSTALLING}
               key={status}
             />
             <Text>
