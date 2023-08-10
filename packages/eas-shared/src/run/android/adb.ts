@@ -22,6 +22,12 @@ export async function adbAsync(...args: string[]): Promise<SpawnResult> {
   try {
     return await spawnAsync(adbExecutable, args);
   } catch (error: any) {
+    if (error.code === "ENOENT") {
+      throw new Error(
+        `adb command not found, please install it globally or configure the ANDROID_HOME environment variable`
+      );
+    }
+
     let errorMessage = (error.stderr || error.stdout || error.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(
