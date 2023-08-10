@@ -15,7 +15,7 @@ body:
         Clearly describe what the expected behavior is and what instead is actually happening. Be concise and precise in your description. Include any affected platforms (iOS, Android).
     validations:
       required: true
-  - type: markdown
+  - type: textarea
     attributes:
       label: Steps to reproduce
       description: |
