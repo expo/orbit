@@ -6,13 +6,17 @@ import {
 import React from 'react';
 
 import FilePicker from '../modules/FilePickerModule';
-import {Text, TextInput} from './Text';
+import FolderIcon from '../assets/icons/folder.svg';
+import {TextInput} from './Text';
 import {Row} from './View';
+import {useExpoTheme} from '../utils/useExpoTheme';
 
 const PathInput = React.forwardRef<
   NativeTextInput,
   React.ComponentProps<typeof TextInput>
 >(({onChangeText, editable, ...props}, forwardedRef) => {
+  const theme = useExpoTheme();
+
   const handleSelectFolder = async () => {
     try {
       const path = await FilePicker.pickFolder();
@@ -41,7 +45,7 @@ const PathInput = React.forwardRef<
         style={styles.icon}
         onPress={handleSelectFolder}
         disabled={!editable}>
-        <Text>􀈕</Text>
+        <FolderIcon fill={theme.text.default} height={18} width={18} />
       </TouchableOpacity>
     </Row>
   );
