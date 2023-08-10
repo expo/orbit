@@ -116,16 +116,21 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
           device.state === 'Shutdown' &&
           !isDeviceLaunching && (
             <Button
+              title="Launch"
               disabled={isDeviceLaunching}
               color="primary"
               onPress={async () => {
                 setDeviceLaunching(true);
-                await onPressLaunch();
-                setDeviceLaunching(false);
+                try {
+                  await onPressLaunch();
+                } catch (error) {
+                  console.warn(error);
+                } finally {
+                  setDeviceLaunching(false);
+                }
               }}
-              style={[styles.button]}>
-              Launch
-            </Button>
+              style={styles.button}
+            />
           )}
       </Row>
     </Pressable>

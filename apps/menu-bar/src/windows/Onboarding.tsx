@@ -74,7 +74,7 @@ const Onboarding = () => {
         />
       </View>
       <View px="large" py="medium">
-        <Button onPress={closeOnboarding}>Get Started</Button>
+        <Button title="Get Started" onPress={closeOnboarding} />
       </View>
     </View>
   );

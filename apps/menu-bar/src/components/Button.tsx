@@ -16,14 +16,10 @@ import {addOpacity} from '../utils/theme';
 type Color = 'default' | 'primary';
 type Props = TouchableOpacityProps & {
   color?: Color;
+  title: string;
 };
 
-const Button = ({
-  children,
-  color = 'default',
-  disabled,
-  ...otherProps
-}: Props) => {
+const Button = ({title, color = 'default', disabled, ...otherProps}: Props) => {
   const theme = useCurrentTheme();
   const {textStyle, touchableStyle} = getStylesForColor(color, theme);
 
@@ -38,7 +34,7 @@ const Button = ({
         otherProps.style,
       ]}>
       <Text style={textStyle} size="tiny" weight="semibold">
-        {children}
+        {title}
       </Text>
     </TouchableOpacity>
   );
