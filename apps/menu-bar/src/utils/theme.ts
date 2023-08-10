@@ -229,9 +229,7 @@ export const bgDark = {
 
 export const border = {
   default: {
-    borderColor: {
-      semantic: 'gridColor',
-    },
+    borderColor: PlatformColor('gridColor'),
     borderWidth: 1,
   },
   warning: {borderColor: lightTheme.border.warning, borderWidth: 1},
@@ -243,9 +241,7 @@ export const border = {
 
 export const borderDark = {
   default: {
-    borderColor: {
-      semantic: PlatformColor('controlColor'),
-    },
+    borderColor: PlatformColor('controlColor'),
     borderWidth: 1,
   },
   warning: {borderColor: darkTheme.border.warning, borderWidth: 1},

@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "watch": "yarn build --watch --preserveWatchOutput",
+    "lint": "eslint .",
     "typecheck": "tsc"
   },
   "devDependencies": {

@@ -1,0 +1,53 @@
+name: Lint and TSC
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/lint-and-tsc.yml
+      - apps/**
+      - packages/**
+      - ts-declarations/**
+  pull_request:
+    paths:
+      - .github/workflows/lint-and-tsc.yml
+      - apps/**
+      - packages/**
+      - ts-declarations/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: 👀 Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: ⬢ Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: 🧶 Install workspace node modules
+        run: yarn install --frozen-lockfile
+
+      - name: 🏗️ TSC "eas-shared" package files
+        run: yarn tsc --noEmit
+        working-directory: packages/eas-shared
+      - name: 📦️ Build "eas-shared" package
+        run: yarn build
+        working-directory: packages/eas-shared
+
+      - name: 🚨 Lint "Orbit" app files
+        run: yarn lint --max-warnings 0
+        working-directory: apps/menu-bar
+      - name: 🏗️ TSC "Orbit" app files
+        run: yarn tsc --noEmit
+        working-directory: apps/menu-bar
+
+      - name: 🏗️ TSC "CLI" app files
+        run: yarn tsc --noEmit
+        working-directory: apps/cli
