@@ -1,8 +1,10 @@
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ImageSourcePropType,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 import {spacing} from '@expo/styleguide-native';
 
@@ -26,6 +28,8 @@ const CommandCheckItem = ({
   reason,
   success,
 }: Props) => {
+  const showWarningAlert = () => Alert.alert('Something went wrong', reason);
+
   return (
     <View
       align="centered"
@@ -41,14 +45,22 @@ const CommandCheckItem = ({
         <Text size="tiny" color="secondary">
           {description}
         </Text>
-        {reason ? <Text>{reason}</Text> : null}
+        {reason ? (
+          <TouchableOpacity onPress={showWarningAlert}>
+            <Text size="tiny" color="warning" numberOfLines={2}>
+              {reason}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
       {success === undefined ? (
         <ActivityIndicator />
       ) : success ? (
         <CheckIcon />
       ) : (
-        <AlertIcon />
+        <TouchableOpacity onPress={showWarningAlert}>
+          <AlertIcon />
+        </TouchableOpacity>
       )}
     </View>
   );

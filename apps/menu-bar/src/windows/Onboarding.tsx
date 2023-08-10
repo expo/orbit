@@ -1,7 +1,6 @@
-import {Image, StyleSheet} from 'react-native';
+import {Image, ScrollView, StyleSheet} from 'react-native';
 import {useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {lightTheme} from '@expo/styleguide-native';
 
 import {WindowsNavigator} from './index';
 import CommandCheckItem from '../components/CommandCheckItem';
@@ -21,6 +20,8 @@ type PlatformToolsCheck = {
   android?: {success: boolean; reason?: string};
   ios?: {success: boolean; reason?: string};
 };
+
+const WINDOW_TITLE_HEIGHT = 28;
 
 const Onboarding = () => {
   const theme = useExpoTheme();
@@ -42,39 +43,47 @@ const Onboarding = () => {
 
   return (
     <View flex="1" bg="default">
-      <View style={styles.header} pt="2.5">
-        <Image source={Background} style={styles.background} />
-        <Logo />
-        <View mt="medium" mb="2">
-          <ExpoOrbitText />
-        </View>
-        <Text size="small" style={styles.subtitle}>
-          Download and launch builds.
-        </Text>
-      </View>
-      <View
-        padding="large"
-        style={[styles.container, {borderBottomColor: theme.border.default}]}>
-        <View>
-          <Text weight="bold">Pre-flight checklist</Text>
-          <Text size="small" color="secondary">
-            Configure developer tools to get the most out of Orbit.
+      <Image source={Background} style={styles.background} />
+      <ScrollView
+        style={{marginTop: -WINDOW_TITLE_HEIGHT}}
+        alwaysBounceVertical={false}>
+        <View style={styles.header}>
+          <Logo />
+          <View mt="medium" mb="2">
+            <ExpoOrbitText />
+          </View>
+          <Text size="small" style={styles.subtitle}>
+            Download and launch builds.
           </Text>
         </View>
-        <CommandCheckItem
-          title="Android Studio"
-          description="Install Android Studio to manage devices and install apps on Android"
-          icon={AndroidStudio}
-          {...platformToolsCheck?.android}
-        />
-        <CommandCheckItem
-          title="Xcode"
-          description="Install Xcode to manage devices and install apps on iOS"
-          icon={Xcode}
-          {...platformToolsCheck?.ios}
-        />
-      </View>
-      <View px="large" py="medium">
+        <View bg="default">
+          <View px="large" py="large" style={styles.container}>
+            <View>
+              <Text weight="bold">Pre-flight checklist</Text>
+              <Text size="small" color="secondary">
+                Configure developer tools to get the most out of Orbit.
+              </Text>
+            </View>
+            <CommandCheckItem
+              title="Android Studio"
+              description="Install Android Studio to manage devices and install apps on Android"
+              icon={AndroidStudio}
+              {...platformToolsCheck?.android}
+            />
+            <CommandCheckItem
+              title="Xcode"
+              description="Install Xcode to manage devices and install apps on iOS"
+              icon={Xcode}
+              {...platformToolsCheck?.ios}
+            />
+          </View>
+        </View>
+      </ScrollView>
+      <View
+        px="large"
+        py="medium"
+        bg="default"
+        style={[styles.footer, {borderTopColor: theme.border.default}]}>
         <Button title="Get Started" onPress={closeOnboarding} />
       </View>
     </View>
@@ -88,22 +97,24 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 250,
+    height: 230,
     overflow: 'hidden',
-    backgroundColor: 'black',
   },
   container: {
     flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: lightTheme.border.default,
     gap: 14,
+    overflow: 'hidden',
   },
   subtitle: {
     color: '#E1EDFF',
   },
   background: {
     position: 'absolute',
+    backgroundColor: 'black',
     top: 0,
     left: 0,
+  },
+  footer: {
+    borderTopWidth: 1,
   },
 });
