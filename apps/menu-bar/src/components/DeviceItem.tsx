@@ -18,7 +18,7 @@ export const DEVICE_ITEM_HEIGHT = 42;
 interface Props {
   device: Device;
   onPress: () => void;
-  onPressLaunch: () => void;
+  onPressLaunch: () => Promise<void>;
   selected?: boolean;
 }
 
@@ -26,6 +26,7 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
   const theme = useExpoTheme();
   const currentTheme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
+  const [isDeviceLaunching, setDeviceLaunching] = useState(false);
 
   return (
     <Pressable
@@ -94,22 +95,35 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
         )}
         {device.deviceType !== 'device' && device.state === 'Booted' && (
           <>
-            <Text color="success" style={styles.runIndicator}>
+            <Text color="success" style={styles.indicator}>
               ●
             </Text>
-            <Text color="secondary" style={styles.runIndicator}>
+            <Text color="secondary" style={styles.indicator}>
               {' '}
               Running
             </Text>
           </>
         )}
+        {device.deviceType !== 'device' &&
+          device.state === 'Shutdown' &&
+          isDeviceLaunching && (
+            <Text color="secondary" style={styles.indicator}>
+              Launching…
+            </Text>
+          )}
         {isHovered &&
           device.deviceType !== 'device' &&
-          device.state === 'Shutdown' && (
+          device.state === 'Shutdown' &&
+          !isDeviceLaunching && (
             <Button
+              disabled={isDeviceLaunching}
               color="primary"
-              onPress={onPressLaunch}
-              style={styles.button}>
+              onPress={async () => {
+                setDeviceLaunching(true);
+                await onPressLaunch();
+                setDeviceLaunching(false);
+              }}
+              style={[styles.button]}>
               Launch
             </Button>
           )}
@@ -137,7 +151,7 @@ const styles = StyleSheet.create({
   button: {
     marginLeft: 8,
   },
-  runIndicator: {
+  indicator: {
     fontSize: 11,
   },
 });

@@ -14,10 +14,9 @@ import {useCurrentTheme} from '../utils/useExpoTheme';
 import {addOpacity} from '../utils/theme';
 
 type Color = 'default' | 'primary';
-interface Props extends TouchableOpacityProps {
-  children: string;
+type Props = TouchableOpacityProps & {
   color?: Color;
-}
+};
 
 const Button = ({
   children,
