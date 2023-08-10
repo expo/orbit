@@ -121,7 +121,6 @@ export const View = create(RNView, {
   selectors: {
     dark: {
       bg: bgDark,
-
       border: borderDark,
     },
 

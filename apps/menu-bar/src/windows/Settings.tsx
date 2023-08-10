@@ -122,7 +122,9 @@ const Settings = () => {
           {`Version: ${MenuBarModule.constants.appVersion} (${MenuBarModule.constants.buildVersion})`}
         </Text>
       </View>
-      <Text color="secondary" style={styles.about}>Copyright 650 Industries Inc, 2023</Text>
+      <Text color="secondary" style={styles.about}>
+        Copyright 650 Industries Inc, 2023
+      </Text>
     </View>
   );
 };

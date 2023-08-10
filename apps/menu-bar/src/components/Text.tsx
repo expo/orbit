@@ -1,36 +1,12 @@
+import {shadows} from '@expo/styleguide-native';
 import {
-  darkTheme,
-  lightTheme,
-  shadows,
-  typography,
-} from '@expo/styleguide-native';
-import {Text as RNText, TextInput as RNTextInput} from 'react-native';
+  PlatformColor,
+  Text as RNText,
+  TextInput as RNTextInput,
+} from 'react-native';
 
 import {create} from '../utils/create-component-primitive';
 import {text, textDark, padding, rounded} from '../utils/theme';
-
-export const Heading = create(RNText, {
-  base: {
-    ...typography.fontSizes[16],
-  },
-
-  props: {
-    accessibilityRole: 'header',
-  },
-
-  variants: {
-    ...text,
-
-    size: {
-      large: typography.fontSizes[22],
-      small: typography.fontSizes[13],
-    },
-  },
-
-  selectors: {
-    dark: textDark,
-  },
-});
 
 export const Text = create(RNText, {
   base: {
@@ -62,9 +38,7 @@ export const TextInput = create(RNTextInput, {
     border: {
       default: {
         borderWidth: 1,
-        borderColor: {
-          semantic: 'gridColor',
-        },
+        borderColor: PlatformColor('gridColor'),
       },
     },
 
@@ -83,9 +57,7 @@ export const TextInput = create(RNTextInput, {
 
       border: {
         default: {
-          borderColor: {
-            semantic: 'gridColor',
-          },
+          borderColor: PlatformColor('gridColor'),
         },
       },
     },

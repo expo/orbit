@@ -76,7 +76,7 @@ function Core(props: Props) {
   }, []);
 
   const getFirstAvailableDevice = useCallback(
-    (simulator?: boolean) => {
+    (_?: boolean) => {
       return (
         devices.find(d => getDeviceId(d) === selectedDevicesIds.ios) ??
         devices.find(d => getDeviceId(d) === selectedDevicesIds.android) ??
@@ -254,7 +254,7 @@ function Core(props: Props) {
         <SectionList
           sections={sections}
           style={{minHeight: estimatedListHeight}}
-          SectionSeparatorComponent={() => <Spacer.Vertical size="tiny" />}
+          SectionSeparatorComponent={Separator}
           renderSectionHeader={({section: {label}}) => {
             return (
               <View px="medium">
@@ -282,5 +282,7 @@ function Core(props: Props) {
     </View>
   );
 }
+
+const Separator = () => <Spacer.Vertical size="tiny" />;
 
 export default memo(Core);

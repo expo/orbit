@@ -35,6 +35,7 @@ const Onboarding = () => {
 
   useEffect(() => {
     MenuBarModule.runCli('check-tools', []).then(output => {
+      // eslint-disable-next-line no-eval
       setPlatformToolsCheck(eval(`(${output})`));
     });
   }, []);

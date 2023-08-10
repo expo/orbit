@@ -15,13 +15,7 @@ const NativeColorPalette = () => {
   return (
     <View style={styles.container}>
       {selectedColor ? (
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 5,
-            alignItems: 'center',
-            padding: 5,
-          }}>
+        <View style={styles.selectedContainer}>
           <View
             style={[
               styles.bigSquare,
@@ -49,7 +43,7 @@ const NativeColorPalette = () => {
                 },
               ]}
               onPress={() =>
-                setSelectedColor(prev => (prev != item ? item : undefined))
+                setSelectedColor(prev => (prev !== item ? item : undefined))
               }
             />
           );
@@ -75,6 +69,12 @@ const styles = StyleSheet.create({
   bigSquare: {
     height: 40,
     width: 40,
+  },
+  selectedContainer: {
+    flexDirection: 'row',
+    gap: 5,
+    alignItems: 'center',
+    padding: 5,
   },
   selectedColorText: {
     margin: 10,

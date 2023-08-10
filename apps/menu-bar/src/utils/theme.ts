@@ -6,7 +6,7 @@ import {
   typography,
   palette,
 } from '@expo/styleguide-native';
-import {TextStyle, Platform, StyleSheet} from 'react-native';
+import {TextStyle, Platform, StyleSheet, PlatformColor} from 'react-native';
 
 type SpacingKey = `${keyof typeof spacing}`;
 type DescriptiveScale = 'micro' | 'tiny' | 'small' | 'medium' | 'large' | 'xl';
@@ -186,11 +186,11 @@ export const text = {
   },
 
   color: {
-    default: {color: {semantic: 'labelColor'}},
+    default: {color: PlatformColor('labelColor')},
     error: {color: lightTheme.text.error},
     warning: {color: lightTheme.text.warning},
     success: {color: lightTheme.text.success},
-    secondary: {color: palette.light.gray["800"]},
+    secondary: {color: palette.light.gray['800']},
     primary: {color: lightTheme.button.primary.background},
     link: {color: lightTheme.link.default},
   },
@@ -198,11 +198,11 @@ export const text = {
 
 export const textDark = {
   color: {
-    default: {color: {semantic: 'labelColor'}},
+    default: {color: PlatformColor('labelColor')},
     error: {color: darkTheme.text.error},
     warning: {color: darkTheme.text.warning},
     success: {color: darkTheme.text.success},
-    secondary: {color: palette.dark.gray["800"]},
+    secondary: {color: palette.dark.gray['800']},
     primary: {color: darkTheme.button.primary.background},
     link: {color: darkTheme.link.default},
   },
@@ -244,7 +244,7 @@ export const border = {
 export const borderDark = {
   default: {
     borderColor: {
-      semantic: 'controlColor',
+      semantic: PlatformColor('controlColor'),
     },
     borderWidth: 1,
   },
