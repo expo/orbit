@@ -270,7 +270,9 @@ function Core(props: Props) {
                 device={device}
                 key={device.name}
                 onPress={() => onSelectDevice(device)}
-                onPressLaunch={() => bootDeviceAsync({platform, id})}
+                onPressLaunch={async () => {
+                  await bootDeviceAsync({platform, id});
+                }}
                 selected={selectedDevicesIds[platform] === id}
               />
             );
