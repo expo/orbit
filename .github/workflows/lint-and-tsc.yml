@@ -37,6 +37,9 @@ jobs:
       - name: 🏗️ TSC "eas-shared" package files
         run: yarn tsc --noEmit
         working-directory: packages/eas-shared
+      - name: 📦️ Build "eas-shared" package
+        run: yarn build
+        working-directory: packages/eas-shared
 
       - name: 🚨 Lint "Orbit" app files
         run: yarn lint --max-warnings 0
