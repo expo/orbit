@@ -1,5 +1,5 @@
 import React from 'react';
-import {Animated, ColorValue, View} from 'react-native';
+import {ColorValue, View} from 'react-native';
 import Svg from 'react-native-svg';
 import {G, Circle} from 'react-native-svg';
 

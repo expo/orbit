@@ -26,12 +26,7 @@ const PathInput = React.forwardRef<
       rounded="medium"
       bg={editable ? 'overlay' : 'secondary'}
       align="center"
-      style={[
-        styles.inputContainer,
-        !editable && {
-          opacity: 0.66,
-        },
-      ]}>
+      style={[styles.inputContainer, !editable && styles.inputDisabled]}>
       <TextInput
         shadow="input"
         {...props}
@@ -66,6 +61,9 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     verticalAlign: 'middle',
     fontSize: 13,
+  },
+  inputDisabled: {
+    opacity: 0.66,
   },
   icon: {
     paddingHorizontal: 6,

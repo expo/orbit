@@ -14,8 +14,8 @@ export const useListDevices = () => {
     try {
       const devicesList = await listDevicesAsync({platform: 'all'});
       setDevices(devicesList);
-    } catch (error) {
-      setError(error as Error);
+    } catch (err) {
+      setError(err as Error);
     } finally {
       setLoading(false);
     }

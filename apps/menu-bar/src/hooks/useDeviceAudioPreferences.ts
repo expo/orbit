@@ -4,7 +4,7 @@ import {DeviceEventEmitter} from 'react-native';
 import {getUserPreferences} from '../modules/Storage';
 
 export const useDeviceAudioPreferences = () => {
-  const [emulatorWithoutAudio, setEmulatorWithoutAudio] = useState<boolean>();
+  const [isEmulatorWithoutAudio, setEmulatorWithoutAudio] = useState<boolean>();
 
   const getAudioPreferences = useCallback(async () => {
     const {emulatorWithoutAudio} = await getUserPreferences();
@@ -20,9 +20,9 @@ export const useDeviceAudioPreferences = () => {
     return () => {
       listener.remove();
     };
-  }, []);
+  }, [getAudioPreferences]);
 
   return {
-    emulatorWithoutAudio,
+    emulatorWithoutAudio: isEmulatorWithoutAudio,
   };
 };

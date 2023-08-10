@@ -33,7 +33,7 @@ type SelectorProps = {
   dark?: StyleType;
 };
 
-export function create<T extends object, O extends Options>(
+export function create<T extends {}, O extends Options>(
   component: React.ComponentType<T>,
   config: O & {selectors?: Selectors<O['variants']>; props?: T},
 ) {

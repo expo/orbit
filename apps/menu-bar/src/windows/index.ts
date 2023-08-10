@@ -11,6 +11,7 @@ export const WindowsNavigator = createWindowsNavigator({
     options: {
       title: 'Settings',
       windowStyle: {
+        // eslint-disable-next-line no-bitwise
         mask: WindowStyleMask.Titled | WindowStyleMask.Closable,
         titlebarAppearsTransparent: true,
         height: 275,
@@ -23,6 +24,7 @@ export const WindowsNavigator = createWindowsNavigator({
     options: {
       title: '',
       windowStyle: {
+        // eslint-disable-next-line no-bitwise
         mask: WindowStyleMask.Titled | WindowStyleMask.FullSizeContentView,
         titlebarAppearsTransparent: true,
         height: 618,
