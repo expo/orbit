@@ -60,10 +60,14 @@ function Core(props: Props) {
 
   const displayDimensions = useSafeDisplayDimensions();
   const estimatedAvailableSizeForDevices =
-    displayDimensions.height - FOOTER_HEIGHT - BUILDS_SECTION_HEIGHT - 30;
+    (displayDimensions.height || 0) -
+    FOOTER_HEIGHT -
+    BUILDS_SECTION_HEIGHT -
+    30;
   const heightOfAllDevices = DEVICE_ITEM_HEIGHT * devices?.length;
   const estimatedListHeight =
-    heightOfAllDevices <= estimatedAvailableSizeForDevices
+    heightOfAllDevices <= estimatedAvailableSizeForDevices ||
+    estimatedAvailableSizeForDevices <= 0
       ? heightOfAllDevices
       : estimatedAvailableSizeForDevices;
 
