@@ -4,11 +4,13 @@ on:
   push:
     branches: [main]
     paths:
+      - .github/workflows/lint-and-tsc.yml
       - apps/**
       - packages/**
       - ts-declarations/**
   pull_request:
     paths:
+      - .github/workflows/lint-and-tsc.yml
       - apps/**
       - packages/**
       - ts-declarations/**
@@ -31,18 +33,18 @@ jobs:
           node-version: 18
       - name: 🧶 Install workspace node modules
         run: yarn install --frozen-lockfile
-        
+
       - name: 🏗️ TSC "eas-shared" package files
         run: yarn tsc --noEmit
         working-directory: packages/eas-shared
-        
+
       - name: 🚨 Lint "Orbit" app files
         run: yarn lint --max-warnings 0
         working-directory: apps/menu-bar
       - name: 🏗️ TSC "Orbit" app files
         run: yarn tsc --noEmit
         working-directory: apps/menu-bar
-        
+
       - name: 🏗️ TSC "CLI" app files
         run: yarn tsc --noEmit
         working-directory: apps/cli
