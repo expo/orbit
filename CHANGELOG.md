@@ -12,6 +12,7 @@
 - Fixed menu bar popover height after putting Mac to sleep. ([#28](https://github.com/expo/orbit/pull/28) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Prevent multiple "Launch" clicks, add label when booting. ([#29](https://github.com/expo/orbit/pull/29) by [@Simek](https://github.com/Simek))
 - Fixed Pre-flight checklist UI when a check fails. ([#33](https://github.com/expo/orbit/pull/33) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fixed Folder icon not rendering correctly inside the Settings Window. ([#34](https://github.com/expo/orbit/pull/34) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
