@@ -6,6 +6,7 @@
 #import <React/RCTLinkingManager.h>
 
 #import "DevViewController.h"
+#import "WindowNavigator.h"
 
 @interface AppDelegate () <RCTBridgeDelegate>
 #if RCT_DEV
@@ -28,6 +29,7 @@
   [image setTemplate:YES];
   statusItem.button.image = image;
   [statusItem.button setTarget:self];
+  [statusItem.button sendActionOn:NSEventMaskRightMouseUp | NSEventMaskLeftMouseUp];
   [statusItem.button setAction:@selector(onPressStatusItem:)];
 
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
@@ -58,6 +60,26 @@
   [NSApp activateIgnoringOtherApps:YES];
 }
 
+- (NSMenu *)createContextMenu {
+    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"My Menu"];
+
+    [menu addItemWithTitle:@"Settings..." action:@selector(settingsAction:) keyEquivalent:@""];
+    [menu addItemWithTitle:@"Quit" action:@selector(quitAction:) keyEquivalent:@"q"];
+
+    return menu;
+}
+
+
+- (void)quitAction:(id)sender {
+  exit(0);
+}
+
+
+- (void)settingsAction:(id)sender {
+  WindowNavigator *windowNavigator = [WindowNavigator shared];
+  [windowNavigator openWindow:@"Settings" options:@{}];
+}
+
 - (void)openPopover {
     [popover showRelativeToRect:statusItem.button.bounds
                          ofView:statusItem.button
@@ -68,6 +90,13 @@
 }
 
 - (void)onPressStatusItem:(id)sender {
+  NSEvent *event = [NSApp currentEvent];
+  if (event.type == NSEventTypeRightMouseUp) {
+    NSMenu *contextMenu = [self createContextMenu];
+    [statusItem popUpStatusItemMenu:contextMenu];
+    return;
+  }
+
   if (popover.isShown) {
     [popover close];
   } else {
