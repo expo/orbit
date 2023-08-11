@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Added a context menu when right clicking on the menu bar icon. ([#36](https://github.com/expo/orbit/pull/36) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
