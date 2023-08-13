@@ -12,6 +12,8 @@
 
 ### 💡 Others
 
+- Refetch devices list after launching a simulator. ([#37](https://github.com/expo/orbit/pull/37) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 0.1.1 — 2023-08-10
 
 ### 🐛 Bug fixes

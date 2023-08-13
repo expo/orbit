@@ -262,7 +262,7 @@ function Core(props: Props) {
               </View>
             );
           }}
-          renderItem={({item: device}) => {
+          renderItem={({item: device}: {item: Device}) => {
             const platform = getDeviceOS(device);
             const id = getDeviceId(device);
             return (
@@ -272,6 +272,7 @@ function Core(props: Props) {
                 onPress={() => onSelectDevice(device)}
                 onPressLaunch={async () => {
                   await bootDeviceAsync({platform, id});
+                  refetch();
                 }}
                 selected={selectedDevicesIds[platform] === id}
               />
