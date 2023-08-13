@@ -13,6 +13,8 @@
 ### 💡 Others
 
 - Refetch devices list after launching a simulator. ([#37](https://github.com/expo/orbit/pull/37) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Improve Popover height estimations. ([#38](https://github.com/expo/orbit/pull/38) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add alert when trying to install build with no available device. ([#38](https://github.com/expo/orbit/pull/38) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 0.1.1 — 2023-08-10
 

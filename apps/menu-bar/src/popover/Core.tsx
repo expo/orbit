@@ -1,5 +1,5 @@
 import React, {memo, useCallback, useEffect, useState} from 'react';
-import {SectionList} from 'react-native';
+import {Alert, SectionList} from 'react-native';
 
 import {useDeepLinking} from '../hooks/useDeepLinking';
 import {downloadBuildAsync} from '../commands/downloadBuildAsync';
@@ -29,7 +29,7 @@ import {
 import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
 import {useSafeDisplayDimensions} from '../hooks/useSafeDisplayDimensions';
 import {useExpoTheme} from '../utils/useExpoTheme';
-import SectionHeader from './SectionHeader';
+import SectionHeader, {SECTION_HEADER_HEIGHT} from './SectionHeader';
 import Item from './Item';
 import {FOOTER_HEIGHT} from './Footer';
 
@@ -52,7 +52,7 @@ function Core(props: Props) {
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const {devices} = useListDevices();
+  const {devices, refetch} = useListDevices();
   const {emulatorWithoutAudio} = useDeviceAudioPreferences();
   const theme = useExpoTheme();
 
@@ -64,7 +64,9 @@ function Core(props: Props) {
     FOOTER_HEIGHT -
     BUILDS_SECTION_HEIGHT -
     30;
-  const heightOfAllDevices = DEVICE_ITEM_HEIGHT * devices?.length;
+  const heightOfAllDevices =
+    DEVICE_ITEM_HEIGHT * devices?.length +
+    SECTION_HEADER_HEIGHT * (sections?.length || 0);
   const estimatedListHeight =
     heightOfAllDevices <= estimatedAvailableSizeForDevices ||
     estimatedAvailableSizeForDevices <= 0
@@ -136,7 +138,10 @@ function Core(props: Props) {
         const platform = getPlatformFromURI(url);
         let device = getDeviceByPlatform(platform);
         if (!device) {
-          return; // handle error
+          Alert.alert(
+            `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`,
+          );
+          return;
         }
 
         const deviceId = getDeviceId(device);
@@ -255,13 +260,9 @@ function Core(props: Props) {
           sections={sections}
           style={{minHeight: estimatedListHeight}}
           SectionSeparatorComponent={Separator}
-          renderSectionHeader={({section: {label}}) => {
-            return (
-              <View px="medium">
-                <SectionHeader label={label} />
-              </View>
-            );
-          }}
+          renderSectionHeader={({section: {label}}) => (
+            <SectionHeader label={label} />
+          )}
           renderItem={({item: device}: {item: Device}) => {
             const platform = getDeviceOS(device);
             const id = getDeviceId(device);
