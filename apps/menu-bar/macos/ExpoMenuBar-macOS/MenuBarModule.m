@@ -111,7 +111,7 @@ NSString *getMachineHardwareName(void) {
 
 NSString *getCliResourceNameForArch(void) {
     NSString *arch = getMachineHardwareName();
-    if([arch compare:@"arm64"]){
+    if([arch isEqualToString:@"arm64"]){
       return @"orbit-cli-arm64";
     }
 

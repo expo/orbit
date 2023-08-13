@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Fixed listing devices on Intel machines. ([#39](https://github.com/expo/orbit/pull/39) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 - Refetch devices list after launching a simulator. ([#37](https://github.com/expo/orbit/pull/37) by [@gabrieldonadel](https://github.com/gabrieldonadel))
