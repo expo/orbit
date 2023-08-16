@@ -226,7 +226,7 @@ function Core(props: Props) {
   return (
     <View shrink="1">
       <View style={{height: BUILDS_SECTION_HEIGHT}}>
-        <View px="medium" pt="2.5" pb="tiny">
+        <View pt="2.5" pb="tiny">
           <SectionHeader label="Builds" />
         </View>
         {status === Status.LISTENING ? (
