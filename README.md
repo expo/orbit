@@ -14,7 +14,7 @@ Try out Expo Orbit now, explore its capabilities, and share your feedback. Your 
 
 ## Install
 
-1. Go to [orbit/releases](https://github.com/expo/eas-menu-bar/releases?q=expo-menu-bar) and download the latest release.
+1. Go to [orbit/releases](https://github.com/expo/eas-menu-bar/releases) and download the latest release.
 
 2. Unzip the file and drag Expo Orbit to the Applications folder.
 
