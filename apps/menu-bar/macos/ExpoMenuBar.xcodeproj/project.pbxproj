@@ -15,6 +15,7 @@
 		C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */; };
 		C032EDB72A1FE6F300FBC597 /* orbit-cli-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */; };
 		C051E6B62A83577800C6D615 /* orbit-cli-x64 in Resources */ = {isa = PBXBuildFile; fileRef = C051E6B52A83577800C6D615 /* orbit-cli-x64 */; };
+		C051E6BB2A991C4200C6D615 /* WebAuthenticationSession.m in Sources */ = {isa = PBXBuildFile; fileRef = C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */; };
 		C0523ECA2A545730003371AF /* FilePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523EC92A545730003371AF /* FilePicker.m */; };
 		C0523ECC2A550983003371AF /* WindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowManager.m */; };
 		C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */; };
@@ -70,6 +71,8 @@
 		C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ExpoMenuBar-macOSRelease.entitlements"; sourceTree = "<group>"; };
 		C051E6B42A8340AF00C6D615 /* AutoLauncherRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncherRelease.entitlements; sourceTree = "<group>"; };
 		C051E6B52A83577800C6D615 /* orbit-cli-x64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "orbit-cli-x64"; path = "../../cli/orbit-cli-x64"; sourceTree = "<group>"; };
+		C051E6B92A991C0A00C6D615 /* WebAuthenticationSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WebAuthenticationSession.h; sourceTree = "<group>"; };
+		C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WebAuthenticationSession.m; sourceTree = "<group>"; };
 		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
 		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
 		C0523ECB2A550983003371AF /* WindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowManager.m; sourceTree = "<group>"; };
@@ -191,6 +194,8 @@
 				C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */,
 				C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */,
 				C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */,
+				C051E6B92A991C0A00C6D615 /* WebAuthenticationSession.h */,
+				C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -457,6 +462,7 @@
 				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
 				C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */,
+				C051E6BB2A991C4200C6D615 /* WebAuthenticationSession.m in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
