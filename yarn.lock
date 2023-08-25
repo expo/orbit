@@ -7193,6 +7193,11 @@ react-native-macos@^0.71.0-0:
     whatwg-fetch "^3.0.0"
     ws "^6.2.2"
 
+react-native-mmkv@^2.10.2:
+  version "2.10.2"
+  resolved "https://registry.yarnpkg.com/react-native-mmkv/-/react-native-mmkv-2.10.2.tgz#73f06bb710388f67bade031e7b8e42a6d2358e40"
+  integrity sha512-hNrZzwvIFyogJkqf//rVSw7EwceYqkx/jl3hb5tzct6qqwEmS1L9ybvnDjzDkaMyDeouQIqAnsdnb6AuDSrgQQ==
+
 react-native-svg-transformer@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/react-native-svg-transformer/-/react-native-svg-transformer-1.0.0.tgz#7a707e5e95d20321b5f3dcfd0c3c8762ebd0221b"
