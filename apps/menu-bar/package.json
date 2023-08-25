@@ -17,6 +17,7 @@
     "react-native": "0.71.8",
     "react-native-macos": "^0.71.0-0",
     "react-native-svg": "^13.9.0",
+    "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^9.2.0"
   },
   "devDependencies": {
