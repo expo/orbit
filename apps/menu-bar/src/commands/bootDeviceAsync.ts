@@ -6,11 +6,7 @@ type BootDeviceAsyncOptions = {
   noAudio?: boolean;
 };
 
-export const bootDeviceAsync = async ({
-  platform,
-  id,
-  noAudio,
-}: BootDeviceAsyncOptions) => {
+export const bootDeviceAsync = async ({ platform, id, noAudio }: BootDeviceAsyncOptions) => {
   const args = ['-p', platform, '--id', id];
   if (noAudio) {
     args.push('--no-audio');

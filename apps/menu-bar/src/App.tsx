@@ -1,13 +1,13 @@
-import React, {useEffect} from 'react';
-import {StyleSheet} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
 
 import AutoResizerRootView from './components/AutoResizerRootView';
-import {WindowsNavigator} from './windows';
-import {hasSeenOnboardingStorageKey} from './windows/Onboarding';
-import {ThemeProvider} from './providers/ThemeProvider';
+import { SAFE_AREA_FACTOR } from './hooks/useSafeDisplayDimensions';
 import Popover from './popover';
-import {SAFE_AREA_FACTOR} from './hooks/useSafeDisplayDimensions';
+import { ThemeProvider } from './providers/ThemeProvider';
+import { WindowsNavigator } from './windows';
+import { hasSeenOnboardingStorageKey } from './windows/Onboarding';
 
 type Props = {
   isDevWindow: boolean;
@@ -15,7 +15,7 @@ type Props = {
 
 function App(props: Props) {
   useEffect(() => {
-    AsyncStorage.getItem(hasSeenOnboardingStorageKey).then(value => {
+    AsyncStorage.getItem(hasSeenOnboardingStorageKey).then((value) => {
       if (!value) {
         WindowsNavigator.open('Onboarding');
       }

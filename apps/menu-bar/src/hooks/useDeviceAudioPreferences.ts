@@ -1,13 +1,13 @@
-import {useCallback, useEffect, useState} from 'react';
-import {DeviceEventEmitter} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 
-import {getUserPreferences} from '../modules/Storage';
+import { getUserPreferences } from '../modules/Storage';
 
 export const useDeviceAudioPreferences = () => {
   const [isEmulatorWithoutAudio, setEmulatorWithoutAudio] = useState<boolean>();
 
   const getAudioPreferences = useCallback(async () => {
-    const {emulatorWithoutAudio} = await getUserPreferences();
+    const { emulatorWithoutAudio } = await getUserPreferences();
     setEmulatorWithoutAudio(emulatorWithoutAudio);
   }, []);
 

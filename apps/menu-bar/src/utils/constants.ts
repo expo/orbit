@@ -1,6 +1,4 @@
-import {Linking} from 'react-native';
+import { Linking } from 'react-native';
 
 export const openProjectsSelectorURL = () =>
-  Linking.openURL(
-    'https://expo.dev/accounts/[account]/projects/[project]/builds',
-  );
+  Linking.openURL('https://expo.dev/accounts/[account]/projects/[project]/builds');

@@ -1,4 +1,4 @@
-import {SectionListData} from 'react-native';
+import { SectionListData } from 'react-native';
 
 export type BaseDevice = {
   name: string;
@@ -38,8 +38,8 @@ export function getDeviceId(device: Device): string {
 }
 
 export function getSectionsFromDeviceList(
-  devices: Device[],
-): Array<SectionListData<Device, {label: string}>> {
+  devices: Device[]
+): SectionListData<Device, { label: string }>[] {
   const sections = devices
     .reduce(
       (acc, device) => {
@@ -62,9 +62,9 @@ export function getSectionsFromDeviceList(
           key: 'android',
           label: 'Android',
         },
-      ],
+      ]
     )
-    .filter(section => section.data.length > 0);
+    .filter((section) => section.data.length > 0);
 
   return sections;
 }

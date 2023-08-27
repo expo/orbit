@@ -2,9 +2,9 @@ import MenuBarModule from '../modules/MenuBarModule';
 
 export async function downloadBuildAsync(
   url: string,
-  progressCallback: (progress: number) => void,
+  progressCallback: (progress: number) => void
 ): Promise<string> {
-  return MenuBarModule.runCli('download-build', [url], status => {
+  return MenuBarModule.runCli('download-build', [url], (status) => {
     progressCallback(extractDownloadProgress(status));
   });
 }

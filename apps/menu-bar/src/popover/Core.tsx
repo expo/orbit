@@ -1,37 +1,32 @@
-import React, {memo, useCallback, useEffect, useState} from 'react';
-import {Alert, SectionList} from 'react-native';
+import React, { memo, useCallback, useEffect, useState } from 'react';
+import { Alert, SectionList } from 'react-native';
 
-import {useDeepLinking} from '../hooks/useDeepLinking';
-import {downloadBuildAsync} from '../commands/downloadBuildAsync';
-import {useListDevices} from '../hooks/useListDevices';
-import {bootDeviceAsync} from '../commands/bootDeviceAsync';
-import {installAndLaunchAppAsync} from '../commands/installAndLaunchAppAsync';
-import {launchSnackAsync} from '../commands/launchSnackAsync';
-import FilePicker from '../modules/FilePickerModule';
-import {getPlatformFromURI} from '../utils/parseUrl';
-import DeviceItem, {DEVICE_ITEM_HEIGHT} from '../components/DeviceItem';
-import {
-  Device,
-  getDeviceId,
-  getDeviceOS,
-  getSectionsFromDeviceList,
-} from '../utils/device';
-import ProgressIndicator from '../components/ProgressIndicator';
-import {Spacer, Text, View} from '../components';
-import File05Icon from '../assets/icons/file-05.svg';
+import { FOOTER_HEIGHT } from './Footer';
+import Item from './Item';
+import SectionHeader, { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import Earth02Icon from '../assets/icons/earth-02.svg';
-import {openProjectsSelectorURL} from '../utils/constants';
+import File05Icon from '../assets/icons/file-05.svg';
+import { bootDeviceAsync } from '../commands/bootDeviceAsync';
+import { downloadBuildAsync } from '../commands/downloadBuildAsync';
+import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
+import { launchSnackAsync } from '../commands/launchSnackAsync';
+import { Spacer, Text, View } from '../components';
+import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
+import ProgressIndicator from '../components/ProgressIndicator';
+import { useDeepLinking } from '../hooks/useDeepLinking';
+import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
+import { useListDevices } from '../hooks/useListDevices';
+import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
+import FilePicker from '../modules/FilePickerModule';
 import {
   SelectedDevicesIds,
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
 } from '../modules/Storage';
-import {useDeviceAudioPreferences} from '../hooks/useDeviceAudioPreferences';
-import {useSafeDisplayDimensions} from '../hooks/useSafeDisplayDimensions';
-import {useExpoTheme} from '../utils/useExpoTheme';
-import SectionHeader, {SECTION_HEADER_HEIGHT} from './SectionHeader';
-import Item from './Item';
-import {FOOTER_HEIGHT} from './Footer';
+import { openProjectsSelectorURL } from '../utils/constants';
+import { Device, getDeviceId, getDeviceOS, getSectionsFromDeviceList } from '../utils/device';
+import { getPlatformFromURI } from '../utils/parseUrl';
+import { useExpoTheme } from '../utils/useExpoTheme';
 
 enum Status {
   LISTENING,
@@ -46,30 +41,27 @@ type Props = {
 };
 
 function Core(props: Props) {
-  const [selectedDevicesIds, setSelectedDevicesIds] =
-    useState<SelectedDevicesIds>({android: undefined, ios: undefined});
+  const [selectedDevicesIds, setSelectedDevicesIds] = useState<SelectedDevicesIds>({
+    android: undefined,
+    ios: undefined,
+  });
 
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const {devices, refetch} = useListDevices();
-  const {emulatorWithoutAudio} = useDeviceAudioPreferences();
+  const { devices, refetch } = useListDevices();
+  const { emulatorWithoutAudio } = useDeviceAudioPreferences();
   const theme = useExpoTheme();
 
   const sections = getSectionsFromDeviceList(devices);
 
   const displayDimensions = useSafeDisplayDimensions();
   const estimatedAvailableSizeForDevices =
-    (displayDimensions.height || 0) -
-    FOOTER_HEIGHT -
-    BUILDS_SECTION_HEIGHT -
-    30;
+    (displayDimensions.height || 0) - FOOTER_HEIGHT - BUILDS_SECTION_HEIGHT - 30;
   const heightOfAllDevices =
-    DEVICE_ITEM_HEIGHT * devices?.length +
-    SECTION_HEADER_HEIGHT * (sections?.length || 0);
+    DEVICE_ITEM_HEIGHT * devices?.length + SECTION_HEADER_HEIGHT * (sections?.length || 0);
   const estimatedListHeight =
-    heightOfAllDevices <= estimatedAvailableSizeForDevices ||
-    estimatedAvailableSizeForDevices <= 0
+    heightOfAllDevices <= estimatedAvailableSizeForDevices || estimatedAvailableSizeForDevices <= 0
       ? heightOfAllDevices
       : estimatedAvailableSizeForDevices;
 
@@ -80,12 +72,12 @@ function Core(props: Props) {
   const getFirstAvailableDevice = useCallback(
     (_?: boolean) => {
       return (
-        devices.find(d => getDeviceId(d) === selectedDevicesIds.ios) ??
-        devices.find(d => getDeviceId(d) === selectedDevicesIds.android) ??
-        devices?.find(d => d.state === 'Booted')
+        devices.find((d) => getDeviceId(d) === selectedDevicesIds.ios) ??
+        devices.find((d) => getDeviceId(d) === selectedDevicesIds.android) ??
+        devices?.find((d) => d.state === 'Booted')
       );
     },
-    [devices, selectedDevicesIds],
+    [devices, selectedDevicesIds]
   );
 
   const ensureDeviceIsRunning = useCallback(
@@ -101,7 +93,7 @@ function Core(props: Props) {
         noAudio: emulatorWithoutAudio,
       });
     },
-    [emulatorWithoutAudio],
+    [emulatorWithoutAudio]
   );
 
   // @TODO: create another hook
@@ -119,27 +111,27 @@ function Core(props: Props) {
         platform: getDeviceOS(device),
       });
     },
-    [ensureDeviceIsRunning, getFirstAvailableDevice],
+    [ensureDeviceIsRunning, getFirstAvailableDevice]
   );
 
   const getDeviceByPlatform = useCallback(
     (platform: 'android' | 'ios') => {
       return (
-        devices.find(d => getDeviceId(d) === selectedDevicesIds[platform]) ??
-        devices.find(d => getDeviceOS(d) === platform)
+        devices.find((d) => getDeviceId(d) === selectedDevicesIds[platform]) ??
+        devices.find((d) => getDeviceOS(d) === platform)
       );
     },
-    [devices, selectedDevicesIds],
+    [devices, selectedDevicesIds]
   );
 
   const handleEASUrl = useCallback(
     async (url: string) => {
       try {
         const platform = getPlatformFromURI(url);
-        let device = getDeviceByPlatform(platform);
+        const device = getDeviceByPlatform(platform);
         if (!device) {
           Alert.alert(
-            `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`,
+            `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`
           );
           return;
         }
@@ -152,7 +144,7 @@ function Core(props: Props) {
         ]);
 
         setStatus(Status.INSTALLING);
-        await installAndLaunchAppAsync({appPath: buildPath, deviceId});
+        await installAndLaunchAppAsync({ appPath: buildPath, deviceId });
       } catch (error) {
         console.log(`error ${error}`);
       } finally {
@@ -161,7 +153,7 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getDeviceByPlatform],
+    [ensureDeviceIsRunning, getDeviceByPlatform]
   );
 
   const openFilePicker = async () => {
@@ -182,7 +174,6 @@ function Core(props: Props) {
         appPath,
         deviceId,
       });
-    } catch (error) {
     } finally {
       setTimeout(() => {
         setStatus(Status.LISTENING);
@@ -192,7 +183,7 @@ function Core(props: Props) {
 
   useDeepLinking(
     useCallback(
-      ({url}) => {
+      ({ url }) => {
         if (!props.isDevWindow) {
           const urlWithoutProtocol = url.substring(url.indexOf('://') + 3);
           const isSnackUrl = url.includes('exp.host/');
@@ -204,15 +195,15 @@ function Core(props: Props) {
           handleEASUrl(`https://${urlWithoutProtocol}`);
         }
       },
-      [props.isDevWindow, handleEASUrl, handleSnackUrl],
-    ),
+      [props.isDevWindow, handleEASUrl, handleSnackUrl]
+    )
   );
 
   const onSelectDevice = (device: Device) => {
     const platform = getDeviceOS(device);
     const id = getDeviceId(device);
 
-    setSelectedDevicesIds(prev => {
+    setSelectedDevicesIds((prev) => {
       const newValue = {
         ...prev,
         [platform]: prev[platform] === id ? undefined : id,
@@ -225,7 +216,7 @@ function Core(props: Props) {
 
   return (
     <View shrink="1">
-      <View style={{height: BUILDS_SECTION_HEIGHT}}>
+      <View style={{ height: BUILDS_SECTION_HEIGHT }}>
         <View pt="2.5" pb="tiny">
           <SectionHeader label="Builds" />
         </View>
@@ -247,23 +238,17 @@ function Core(props: Props) {
               indeterminate={status === Status.INSTALLING}
               key={status}
             />
-            <Text>
-              {status === Status.DOWNLOADING
-                ? 'Downloading build...'
-                : 'Installing...'}
-            </Text>
+            <Text>{status === Status.DOWNLOADING ? 'Downloading build...' : 'Installing...'}</Text>
           </View>
         ) : null}
       </View>
       <View shrink="1" pt="tiny">
         <SectionList
           sections={sections}
-          style={{minHeight: estimatedListHeight}}
+          style={{ minHeight: estimatedListHeight }}
           SectionSeparatorComponent={Separator}
-          renderSectionHeader={({section: {label}}) => (
-            <SectionHeader label={label} />
-          )}
-          renderItem={({item: device}: {item: Device}) => {
+          renderSectionHeader={({ section: { label } }) => <SectionHeader label={label} />}
+          renderItem={({ item: device }: { item: Device }) => {
             const platform = getDeviceOS(device);
             const id = getDeviceId(device);
             return (
@@ -272,7 +257,7 @@ function Core(props: Props) {
                 key={device.name}
                 onPress={() => onSelectDevice(device)}
                 onPressLaunch={async () => {
-                  await bootDeviceAsync({platform, id});
+                  await bootDeviceAsync({ platform, id });
                   refetch();
                 }}
                 selected={selectedDevicesIds[platform] === id}

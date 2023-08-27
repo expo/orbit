@@ -1,17 +1,17 @@
-import {StyleSheet, Pressable, PlatformColor} from 'react-native';
-import {useState} from 'react';
+import { palette } from '@expo/styleguide-native';
+import { useState } from 'react';
+import { StyleSheet, Pressable, PlatformColor } from 'react-native';
 
-import {Device} from '../utils/device';
-import {Row, View} from './View';
-import {Text} from './Text';
+import Button from './Button';
+import { Text } from './Text';
+import { Row, View } from './View';
+import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
-import CableConnectorIcon from '../assets/icons/cable-connector.svg';
-import {useExpoTheme} from '../utils/useExpoTheme';
-import Button from './Button';
-import {palette} from '@expo/styleguide-native';
-import {useTheme} from '../providers/ThemeProvider';
-import {capitalize} from '../utils/helpers';
+import { useTheme } from '../providers/ThemeProvider';
+import { Device } from '../utils/device';
+import { capitalize } from '../utils/helpers';
+import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const DEVICE_ITEM_HEIGHT = 42;
 
@@ -22,7 +22,7 @@ interface Props {
   selected?: boolean;
 }
 
-const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
+const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
   const theme = useExpoTheme();
   const currentTheme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
@@ -32,12 +32,8 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
     <Pressable
       style={[
         styles.row,
-        // eslint-disable-next-line react-native/no-inline-styles
         isHovered && {
-          backgroundColor:
-            currentTheme === 'dark'
-              ? 'rgba(255,255,255,.11)'
-              : 'rgba(0,0,0,.12)',
+          backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,.11)' : 'rgba(0,0,0,.12)',
         },
       ]}
       onPress={onPress}
@@ -50,8 +46,7 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
             align="centered"
             style={[
               styles.circle,
-              // eslint-disable-next-line react-native/no-inline-styles
-              (isHovered || selected) && {opacity: 1},
+              (isHovered || selected) && { opacity: 1 },
               {
                 backgroundColor: selected
                   ? PlatformColor('selectedContentBackground')
@@ -85,11 +80,7 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
             {device.connectionType === 'Network' ? (
               <WifiIcon height={20} width={20} fill={PlatformColor('text')} />
             ) : (
-              <CableConnectorIcon
-                height={24}
-                width={24}
-                fill={PlatformColor('text')}
-              />
+              <CableConnectorIcon height={24} width={24} fill={PlatformColor('text')} />
             )}
           </>
         )}
@@ -104,13 +95,11 @@ const DeviceItem = ({device, onPress, onPressLaunch, selected}: Props) => {
             </Text>
           </>
         )}
-        {device.deviceType !== 'device' &&
-          device.state === 'Shutdown' &&
-          isDeviceLaunching && (
-            <Text color="secondary" style={styles.indicator}>
-              Launching…
-            </Text>
-          )}
+        {device.deviceType !== 'device' && device.state === 'Shutdown' && isDeviceLaunching && (
+          <Text color="secondary" style={styles.indicator}>
+            Launching…
+          </Text>
+        )}
         {isHovered &&
           device.deviceType !== 'device' &&
           device.state === 'Shutdown' &&
@@ -148,7 +137,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
     borderRadius: 4,
   },
-  circle: {width: 32, height: 32, marginRight: 8, opacity: 0.8},
+  circle: { width: 32, height: 32, marginRight: 8, opacity: 0.8 },
   description: {
     fontSize: 11,
     opacity: 0.8,

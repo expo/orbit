@@ -1,32 +1,31 @@
-import {Image, ScrollView, StyleSheet} from 'react-native';
-import {useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
+import { Image, ScrollView, StyleSheet } from 'react-native';
 
-import {WindowsNavigator} from './index';
+import { WindowsNavigator } from './index';
+import AndroidStudio from '../assets/images/android-studio.png';
+import Background from '../assets/images/onboarding/background.png';
+import ExpoOrbitText from '../assets/images/onboarding/expo-orbit-text.svg';
+import Logo from '../assets/images/onboarding/logo.svg';
+import Xcode from '../assets/images/xcode.png';
+import { Text, View } from '../components';
+import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
 import MenuBarModule from '../modules/MenuBarModule';
-import AndroidStudio from '../assets/images/android-studio.png';
-import Xcode from '../assets/images/xcode.png';
-import Background from '../assets/images/onboarding/background.png';
-import Logo from '../assets/images/onboarding/logo.svg';
-import ExpoOrbitText from '../assets/images/onboarding/expo-orbit-text.svg';
-import {Text, View} from '../components';
-import Button from '../components/Button';
-import {useExpoTheme} from '../utils/useExpoTheme';
+import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
 
 type PlatformToolsCheck = {
-  android?: {success: boolean; reason?: string};
-  ios?: {success: boolean; reason?: string};
+  android?: { success: boolean; reason?: string };
+  ios?: { success: boolean; reason?: string };
 };
 
 const WINDOW_TITLE_HEIGHT = 28;
 
 const Onboarding = () => {
   const theme = useExpoTheme();
-  const [platformToolsCheck, setPlatformToolsCheck] =
-    useState<PlatformToolsCheck>({});
+  const [platformToolsCheck, setPlatformToolsCheck] = useState<PlatformToolsCheck>({});
 
   const closeOnboarding = () => {
     AsyncStorage.setItem(hasSeenOnboardingStorageKey, 'true').then(() => {
@@ -35,7 +34,7 @@ const Onboarding = () => {
   };
 
   useEffect(() => {
-    MenuBarModule.runCli('check-tools', []).then(output => {
+    MenuBarModule.runCli('check-tools', []).then((output) => {
       // eslint-disable-next-line no-eval
       setPlatformToolsCheck(eval(`(${output})`));
     });
@@ -44,9 +43,7 @@ const Onboarding = () => {
   return (
     <View flex="1" bg="default">
       <Image source={Background} style={styles.background} />
-      <ScrollView
-        style={{marginTop: -WINDOW_TITLE_HEIGHT}}
-        alwaysBounceVertical={false}>
+      <ScrollView style={{ marginTop: -WINDOW_TITLE_HEIGHT }} alwaysBounceVertical={false}>
         <View style={styles.header}>
           <Logo />
           <View mt="medium" mb="2">
@@ -83,7 +80,7 @@ const Onboarding = () => {
         px="large"
         py="medium"
         bg="default"
-        style={[styles.footer, {borderTopColor: theme.border.default}]}>
+        style={[styles.footer, { borderTopColor: theme.border.default }]}>
         <Button title="Get Started" onPress={closeOnboarding} />
       </View>
     </View>

@@ -1,10 +1,4 @@
-import {
-  ColorValue,
-  requireNativeComponent,
-  StyleProp,
-  StyleSheet,
-  ViewStyle,
-} from 'react-native';
+import { ColorValue, requireNativeComponent, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
 type NativeProps = {
   color?: ColorValue;
@@ -14,8 +8,7 @@ type NativeProps = {
   progress?: number;
 };
 
-const NativeProgressIndicator =
-  requireNativeComponent<NativeProps>('ProgressIndicator');
+const NativeProgressIndicator = requireNativeComponent<NativeProps>('ProgressIndicator');
 
 const ProgressIndicator = (props: NativeProps) => {
   return (

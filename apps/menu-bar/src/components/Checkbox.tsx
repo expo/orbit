@@ -1,4 +1,4 @@
-import {useLayoutEffect, useRef, useState} from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import {
   NativeSyntheticEvent,
   Pressable,
@@ -8,14 +8,14 @@ import {
   ViewProps,
 } from 'react-native';
 import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
-import {Text} from './Text';
+
+import { Text } from './Text';
 
 interface CheckboxChangeEventData extends TargetedEvent {
   value: boolean;
 }
 
-interface CheckboxChangeEvent
-  extends NativeSyntheticEvent<CheckboxChangeEventData> {}
+interface CheckboxChangeEvent extends NativeSyntheticEvent<CheckboxChangeEventData> {}
 
 type NativeCheckboxProps = ViewProps & {
   disabled?: boolean;
@@ -31,39 +31,25 @@ type CheckboxProps = NativeCheckboxProps & {
 };
 
 interface NativeCommands {
-  setValue: (
-    viewRef: React.ElementRef<typeof NativeCheckbox>,
-    value: boolean,
-  ) => void;
+  setValue: (viewRef: React.ElementRef<typeof NativeCheckbox>, value: boolean) => void;
 }
 
 export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
   supportedCommands: ['setValue'],
 });
 
-const Checkbox = ({
-  onChange,
-  onValueChange,
-  label,
-  ...props
-}: CheckboxProps) => {
-  const [native, setNative] = useState<{value?: boolean}>({value: undefined});
+const Checkbox = ({ onChange, onValueChange, label, ...props }: CheckboxProps) => {
+  const [native, setNative] = useState<{ value?: boolean }>({ value: undefined });
 
-  const nativeSwitchRef = useRef<React.ElementRef<
-    typeof NativeCheckbox
-  > | null>(null);
+  const nativeSwitchRef = useRef<React.ElementRef<typeof NativeCheckbox> | null>(null);
 
   useLayoutEffect(() => {
     // This is necessary in case native updates the switch and JS decides
     // that the update should be ignored and we should stick with the value
     // that we have in JS.
     const jsValue = props.value === true;
-    const shouldUpdateNativeSwitch =
-      native.value != null && native.value !== jsValue;
-    if (
-      shouldUpdateNativeSwitch &&
-      nativeSwitchRef.current?.setNativeProps != null
-    ) {
+    const shouldUpdateNativeSwitch = native.value != null && native.value !== jsValue;
+    if (shouldUpdateNativeSwitch && nativeSwitchRef.current?.setNativeProps != null) {
       Commands.setValue(nativeSwitchRef.current, jsValue);
     }
   }, [props.value, native]);
@@ -71,7 +57,7 @@ const Checkbox = ({
   const handleChange = (event: CheckboxChangeEvent) => {
     onChange?.(event);
     onValueChange?.(event.nativeEvent.value);
-    setNative({value: event.nativeEvent.value});
+    setNative({ value: event.nativeEvent.value });
   };
 
   return (
@@ -86,7 +72,7 @@ const Checkbox = ({
         <Pressable
           onPress={() => {
             onValueChange?.(!props.value);
-            setNative({value: !props.value});
+            setNative({ value: !props.value });
           }}>
           <Text>{label}</Text>
         </Pressable>
@@ -98,5 +84,5 @@ const Checkbox = ({
 export default Checkbox;
 
 const styles = StyleSheet.create({
-  checkbox: {height: 18, width: 18},
+  checkbox: { height: 18, width: 18 },
 });

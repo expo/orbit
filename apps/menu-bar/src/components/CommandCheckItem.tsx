@@ -1,3 +1,4 @@
+import { spacing } from '@expo/styleguide-native';
 import {
   ActivityIndicator,
   Alert,
@@ -6,12 +7,11 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import {spacing} from '@expo/styleguide-native';
 
+import { Text } from './Text';
+import { View } from './View';
 import AlertIcon from '../assets/icons/alert-triangle.svg';
 import CheckIcon from '../assets/icons/check-circle.svg';
-import {View} from './View';
-import {Text} from './Text';
 
 interface Props {
   title: string;
@@ -21,13 +21,7 @@ interface Props {
   icon: ImageSourcePropType;
 }
 
-const CommandCheckItem = ({
-  description,
-  icon,
-  title,
-  reason,
-  success,
-}: Props) => {
+const CommandCheckItem = ({ description, icon, title, reason, success }: Props) => {
   const showWarningAlert = () => Alert.alert('Something went wrong', reason);
 
   return (

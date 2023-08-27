@@ -6,14 +6,10 @@ type LaunchSnackAsyncOptions = {
   url: string;
 };
 
-export const launchSnackAsync = async ({
-  url,
-  platform,
-  deviceId,
-}: LaunchSnackAsyncOptions) => {
+export const launchSnackAsync = async ({ url, platform, deviceId }: LaunchSnackAsyncOptions) => {
   await MenuBarModule.runCli(
     'launch-snack',
     [url, '-p', platform, '--device-id', deviceId],
-    console.log,
+    console.log
   );
 };

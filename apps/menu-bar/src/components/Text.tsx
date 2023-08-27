@@ -1,12 +1,8 @@
-import {shadows} from '@expo/styleguide-native';
-import {
-  PlatformColor,
-  Text as RNText,
-  TextInput as RNTextInput,
-} from 'react-native';
+import { shadows } from '@expo/styleguide-native';
+import { PlatformColor, Text as RNText, TextInput as RNTextInput } from 'react-native';
 
-import {create} from '../utils/create-component-primitive';
-import {text, textDark, padding, rounded} from '../utils/theme';
+import { create } from '../utils/create-component-primitive';
+import { text, textDark, padding, rounded } from '../utils/theme';
 
 export const Text = create(RNText, {
   base: {

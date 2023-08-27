@@ -1,13 +1,6 @@
-import {useState} from 'react';
-import {
-  FlatList,
-  PlatformColor,
-  TouchableOpacity,
-  Text,
-  View,
-  StyleSheet,
-} from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { useState } from 'react';
+import { FlatList, PlatformColor, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 
 const NativeColorPalette = () => {
   const [selectedColor, setSelectedColor] = useState<string>();
@@ -33,7 +26,7 @@ const NativeColorPalette = () => {
       ) : null}
       <FlatList
         data={colorsArray}
-        renderItem={({item}) => {
+        renderItem={({ item }) => {
           return (
             <TouchableOpacity
               style={[
@@ -42,13 +35,11 @@ const NativeColorPalette = () => {
                   backgroundColor: PlatformColor(item),
                 },
               ]}
-              onPress={() =>
-                setSelectedColor(prev => (prev !== item ? item : undefined))
-              }
+              onPress={() => setSelectedColor((prev) => (prev !== item ? item : undefined))}
             />
           );
         }}
-        keyExtractor={item => item}
+        keyExtractor={(item) => item}
         numColumns={9}
       />
     </View>

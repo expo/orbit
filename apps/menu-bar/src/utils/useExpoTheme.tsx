@@ -1,7 +1,7 @@
-import {lightTheme, darkTheme, palette} from '@expo/styleguide-native';
+import { lightTheme, darkTheme, palette } from '@expo/styleguide-native';
 import * as React from 'react';
 
-import {ThemeProvider, useTheme} from '../providers/ThemeProvider';
+import { ThemeProvider, useTheme } from '../providers/ThemeProvider';
 
 export type ExpoTheme = typeof lightTheme;
 
@@ -25,9 +25,7 @@ export function useExpoPalette() {
   return palette[theme];
 }
 
-export const withThemeProvider = <P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-) => {
+export const withThemeProvider = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
   const WithThemeProvider = (props: P) => {
     return (
       <ThemeProvider>

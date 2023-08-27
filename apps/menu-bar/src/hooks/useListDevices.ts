@@ -1,8 +1,8 @@
-import {useCallback, useEffect, useState} from 'react';
-import {DeviceEventEmitter} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 
-import {listDevicesAsync} from '../commands/listDevicesAsync';
-import {Device} from '../utils/device';
+import { listDevicesAsync } from '../commands/listDevicesAsync';
+import { Device } from '../utils/device';
 
 export const useListDevices = () => {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -12,7 +12,7 @@ export const useListDevices = () => {
   const updateDevicesList = useCallback(async () => {
     setLoading(true);
     try {
-      const devicesList = await listDevicesAsync({platform: 'all'});
+      const devicesList = await listDevicesAsync({ platform: 'all' });
       setDevices(devicesList);
     } catch (err) {
       setError(err as Error);

@@ -1,5 +1,5 @@
 import React from 'react';
-import {useColorScheme} from 'react-native';
+import { useColorScheme } from 'react-native';
 
 type ThemePreference = 'light' | 'dark' | 'no-preference';
 type Theme = 'light' | 'dark';
@@ -12,10 +12,7 @@ type ThemeProviderProps = {
   themePreference?: ThemePreference;
 };
 
-export function ThemeProvider({
-  children,
-  themePreference = 'no-preference',
-}: ThemeProviderProps) {
+export function ThemeProvider({ children, themePreference = 'no-preference' }: ThemeProviderProps) {
   const systemTheme = useColorScheme();
 
   const theme = React.useMemo(() => {
@@ -26,7 +23,5 @@ export function ThemeProvider({
     return systemTheme ?? 'light';
   }, [themePreference, systemTheme]);
 
-  return (
-    <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

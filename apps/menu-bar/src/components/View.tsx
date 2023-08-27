@@ -1,7 +1,7 @@
-import {lightTheme, darkTheme, shadows, palette} from '@expo/styleguide-native';
-import {View as RNView, StyleSheet} from 'react-native';
+import { lightTheme, darkTheme, shadows, palette } from '@expo/styleguide-native';
+import { View as RNView, StyleSheet } from 'react-native';
 
-import {create} from '../utils/create-component-primitive';
+import { create } from '../utils/create-component-primitive';
 import {
   scale,
   padding,
@@ -35,27 +35,27 @@ export const View = create(RNView, {
     },
 
     flex: {
-      '1': {flex: 1},
-      '0': {flex: 0},
+      '1': { flex: 1 },
+      '0': { flex: 0 },
     },
 
     shrink: {
-      '1': {flexShrink: 1},
-      '0': {flexShrink: 0},
+      '1': { flexShrink: 1 },
+      '0': { flexShrink: 0 },
     },
 
     grow: {
-      '1': {flexGrow: 1},
-      '0': {flexGrow: 0},
+      '1': { flexGrow: 1 },
+      '0': { flexGrow: 0 },
     },
 
     bg,
 
     opacity: {
-      '1': {opacity: 1},
-      '0.5': {opacity: 0.5},
-      '0.75': {opacity: 0.75},
-      '0': {opacity: 0},
+      '1': { opacity: 1 },
+      '0.5': { opacity: 0.5 },
+      '0.75': { opacity: 0.75 },
+      '0': { opacity: 0 },
     },
 
     inset: {
@@ -83,20 +83,20 @@ export const View = create(RNView, {
     },
 
     border: {
-      default: {borderColor: lightTheme.border.default, borderWidth: 1},
+      default: { borderColor: lightTheme.border.default, borderWidth: 1 },
       hairline: {
         borderColor: lightTheme.border.default,
         borderWidth: StyleSheet.hairlineWidth,
       },
-      warning: {borderColor: lightTheme.border.warning, borderWidth: 1},
-      error: {borderColor: lightTheme.border.error, borderWidth: 1},
+      warning: { borderColor: lightTheme.border.warning, borderWidth: 1 },
+      error: { borderColor: lightTheme.border.error, borderWidth: 1 },
     },
 
     ...rounded,
 
     shadow: {
       micro: shadows.micro,
-      tiny: {...shadows.tiny, shadowOpacity: 0.075},
+      tiny: { ...shadows.tiny, shadowOpacity: 0.075 },
       small: shadows.small,
       medium: shadows.medium,
       button: shadows.button,
@@ -110,11 +110,11 @@ export const View = create(RNView, {
     gap,
 
     justify: {
-      center: {justifyContent: 'center'},
-      start: {justifyContent: 'flex-start'},
-      end: {justifyContent: 'flex-end'},
-      between: {justifyContent: 'space-between'},
-      around: {justifyContent: 'space-around'},
+      center: { justifyContent: 'center' },
+      start: { justifyContent: 'flex-start' },
+      end: { justifyContent: 'flex-end' },
+      between: { justifyContent: 'space-between' },
+      around: { justifyContent: 'space-around' },
     },
   },
 
@@ -139,32 +139,32 @@ export const Row = create(RNView, {
     bg,
 
     flex: {
-      '1': {flex: 1},
-      '0': {flex: 0},
+      '1': { flex: 1 },
+      '0': { flex: 0 },
     },
 
     shrink: {
-      '1': {flexShrink: 1},
-      '0': {flexShrink: 0},
+      '1': { flexShrink: 1 },
+      '0': { flexShrink: 0 },
     },
 
     grow: {
-      '1': {flexGrow: 1},
-      '0': {flexGrow: 0},
+      '1': { flexGrow: 1 },
+      '0': { flexGrow: 0 },
     },
 
     align: {
-      center: {alignItems: 'center'},
-      start: {alignItems: 'flex-start'},
-      end: {alignItems: 'flex-end'},
+      center: { alignItems: 'center' },
+      start: { alignItems: 'flex-start' },
+      end: { alignItems: 'flex-end' },
     },
 
     justify: {
-      center: {justifyContent: 'center'},
-      start: {justifyContent: 'flex-start'},
-      end: {justifyContent: 'flex-end'},
-      between: {justifyContent: 'space-between'},
-      around: {justifyContent: 'space-around'},
+      center: { justifyContent: 'center' },
+      start: { justifyContent: 'flex-start' },
+      end: { justifyContent: 'flex-end' },
+      between: { justifyContent: 'space-between' },
+      around: { justifyContent: 'space-around' },
     },
 
     ...padding,
@@ -191,12 +191,12 @@ const Horizontal = create(RNView, {
   variants: {
     bg,
     size: {
-      micro: {width: scale.micro, flex: 0},
-      tiny: {width: scale.tiny, flex: 0},
-      small: {width: scale.small, flex: 0},
-      medium: {width: scale.medium, flex: 0},
-      large: {width: scale.large, flex: 0},
-      xl: {width: scale.xl, flex: 0},
+      micro: { width: scale.micro, flex: 0 },
+      tiny: { width: scale.tiny, flex: 0 },
+      small: { width: scale.small, flex: 0 },
+      medium: { width: scale.medium, flex: 0 },
+      large: { width: scale.large, flex: 0 },
+      xl: { width: scale.xl, flex: 0 },
     },
   },
 
@@ -214,12 +214,12 @@ const Vertical = create(RNView, {
   variants: {
     bg,
     size: {
-      micro: {height: scale.micro, flex: 0},
-      tiny: {height: scale.tiny, flex: 0},
-      small: {height: scale.small, flex: 0},
-      medium: {height: scale.medium, flex: 0},
-      large: {height: scale.large, flex: 0},
-      xl: {height: scale.xl, flex: 0},
+      micro: { height: scale.micro, flex: 0 },
+      tiny: { height: scale.tiny, flex: 0 },
+      small: { height: scale.small, flex: 0 },
+      medium: { height: scale.medium, flex: 0 },
+      large: { height: scale.large, flex: 0 },
+      xl: { height: scale.xl, flex: 0 },
     },
   },
 
@@ -244,9 +244,9 @@ export const Divider = create(RNView, {
 
   variants: {
     weight: {
-      thin: {height: StyleSheet.hairlineWidth},
-      normal: {height: 1},
-      heavy: {height: 2},
+      thin: { height: StyleSheet.hairlineWidth },
+      normal: { height: 1 },
+      heavy: { height: 2 },
     },
 
     ...margin,
@@ -270,11 +270,11 @@ export const StatusIndicator = create(RNView, {
 
   variants: {
     status: {
-      info: {backgroundColor: lightTheme.status.info},
-      success: {backgroundColor: lightTheme.status.success},
-      warning: {backgroundColor: lightTheme.status.warning},
-      error: {backgroundColor: lightTheme.status.error},
-      default: {backgroundColor: lightTheme.status.default},
+      info: { backgroundColor: lightTheme.status.info },
+      success: { backgroundColor: lightTheme.status.success },
+      warning: { backgroundColor: lightTheme.status.warning },
+      error: { backgroundColor: lightTheme.status.error },
+      default: { backgroundColor: lightTheme.status.default },
     },
 
     size: {
@@ -291,11 +291,11 @@ export const StatusIndicator = create(RNView, {
 
   selectors: {
     dark: {
-      info: {backgroundColor: darkTheme.status.info},
-      success: {backgroundColor: darkTheme.status.success},
-      warning: {backgroundColor: darkTheme.status.warning},
-      error: {backgroundColor: darkTheme.status.error},
-      default: {backgroundColor: darkTheme.status.default},
+      info: { backgroundColor: darkTheme.status.info },
+      success: { backgroundColor: darkTheme.status.success },
+      warning: { backgroundColor: darkTheme.status.warning },
+      error: { backgroundColor: darkTheme.status.error },
+      default: { backgroundColor: darkTheme.status.default },
     },
   },
 });

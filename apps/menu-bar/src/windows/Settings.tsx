@@ -1,9 +1,9 @@
-import {useEffect, useState} from 'react';
-import {Alert, StyleSheet, TouchableOpacity} from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 
-import MenuBarModule from '../modules/MenuBarModule';
-import {Checkbox, View, Row, Text, Divider} from '../components';
+import { Checkbox, View, Row, Text, Divider } from '../components';
 import PathInput from '../components/PathInput';
+import MenuBarModule from '../modules/MenuBarModule';
 import {
   UserPreferences,
   getUserPreferences,
@@ -16,7 +16,7 @@ const Settings = () => {
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
 
   useEffect(() => {
-    getUserPreferences().then(value => {
+    getUserPreferences().then((value) => {
       setUserPreferences(value);
       setCustomSdkPathEnabled(Boolean(value.customSdkPath));
     });
@@ -25,8 +25,8 @@ const Settings = () => {
   const onPressLaunchOnLogin = async (value: boolean) => {
     try {
       await MenuBarModule.setLoginItemEnabled(value);
-      setUserPreferences(prev => {
-        const newPreferences = {...prev, launchOnLogin: value};
+      setUserPreferences((prev) => {
+        const newPreferences = { ...prev, launchOnLogin: value };
         saveUserPreferences(newPreferences);
         return newPreferences;
       });
@@ -40,16 +40,16 @@ const Settings = () => {
               text: 'Open Settings',
               onPress: MenuBarModule.openSystemSettingsLoginItems,
             },
-            {text: 'Cancel', style: 'cancel'},
-          ],
+            { text: 'Cancel', style: 'cancel' },
+          ]
         );
       }
     }
   };
 
   const onPressEmulatorWithoutAudio = async (value: boolean) => {
-    setUserPreferences(prev => {
-      const newPreferences = {...prev, emulatorWithoutAudio: value};
+    setUserPreferences((prev) => {
+      const newPreferences = { ...prev, emulatorWithoutAudio: value };
       saveUserPreferences(newPreferences);
       return newPreferences;
     });
@@ -58,8 +58,8 @@ const Settings = () => {
   const toggleCustomSdkPath = (value: boolean) => {
     setCustomSdkPathEnabled(value);
     if (!value) {
-      setUserPreferences(prev => {
-        const newPreferences = {...prev, customSdkPath: undefined};
+      setUserPreferences((prev) => {
+        const newPreferences = { ...prev, customSdkPath: undefined };
         saveUserPreferences(newPreferences);
         MenuBarModule.setEnvVars({});
         return newPreferences;
@@ -93,9 +93,9 @@ const Settings = () => {
         </Row>
         <PathInput
           editable={customSdkPathEnabled}
-          onChangeText={text => {
-            setUserPreferences(prev => {
-              const newPreferences = {...prev, customSdkPath: text};
+          onChangeText={(text) => {
+            setUserPreferences((prev) => {
+              const newPreferences = { ...prev, customSdkPath: text };
               saveUserPreferences(newPreferences);
               MenuBarModule.setEnvVars({
                 ANDROID_HOME: text,
