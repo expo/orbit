@@ -1,11 +1,12 @@
 import {
   ApolloClient,
+  ApolloLink,
   FieldFunctionOptions,
+  HttpLink,
   InMemoryCache,
   NormalizedCacheObject,
+  concat,
 } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import { HttpLink } from '@apollo/client/link/http';
 import { MMKVWrapper, persistCache } from 'apollo3-cache-persist';
 import { useEffect, useState } from 'react';
 
@@ -68,17 +69,22 @@ export const useApolloClient = ({ sessionSecret }: UseApolloClientParams) => {
         key: 'apollo-cache-persist',
       });
 
-      const authMiddlewareLink = setContext(() => {
+      const authMiddlewareLink = new ApolloLink((operation, forward) => {
         if (sessionSecret) {
-          return {
-            headers: { 'expo-session': sessionSecret },
-          };
+          operation.setContext(({ headers = {} }) => ({
+            headers: {
+              ...headers,
+              'expo-session': sessionSecret,
+            },
+          }));
         }
+
+        return forward(operation);
       });
 
       setClient(
         new ApolloClient({
-          link: authMiddlewareLink.concat(httpLink),
+          link: concat(authMiddlewareLink, httpLink),
           cache,
         })
       );
