@@ -7,7 +7,8 @@
     "macos": "react-native run-macos",
     "start": "react-native start",
     "test": "jest",
-    "update-cli": "mkdir -p cli && cp -R ../cli/dist/ cli/"
+    "update-cli": "mkdir -p cli && cp -R ../cli/dist/ cli/",
+    "gql": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.8.1",
@@ -28,6 +29,10 @@
     "@babel/core": "^7.22.11",
     "@babel/preset-env": "^7.22.10",
     "@babel/runtime": "^7.22.11",
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/schema-ast": "^4.0.0",
+    "@graphql-codegen/typescript-operations": "^4.0.1",
+    "@graphql-codegen/typescript-react-apollo": "^3.3.7",
     "@tsconfig/react-native": "^2.0.3",
     "@types/jest": "^29.2.1",
     "@types/react": "^18.0.24",
