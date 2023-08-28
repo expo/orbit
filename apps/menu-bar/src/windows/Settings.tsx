@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 
+import Config from '../api/Config';
 import { Checkbox, View, Row, Text, Divider } from '../components';
+import Button from '../components/Button';
 import PathInput from '../components/PathInput';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
@@ -9,9 +11,17 @@ import {
   getUserPreferences,
   resetStorage,
   saveUserPreferences,
+  storage,
 } from '../modules/Storage';
+import WebAuthenticationSessionModule, {
+  WebBrowserResultType,
+} from '../modules/WebAuthenticationSessionModule';
 
 const Settings = () => {
+  const [hasSessionSecret, setHasSessionSecret] = useState(
+    Boolean(storage.getString('sessionSecret'))
+  );
+
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
 
@@ -67,9 +77,42 @@ const Settings = () => {
     }
   };
 
+  const handleAuthentication = async () => {
+    const redirectBase = 'expo-orbit://auth';
+    const authSessionURL = `${Config.website.origin}/login?app_redirect_uri=${encodeURIComponent(
+      redirectBase
+    )}`;
+    const result = await WebAuthenticationSessionModule.openAuthSessionAsync(authSessionURL);
+
+    if (result.type === WebBrowserResultType.SUCCESS) {
+      const resultURL = new URL(result.url);
+      const sessionSecret = resultURL.searchParams.get('session_secret');
+
+      if (!sessionSecret) {
+        throw new Error('session_secret is missing in auth redirect query');
+      }
+
+      storage.set('sessionSecret', sessionSecret);
+      setHasSessionSecret(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    storage.delete('sessionSecret');
+    setHasSessionSecret(false);
+  };
+
   return (
     <View flex="1" padding="medium">
       <View flex="1">
+        <View padding="2">
+          {hasSessionSecret ? (
+            <Button title="Logout" onPress={handleLogout} style={styles.button} />
+          ) : (
+            <Button title="Login" onPress={handleAuthentication} style={styles.button} />
+          )}
+        </View>
+        <Divider mb="tiny" />
         <Row mb="3.5" align="center" gap="1">
           <Checkbox
             value={userPreferences.launchOnLogin}
@@ -134,5 +177,8 @@ export default Settings;
 const styles = StyleSheet.create({
   about: {
     fontSize: 13,
+  },
+  button: {
+    alignSelf: 'flex-start',
   },
 });

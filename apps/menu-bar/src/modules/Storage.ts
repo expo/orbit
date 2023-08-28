@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {MMKV} from 'react-native-mmkv';
 
 const userPreferencesStorageKey = 'user-preferences';
 
@@ -34,3 +35,5 @@ export const saveSelectedDevicesIds = async (devicesIds: SelectedDevicesIds) => 
 };
 
 export const resetStorage = async () => AsyncStorage.clear();
+
+export const storage = new MMKV();
