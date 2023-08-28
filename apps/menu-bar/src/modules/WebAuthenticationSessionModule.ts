@@ -1,4 +1,4 @@
-import {NativeModule, NativeModules} from 'react-native';
+import { NativeModules } from 'react-native';
 
 export enum WebBrowserResultType {
   CANCEL = 'cancel',
@@ -14,11 +14,11 @@ export type WebBrowserResult =
       url: string;
     };
 
-type WebAuthenticationSessionModule = {
+type WebAuthenticationSessionModuleType = {
   openAuthSessionAsync: (url: string) => Promise<WebBrowserResult>;
 };
 
-const WebAuthenticationSessionModule: WebAuthenticationSessionModule =
+const WebAuthenticationSessionModule: WebAuthenticationSessionModuleType =
   NativeModules.WebAuthenticationSession;
 
 export default WebAuthenticationSessionModule;
