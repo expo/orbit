@@ -1,0 +1,27 @@
+fragment AppForPinnedList on App {
+  id
+  name
+  icon {
+    url
+    primaryColor
+  }
+  ownerAccount {
+    name
+  }
+}
+
+query GetAppsForPinnedList {
+  viewer {
+    accounts {
+      id
+      appsPaginated(first: 10) {
+        edges {
+          cursor
+          node {
+            ...AppForPinnedList
+          }
+        }
+      }
+    }
+  }
+}

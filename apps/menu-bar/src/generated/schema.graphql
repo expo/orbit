@@ -1,0 +1,4241 @@
+schema {
+  query: RootQuery
+  mutation: RootMutation
+}
+
+type AcceptUserInvitationResult {
+  success: Boolean!
+}
+
+"""A method of authentication for an Actor"""
+type AccessToken {
+  createdAt: DateTime!
+  id: ID!
+  lastUsedAt: DateTime
+  note: String
+  owner: Actor!
+  revokedAt: DateTime
+  updatedAt: DateTime!
+  visibleTokenPrefix: String!
+}
+
+type AccessTokenMutation {
+  """Create an AccessToken for an Actor"""
+  createAccessToken(createAccessTokenData: CreateAccessTokenInput!): CreateAccessTokenResponse!
+
+  """Delete an AccessToken"""
+  deleteAccessToken(id: ID!): DeleteAccessTokenResult!
+
+  """Revoke an AccessToken"""
+  setAccessTokenRevoked(id: ID!, revoked: Boolean): AccessToken!
+}
+
+"""
+An account is a container owning projects, credentials, billing and other organization
+data and settings. Actors may own and be members of accounts.
+"""
+type Account {
+  accessTokens: [AccessToken]! @deprecated(reason: "Legacy access tokens are deprecated")
+
+  """Coalesced project activity for all apps belonging to this account."""
+  activityTimelineProjectActivities(
+    """ Offset the query """
+    createdBefore: DateTime
+
+    """ Types of objects to filter """
+    filterTypes: [ActivityTimelineProjectActivityType!]
+    limit: Int!
+  ): [ActivityTimelineProjectActivity!]!
+  appCount: Int!
+  appStoreConnectApiKeys: [AppStoreConnectApiKey!]!
+  appleAppIdentifiers(bundleIdentifier: String): [AppleAppIdentifier!]!
+  appleDevices(identifier: String, limit: Int, offset: Int): [AppleDevice!]!
+  appleDistributionCertificates: [AppleDistributionCertificate!]!
+  appleProvisioningProfiles(appleAppIdentifierId: ID): [AppleProvisioningProfile!]!
+  applePushKeys: [ApplePushKey!]!
+
+  """iOS credentials for account"""
+  appleTeams(appleTeamIdentifier: String, limit: Int, offset: Int): [AppleTeam!]!
+
+  """Apps associated with this account"""
+  apps(includeUnpublished: Boolean, limit: Int!, offset: Int!): [App!]!
+
+  """
+  Paginated list of apps associated with this account. By default sorted by name. Use filter to adjust the sorting order.
+  """
+  appsPaginated(after: String, before: String, filter: AccountAppsFilterInput, first: Int, last: Int): AccountAppsConnection!
+  availableBuilds: Int @deprecated(reason: "Build packs are no longer supported")
+
+  """
+  Billing information. Only visible to members with the ADMIN or OWNER role.
+  """
+  billing: Billing
+  billingPeriod(date: DateTime!): BillingPeriod!
+
+  """Build Jobs associated with this account"""
+  buildJobs(limit: Int!, offset: Int!, status: BuildJobStatus): [BuildJob!]!
+
+  """
+  Coalesced Build (EAS) or BuildJob (Classic) for all apps belonging to this account.
+  """
+  buildOrBuildJobs(
+    """ Offset the query """
+    createdBefore: DateTime
+    limit: Int!
+  ): [BuildOrBuildJob!]! @deprecated(reason: "Use activityTimelineProjectActivities with filterTypes instead")
+
+  """(EAS Build) Builds associated with this account"""
+  builds(limit: Int!, offset: Int!, platform: AppPlatform, status: BuildStatus): [Build!]!
+  createdAt: DateTime!
+
+  """Environment secrets for an account"""
+  environmentSecrets(filterNames: [String!]): [EnvironmentSecret!]!
+
+  """GitHub App installations for an account"""
+  githubAppInstallations: [GitHubAppInstallation!]!
+
+  """Android credentials for account"""
+  googleServiceAccountKeys: [GoogleServiceAccountKey!]!
+  id: ID!
+  isCurrent: Boolean!
+
+  """Whether this account has SSO enabled. Can be queried by all members."""
+  isSSOEnabled: Boolean!
+  name: String!
+
+  """Offers set on this account"""
+  offers: [Offer!]
+
+  """Owning User of this account if personal account"""
+  owner: User
+
+  """Owning UserActor of this account if personal account"""
+  ownerUserActor: UserActor
+  pushSecurityEnabled: Boolean!
+  requiresAccessTokenForPushSecurity: Boolean! @deprecated(reason: "Legacy access tokens are deprecated")
+
+  """Snacks associated with this account"""
+  snacks(limit: Int!, offset: Int!): [Snack!]!
+
+  """SSO configuration for this account"""
+  ssoConfiguration: AccountSSOConfiguration
+
+  """Subscription info visible to members that have VIEWER role"""
+  subscription: SubscriptionDetails
+  subscriptionChangesPending: Boolean @deprecated(reason: "No longer needed")
+
+  """Coalesced project activity for an app using pagination"""
+  timelineActivity(after: String, before: String, filter: TimelineActivityFilterInput, first: Int, last: Int): TimelineActivityConnection!
+  unlimitedBuilds: Boolean! @deprecated(reason: "See isCurrent")
+  updatedAt: DateTime!
+
+  """Account query object for querying EAS usage metrics"""
+  usageMetrics: AccountUsageMetrics!
+
+  """Owning UserActor of this account if personal account"""
+  userActorOwner: UserActor @deprecated(reason: "Deprecated in favor of ownerUserActor")
+
+  """Pending user invitations for this account"""
+  userInvitations: [UserInvitation!]!
+
+  """Actors associated with this account and permissions they hold"""
+  users: [UserPermission!]!
+  willAutoRenewBuilds: Boolean @deprecated(reason: "Build packs are no longer supported")
+}
+
+type AccountAppsConnection {
+  edges: [AccountAppsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type AccountAppsEdge {
+  cursor: String!
+  node: App!
+}
+
+input AccountAppsFilterInput {
+  sortByField: AccountAppsSortByField!
+}
+
+enum AccountAppsSortByField {
+  LATEST_ACTIVITY_TIME
+
+  """
+  Name prefers the display name but falls back to full_name with @account/
+  part stripped.
+  """
+  NAME
+}
+
+input AccountDataInput {
+  name: String!
+}
+
+type AccountMutation {
+  """Makes a one time purchase"""
+  buyProduct(accountName: ID!, autoRenew: Boolean, paymentSource: ID, productId: ID!): Account @deprecated(reason: "Build packs are no longer supported")
+
+  """Cancels all subscriptions immediately"""
+  cancelAllSubscriptionsImmediately(accountID: ID!): Account!
+
+  """Cancel scheduled subscription change"""
+  cancelScheduledSubscriptionChange(accountID: ID!): Account!
+
+  """Cancels the active subscription"""
+  cancelSubscription(accountName: ID!): Account!
+
+  """
+  Upgrades or downgrades the active subscription to the newPlanIdentifier, which must be one of the EAS plans (i.e., Production or Enterprise).
+  """
+  changePlan(accountID: ID!, couponCode: String, newPlanIdentifier: String!): Account!
+
+  """
+  Add specified account Permissions for Actor. Actor must already have at least one permission on the account.
+  """
+  grantActorPermissions(accountID: ID!, actorID: ID!, permissions: [Permission]): Account!
+
+  """
+  Rename this account and the primary user's username if this account is a personal account
+  """
+  rename(accountID: ID!, newName: String!): Account!
+
+  """
+  Requests a refund for the specified charge by requesting a manual refund from support
+  """
+  requestRefund(accountID: ID!, chargeID: ID!, description: String, reason: String): Boolean
+
+  """
+  Revoke specified Permissions for Actor. Actor must already have at least one permission on the account.
+  """
+  revokeActorPermissions(accountID: ID!, actorID: ID!, permissions: [Permission]): Account!
+
+  """
+  Update setting to purchase new build packs when the current one is consumed
+  """
+  setBuildAutoRenew(accountName: ID!, autoRenew: Boolean): Account @deprecated(reason: "Build packs are no longer supported")
+
+  """Set payment details"""
+  setPaymentSource(accountName: ID!, paymentSource: ID!): Account!
+
+  """
+  Require authorization to send push notifications for experiences owned by this account
+  """
+  setPushSecurityEnabled(accountID: ID!, pushSecurityEnabled: Boolean!): Account!
+}
+
+input AccountNotificationSubscriptionInput {
+  accountId: ID!
+  event: NotificationEvent!
+  type: NotificationType!
+  userId: ID!
+}
+
+type AccountQuery {
+  """Query an Account by ID"""
+  byId(
+    """Account id to use to look up account"""
+    accountId: String!
+  ): Account!
+
+  """Query an Account by name"""
+  byName(
+    """Account name to use to look up account"""
+    accountName: String!
+  ): Account!
+}
+
+"""Auth configuration data for an SSO account."""
+type AccountSSOConfiguration {
+  authProtocol: AuthProtocolType!
+  authProviderIdentifier: String!
+  clientIdentifier: String!
+  clientSecret: String!
+  createdAt: DateTime!
+  id: ID!
+  issuer: String!
+  updatedAt: DateTime!
+}
+
+input AccountSSOConfigurationData {
+  authProtocol: AuthProtocolType!
+  authProviderIdentifier: String!
+  clientIdentifier: String!
+  clientSecret: String!
+  issuer: String!
+}
+
+type AccountSSOConfigurationMutation {
+  """Create an AccountSSOConfiguration for an Account"""
+  createAccountSSOConfiguration(accountId: ID!, accountSSOConfigurationData: AccountSSOConfigurationData!): AccountSSOConfiguration!
+
+  """Delete an AccountSSOConfiguration"""
+  deleteAccountSSOConfiguration(id: ID!): DeleteAccountSSOConfigurationResult!
+
+  """Update an AccountSSOConfiguration"""
+  updateAccountSSOConfiguration(accountSSOConfigurationData: AccountSSOConfigurationData!, id: ID!): AccountSSOConfiguration!
+}
+
+"""Public auth configuration data for an SSO account."""
+type AccountSSOConfigurationPublicData {
+  authProtocol: AuthProtocolType!
+  authProviderIdentifier: String!
+  authorizationUrl: String!
+  id: ID!
+  issuer: String!
+}
+
+type AccountSSOConfigurationPublicDataQuery {
+  """Get AccountSSOConfiguration public data by account name"""
+  publicDataByAccountName(
+    """Account name to use to look up account SSO configuration"""
+    accountName: String!
+  ): AccountSSOConfigurationPublicData!
+}
+
+type AccountUsageEASBuildMetadata {
+  billingResourceClass: EASBuildBillingResourceClass!
+  platform: AppPlatform!
+}
+
+union AccountUsageMetadata = AccountUsageEASBuildMetadata
+
+type AccountUsageMetric {
+  id: ID!
+  metricType: UsageMetricType!
+  serviceMetric: EASServiceMetric!
+  timestamp: DateTime!
+  value: Float!
+}
+
+type AccountUsageMetrics {
+  byBillingPeriod(date: DateTime!, service: EASService): UsageMetricTotal!
+  metricsForServiceMetric(filterParams: JSONObject, granularity: UsageMetricsGranularity!, serviceMetric: EASServiceMetric!, timespan: UsageMetricsTimespan!): [AccountUsageMetric!]!
+}
+
+interface ActivityTimelineProjectActivity {
+  activityTimestamp: DateTime!
+  actor: Actor
+  id: ID!
+}
+
+enum ActivityTimelineProjectActivityType {
+  BUILD
+  BUILD_JOB
+  SUBMISSION
+  UPDATE
+}
+
+"""
+A regular user, SSO user, or robot that can authenticate with Expo services and be a member of accounts.
+"""
+interface Actor {
+  """Access Tokens belonging to this actor"""
+  accessTokens: [AccessToken!]!
+
+  """Associated accounts"""
+  accounts: [Account!]!
+  created: DateTime!
+
+  """
+  Best-effort human readable name for this actor for use in user interfaces during action attribution.
+  For example, when displaying a sentence indicating that actor X created a build or published an update.
+  """
+  displayName: String!
+
+  """Experiments associated with this actor"""
+  experiments: [ActorExperiment!]!
+
+  """
+  Server feature gate values for this actor, optionally filtering by desired gates.
+  Only resolves for the viewer.
+  """
+  featureGates(filter: [String!]): JSONObject!
+  firstName: String
+  id: ID!
+  isExpoAdmin: Boolean!
+}
+
+type ActorExperiment {
+  createdAt: DateTime!
+  enabled: Boolean!
+  experiment: Experiment!
+  id: ID!
+  updatedAt: DateTime!
+}
+
+type ActorExperimentMutation {
+  """Create or update the value of a User Experiment"""
+  createOrUpdateActorExperiment(enabled: Boolean!, experiment: Experiment!): ActorExperiment!
+}
+
+type ActorQuery {
+  """Query an Actor by ID"""
+  byId(id: ID!): Actor! @deprecated(reason: "Public actor queries are no longer supported")
+}
+
+input AddUserInput {
+  audience: MailchimpAudience = EXPO_DEVELOPERS
+  email: String!
+  tags: [MailchimpTag!]
+}
+
+type AddUserPayload {
+  email_address: String
+  id: String
+  list_id: String
+  status: String
+  tags: [MailchimpTagPayload!]
+  timestamp_signup: String
+}
+
+type AddonDetails {
+  id: ID!
+  name: String!
+  nextInvoice: DateTime
+  planId: String!
+  willCancel: Boolean
+}
+
+type Address {
+  city: String
+  country: String
+  line1: String
+  state: String
+  zip: String
+}
+
+type AndroidAppBuildCredentials {
+  androidKeystore: AndroidKeystore
+  id: ID!
+  isDefault: Boolean!
+  isLegacy: Boolean!
+  name: String!
+}
+
+"""
+@isDefault: if set, these build credentials will become the default for the Android app. All other build credentials will have their default status set to false.
+"""
+input AndroidAppBuildCredentialsInput {
+  isDefault: Boolean!
+  keystoreId: ID!
+  name: String!
+}
+
+type AndroidAppBuildCredentialsMutation {
+  """Create a set of build credentials for an Android app"""
+  createAndroidAppBuildCredentials(androidAppBuildCredentialsInput: AndroidAppBuildCredentialsInput!, androidAppCredentialsId: ID!): AndroidAppBuildCredentials!
+
+  """delete a set of build credentials for an Android app"""
+  deleteAndroidAppBuildCredentials(id: ID!): deleteAndroidAppBuildCredentialsResult!
+
+  """Set the build credentials to be the default for the Android app"""
+  setDefault(id: ID!, isDefault: Boolean!): AndroidAppBuildCredentials!
+
+  """Set the keystore to be used for an Android app"""
+  setKeystore(id: ID!, keystoreId: ID!): AndroidAppBuildCredentials!
+
+  """
+  Set the name of a set of build credentials to be used for an Android app
+  """
+  setName(id: ID!, name: String!): AndroidAppBuildCredentials!
+}
+
+type AndroidAppCredentials {
+  androidAppBuildCredentialsArray: [AndroidAppBuildCredentials!]! @deprecated(reason: "use androidAppBuildCredentialsList instead")
+  androidAppBuildCredentialsList: [AndroidAppBuildCredentials!]!
+  androidFcm: AndroidFcm
+  app: App!
+  applicationIdentifier: String
+  googleServiceAccountKeyForSubmissions: GoogleServiceAccountKey
+  id: ID!
+  isLegacy: Boolean!
+}
+
+input AndroidAppCredentialsFilter {
+  applicationIdentifier: String
+  legacyOnly: Boolean
+}
+
+input AndroidAppCredentialsInput {
+  fcmId: ID
+  googleServiceAccountKeyForSubmissionsId: ID
+}
+
+type AndroidAppCredentialsMutation {
+  """Create a set of credentials for an Android app"""
+  createAndroidAppCredentials(androidAppCredentialsInput: AndroidAppCredentialsInput!, appId: ID!, applicationIdentifier: String!): AndroidAppCredentials!
+
+  """Delete a set of credentials for an Android app"""
+  deleteAndroidAppCredentials(id: ID!): DeleteAndroidAppCredentialsResult!
+
+  """Set the FCM push key to be used in an Android app"""
+  setFcm(fcmId: ID!, id: ID!): AndroidAppCredentials!
+
+  """
+  Set the Google Service Account Key to be used for submitting an Android app
+  """
+  setGoogleServiceAccountKeyForSubmissions(googleServiceAccountKeyId: ID!, id: ID!): AndroidAppCredentials!
+}
+
+enum AndroidBuildType {
+  APK
+  APP_BUNDLE
+
+  """@deprecated Use developmentClient option instead."""
+  DEVELOPMENT_CLIENT
+}
+
+input AndroidBuilderEnvironmentInput {
+  env: JSONObject
+  expoCli: String
+  image: String
+  ndk: String
+  node: String
+  yarn: String
+}
+
+type AndroidFcm {
+  account: Account!
+  createdAt: DateTime!
+
+  """
+  Legacy FCM: returns the Cloud Messaging token, parses to a String
+  FCM v1: returns the Service Account Key file, parses to an Object
+  """
+  credential: JSON!
+  id: ID!
+  snippet: FcmSnippet!
+  updatedAt: DateTime!
+  version: AndroidFcmVersion!
+}
+
+input AndroidFcmInput {
+  credential: String!
+  version: AndroidFcmVersion!
+}
+
+type AndroidFcmMutation {
+  """Create an FCM credential"""
+  createAndroidFcm(accountId: ID!, androidFcmInput: AndroidFcmInput!): AndroidFcm!
+
+  """Delete an FCM credential"""
+  deleteAndroidFcm(id: ID!): deleteAndroidFcmResult!
+}
+
+enum AndroidFcmVersion {
+  LEGACY
+  V1
+}
+
+input AndroidJobBuildCredentialsInput {
+  keystore: AndroidJobKeystoreInput!
+}
+
+input AndroidJobInput {
+  applicationArchivePath: String
+
+  """@deprecated"""
+  artifactPath: String
+  buildArtifactPaths: [String!]
+  buildProfile: String
+  buildType: AndroidBuildType
+  builderEnvironment: AndroidBuilderEnvironmentInput
+  cache: BuildCacheInput
+  customBuildConfig: CustomBuildConfigInput
+  developmentClient: Boolean
+  experimental: JSONObject
+  gradleCommand: String
+  mode: BuildMode
+  projectArchive: ProjectArchiveSourceInput!
+  projectRootDirectory: String!
+  releaseChannel: String
+  secrets: AndroidJobSecretsInput
+  triggeredBy: BuildTrigger
+  type: BuildWorkflow!
+  updates: BuildUpdatesInput
+  username: String
+  version: AndroidJobVersionInput
+}
+
+input AndroidJobKeystoreInput {
+  dataBase64: String!
+  keyAlias: String!
+  keyPassword: String
+  keystorePassword: String!
+}
+
+input AndroidJobOverridesInput {
+  applicationArchivePath: String
+
+  """@deprecated"""
+  artifactPath: String
+  buildArtifactPaths: [String!]
+  buildProfile: String
+  buildType: AndroidBuildType
+  builderEnvironment: AndroidBuilderEnvironmentInput
+  cache: BuildCacheInput
+  developmentClient: Boolean
+  experimental: JSONObject
+  gradleCommand: String
+  mode: BuildMode
+  releaseChannel: String
+  secrets: AndroidJobSecretsInput
+  updates: BuildUpdatesInput
+  username: String
+  version: AndroidJobVersionInput
+}
+
+input AndroidJobSecretsInput {
+  buildCredentials: AndroidJobBuildCredentialsInput
+  robotAccessToken: String
+}
+
+input AndroidJobVersionInput {
+  versionCode: String!
+}
+
+type AndroidKeystore {
+  account: Account!
+  createdAt: DateTime!
+  id: ID!
+  keyAlias: String!
+  keyPassword: String
+  keystore: String!
+  keystorePassword: String!
+  md5CertificateFingerprint: String
+  sha1CertificateFingerprint: String
+  sha256CertificateFingerprint: String
+  type: AndroidKeystoreType!
+  updatedAt: DateTime!
+}
+
+input AndroidKeystoreInput {
+  base64EncodedKeystore: String!
+  keyAlias: String!
+  keyPassword: String
+  keystorePassword: String!
+  type: AndroidKeystoreType!
+}
+
+type AndroidKeystoreMutation {
+  """Create a Keystore"""
+  createAndroidKeystore(accountId: ID!, androidKeystoreInput: AndroidKeystoreInput!): AndroidKeystore
+
+  """Delete a Keystore"""
+  deleteAndroidKeystore(id: ID!): DeleteAndroidKeystoreResult!
+}
+
+enum AndroidKeystoreType {
+  JKS
+  PKCS12
+  UNKNOWN
+}
+
+type AndroidSubmissionConfig {
+  applicationIdentifier: String @deprecated(reason: "applicationIdentifier is deprecated and will be auto-detected on submit")
+  archiveType: SubmissionAndroidArchiveType @deprecated(reason: "archiveType is deprecated and will be null")
+  releaseStatus: SubmissionAndroidReleaseStatus
+  rollout: Float
+  track: SubmissionAndroidTrack!
+}
+
+input AndroidSubmissionConfigInput {
+  applicationIdentifier: String
+  archiveUrl: String
+  changesNotSentForReview: Boolean
+  googleServiceAccountKeyId: String
+  googleServiceAccountKeyJson: String
+  releaseStatus: SubmissionAndroidReleaseStatus
+  rollout: Float
+  track: SubmissionAndroidTrack!
+}
+
+"""Represents an Exponent App (or Experience in legacy terms)"""
+type App implements Project {
+  accessTokens: [AccessToken]! @deprecated(reason: "Legacy access tokens are deprecated")
+
+  """Coalesced project activity for an app"""
+  activityTimelineProjectActivities(
+    """ Offset the query """
+    createdBefore: DateTime
+    filterChannels: [String!]
+    filterPlatforms: [AppPlatform!]
+    filterReleaseChannels: [String!]
+
+    """ Types of objects to filter """
+    filterTypes: [ActivityTimelineProjectActivityType!]
+    limit: Int!
+  ): [ActivityTimelineProjectActivity!]!
+
+  """Android app credentials for the project"""
+  androidAppCredentials(filter: AndroidAppCredentialsFilter): [AndroidAppCredentials!]!
+
+  """ios.appStoreUrl field from most recent classic update manifest"""
+  appStoreUrl: String
+  assetLimitPerUpdateGroup: Int!
+  branchesPaginated(after: String, before: String, first: Int, last: Int): AppBranchesConnection!
+  buildJobs(limit: Int!, offset: Int!, status: BuildStatus): [BuildJob!]!
+
+  """Coalesced Build (EAS) or BuildJob (Classic) items for this app."""
+  buildOrBuildJobs(
+    """ Offset the query """
+    createdBefore: DateTime
+    limit: Int!
+  ): [BuildOrBuildJob!]! @deprecated(reason: "Use activityTimelineProjectActivities with filterTypes instead")
+
+  """(EAS Build) Builds associated with this app"""
+  builds(
+    filter: BuildFilter
+    limit: Int!
+    offset: Int!
+
+    """Deprecated, use filter instead"""
+    platform: AppPlatform
+
+    """Deprecated, use filter instead"""
+    status: BuildStatus
+  ): [Build!]!
+  buildsPaginated(after: String, before: String, filter: BuildFilterInput, first: Int, last: Int): AppBuildsConnection!
+
+  """Classic update release channel names that have at least one build"""
+  buildsReleaseChannels: [String!]!
+  channelsPaginated(after: String, before: String, filter: ChannelFilterInput, first: Int, last: Int): AppChannelsConnection!
+  deployment(channel: String!, runtimeVersion: String!): Deployment
+
+  """Deployments associated with this app"""
+  deployments(after: String, before: String, filter: DeploymentFilterInput, first: Int, last: Int): DeploymentsConnection!
+  description: String!
+
+  """Environment secrets for an app"""
+  environmentSecrets(filterNames: [String!]): [EnvironmentSecret!]!
+  fullName: String!
+  githubBuildTriggers: [GitHubBuildTrigger!]!
+  githubRepository: GitHubRepository
+  githubRepositorySettings: GitHubRepositorySettings
+
+  """githubUrl field from most recent classic update manifest"""
+  githubUrl: String
+
+  """
+  Info about the icon specified in the most recent classic update manifest
+  """
+  icon: AppIcon
+  iconUrl: String @deprecated
+  id: ID!
+
+  """App query field for querying EAS Insights about this app"""
+  insights: AppInsights!
+
+  """iOS app credentials for the project"""
+  iosAppCredentials(filter: IosAppCredentialsFilter): [IosAppCredentials!]!
+  isDeleting: Boolean!
+
+  """
+  Whether the latest classic update publish is using a deprecated SDK version
+  """
+  isDeprecated: Boolean!
+  isLikedByMe: Boolean! @deprecated(reason: "'likes' have been deprecated.")
+  lastPublishedTime: DateTime! @deprecated
+
+  """Time of the last user activity (update, branch, submission)."""
+  latestActivity: DateTime!
+  latestAppVersionByPlatformAndApplicationIdentifier(applicationIdentifier: String!, platform: AppPlatform!): AppVersion
+  latestReleaseForReleaseChannel(platform: AppPlatform!, releaseChannel: String!): AppRelease
+
+  """ID of latest classic update release"""
+  latestReleaseId: ID!
+  likeCount: Int! @deprecated(reason: "'likes' have been deprecated.")
+  likedBy(limit: Int, offset: Int): [User]! @deprecated(reason: "'likes' have been deprecated.")
+  name: String!
+  ownerAccount: Account!
+  packageName: String! @deprecated
+  packageUsername: String! @deprecated
+
+  """android.playStoreUrl field from most recent classic update manifest"""
+  playStoreUrl: String
+  privacy: String! @deprecated(reason: "Use 'privacySetting' instead.")
+  privacySetting: AppPrivacy!
+
+  """Whether there have been any classic update publishes"""
+  published: Boolean!
+  pushSecurityEnabled: Boolean!
+
+  """Classic update release channel names (to be removed)"""
+  releaseChannels: [String!]!
+  requiresAccessTokenForPushSecurity: Boolean! @deprecated(reason: "Legacy access tokens are deprecated")
+
+  """Runtimes associated with this app"""
+  runtimes(after: String, before: String, first: Int, last: Int): RuntimesConnection!
+  scopeKey: String!
+
+  """SDK version of the latest classic update publish, 0.0.0 otherwise"""
+  sdkVersion: String!
+  slug: String!
+
+  """EAS Submissions associated with this app"""
+  submissions(filter: SubmissionFilter!, limit: Int!, offset: Int!): [Submission!]!
+  submissionsPaginated(after: String, before: String, first: Int, last: Int): AppSubmissionsConnection!
+
+  """Coalesced project activity for an app using pagination"""
+  timelineActivity(after: String, before: String, filter: TimelineActivityFilterInput, first: Int, last: Int): TimelineActivityConnection!
+  trendScore: Float! @deprecated(reason: "'likes' have been deprecated.")
+
+  """get an EAS branch owned by the app by name"""
+  updateBranchByName(name: String!): UpdateBranch
+
+  """EAS branches owned by an app"""
+  updateBranches(limit: Int!, offset: Int!): [UpdateBranch!]!
+
+  """get an EAS channel owned by the app by name"""
+  updateChannelByName(name: String!): UpdateChannel
+
+  """EAS channels owned by an app"""
+  updateChannels(limit: Int!, offset: Int!): [UpdateChannel!]!
+
+  """EAS updates owned by an app grouped by update group"""
+  updateGroups(filter: UpdatesFilter, limit: Int!, offset: Int!): [[Update!]!]!
+
+  """Time of last classic update publish"""
+  updated: DateTime!
+
+  """EAS updates owned by an app"""
+  updates(limit: Int!, offset: Int!): [Update!]!
+  updatesPaginated(after: String, before: String, first: Int, last: Int): AppUpdatesConnection!
+  username: String! @deprecated(reason: "Use ownerAccount.name instead")
+  users: [User] @deprecated
+
+  """Webhooks for an app"""
+  webhooks(filter: WebhookFilter): [Webhook!]!
+}
+
+type AppBranchEdge {
+  cursor: String!
+  node: UpdateBranch!
+}
+
+type AppBranchesConnection {
+  edges: [AppBranchEdge!]!
+  pageInfo: PageInfo!
+}
+
+type AppBuildEdge {
+  cursor: String!
+  node: BuildOrBuildJob!
+}
+
+type AppBuildsConnection {
+  edges: [AppBuildEdge!]!
+  pageInfo: PageInfo!
+}
+
+type AppChannelEdge {
+  cursor: String!
+  node: UpdateChannel!
+}
+
+type AppChannelsConnection {
+  edges: [AppChannelEdge!]!
+  pageInfo: PageInfo!
+}
+
+input AppDataInput {
+  id: ID!
+  privacy: String
+}
+
+type AppIcon {
+  colorPalette: JSON @deprecated
+  originalUrl: String!
+  primaryColor: String
+  url: String!
+}
+
+input AppInfoInput {
+  displayName: String
+}
+
+input AppInput {
+  accountId: ID!
+  appInfo: AppInfoInput
+  privacy: AppPrivacy!
+  projectName: String!
+}
+
+type AppInsights {
+  hasEventsFromExpoInsightsClientModule: Boolean!
+  totalUniqueUsers(timespan: InsightsTimespan!, useDeprecatedBackend: Boolean): Int
+  uniqueUsersByAppVersionOverTime(timespan: InsightsTimespan!, useDeprecatedBackend: Boolean): UniqueUsersOverTimeData!
+  uniqueUsersByPlatformOverTime(timespan: InsightsTimespan!, useDeprecatedBackend: Boolean): UniqueUsersOverTimeData!
+}
+
+type AppMutation {
+  """Create an unpublished app"""
+  createApp(appInput: AppInput!): App!
+  grantAccess(accessLevel: String, toUser: ID!): App @deprecated
+
+  """Set display info for app"""
+  setAppInfo(appId: ID!, appInfo: AppInfoInput!): App!
+
+  """Require api token to send push notifs for experience"""
+  setPushSecurityEnabled(appId: ID!, pushSecurityEnabled: Boolean!): App!
+}
+
+input AppNotificationSubscriptionInput {
+  appId: ID!
+  event: NotificationEvent!
+  type: NotificationType!
+  userId: ID!
+}
+
+enum AppPlatform {
+  ANDROID
+  IOS
+}
+
+enum AppPrivacy {
+  HIDDEN
+  PUBLIC
+  UNLISTED
+}
+
+type AppQuery {
+  """Public apps in the app directory"""
+  all(
+    """Filter to use to filter public app list"""
+    filter: AppsFilter!
+    limit: Int
+    offset: Int
+
+    """Method to sort by"""
+    sort: AppSort!
+  ): [App!]! @deprecated(reason: "App directory no longer supported")
+  byFullName(
+    """App full name used to look up app"""
+    fullName: String!
+  ): App!
+
+  """Look up app by app id"""
+  byId(appId: String!): App!
+}
+
+type AppRelease {
+  hash: String!
+  id: ID!
+  manifest: JSON!
+  publishedTime: DateTime!
+  publishingUsername: String!
+  runtimeVersion: String
+  s3Key: String!
+  s3Url: String!
+  sdkVersion: String!
+  version: String!
+}
+
+enum AppSort {
+  """Sort by recently published"""
+  RECENTLY_PUBLISHED
+
+  """Sort by highest trendScore"""
+  VIEWED
+}
+
+type AppStoreConnectApiKey {
+  account: Account!
+  appleTeam: AppleTeam
+  createdAt: DateTime!
+  id: ID!
+  issuerIdentifier: String!
+  keyIdentifier: String!
+  name: String
+  roles: [AppStoreConnectUserRole!]
+  updatedAt: DateTime!
+}
+
+input AppStoreConnectApiKeyInput {
+  appleTeamId: ID
+  issuerIdentifier: String!
+  keyIdentifier: String!
+  keyP8: String!
+  name: String
+  roles: [AppStoreConnectUserRole!]
+}
+
+type AppStoreConnectApiKeyMutation {
+  """Create an App Store Connect Api Key for an Apple Team"""
+  createAppStoreConnectApiKey(accountId: ID!, appStoreConnectApiKeyInput: AppStoreConnectApiKeyInput!): AppStoreConnectApiKey!
+
+  """Delete an App Store Connect Api Key"""
+  deleteAppStoreConnectApiKey(id: ID!): deleteAppStoreConnectApiKeyResult!
+}
+
+enum AppStoreConnectUserRole {
+  ACCESS_TO_REPORTS
+  ACCOUNT_HOLDER
+  ADMIN
+  APP_MANAGER
+  CLOUD_MANAGED_APP_DISTRIBUTION
+  CLOUD_MANAGED_DEVELOPER_ID
+  CREATE_APPS
+  CUSTOMER_SUPPORT
+  DEVELOPER
+  FINANCE
+  IMAGE_MANAGER
+  MARKETING
+  READ_ONLY
+  SALES
+  TECHNICAL
+  UNKNOWN
+}
+
+type AppSubmissionEdge {
+  cursor: String!
+  node: Submission!
+}
+
+type AppSubmissionsConnection {
+  edges: [AppSubmissionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type AppUpdateEdge {
+  cursor: String!
+  node: Update!
+}
+
+type AppUpdatesConnection {
+  edges: [AppUpdateEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""Represents Play Store/App Store version of an application"""
+type AppVersion {
+  """
+  Store identifier for an application
+   - Android - applicationId
+   - iOS - bundle identifier
+  """
+  applicationIdentifier: String!
+
+  """
+  Value that identifies build in a store (it's visible to developers, but not to end users)
+  - Android - versionCode in build.gradle ("android.versionCode" field in app.json)
+  - iOS - CFBundleVersion in Info.plist ("ios.buildNumber" field in app.json)
+  """
+  buildVersion: String!
+  id: ID!
+  platform: AppPlatform!
+  runtimeVersion: String
+
+  """
+  User-facing version in a store
+  - Android - versionName in build.gradle ("version" field in app.json)
+  - iOS - CFBundleShortVersionString in Info.plist ("version" field in app.json)
+  """
+  storeVersion: String!
+}
+
+input AppVersionInput {
+  appId: ID!
+  applicationIdentifier: String!
+  buildVersion: String!
+  platform: AppPlatform!
+  runtimeVersion: String
+  storeVersion: String!
+}
+
+type AppVersionMutation {
+  """Create an app version"""
+  createAppVersion(appVersionInput: AppVersionInput!): AppVersion!
+}
+
+type AppleAppIdentifier {
+  account: Account!
+  appleTeam: AppleTeam
+  bundleIdentifier: String!
+  id: ID!
+  parentAppleAppIdentifier: AppleAppIdentifier
+}
+
+input AppleAppIdentifierInput {
+  appleTeamId: ID
+  bundleIdentifier: String!
+  parentAppleAppId: ID
+}
+
+type AppleAppIdentifierMutation {
+  """Create an Identifier for an iOS App"""
+  createAppleAppIdentifier(accountId: ID!, appleAppIdentifierInput: AppleAppIdentifierInput!): AppleAppIdentifier!
+}
+
+type AppleDevice {
+  account: Account!
+  appleTeam: AppleTeam!
+  deviceClass: AppleDeviceClass
+  enabled: Boolean
+  id: ID!
+  identifier: String!
+  model: String
+  name: String
+  softwareVersion: String
+}
+
+enum AppleDeviceClass {
+  IPAD
+  IPHONE
+  MAC
+}
+
+input AppleDeviceInput {
+  appleTeamId: ID!
+  deviceClass: AppleDeviceClass
+  enabled: Boolean
+  identifier: String!
+  model: String
+  name: String
+  softwareVersion: String
+}
+
+type AppleDeviceMutation {
+  """Create an Apple Device"""
+  createAppleDevice(accountId: ID!, appleDeviceInput: AppleDeviceInput!): AppleDevice!
+
+  """Delete an Apple Device"""
+  deleteAppleDevice(id: ID!): DeleteAppleDeviceResult!
+
+  """Update an Apple Device"""
+  updateAppleDevice(appleDeviceUpdateInput: AppleDeviceUpdateInput!, id: ID!): AppleDevice!
+}
+
+type AppleDeviceRegistrationRequest {
+  account: Account!
+  appleTeam: AppleTeam!
+  id: ID!
+}
+
+type AppleDeviceRegistrationRequestMutation {
+  """Create an Apple Device registration request"""
+  createAppleDeviceRegistrationRequest(accountId: ID!, appleTeamId: ID!): AppleDeviceRegistrationRequest!
+}
+
+type AppleDeviceRegistrationRequestQuery {
+  byId(id: ID!): AppleDeviceRegistrationRequest!
+}
+
+input AppleDeviceUpdateInput {
+  name: String
+}
+
+type AppleDistributionCertificate {
+  account: Account!
+  appleTeam: AppleTeam
+  certificateP12: String
+  certificatePassword: String
+  certificatePrivateSigningKey: String
+  createdAt: DateTime!
+  developerPortalIdentifier: String
+  id: ID!
+  iosAppBuildCredentialsList: [IosAppBuildCredentials!]!
+  serialNumber: String!
+  updatedAt: DateTime!
+  validityNotAfter: DateTime!
+  validityNotBefore: DateTime!
+}
+
+input AppleDistributionCertificateInput {
+  appleTeamId: ID
+  certP12: String!
+  certPassword: String!
+  certPrivateSigningKey: String
+  developerPortalIdentifier: String
+}
+
+type AppleDistributionCertificateMutation {
+  """Create a Distribution Certificate"""
+  createAppleDistributionCertificate(accountId: ID!, appleDistributionCertificateInput: AppleDistributionCertificateInput!): AppleDistributionCertificate
+
+  """Delete a Distribution Certificate"""
+  deleteAppleDistributionCertificate(id: ID!): DeleteAppleDistributionCertificateResult!
+}
+
+type AppleProvisioningProfile {
+  account: Account!
+  appleAppIdentifier: AppleAppIdentifier!
+  appleDevices: [AppleDevice!]!
+  appleTeam: AppleTeam
+  appleUUID: String!
+  createdAt: DateTime!
+  developerPortalIdentifier: String
+  expiration: DateTime!
+  id: ID!
+  provisioningProfile: String
+  status: String!
+  updatedAt: DateTime!
+}
+
+input AppleProvisioningProfileInput {
+  appleProvisioningProfile: String!
+  developerPortalIdentifier: String
+}
+
+type AppleProvisioningProfileMutation {
+  """Create a Provisioning Profile"""
+  createAppleProvisioningProfile(accountId: ID!, appleAppIdentifierId: ID!, appleProvisioningProfileInput: AppleProvisioningProfileInput!): AppleProvisioningProfile!
+
+  """Delete a Provisioning Profile"""
+  deleteAppleProvisioningProfile(id: ID!): DeleteAppleProvisioningProfileResult!
+
+  """Delete Provisioning Profiles"""
+  deleteAppleProvisioningProfiles(ids: [ID!]!): [DeleteAppleProvisioningProfileResult!]!
+
+  """Update a Provisioning Profile"""
+  updateAppleProvisioningProfile(appleProvisioningProfileInput: AppleProvisioningProfileInput!, id: ID!): AppleProvisioningProfile!
+}
+
+type ApplePushKey {
+  account: Account!
+  appleTeam: AppleTeam
+  createdAt: DateTime!
+  id: ID!
+  iosAppCredentialsList: [IosAppCredentials!]!
+  keyIdentifier: String!
+  keyP8: String!
+  updatedAt: DateTime!
+}
+
+input ApplePushKeyInput {
+  appleTeamId: ID!
+  keyIdentifier: String!
+  keyP8: String!
+}
+
+type ApplePushKeyMutation {
+  """Create an Apple Push Notification key"""
+  createApplePushKey(accountId: ID!, applePushKeyInput: ApplePushKeyInput!): ApplePushKey!
+
+  """Delete an Apple Push Notification key"""
+  deleteApplePushKey(id: ID!): deleteApplePushKeyResult!
+}
+
+type AppleTeam {
+  account: Account!
+  appleAppIdentifiers(bundleIdentifier: String): [AppleAppIdentifier!]!
+  appleDevices(limit: Int, offset: Int): [AppleDevice!]!
+  appleDistributionCertificates: [AppleDistributionCertificate!]!
+  appleProvisioningProfiles(appleAppIdentifierId: ID): [AppleProvisioningProfile!]!
+  applePushKeys: [ApplePushKey!]!
+  appleTeamIdentifier: String!
+  appleTeamName: String
+  id: ID!
+}
+
+input AppleTeamInput {
+  appleTeamIdentifier: String!
+  appleTeamName: String
+}
+
+type AppleTeamMutation {
+  """Create an Apple Team"""
+  createAppleTeam(accountId: ID!, appleTeamInput: AppleTeamInput!): AppleTeam!
+}
+
+type AppleTeamQuery {
+  byAppleTeamIdentifier(accountId: ID!, identifier: String!): AppleTeam
+}
+
+enum AppsFilter {
+  """Featured Projects"""
+  FEATURED
+
+  """New Projects"""
+  NEW
+}
+
+input AscApiKeyInput {
+  issuerIdentifier: String!
+  keyIdentifier: String!
+  keyP8: String!
+}
+
+type AssetMetadataResult {
+  status: AssetMetadataStatus!
+  storageKey: String!
+}
+
+enum AssetMetadataStatus {
+  DOES_NOT_EXIST
+  EXISTS
+}
+
+type AssetMutation {
+  """
+  Returns an array of specifications for upload. Each URL is valid for an hour.
+  The content type of the asset you wish to upload must be specified.
+  """
+  getSignedAssetUploadSpecifications(
+    """max 1400"""
+    assetContentTypes: [String]!
+  ): GetSignedAssetUploadSpecificationsResult!
+}
+
+"""Check to see if assets with given storageKeys exist"""
+type AssetQuery {
+  metadata(storageKeys: [String!]!): [AssetMetadataResult!]!
+}
+
+enum AuthProtocolType {
+  OIDC
+}
+
+type BackgroundJobReceipt {
+  account: Account!
+  createdAt: DateTime!
+  errorCode: String
+  errorMessage: String
+  id: ID!
+  resultId: ID
+  resultType: BackgroundJobResultType!
+  state: BackgroundJobState!
+  tries: Int!
+  updatedAt: DateTime!
+  willRetry: Boolean!
+}
+
+type BackgroundJobReceiptQuery {
+  """Look up background job receipt by ID"""
+  byId(id: ID!): BackgroundJobReceipt!
+}
+
+enum BackgroundJobResultType {
+  GITHUB_BUILD
+  VOID
+}
+
+enum BackgroundJobState {
+  FAILURE
+  IN_PROGRESS
+  QUEUED
+  SUCCESS
+}
+
+type Billing {
+  """History of invoices"""
+  charges: [Charge]
+  id: ID!
+  payment: PaymentDetails @deprecated(reason: "No longer used")
+  subscription: SubscriptionDetails
+}
+
+type BillingPeriod {
+  anchor: DateTime!
+  end: DateTime!
+  id: ID!
+  start: DateTime!
+}
+
+"""Represents an EAS Build"""
+type Build implements ActivityTimelineProjectActivity & BuildOrBuildJob {
+  activityTimestamp: DateTime!
+  actor: Actor
+  app: App!
+  appBuildVersion: String
+  appVersion: String
+  artifacts: BuildArtifacts
+  buildMode: BuildMode
+  buildProfile: String
+  canRetry(newMode: BuildMode): Boolean!
+  cancelingActor: Actor
+  channel: String
+  childBuild: Build
+  completedAt: DateTime
+  createdAt: DateTime!
+  customWorkflowName: String
+  developmentClient: Boolean
+  distribution: DistributionType
+  enqueuedAt: DateTime
+  error: BuildError
+  estimatedWaitTimeLeftSeconds: Int
+  expirationDate: DateTime
+  gitCommitHash: String
+  gitCommitMessage: String
+  gitRef: String
+  githubRepositoryOwnerAndName: String
+  id: ID!
+
+  """Queue position is 1-indexed"""
+  initialQueuePosition: Int
+  initiatingActor: Actor
+  initiatingUser: User @deprecated(reason: "User type is deprecated")
+  iosEnterpriseProvisioning: BuildIosEnterpriseProvisioning
+  isGitWorkingTreeDirty: Boolean
+  isWaived: Boolean!
+  logFiles: [String!]!
+  maxBuildTimeSeconds: Int!
+
+  """Retry time starts after completedAt"""
+  maxRetryTimeMinutes: Int
+  message: String
+  metrics: BuildMetrics
+  parentBuild: Build
+  platform: AppPlatform!
+  priority: BuildPriority!
+  project: Project!
+  projectRootDirectory: String
+  provisioningStartedAt: DateTime
+
+  """Queue position is 1-indexed"""
+  queuePosition: Int
+  reactNativeVersion: String
+  releaseChannel: String
+
+  """The builder resource class requested by the developer"""
+  resourceClass: BuildResourceClass! @deprecated(reason: "Use resourceClassDisplayName instead")
+
+  """String describing the resource class used to run the build"""
+  resourceClassDisplayName: String!
+  retryDisabledReason(newMode: BuildMode): BuildRetryDisabledReason
+  runFromCI: Boolean
+  runtimeVersion: String
+  sdkVersion: String
+  status: BuildStatus!
+  submissions: [Submission!]!
+  updatedAt: DateTime!
+  workerStartedAt: DateTime
+}
+
+type BuildArtifact {
+  manifestPlistUrl: String
+  url: String!
+}
+
+type BuildArtifacts {
+  applicationArchiveUrl: String
+  buildArtifactsUrl: String
+  buildUrl: String
+  xcodeBuildLogsUrl: String
+}
+
+input BuildCacheInput {
+  clear: Boolean
+  disabled: Boolean
+  key: String
+  paths: [String!]
+}
+
+enum BuildCredentialsSource {
+  LOCAL
+  REMOTE
+}
+
+type BuildError {
+  docsUrl: String
+  errorCode: String!
+  message: String!
+}
+
+input BuildFilter {
+  appBuildVersion: String
+  appIdentifier: String
+  appVersion: String
+  buildProfile: String
+  channel: String
+  distribution: DistributionType
+  gitCommitHash: String
+  platform: AppPlatform
+  runtimeVersion: String
+  sdkVersion: String
+  status: BuildStatus
+}
+
+input BuildFilterInput {
+  channel: String
+  platforms: [AppPlatform!]
+  releaseChannel: String
+}
+
+enum BuildIosEnterpriseProvisioning {
+  ADHOC
+  UNIVERSAL
+}
+
+"""Represents an Standalone App build job"""
+type BuildJob implements ActivityTimelineProjectActivity & BuildOrBuildJob {
+  accountUserActor: UserActor
+  activityTimestamp: DateTime!
+  actor: Actor
+  app: App
+  artifacts: BuildArtifact
+  config: JSON
+  created: DateTime
+  expirationDate: DateTime
+  fullExperienceName: String
+  id: ID!
+  logs: BuildLogs
+  platform: AppPlatform!
+  release: AppRelease
+  releaseChannel: String
+  sdkVersion: String
+  status: BuildJobStatus
+  updated: DateTime
+  user: User
+}
+
+enum BuildJobLogsFormat {
+  JSON
+  RAW
+}
+
+type BuildJobMutation {
+  del: BuildJob
+}
+
+type BuildJobQuery {
+  """get all build jobs by an optional filter"""
+  all(
+    experienceSlug: String
+    limit: Int
+    offset: Int
+
+    """
+    allows admins to see every entry by any user, but it scopes it to the user's own entries by default
+    """
+    showAdminView: Boolean = false
+    status: BuildJobStatus
+    username: String
+  ): [BuildJob]! @deprecated(reason: "Prefer Account.buildJobs or App.buildJobs")
+  byId(buildId: ID!): BuildJob!
+}
+
+enum BuildJobStatus {
+  ERRORED
+  FINISHED
+  IN_PROGRESS
+  PENDING
+  SENT_TO_QUEUE
+  STARTED
+}
+
+type BuildLimitThresholdExceededMetadata {
+  account: Account!
+  thresholdsExceeded: [NotificationThresholdExceeded!]!
+}
+
+enum BuildLimitThresholdExceededMetadataType {
+  IOS
+  TOTAL
+}
+
+type BuildLogs {
+  format: BuildJobLogsFormat
+  url: String
+}
+
+input BuildMetadataInput {
+  appBuildVersion: String
+  appIdentifier: String
+  appName: String
+  appVersion: String
+  buildMode: BuildMode
+  buildProfile: String
+  channel: String
+  cliVersion: String
+  credentialsSource: BuildCredentialsSource
+  customWorkflowName: String
+  developmentClient: Boolean
+  distribution: DistributionType
+  gitCommitHash: String
+  gitCommitMessage: String
+  iosEnterpriseProvisioning: BuildIosEnterpriseProvisioning
+  isGitWorkingTreeDirty: Boolean
+  message: String
+  reactNativeVersion: String
+  releaseChannel: String
+  runFromCI: Boolean
+  runWithNoWaitFlag: Boolean
+  runtimeVersion: String
+  sdkVersion: String
+  trackingContext: JSONObject
+  username: String
+  workflow: BuildWorkflow
+}
+
+type BuildMetrics {
+  buildDuration: Int
+  buildQueueTime: Int
+  buildWaitTime: Int
+}
+
+enum BuildMode {
+  BUILD
+  CUSTOM
+  RESIGN
+}
+
+type BuildMutation {
+  """Cancel an EAS Build build"""
+  cancel: Build! @deprecated(reason: "Use cancelBuild instead")
+
+  """Cancel an EAS Build build"""
+  cancelBuild(buildId: ID!): Build!
+
+  """Create an Android build"""
+  createAndroidBuild(appId: ID!, buildParams: BuildParamsInput, job: AndroidJobInput!, metadata: BuildMetadataInput): CreateBuildResult!
+
+  """Create an iOS build"""
+  createIosBuild(appId: ID!, buildParams: BuildParamsInput, job: IosJobInput!, metadata: BuildMetadataInput): CreateBuildResult!
+
+  """Delete an EAS Build build"""
+  deleteBuild(buildId: ID!): Build!
+
+  """Retry an Android EAS Build"""
+  retryAndroidBuild(buildId: ID!, jobOverrides: AndroidJobOverridesInput): Build!
+
+  """Retry an EAS Build build"""
+  retryBuild(buildId: ID!): Build! @deprecated(reason: "Use retryAndroidBuild and retryIosBuild instead")
+
+  """Retry an iOS EAS Build"""
+  retryIosBuild(buildId: ID!, jobOverrides: IosJobOverridesInput): Build!
+
+  """Update metadata for EAS Build build"""
+  updateBuildMetadata(buildId: ID!, metadata: BuildMetadataInput!): Build!
+}
+
+interface BuildOrBuildJob {
+  id: ID!
+}
+
+type BuildOrBuildJobQuery {
+  """Look up EAS Build or Classic Build Job by ID"""
+  byId(buildOrBuildJobId: ID!): EASBuildOrClassicBuildJob!
+}
+
+input BuildParamsInput {
+  reactNativeVersion: String
+  resourceClass: BuildResourceClass!
+  sdkVersion: String
+}
+
+type BuildPlanCreditThresholdExceededMetadata {
+  account: Account!
+  buildCreditUsage: Int!
+  planLimit: Int!
+  threshold: Int!
+}
+
+enum BuildPriority {
+  HIGH
+  NORMAL
+  NORMAL_PLUS
+}
+
+"""Publicly visible data for a Build."""
+type BuildPublicData {
+  artifacts: PublicArtifacts!
+  distribution: DistributionType
+  id: ID!
+  platform: AppPlatform!
+  project: ProjectPublicData!
+  status: BuildStatus!
+}
+
+type BuildPublicDataQuery {
+  """Get BuildPublicData by ID"""
+  byId(id: ID!): BuildPublicData
+}
+
+type BuildQuery {
+  """
+  Get all builds.
+  By default, they are sorted from latest to oldest.
+  Available only for admin users.
+  """
+  all(limit: Int, offset: Int, order: Order, statuses: [BuildStatus!]): [Build!]!
+
+  """
+  Get all builds for a specific app.
+  They are sorted from latest to oldest.
+  """
+  allForApp(appId: String!, limit: Int, offset: Int, platform: AppPlatform, status: BuildStatus): [Build]! @deprecated(reason: "Use App.builds instead")
+
+  """Look up EAS Build by build ID"""
+  byId(buildId: ID!): Build!
+}
+
+input BuildResignInput {
+  applicationArchiveSource: ProjectArchiveSourceInput
+}
+
+enum BuildResourceClass {
+  ANDROID_DEFAULT
+  ANDROID_LARGE
+  ANDROID_MEDIUM
+  IOS_DEFAULT
+  IOS_INTEL_LARGE @deprecated(reason: "Use IOS_INTEL_MEDIUM instead")
+  IOS_INTEL_MEDIUM
+  IOS_LARGE
+  IOS_M1_LARGE @deprecated(reason: "Use IOS_M_MEDIUM instead")
+  IOS_M1_MEDIUM
+  IOS_MEDIUM
+  IOS_M_LARGE
+  IOS_M_MEDIUM
+  LEGACY
+}
+
+enum BuildRetryDisabledReason {
+  ALREADY_RETRIED
+  INVALID_STATUS
+  IS_GITHUB_BUILD
+  NOT_COMPLETED_YET
+  TOO_MUCH_TIME_ELAPSED
+}
+
+enum BuildStatus {
+  CANCELED
+  ERRORED
+  FINISHED
+  IN_PROGRESS
+  IN_QUEUE
+  NEW
+  PENDING_CANCEL
+}
+
+enum BuildTrigger {
+  EAS_CLI
+  GIT_BASED_INTEGRATION
+}
+
+input BuildUpdatesInput {
+  channel: String
+}
+
+enum BuildWorkflow {
+  GENERIC
+  MANAGED
+  UNKNOWN
+}
+
+type Card {
+  brand: String
+  cardHolder: String
+  expMonth: Int
+  expYear: Int
+  last4: String
+}
+
+input ChannelFilterInput {
+  searchTerm: String
+}
+
+type Charge {
+  amount: Int!
+  createdAt: DateTime!
+  id: ID!
+  invoiceId: String
+  paid: Boolean!
+  receiptUrl: String
+  wasRefunded: Boolean!
+}
+
+type CodeSigningInfo {
+  alg: String!
+  keyid: String!
+  sig: String!
+}
+
+input CodeSigningInfoInput {
+  alg: String!
+  keyid: String!
+  sig: String!
+}
+
+type Concurrencies {
+  android: Int!
+  ios: Int!
+  total: Int!
+}
+
+input CreateAccessTokenInput {
+  actorID: ID!
+  note: String
+}
+
+type CreateAccessTokenResponse {
+  """AccessToken created"""
+  accessToken: AccessToken!
+
+  """Full token string to be used for authentication"""
+  token: String!
+}
+
+input CreateAndroidSubmissionInput {
+  appId: ID!
+  archiveSource: SubmissionArchiveSourceInput
+  archiveUrl: String
+  config: AndroidSubmissionConfigInput!
+  submittedBuildId: ID
+}
+
+type CreateBuildResult {
+  build: Build!
+  deprecationInfo: EASBuildDeprecationInfo
+}
+
+input CreateEnvironmentSecretInput {
+  name: String!
+  type: EnvironmentSecretType
+  value: String!
+}
+
+input CreateGitHubAppInstallationInput {
+  accountId: ID!
+  installationIdentifier: Int!
+}
+
+input CreateGitHubBuildTriggerInput {
+  appId: ID!
+  autoSubmit: Boolean!
+  buildProfile: String!
+  isActive: Boolean!
+  platform: AppPlatform!
+
+  """
+  A branch or tag name, or a wildcard pattern where the code change originates from. For example, `main` or `release/*`.
+  """
+  sourcePattern: String!
+
+  """
+  A branch name or a wildcard pattern that the pull request targets. For example, `main` or `release/*`.
+  """
+  targetPattern: String
+  type: GitHubBuildTriggerType!
+}
+
+input CreateGitHubRepositoryInput {
+  appId: ID!
+  githubAppInstallationId: ID!
+  githubRepositoryIdentifier: Int!
+  nodeIdentifier: String!
+}
+
+input CreateGitHubRepositorySettingsInput {
+  appId: ID!
+
+  """
+  The base directory is the directory to change to before starting a build. This string should be a properly formatted POSIX path starting with '/', './', or the name of the directory relative to the root of the repository. Valid examples include: '/apps/expo-app', './apps/expo-app', and 'apps/expo-app'. This is intended for monorepos or apps that live in a subdirectory of a repository.
+  """
+  baseDirectory: String!
+}
+
+input CreateIosSubmissionInput {
+  appId: ID!
+  archiveSource: SubmissionArchiveSourceInput
+  archiveUrl: String
+  config: IosSubmissionConfigInput!
+  submittedBuildId: ID
+}
+
+type CreateServerlessFunctionUploadUrlResult {
+  formDataFields: JSONObject!
+  url: String!
+}
+
+type CreateSubmissionResult {
+  """Created submission"""
+  submission: Submission!
+}
+
+input CustomBuildConfigInput {
+  path: String!
+}
+
+"""Date custom scalar type"""
+scalar DateTime
+
+type DeleteAccessTokenResult {
+  id: ID!
+}
+
+type DeleteAccountResult {
+  id: ID!
+}
+
+type DeleteAccountSSOConfigurationResult {
+  id: ID!
+}
+
+type DeleteAndroidAppCredentialsResult {
+  id: ID!
+}
+
+type DeleteAndroidKeystoreResult {
+  id: ID!
+}
+
+type DeleteAppleDeviceResult {
+  id: ID!
+}
+
+type DeleteAppleDistributionCertificateResult {
+  id: ID!
+}
+
+type DeleteAppleProvisioningProfileResult {
+  id: ID!
+}
+
+type DeleteDiscordUserResult {
+  id: ID!
+}
+
+type DeleteEnvironmentSecretResult {
+  id: ID!
+}
+
+type DeleteGitHubUserResult {
+  id: ID!
+}
+
+type DeleteGoogleServiceAccountKeyResult {
+  id: ID!
+}
+
+type DeleteIosAppBuildCredentialsResult {
+  id: ID!
+}
+
+type DeleteIosAppCredentialsResult {
+  id: ID!
+}
+
+type DeleteRobotResult {
+  id: ID!
+}
+
+type DeleteSSOUserResult {
+  id: ID!
+}
+
+type DeleteUpdateBranchResult {
+  id: ID!
+}
+
+type DeleteUpdateChannelResult {
+  id: ID!
+}
+
+type DeleteUpdateGroupResult {
+  group: ID!
+}
+
+type DeleteWebhookResult {
+  id: ID!
+}
+
+type DeployServerlessFunctionResult {
+  url: String!
+}
+
+"""
+Represents a Deployment - a set of Builds with the same Runtime Version and Channel
+"""
+type Deployment {
+  builds(after: String, before: String, first: Int, last: Int): DeploymentBuildsConnection!
+  channel: UpdateChannel!
+  id: ID!
+
+  """Deployment query field"""
+  insights: DeploymentInsights!
+
+  """Ordered the same way as 'updateBranches' in UpdateChannel"""
+  latestUpdatesPerBranch(limit: Int!, offset: Int!): [LatestUpdateOnBranch!]!
+  runtime: Runtime!
+}
+
+type DeploymentBuildEdge {
+  cursor: String!
+  node: Build!
+}
+
+"""Represents the connection over the builds edge of a Deployment"""
+type DeploymentBuildsConnection {
+  edges: [DeploymentBuildEdge!]!
+  pageInfo: PageInfo!
+}
+
+type DeploymentEdge {
+  cursor: String!
+  node: Deployment!
+}
+
+input DeploymentFilterInput {
+  channelId: String
+  runtimeId: String
+}
+
+type DeploymentInsights {
+  id: ID!
+  mostPopularUpdates(timespan: InsightsTimespan!): [Update!]!
+  uniqueUsersOverTime(timespan: InsightsTimespan!): UniqueUsersOverTimeData!
+}
+
+"""Represents the connection over the deployments edge of an App"""
+type DeploymentsConnection {
+  edges: [DeploymentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type DiscordUser {
+  discordIdentifier: String!
+  id: ID!
+  metadata: DiscordUserMetadata
+  userActor: UserActor!
+}
+
+type DiscordUserMetadata {
+  discordAvatarUrl: String!
+  discordDiscriminator: String!
+  discordUsername: String!
+}
+
+type DiscordUserMutation {
+  """Delete a Discord User by ID"""
+  deleteDiscordUser(id: ID!): DeleteDiscordUserResult!
+}
+
+enum DistributionType {
+  INTERNAL
+  SIMULATOR
+  STORE
+}
+
+enum EASBuildBillingResourceClass {
+  LARGE
+  MEDIUM
+}
+
+type EASBuildDeprecationInfo {
+  message: String!
+  type: EASBuildDeprecationInfoType!
+}
+
+enum EASBuildDeprecationInfoType {
+  INTERNAL
+  USER_FACING
+}
+
+union EASBuildOrClassicBuildJob = Build | BuildJob
+
+enum EASService {
+  BUILDS
+  UPDATES
+}
+
+enum EASServiceMetric {
+  ASSETS_REQUESTS
+  BANDWIDTH_USAGE
+  BUILDS
+  MANIFEST_REQUESTS
+  UNIQUE_UPDATERS
+  UNIQUE_USERS
+}
+
+type EASTotalPlanEnablement {
+  total: Int!
+  unit: EASTotalPlanEnablementUnit
+}
+
+enum EASTotalPlanEnablementUnit {
+  BUILD
+  BYTE
+  CONCURRENCY
+  REQUEST
+  UPDATER
+  USER
+}
+
+input EditUpdateBranchInput {
+  appId: ID
+  id: ID
+  name: String
+  newName: String!
+}
+
+type EmailSubscriptionMutation {
+  addUser(addUserInput: AddUserInput!): AddUserPayload!
+}
+
+type EnvironmentSecret {
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+  type: EnvironmentSecretType!
+  updatedAt: DateTime!
+}
+
+type EnvironmentSecretMutation {
+  """Create an environment secret for an Account"""
+  createEnvironmentSecretForAccount(accountId: String!, environmentSecretData: CreateEnvironmentSecretInput!): EnvironmentSecret!
+
+  """Create an environment secret for an App"""
+  createEnvironmentSecretForApp(appId: String!, environmentSecretData: CreateEnvironmentSecretInput!): EnvironmentSecret!
+
+  """Delete an environment secret"""
+  deleteEnvironmentSecret(id: String!): DeleteEnvironmentSecretResult!
+}
+
+enum EnvironmentSecretType {
+  FILE_BASE64
+  STRING
+}
+
+type EstimatedOverageAndCost {
+  id: ID!
+
+  """The limit, in units, allowed by this plan"""
+  limit: Float!
+  metadata: AccountUsageMetadata
+  metricType: UsageMetricType!
+  service: EASService!
+  serviceMetric: EASServiceMetric!
+
+  """Total cost of this particular metric, in cents"""
+  totalCost: Int!
+  value: Float!
+}
+
+type EstimatedUsage {
+  id: ID!
+  limit: Float!
+  metricType: UsageMetricType!
+  service: EASService!
+  serviceMetric: EASServiceMetric!
+  value: Float!
+}
+
+enum Experiment {
+  ORBIT
+}
+
+type ExperimentationQuery {
+  """Get device experimentation config"""
+  deviceConfig: JSONObject!
+
+  """
+  Get experimentation unit to use for device experiments. In this case, it is the IP address.
+  """
+  deviceExperimentationUnit: ID!
+
+  """Get user experimentation config"""
+  userConfig: JSONObject!
+}
+
+union FcmSnippet = FcmSnippetLegacy | FcmSnippetV1
+
+type FcmSnippetLegacy {
+  firstFourCharacters: String!
+  lastFourCharacters: String!
+}
+
+type FcmSnippetV1 {
+  clientId: String
+  keyId: String!
+  projectId: String!
+  serviceAccountEmail: String!
+}
+
+enum Feature {
+  """Priority Builds"""
+  BUILDS
+
+  """Funds support for open source development"""
+  OPEN_SOURCE
+
+  """Top Tier Support"""
+  SUPPORT
+
+  """Share access to projects"""
+  TEAMS
+}
+
+type FutureSubscription {
+  createdAt: DateTime!
+  id: ID!
+  meteredBillingStatus: MeteredBillingStatus!
+  planId: String!
+  startDate: DateTime!
+}
+
+type GetSignedAssetUploadSpecificationsResult {
+  specifications: [String!]!
+}
+
+enum GitHubAppEnvironment {
+  DEVELOPMENT
+  PRODUCTION
+  STAGING
+}
+
+type GitHubAppInstallation {
+  accessibleRepositories(page: Int, perPage: Int): GitHubRepositoryPaginationResult!
+  account: Account!
+  actor: Actor
+  id: ID!
+  installationIdentifier: Int!
+  metadata: GitHubAppInstallationMetadata!
+}
+
+type GitHubAppInstallationAccessibleRepository {
+  defaultBranch: String
+  description: String
+  id: Int!
+  name: String!
+  nodeId: String!
+  owner: GitHubRepositoryOwner!
+  private: Boolean!
+  url: String!
+}
+
+type GitHubAppInstallationMetadata {
+  githubAccountAvatarUrl: String
+  githubAccountName: String
+  installationStatus: GitHubAppInstallationStatus!
+}
+
+type GitHubAppInstallationMutation {
+  """Create a GitHub App installation for an Account"""
+  createGitHubAppInstallationForAccount(githubAppInstallationData: CreateGitHubAppInstallationInput!): GitHubAppInstallation!
+
+  """Delete a GitHub App installation by ID"""
+  deleteGitHubAppInstallation(githubAppInstallationId: ID!): GitHubAppInstallation!
+}
+
+enum GitHubAppInstallationStatus {
+  ACTIVE
+  NOT_INSTALLED
+  SUSPENDED
+}
+
+type GitHubAppMutation {
+  """
+  Create a GitHub build for an app. Returns the ID of the background job receipt. Use BackgroundJobReceiptQuery to get the status of the job.
+  """
+  createGitHubBuild(buildInput: GitHubBuildInput!): BackgroundJobReceipt!
+}
+
+type GitHubAppQuery {
+  appIdentifier: String!
+  clientIdentifier: String!
+  environment: GitHubAppEnvironment!
+  installation(id: ID!): GitHubAppInstallation!
+  name: String!
+  searchRepositories(githubAppInstallationId: ID!, query: String!): GitHubRepositoryPaginationResult!
+}
+
+input GitHubBuildInput {
+  appId: ID!
+  baseDirectory: String
+  buildProfile: String!
+  gitRef: String!
+  platform: AppPlatform!
+}
+
+type GitHubBuildTrigger {
+  app: App!
+  autoSubmit: Boolean!
+  buildProfile: String!
+  createdAt: DateTime!
+  id: ID!
+  isActive: Boolean!
+  lastRunAt: DateTime
+  platform: AppPlatform!
+  sourcePattern: String!
+  targetPattern: String
+  type: GitHubBuildTriggerType!
+  updatedAt: DateTime!
+}
+
+type GitHubBuildTriggerMutation {
+  """Create GitHub build trigger for an App"""
+  createGitHubBuildTrigger(githubBuildTriggerData: CreateGitHubBuildTriggerInput!): GitHubBuildTrigger!
+
+  """Delete GitHub build trigger by ID"""
+  deleteGitHubBuildTrigger(githubBuildTriggerId: ID!): GitHubBuildTrigger!
+
+  """Update a GitHub build trigger by ID"""
+  updateGitHubBuildTrigger(githubBuildTriggerData: UpdateGitHubBuildTriggerInput!, githubBuildTriggerId: ID!): GitHubBuildTrigger!
+}
+
+enum GitHubBuildTriggerType {
+  PULL_REQUEST_UPDATED
+  PUSH_TO_BRANCH
+  TAG_UPDATED
+}
+
+type GitHubRepository {
+  app: App!
+  githubAppInstallation: GitHubAppInstallation!
+  githubRepositoryIdentifier: Int!
+  githubRepositoryUrl: String
+  id: ID!
+  metadata: GitHubRepositoryMetadata!
+  nodeIdentifier: String!
+}
+
+type GitHubRepositoryMetadata {
+  defaultBranch: String
+  githubRepoDescription: String
+  githubRepoName: String!
+  githubRepoOwnerName: String!
+  githubRepoUrl: String!
+  lastPushed: DateTime!
+  lastUpdated: DateTime!
+  private: Boolean!
+}
+
+type GitHubRepositoryMutation {
+  """Create a GitHub repository for an App"""
+  createGitHubRepository(githubRepositoryData: CreateGitHubRepositoryInput!): GitHubRepository!
+
+  """Delete a GitHub repository by ID"""
+  deleteGitHubRepository(githubRepositoryId: ID!): GitHubRepository!
+}
+
+type GitHubRepositoryOwner {
+  avatarUrl: String!
+  id: Int!
+  login: String!
+  url: String!
+}
+
+type GitHubRepositoryPaginationResult {
+  repositories: [GitHubAppInstallationAccessibleRepository!]!
+  totalCount: Int!
+}
+
+type GitHubRepositorySettings {
+  app: App!
+  baseDirectory: String!
+  id: ID!
+}
+
+type GitHubRepositorySettingsMutation {
+  """Create GitHub repository settings for an App"""
+  createGitHubRepositorySettings(githubRepositorySettingsData: CreateGitHubRepositorySettingsInput!): GitHubRepositorySettings!
+
+  """Delete GitHub repository settings by ID"""
+  deleteGitHubRepositorySettings(githubRepositorySettingsId: ID!): GitHubRepositorySettings!
+
+  """Update GitHub repository settings"""
+  updateGitHubRepositorySettings(githubRepositorySettingsData: UpdateGitHubRepositorySettingsInput!, githubRepositorySettingsId: ID!): GitHubRepositorySettings!
+}
+
+type GitHubUser {
+  githubUserIdentifier: String!
+  id: ID!
+  metadata: GitHubUserMetadata
+  userActor: UserActor!
+}
+
+type GitHubUserMetadata {
+  avatarUrl: String!
+  login: String!
+  name: String
+  url: String!
+}
+
+type GitHubUserMutation {
+  """Delete a GitHub User by ID"""
+  deleteGitHubUser(id: ID!): DeleteGitHubUserResult!
+}
+
+type GoogleServiceAccountKey {
+  account: Account!
+  clientEmail: String!
+  clientIdentifier: String!
+  createdAt: DateTime!
+  id: ID!
+  privateKeyIdentifier: String!
+  projectIdentifier: String!
+  updatedAt: DateTime!
+}
+
+input GoogleServiceAccountKeyInput {
+  jsonKey: JSONObject!
+}
+
+type GoogleServiceAccountKeyMutation {
+  """Create a Google Service Account Key"""
+  createGoogleServiceAccountKey(accountId: ID!, googleServiceAccountKeyInput: GoogleServiceAccountKeyInput!): GoogleServiceAccountKey!
+
+  """Delete a Google Service Account Key"""
+  deleteGoogleServiceAccountKey(id: ID!): DeleteGoogleServiceAccountKeyResult!
+}
+
+input InsightsTimespan {
+  end: DateTime!
+  start: DateTime!
+}
+
+type Invoice {
+  """The total amount due for the invoice, in cents"""
+  amountDue: Int!
+
+  """
+  The total amount that has been paid, considering any discounts or account credit. Value is in cents.
+  """
+  amountPaid: Int!
+
+  """
+  The total amount that needs to be paid, considering any discounts or account credit. Value is in cents.
+  """
+  amountRemaining: Int!
+  discount: InvoiceDiscount
+  id: ID!
+  lineItems: [InvoiceLineItem!]!
+  period: InvoicePeriod!
+  startingBalance: Int!
+  subtotal: Int!
+  total: Int!
+  totalDiscountedAmount: Int!
+}
+
+type InvoiceDiscount {
+  """The coupon's discount value, in percentage or in dollar amount"""
+  amount: Int!
+  duration: String!
+  durationInMonths: Int
+  id: ID!
+  name: String!
+  type: InvoiceDiscountType!
+}
+
+enum InvoiceDiscountType {
+  AMOUNT
+  PERCENTAGE
+}
+
+type InvoiceLineItem {
+  """Line-item amount in cents"""
+  amount: Int!
+  description: String!
+  id: ID!
+  period: InvoicePeriod!
+  plan: InvoiceLineItemPlan!
+  proration: Boolean!
+  quantity: Int!
+  title: String!
+}
+
+type InvoiceLineItemPlan {
+  id: ID!
+  name: String!
+}
+
+type InvoicePeriod {
+  end: DateTime!
+  start: DateTime!
+}
+
+type InvoiceQuery {
+  """Preview an upgrade subscription invoice, with proration"""
+  previewInvoiceForSubscriptionUpdate(accountId: String!, couponCode: String, newPlanIdentifier: String!): Invoice!
+}
+
+type IosAppBuildCredentials {
+  appleDevices: [AppleDevice] @deprecated(reason: "Get Apple Devices from AppleProvisioningProfile instead")
+  distributionCertificate: AppleDistributionCertificate
+  id: ID!
+  iosAppCredentials: IosAppCredentials!
+  iosDistributionType: IosDistributionType!
+  provisioningProfile: AppleProvisioningProfile
+}
+
+input IosAppBuildCredentialsFilter {
+  iosDistributionType: IosDistributionType
+}
+
+input IosAppBuildCredentialsInput {
+  distributionCertificateId: ID!
+  iosDistributionType: IosDistributionType!
+  provisioningProfileId: ID!
+}
+
+type IosAppBuildCredentialsMutation {
+  """Create a set of build credentials for an iOS app"""
+  createIosAppBuildCredentials(iosAppBuildCredentialsInput: IosAppBuildCredentialsInput!, iosAppCredentialsId: ID!): IosAppBuildCredentials!
+
+  """Disassociate the build credentials from an iOS app"""
+  deleteIosAppBuildCredentials(id: ID!): DeleteIosAppBuildCredentialsResult!
+
+  """Set the distribution certificate to be used for an iOS app"""
+  setDistributionCertificate(distributionCertificateId: ID!, id: ID!): IosAppBuildCredentials!
+
+  """Set the provisioning profile to be used for an iOS app"""
+  setProvisioningProfile(id: ID!, provisioningProfileId: ID!): IosAppBuildCredentials!
+}
+
+type IosAppCredentials {
+  app: App!
+  appStoreConnectApiKeyForSubmissions: AppStoreConnectApiKey
+  appleAppIdentifier: AppleAppIdentifier!
+  appleTeam: AppleTeam
+  id: ID!
+  iosAppBuildCredentialsArray(filter: IosAppBuildCredentialsFilter): [IosAppBuildCredentials!]! @deprecated(reason: "use iosAppBuildCredentialsList instead")
+  iosAppBuildCredentialsList(filter: IosAppBuildCredentialsFilter): [IosAppBuildCredentials!]!
+  pushKey: ApplePushKey
+}
+
+input IosAppCredentialsFilter {
+  appleAppIdentifierId: String
+}
+
+input IosAppCredentialsInput {
+  appStoreConnectApiKeyForSubmissionsId: ID
+  appleTeamId: ID
+  pushKeyId: ID
+}
+
+type IosAppCredentialsMutation {
+  """Create a set of credentials for an iOS app"""
+  createIosAppCredentials(appId: ID!, appleAppIdentifierId: ID!, iosAppCredentialsInput: IosAppCredentialsInput!): IosAppCredentials!
+
+  """Delete a set of credentials for an iOS app"""
+  deleteIosAppCredentials(id: ID!): DeleteIosAppCredentialsResult!
+
+  """Set the App Store Connect Api Key to be used for submitting an iOS app"""
+  setAppStoreConnectApiKeyForSubmissions(ascApiKeyId: ID!, id: ID!): IosAppCredentials!
+
+  """Set the push key to be used in an iOS app"""
+  setPushKey(id: ID!, pushKeyId: ID!): IosAppCredentials!
+}
+
+"""@deprecated Use developmentClient option instead."""
+enum IosBuildType {
+  DEVELOPMENT_CLIENT
+  RELEASE
+}
+
+input IosBuilderEnvironmentInput {
+  bundler: String
+  cocoapods: String
+  env: JSONObject
+  expoCli: String
+  fastlane: String
+  image: String
+  node: String
+  yarn: String
+}
+
+enum IosDistributionType {
+  AD_HOC
+  APP_STORE
+  DEVELOPMENT
+  ENTERPRISE
+}
+
+input IosJobDistributionCertificateInput {
+  dataBase64: String!
+  password: String!
+}
+
+input IosJobInput {
+  applicationArchivePath: String
+
+  """@deprecated"""
+  artifactPath: String
+  buildArtifactPaths: [String!]
+  buildConfiguration: String
+  buildProfile: String
+
+  """@deprecated"""
+  buildType: IosBuildType
+  builderEnvironment: IosBuilderEnvironmentInput
+  cache: BuildCacheInput
+  customBuildConfig: CustomBuildConfigInput
+  developmentClient: Boolean
+
+  """@deprecated"""
+  distribution: DistributionType
+  experimental: JSONObject
+  mode: BuildMode
+  projectArchive: ProjectArchiveSourceInput!
+  projectRootDirectory: String!
+  releaseChannel: String
+  scheme: String
+  secrets: IosJobSecretsInput
+  simulator: Boolean
+  triggeredBy: BuildTrigger
+  type: BuildWorkflow!
+  updates: BuildUpdatesInput
+  username: String
+  version: IosJobVersionInput
+}
+
+input IosJobOverridesInput {
+  applicationArchivePath: String
+
+  """@deprecated"""
+  artifactPath: String
+  buildArtifactPaths: [String!]
+  buildConfiguration: String
+  buildProfile: String
+
+  """@deprecated"""
+  buildType: IosBuildType
+  builderEnvironment: IosBuilderEnvironmentInput
+  cache: BuildCacheInput
+  developmentClient: Boolean
+
+  """@deprecated"""
+  distribution: DistributionType
+  experimental: JSONObject
+  mode: BuildMode
+  releaseChannel: String
+  resign: BuildResignInput
+  scheme: String
+  secrets: IosJobSecretsInput
+  simulator: Boolean
+  type: BuildWorkflow
+  updates: BuildUpdatesInput
+  username: String
+  version: IosJobVersionInput
+}
+
+input IosJobSecretsInput {
+  buildCredentials: [IosJobTargetCredentialsInput]
+  robotAccessToken: String
+}
+
+input IosJobTargetCredentialsInput {
+  distributionCertificate: IosJobDistributionCertificateInput!
+  provisioningProfileBase64: String!
+  targetName: String!
+}
+
+input IosJobVersionInput {
+  buildNumber: String!
+}
+
+"""@deprecated Use developmentClient option instead."""
+enum IosManagedBuildType {
+  DEVELOPMENT_CLIENT
+  RELEASE
+}
+
+enum IosSchemeBuildConfiguration {
+  DEBUG
+  RELEASE
+}
+
+type IosSubmissionConfig {
+  appleIdUsername: String
+  ascApiKeyId: String
+  ascAppIdentifier: String!
+}
+
+input IosSubmissionConfigInput {
+  appleAppSpecificPassword: String
+  appleIdUsername: String
+  archiveUrl: String
+  ascApiKey: AscApiKeyInput
+  ascApiKeyId: String
+  ascAppIdentifier: String!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject
+
+type KeystoreGenerationUrl {
+  id: ID!
+  url: String!
+}
+
+type KeystoreGenerationUrlMutation {
+  """Create a Keystore Generation URL"""
+  createKeystoreGenerationUrl: KeystoreGenerationUrl!
+}
+
+type LatestUpdateOnBranch {
+  branchId: String!
+  update: Update
+}
+
+type LeaveAccountResult {
+  success: Boolean!
+}
+
+type LineChartData {
+  datasets: [LineDataset!]!
+  labels: [String!]!
+}
+
+type LineDataset {
+  data: [Int]!
+  id: ID!
+  label: String!
+}
+
+enum MailchimpAudience {
+  EXPO_DEVELOPERS
+}
+
+enum MailchimpTag {
+  DEV_CLIENT_USERS
+  EAS_MASTER_LIST
+}
+
+type MailchimpTagPayload {
+  id: Int
+  name: String
+}
+
+type MeMutation {
+  """Add an additional second factor device"""
+  addSecondFactorDevice(deviceConfiguration: SecondFactorDeviceConfiguration!, otp: String!): SecondFactorDeviceConfigurationResult!
+
+  """
+  Certify an initiated second factor authentication method for the current user
+  """
+  certifySecondFactorDevice(otp: String!): SecondFactorBooleanResult!
+
+  """Create a new Account and grant this User the owner Role"""
+  createAccount(accountData: AccountDataInput!): Account!
+
+  """Delete an Account created via createAccount"""
+  deleteAccount(accountId: ID!): DeleteAccountResult!
+
+  """
+  Delete a SSO user. Actor must be an owner on the SSO user's SSO account.
+  """
+  deleteSSOUser(ssoUserId: ID!): DeleteSSOUserResult!
+
+  """Delete a second factor device"""
+  deleteSecondFactorDevice(otp: String!, userSecondFactorDeviceId: ID!): SecondFactorBooleanResult!
+
+  """Delete a Snack that the current user owns"""
+  deleteSnack(snackId: ID!): Snack!
+
+  """Disable all second factor authentication for the current user"""
+  disableSecondFactorAuthentication(otp: String!): SecondFactorBooleanResult!
+
+  """Initiate setup of two-factor authentication for the current user"""
+  initiateSecondFactorAuthentication(deviceConfigurations: [SecondFactorDeviceConfiguration!]!, recaptchaResponseToken: String): SecondFactorInitiationResult!
+
+  """Leave an Account (revoke own permissions on Account)"""
+  leaveAccount(accountId: ID!): LeaveAccountResult!
+
+  """
+  Purge unfinished two-factor authentication setup for the current user if not fully-set-up
+  """
+  purgeUnfinishedSecondFactorAuthentication: SecondFactorBooleanResult!
+
+  """Regenerate backup codes for the current user"""
+  regenerateSecondFactorBackupCodes(otp: String!): SecondFactorRegenerateBackupCodesResult!
+
+  """
+  Send SMS OTP to a second factor device for use during device setup or during change confirmation
+  """
+  sendSMSOTPToSecondFactorDevice(userSecondFactorDeviceId: ID!): SecondFactorBooleanResult!
+
+  """Set the user's primary second factor device"""
+  setPrimarySecondFactorDevice(userSecondFactorDeviceId: ID!): SecondFactorBooleanResult!
+
+  """Transfer project to a different Account"""
+  transferApp(appId: ID!, destinationAccountId: ID!): App!
+
+  """Unpublish an App that the current user owns"""
+  unpublishApp(appId: ID!): App!
+
+  """Update an App that the current user owns"""
+  updateApp(appData: AppDataInput!): App!
+
+  """Update the current regular user's data"""
+  updateProfile(userData: UserDataInput!): User!
+
+  """Update the current SSO user's data"""
+  updateSSOProfile(userData: SSOUserDataInput!): SSOUser!
+}
+
+type MeteredBillingStatus {
+  EAS_BUILD: Boolean!
+  EAS_UPDATE: Boolean!
+}
+
+type Notification {
+  createdAt: DateTime!
+  event: NotificationEvent!
+  id: ID!
+  isRead: Boolean!
+  metadata: NotificationMetadata
+  type: NotificationType!
+  updatedAt: DateTime!
+  websiteMessage: String!
+}
+
+enum NotificationEvent {
+  BUILD_COMPLETE
+  BUILD_LIMIT_THRESHOLD_EXCEEDED
+  BUILD_PLAN_CREDIT_THRESHOLD_EXCEEDED
+  SUBMISSION_COMPLETE
+  TEST
+}
+
+union NotificationMetadata = BuildLimitThresholdExceededMetadata | BuildPlanCreditThresholdExceededMetadata | TestNotificationMetadata
+
+type NotificationSubscription {
+  account: Account
+  actor: Actor
+  app: App
+  createdAt: DateTime!
+  event: NotificationEvent!
+  id: ID!
+  type: NotificationType!
+}
+
+input NotificationSubscriptionFilter {
+  accountId: ID
+  appId: ID
+  event: NotificationEvent
+  type: NotificationType
+}
+
+type NotificationSubscriptionMutation {
+  subscribeToEventForAccount(input: AccountNotificationSubscriptionInput!): SubscribeToNotificationResult!
+  subscribeToEventForApp(input: AppNotificationSubscriptionInput!): SubscribeToNotificationResult!
+  unsubscribe(id: ID!): UnsubscribeFromNotificationResult!
+}
+
+type NotificationThresholdExceeded {
+  count: Int!
+  limit: Int!
+  threshold: Int!
+  type: BuildLimitThresholdExceededMetadataType!
+}
+
+enum NotificationType {
+  EMAIL
+  WEB
+}
+
+type Offer {
+  features: [Feature]
+  id: ID!
+  prerequisite: OfferPrerequisite
+  price: Int!
+  quantity: Int
+  stripeId: ID!
+  trialLength: Int
+  type: OfferType!
+}
+
+type OfferPrerequisite {
+  stripeIds: [String!]!
+  type: String!
+}
+
+enum OfferType {
+  """Addon, or supplementary subscription"""
+  ADDON
+
+  """Advanced Purchase of Paid Resource"""
+  PREPAID
+
+  """Term subscription"""
+  SUBSCRIPTION
+}
+
+enum Order {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+input PartialManifest {
+  assets: [PartialManifestAsset]!
+  extra: JSONObject
+  launchAsset: PartialManifestAsset!
+}
+
+input PartialManifestAsset {
+  bundleKey: String!
+  contentType: String!
+  fileExtension: String
+  fileSHA256: String!
+  storageKey: String!
+}
+
+type PaymentDetails {
+  address: Address
+  card: Card
+  id: ID!
+}
+
+enum Permission {
+  ADMIN
+  OWN
+  PUBLISH
+  VIEW
+}
+
+union PlanEnablement = Concurrencies | EASTotalPlanEnablement
+
+interface Project {
+  description: String!
+  fullName: String!
+  iconUrl: String @deprecated
+  id: ID!
+  name: String!
+  published: Boolean!
+  slug: String!
+  updated: DateTime!
+  username: String!
+}
+
+input ProjectArchiveSourceInput {
+  bucketKey: String
+  gitRef: String
+  repositoryUrl: String
+  type: ProjectArchiveSourceType!
+  url: String
+}
+
+enum ProjectArchiveSourceType {
+  GCS
+  GIT
+  NONE
+  S3
+  URL
+}
+
+type ProjectPublicData {
+  fullName: String!
+  id: ID!
+}
+
+type ProjectQuery {
+  byAccountNameAndSlug(accountName: String!, platform: AppPlatform, sdkVersions: [String], slug: String!): Project!
+  byPaths(paths: [String]): [Project]! @deprecated
+  byUsernameAndSlug(platform: String, sdkVersions: [String], slug: String!, username: String!): Project! @deprecated(reason: "See byAccountNameAndSlug")
+}
+
+type PublicArtifacts {
+  applicationArchiveUrl: String
+  buildUrl: String
+}
+
+input PublishUpdateGroupInput {
+  awaitingCodeSigningInfo: Boolean
+  branchId: String!
+  excludedAssets: [PartialManifestAsset!]
+  gitCommitHash: String
+  isGitWorkingTreeDirty: Boolean
+  message: String
+  rollBackToEmbeddedInfoGroup: UpdateRollBackToEmbeddedGroup
+  runtimeVersion: String!
+  updateInfoGroup: UpdateInfoGroup
+}
+
+type RescindUserInvitationResult {
+  id: ID!
+}
+
+"""Represents a robot (not human) actor."""
+type Robot implements Actor {
+  """Access Tokens belonging to this actor"""
+  accessTokens: [AccessToken!]!
+
+  """Associated accounts"""
+  accounts: [Account!]!
+  created: DateTime!
+  displayName: String!
+
+  """Experiments associated with this actor"""
+  experiments: [ActorExperiment!]!
+
+  """
+  Server feature gate values for this actor, optionally filtering by desired gates.
+  Only resolves for the viewer.
+  """
+  featureGates(filter: [String!]): JSONObject!
+  firstName: String
+  id: ID!
+  isExpoAdmin: Boolean!
+}
+
+input RobotDataInput {
+  name: String
+}
+
+type RobotMutation {
+  """Create a Robot and grant it Permissions on an Account"""
+  createRobotForAccount(accountID: String!, permissions: [Permission]!, robotData: RobotDataInput): Robot!
+
+  """Delete a Robot"""
+  deleteRobot(id: String!): DeleteRobotResult!
+
+  """Update a Robot"""
+  updateRobot(id: String!, robotData: RobotDataInput!): Robot!
+}
+
+enum Role {
+  ADMIN
+  CUSTOM
+  DEVELOPER
+  HAS_ADMIN
+  NOT_ADMIN
+  OWNER
+  VIEW_ONLY
+}
+
+type RootMutation {
+  """This is a placeholder field"""
+  _doNotUse: String @deprecated(reason: "Not used.")
+
+  """
+  Mutations that create, read, update, and delete AccessTokens for Actors
+  """
+  accessToken: AccessTokenMutation!
+
+  """Mutations that modify an Account"""
+  account(accountName: ID!): AccountMutation!
+
+  """Mutations that create, update, and delete an AccountSSOConfiguration"""
+  accountSSOConfiguration: AccountSSOConfigurationMutation!
+
+  """Mutations for Actor experiments"""
+  actorExperiment: ActorExperimentMutation!
+
+  """Mutations that modify the build credentials for an Android app"""
+  androidAppBuildCredentials: AndroidAppBuildCredentialsMutation!
+
+  """Mutations that modify the credentials for an Android app"""
+  androidAppCredentials: AndroidAppCredentialsMutation!
+
+  """Mutations that modify an FCM credential"""
+  androidFcm: AndroidFcmMutation!
+
+  """Mutations that modify a Keystore"""
+  androidKeystore: AndroidKeystoreMutation!
+
+  """Mutations that modify an App"""
+  app(appId: ID): AppMutation
+
+  """Mutations that modify an App Store Connect Api Key"""
+  appStoreConnectApiKey: AppStoreConnectApiKeyMutation!
+
+  """Mutations that modify an AppVersion"""
+  appVersion: AppVersionMutation!
+
+  """Mutations that modify an Identifier for an iOS App"""
+  appleAppIdentifier: AppleAppIdentifierMutation!
+
+  """Mutations that modify an Apple Device"""
+  appleDevice: AppleDeviceMutation!
+
+  """Mutations that modify an Apple Device registration request"""
+  appleDeviceRegistrationRequest: AppleDeviceRegistrationRequestMutation!
+
+  """Mutations that modify a Distribution Certificate"""
+  appleDistributionCertificate: AppleDistributionCertificateMutation!
+
+  """Mutations that modify a Provisioning Profile"""
+  appleProvisioningProfile: AppleProvisioningProfileMutation!
+
+  """Mutations that modify an Apple Push Notification key"""
+  applePushKey: ApplePushKeyMutation!
+
+  """Mutations that modify an Apple Team"""
+  appleTeam: AppleTeamMutation!
+  asset: AssetMutation!
+
+  """Mutations that modify an EAS Build"""
+  build(buildId: ID): BuildMutation!
+
+  """Mutations that modify an BuildJob"""
+  buildJob(buildId: ID!): BuildJobMutation!
+
+  """Mutations for Discord users"""
+  discordUser: DiscordUserMutation!
+
+  """Mutations that modify an EmailSubscription"""
+  emailSubscription: EmailSubscriptionMutation!
+
+  """Mutations that create and delete EnvironmentSecrets"""
+  environmentSecret: EnvironmentSecretMutation!
+
+  """Mutations that utilize services facilitated by the GitHub App"""
+  githubApp: GitHubAppMutation!
+
+  """Mutations for GitHub App installations"""
+  githubAppInstallation: GitHubAppInstallationMutation!
+
+  """Mutations for GitHub build triggers"""
+  githubBuildTrigger: GitHubBuildTriggerMutation!
+
+  """Mutations for GitHub repositories"""
+  githubRepository: GitHubRepositoryMutation!
+
+  """Mutations for GitHub repository settings"""
+  githubRepositorySettings: GitHubRepositorySettingsMutation!
+
+  """Mutations for GitHub users"""
+  githubUser: GitHubUserMutation!
+
+  """Mutations that modify a Google Service Account Key"""
+  googleServiceAccountKey: GoogleServiceAccountKeyMutation!
+
+  """Mutations that modify the build credentials for an iOS app"""
+  iosAppBuildCredentials: IosAppBuildCredentialsMutation!
+
+  """Mutations that modify the credentials for an iOS app"""
+  iosAppCredentials: IosAppCredentialsMutation!
+  keystoreGenerationUrl: KeystoreGenerationUrlMutation!
+
+  """Mutations that modify the currently authenticated User"""
+  me: MeMutation!
+
+  """Mutations that modify a NotificationSubscription"""
+  notificationSubscription: NotificationSubscriptionMutation!
+
+  """Mutations that create, update, and delete Robots"""
+  robot: RobotMutation!
+  serverlessFunction: ServerlessFunctionMutation!
+
+  """Mutations that modify an EAS Submit submission"""
+  submission: SubmissionMutation!
+  update: UpdateMutation!
+  updateBranch: UpdateBranchMutation!
+  updateChannel: UpdateChannelMutation!
+  uploadSession: UploadSession!
+
+  """Mutations that create, delete, and accept UserInvitations"""
+  userInvitation: UserInvitationMutation!
+
+  """Mutations that create, delete, update Webhooks"""
+  webhook: WebhookMutation!
+
+  """Mutations that modify a websiteNotification"""
+  websiteNotifications: WebsiteNotificationMutation!
+}
+
+type RootQuery {
+  """This is a placeholder field"""
+  _doNotUse: String @deprecated(reason: "Not used.")
+
+  """Top-level query object for querying Accounts."""
+  account: AccountQuery!
+
+  """Top-level query object for querying AccountSSOConfigurationPublicData"""
+  accountSSOConfigurationPublicData: AccountSSOConfigurationPublicDataQuery!
+
+  """Top-level query object for querying Actors."""
+  actor: ActorQuery! @deprecated(reason: "Public actor queries are no longer supported")
+
+  """Public apps in the app directory"""
+  allPublicApps(
+    """Filter to use to filter public app list"""
+    filter: AppsFilter!
+    limit: Int
+    offset: Int
+
+    """Method to sort by"""
+    sort: AppSort!
+  ): [App] @deprecated(reason: "Use 'all' field under 'app'.")
+  app: AppQuery!
+
+  """Look up app by app id"""
+  appByAppId(appId: String!): App @deprecated(reason: "Use 'byId' field under 'app'.")
+
+  """
+  Top-level query object for querying Apple Device registration requests.
+  """
+  appleDeviceRegistrationRequest: AppleDeviceRegistrationRequestQuery!
+
+  """Top-level query object for querying Apple Teams."""
+  appleTeam: AppleTeamQuery!
+  asset: AssetQuery!
+  backgroundJobReceipt: BackgroundJobReceiptQuery!
+  buildJobs: BuildJobQuery!
+  buildOrBuildJob: BuildOrBuildJobQuery!
+
+  """Top-level query object for querying BuildPublicData publicly."""
+  buildPublicData: BuildPublicDataQuery!
+  builds: BuildQuery!
+
+  """Top-level query object for querying Experimentation configuration."""
+  experimentation: ExperimentationQuery!
+
+  """
+  Top-level query object for querying GitHub App information and resources it has access to.
+  """
+  githubApp: GitHubAppQuery!
+
+  """Top-level query object for querying Stripe Invoices."""
+  invoice: InvoiceQuery!
+
+  """
+  If authenticated as a typical end user, this is the appropriate top-level
+  query object
+  """
+  me: User
+
+  """
+  If authenticated as any type of Actor, this is the appropriate top-level
+  query object
+  """
+  meActor: Actor
+
+  """
+  If authenticated as any type of human end user (Actor types User or SSOUser),
+  this is the appropriate top-level query object
+  """
+  meUserActor: UserActor
+  project: ProjectQuery!
+  snack: SnackQuery!
+
+  """Top-level query object for querying Expo status page services."""
+  statuspageService: StatuspageServiceQuery!
+  submissions: SubmissionQuery!
+
+  """fetch all updates in a group"""
+  updatesByGroup(group: ID!): [Update!]!
+
+  """Top-level query object for querying Users."""
+  user: UserQuery! @deprecated(reason: "Public user queries are no longer supported")
+
+  """Top-level query object for querying UserActors."""
+  userActor: UserActorQuery! @deprecated(reason: "Public user queries are no longer supported")
+
+  """Top-level query object for querying UserActorPublicData publicly."""
+  userActorPublicData: UserActorPublicDataQuery!
+  userByUserId(userId: String!): User @deprecated(reason: "Use 'byId' field under 'user'.")
+  userByUsername(username: String!): User @deprecated(reason: "Use 'byUsername' field under 'user'.")
+
+  """Top-level query object for querying UserInvitationPublicData publicly."""
+  userInvitationPublicData: UserInvitationPublicDataQuery!
+
+  """
+  If authenticated as a typical end user, this is the appropriate top-level
+  query object
+  """
+  viewer: User
+
+  """Top-level query object for querying Webhooks."""
+  webhook: WebhookQuery!
+}
+
+type Runtime {
+  app: App!
+  firstBuildCreatedAt: DateTime!
+  id: ID!
+  version: String!
+}
+
+type RuntimeEdge {
+  cursor: String!
+  node: Runtime!
+}
+
+input RuntimeFilterInput {
+  """Only return runtimes shared with this branch"""
+  branchId: String
+}
+
+"""Represents the connection over the runtime edge of an App"""
+type RuntimesConnection {
+  edges: [RuntimeEdge!]!
+  pageInfo: PageInfo!
+}
+
+"""Represents a human SSO (not robot) actor."""
+type SSOUser implements Actor & UserActor {
+  """Access Tokens belonging to this actor, none at present"""
+  accessTokens: [AccessToken!]!
+  accounts: [Account!]!
+
+  """
+  Coalesced project activity for all apps belonging to all accounts this user belongs to. Only resolves for the viewer.
+  """
+  activityTimelineProjectActivities(
+    """ Offset the query """
+    createdBefore: DateTime
+
+    """ Types of objects to filter """
+    filterTypes: [ActivityTimelineProjectActivityType!]
+    limit: Int!
+  ): [ActivityTimelineProjectActivity!]!
+  appCount: Int!
+  appetizeCode: String @deprecated
+
+  """
+  Apps this user has published. If this user is the viewer, this field returns the apps the user has access to.
+  """
+  apps(includeUnpublished: Boolean, limit: Int!, offset: Int!): [App!]!
+  bestContactEmail: String
+  created: DateTime!
+
+  """Discord account linked to a user"""
+  discordUser: DiscordUser
+  displayName: String!
+
+  """Experiments associated with this actor"""
+  experiments: [ActorExperiment!]!
+
+  """
+  Server feature gate values for this actor, optionally filtering by desired gates.
+  Only resolves for the viewer.
+  """
+  featureGates(filter: [String!]): JSONObject!
+  firstName: String
+  fullName: String
+
+  """GitHub account linked to a user"""
+  githubUser: GitHubUser
+  githubUsername: String @deprecated
+  id: ID!
+  industry: String @deprecated
+  isExpoAdmin: Boolean!
+  lastName: String
+  location: String @deprecated
+  notificationSubscriptions(filter: NotificationSubscriptionFilter): [NotificationSubscription!]!
+
+  """Associated accounts"""
+  primaryAccount: Account!
+  profilePhoto: String!
+
+  """Snacks associated with this account"""
+  snacks(limit: Int!, offset: Int!): [Snack!]!
+  twitterUsername: String @deprecated
+  username: String!
+  websiteNotifications: [Notification!]! @deprecated
+  websiteNotificationsPaginated(after: String, before: String, first: Int, last: Int): WebsiteNotificationsConnection!
+}
+
+input SSOUserDataInput {
+  firstName: String
+  lastName: String
+}
+
+type SecondFactorBooleanResult {
+  success: Boolean!
+}
+
+input SecondFactorDeviceConfiguration {
+  isPrimary: Boolean!
+  method: SecondFactorMethod!
+  name: String!
+  smsPhoneNumber: String
+}
+
+type SecondFactorDeviceConfigurationResult {
+  keyURI: String!
+  secondFactorDevice: UserSecondFactorDevice!
+  secret: String!
+}
+
+type SecondFactorInitiationResult {
+  configurationResults: [SecondFactorDeviceConfigurationResult!]!
+  plaintextBackupCodes: [String!]!
+}
+
+enum SecondFactorMethod {
+  """Google Authenticator (TOTP)"""
+  AUTHENTICATOR
+
+  """SMS"""
+  SMS
+}
+
+type SecondFactorRegenerateBackupCodesResult {
+  plaintextBackupCodes: [String!]!
+}
+
+input ServerlessFunctionIdentifierInput {
+  gitCommitSHA1: String!
+}
+
+type ServerlessFunctionMutation {
+  createDeployment(appId: ID!, serverlessFunctionIdentifierInput: ServerlessFunctionIdentifierInput!): DeployServerlessFunctionResult!
+  createUploadPresignedUrl(appId: ID!, serverlessFunctionIdentifierInput: ServerlessFunctionIdentifierInput!): CreateServerlessFunctionUploadUrlResult!
+}
+
+type Snack implements Project {
+  """Description of the Snack"""
+  description: String!
+
+  """
+  Full name of the Snack, e.g. "@john/mysnack", "@snack/245631"
+  """
+  fullName: String!
+
+  """Has the Snack been run without errors"""
+  hasBeenRunSuccessfully: Boolean
+  hashId: String!
+  iconUrl: String @deprecated
+  id: ID!
+
+  """
+  Draft status, which is true when the Snack was not saved explicitly, but auto-saved
+  """
+  isDraft: Boolean!
+
+  """
+  Name of the Snack, e.g. "My Snack"
+  """
+  name: String!
+
+  """Preview image of the running snack"""
+  previewImage: String
+  published: Boolean!
+
+  """
+  Slug name, e.g. "mysnack", "245631"
+  """
+  slug: String!
+
+  """Date and time the Snack was last updated"""
+  updated: DateTime!
+
+  """
+  Name of the user that created the Snack, or "snack" when the Snack was saved anonymously
+  """
+  username: String!
+}
+
+type SnackQuery {
+  """Get snack by hashId"""
+  byHashId(hashId: ID!): Snack!
+
+  """Get snack by hashId"""
+  byId(id: ID!): Snack! @deprecated(reason: "Use byHashId")
+}
+
+enum StandardOffer {
+  """$29 USD per month, 30 day trial"""
+  DEFAULT
+
+  """$800 USD per month"""
+  SUPPORT
+
+  """$29 USD per month, 1 year trial"""
+  YC_DEALS
+
+  """$348 USD per year, 30 day trial"""
+  YEARLY_SUB
+}
+
+"""Incident for a given component from Expo status page API."""
+type StatuspageIncident {
+  createdAt: DateTime!
+  id: ID!
+
+  """Impact of an incident from Expo status page."""
+  impact: StatuspageIncidentImpact!
+  name: String!
+  resolvedAt: DateTime
+
+  """Shortlink to the incident from Expo status page."""
+  shortlink: String!
+
+  """Current status of an incident from Expo status page."""
+  status: StatuspageIncidentStatus!
+  updatedAt: DateTime!
+
+  """List of all updates for an incident from Expo status page."""
+  updates: [StatuspageIncidentUpdate!]!
+}
+
+"""Possible Incident impact values from Expo status page API."""
+enum StatuspageIncidentImpact {
+  CRITICAL
+  MAINTENANCE
+  MAJOR
+  MINOR
+  NONE
+}
+
+"""Possible Incident statuses from Expo status page API."""
+enum StatuspageIncidentStatus {
+  COMPLETED
+  IDENTIFIED
+  INVESTIGATING
+  IN_PROGRESS
+  MONITORING
+  RESOLVED
+  SCHEDULED
+  VERIFYING
+}
+
+"""Update for an Incident from Expo status page API."""
+type StatuspageIncidentUpdate {
+  """Text of an update from Expo status page."""
+  body: String!
+  createdAt: DateTime!
+  id: ID!
+
+  """Status set at the moment of update."""
+  status: StatuspageIncidentStatus!
+}
+
+"""Service monitored by Expo status page."""
+type StatuspageService {
+  """Description of a service from Expo status page."""
+  description: String
+  id: ID!
+
+  """
+  List of last inicdents for a service from Expo status page (we always query for 50 latest incidents for all services)
+  sorted by createdAt field in descending order.
+  """
+  incidents: [StatuspageIncident!]!
+
+  """Name of a service monitored by Expo status page."""
+  name: StatuspageServiceName!
+
+  """Current status of a service from Expo status page."""
+  status: StatuspageServiceStatus!
+}
+
+"""Name of a service monitored by Expo status page."""
+enum StatuspageServiceName {
+  EAS_BUILD
+  EAS_SUBMIT
+  EAS_UPDATE
+  GITHUB_API_REQUESTS
+  GITHUB_WEBHOOKS
+}
+
+type StatuspageServiceQuery {
+  """Query services from Expo status page by names."""
+  byServiceNames(
+    """Service names to use to look up components."""
+    serviceNames: [StatuspageServiceName!]!
+  ): [StatuspageService!]!
+}
+
+"""Possible statuses for a service."""
+enum StatuspageServiceStatus {
+  DEGRADED_PERFORMANCE
+  MAJOR_OUTAGE
+  OPERATIONAL
+  PARTIAL_OUTAGE
+  UNDER_MAINTENANCE
+}
+
+type StripeCoupon {
+  amountOff: String
+  appliesTo: String
+  id: ID!
+  name: String!
+  percentOff: Float
+  valid: Boolean!
+}
+
+"""Represents an EAS Submission"""
+type Submission implements ActivityTimelineProjectActivity {
+  activityTimestamp: DateTime!
+  actor: Actor
+  androidConfig: AndroidSubmissionConfig
+  app: App!
+  archiveUrl: String
+  canRetry: Boolean!
+  cancelingActor: Actor
+  childSubmission: Submission
+  completedAt: DateTime
+  createdAt: DateTime!
+  error: SubmissionError
+  id: ID!
+  initiatingActor: Actor
+  iosConfig: IosSubmissionConfig
+  logsUrl: String
+
+  """Retry time starts after completedAt"""
+  maxRetryTimeMinutes: Int!
+  parentSubmission: Submission
+  platform: AppPlatform!
+  status: SubmissionStatus!
+  submittedBuild: Build
+  updatedAt: DateTime!
+}
+
+enum SubmissionAndroidArchiveType {
+  AAB
+  APK
+}
+
+enum SubmissionAndroidReleaseStatus {
+  COMPLETED
+  DRAFT
+  HALTED
+  IN_PROGRESS
+}
+
+enum SubmissionAndroidTrack {
+  ALPHA
+  BETA
+  INTERNAL
+  PRODUCTION
+}
+
+input SubmissionArchiveSourceInput {
+  """
+  Required if the archive source type is GCS_BUILD_APPLICATION_ARCHIVE or GCS_SUBMIT_ARCHIVE
+  """
+  bucketKey: String
+  type: SubmissionArchiveSourceType!
+
+  """Required if the archive source type is URL"""
+  url: String
+}
+
+enum SubmissionArchiveSourceType {
+  GCS_BUILD_APPLICATION_ARCHIVE
+  GCS_SUBMIT_ARCHIVE
+  URL
+}
+
+type SubmissionError {
+  errorCode: String
+  message: String
+}
+
+input SubmissionFilter {
+  platform: AppPlatform
+  status: SubmissionStatus
+}
+
+type SubmissionMutation {
+  """Cancel an EAS Submit submission"""
+  cancelSubmission(submissionId: ID!): Submission!
+
+  """Create an Android EAS Submit submission"""
+  createAndroidSubmission(input: CreateAndroidSubmissionInput!): CreateSubmissionResult!
+
+  """Create an iOS EAS Submit submission"""
+  createIosSubmission(input: CreateIosSubmissionInput!): CreateSubmissionResult!
+
+  """Retry an EAS Submit submission"""
+  retrySubmission(parentSubmissionId: ID!): CreateSubmissionResult!
+}
+
+type SubmissionQuery {
+  """Look up EAS Submission by submission ID"""
+  byId(submissionId: ID!): Submission!
+}
+
+enum SubmissionStatus {
+  AWAITING_BUILD
+  CANCELED
+  ERRORED
+  FINISHED
+  IN_PROGRESS
+  IN_QUEUE
+}
+
+type SubscribeToNotificationResult {
+  notificationSubscription: NotificationSubscription!
+}
+
+type SubscriptionDetails {
+  addons: [AddonDetails!]!
+  cancelledAt: DateTime
+  concurrencies: Concurrencies
+  coupon: StripeCoupon
+  endedAt: DateTime
+  futureSubscription: FutureSubscription
+  id: ID!
+  isDowngrading: Boolean
+  meteredBillingStatus: MeteredBillingStatus!
+  name: String
+  nextInvoice: DateTime
+  planEnablement(serviceMetric: EASServiceMetric!): PlanEnablement
+  planId: String
+  price: Int!
+  status: String
+  trialEnd: DateTime
+  willCancel: Boolean
+}
+
+type TestNotificationMetadata {
+  message: String!
+}
+
+type TimelineActivityConnection {
+  edges: [TimelineActivityEdge!]!
+  pageInfo: PageInfo!
+}
+
+type TimelineActivityEdge {
+  cursor: String!
+  node: ActivityTimelineProjectActivity!
+}
+
+input TimelineActivityFilterInput {
+  channels: [String!]
+  platforms: [AppPlatform!]
+  releaseChannels: [String!]
+  types: [ActivityTimelineProjectActivityType!]
+}
+
+type UniqueUsersOverTimeData {
+  data: LineChartData!
+}
+
+type UnsubscribeFromNotificationResult {
+  notificationSubscription: NotificationSubscription!
+}
+
+type Update implements ActivityTimelineProjectActivity {
+  activityTimestamp: DateTime!
+  actor: Actor
+  app: App!
+  awaitingCodeSigningInfo: Boolean!
+  branch: UpdateBranch!
+  branchId: ID!
+  codeSigningInfo: CodeSigningInfo
+  createdAt: DateTime!
+  gitCommitHash: String
+  group: String!
+  id: ID!
+
+  """Update query field"""
+  insights: UpdateInsights!
+  isGitWorkingTreeDirty: Boolean!
+  isRollBackToEmbedded: Boolean!
+  manifestFragment: String!
+  manifestPermalink: String!
+  message: String
+  platform: String!
+  runtime: Runtime!
+  runtimeVersion: String! @deprecated(reason: "Use 'runtime' field .")
+  updatedAt: DateTime!
+}
+
+type UpdateBranch {
+  app: App!
+  appId: ID!
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+  runtimes(after: String, before: String, filter: RuntimeFilterInput, first: Int, last: Int): RuntimesConnection!
+  updateGroups(filter: UpdatesFilter, limit: Int!, offset: Int!): [[Update!]!]!
+  updatedAt: DateTime!
+  updates(filter: UpdatesFilter, limit: Int!, offset: Int!): [Update!]!
+}
+
+type UpdateBranchMutation {
+  """Create an EAS branch for an app"""
+  createUpdateBranchForApp(appId: ID!, name: String!): UpdateBranch!
+
+  """
+  Delete an EAS branch and all of its updates as long as the branch is not being used by any channels
+  """
+  deleteUpdateBranch(branchId: ID!): DeleteUpdateBranchResult!
+
+  """
+  Edit an EAS branch. The branch can be specified either by its ID or
+  with the combination of (appId, name).
+  """
+  editUpdateBranch(input: EditUpdateBranchInput!): UpdateBranch!
+
+  """Publish an update group to a branch"""
+  publishUpdateGroups(publishUpdateGroupsInput: [PublishUpdateGroupInput!]!): [Update!]!
+}
+
+type UpdateChannel {
+  app: App!
+  appId: ID!
+  branchMapping: String!
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+  updateBranches(limit: Int!, offset: Int!): [UpdateBranch!]!
+  updatedAt: DateTime!
+}
+
+type UpdateChannelMutation {
+  """
+  Create an EAS channel for an app.
+  
+  In order to work with GraphQL formatting, the branchMapping should be a
+  stringified JSON supplied to the mutation as a variable.
+  """
+  createUpdateChannelForApp(appId: ID!, branchMapping: String, name: String!): UpdateChannel!
+
+  """delete an EAS channel that doesn't point to any branches"""
+  deleteUpdateChannel(channelId: ID!): DeleteUpdateChannelResult!
+
+  """
+  Edit an EAS channel.
+  
+  In order to work with GraphQL formatting, the branchMapping should be a
+  stringified JSON supplied to the mutation as a variable.
+  """
+  editUpdateChannel(branchMapping: String!, channelId: ID!): UpdateChannel!
+}
+
+input UpdateGitHubBuildTriggerInput {
+  autoSubmit: Boolean!
+  buildProfile: String!
+  isActive: Boolean!
+  platform: AppPlatform!
+  sourcePattern: String!
+  targetPattern: String
+  type: GitHubBuildTriggerType!
+}
+
+input UpdateGitHubRepositorySettingsInput {
+  baseDirectory: String!
+}
+
+input UpdateInfoGroup {
+  android: PartialManifest
+  ios: PartialManifest
+  web: PartialManifest
+}
+
+type UpdateInsights {
+  id: ID!
+  totalUniqueUsers(timespan: InsightsTimespan!): Int!
+}
+
+type UpdateMutation {
+  """Delete an EAS update group"""
+  deleteUpdateGroup(group: ID!): DeleteUpdateGroupResult!
+
+  """Set code signing info for an update"""
+  setCodeSigningInfo(codeSigningInfo: CodeSigningInfoInput!, updateId: ID!): Update!
+}
+
+input UpdateRollBackToEmbeddedGroup {
+  android: Boolean
+  ios: Boolean
+  web: Boolean
+}
+
+input UpdatesFilter {
+  platform: AppPlatform
+  runtimeVersions: [String!]
+  sdkVersions: [String!]
+}
+
+type UploadSession {
+  """Create an Upload Session"""
+  createUploadSession(type: UploadSessionType!): JSONObject!
+}
+
+enum UploadSessionType {
+  EAS_BUILD_GCS_PROJECT_SOURCES
+  EAS_BUILD_PROJECT_SOURCES
+  EAS_SUBMIT_APP_ARCHIVE
+  EAS_SUBMIT_GCS_APP_ARCHIVE
+}
+
+type UsageMetricTotal {
+  billingPeriod: BillingPeriod!
+  id: ID!
+  overageMetrics: [EstimatedOverageAndCost!]!
+  planMetrics: [EstimatedUsage!]!
+
+  """Total cost of overages, in cents"""
+  totalCost: Float!
+}
+
+enum UsageMetricType {
+  BANDWIDTH
+  BUILD
+  REQUEST
+  UPDATE
+  USER
+}
+
+enum UsageMetricsGranularity {
+  DAY
+  HOUR
+  MINUTE
+  TOTAL
+}
+
+input UsageMetricsTimespan {
+  end: DateTime!
+  start: DateTime!
+}
+
+"""Represents a human (not robot) actor."""
+type User implements Actor & UserActor {
+  """Access Tokens belonging to this actor"""
+  accessTokens: [AccessToken!]!
+  accounts: [Account!]!
+
+  """
+  Coalesced project activity for all apps belonging to all accounts this user belongs to. Only resolves for the viewer.
+  """
+  activityTimelineProjectActivities(
+    """ Offset the query """
+    createdBefore: DateTime
+
+    """ Types of objects to filter """
+    filterTypes: [ActivityTimelineProjectActivityType!]
+    limit: Int!
+  ): [ActivityTimelineProjectActivity!]!
+  appCount: Int!
+  appetizeCode: String @deprecated
+
+  """Apps this user has published"""
+  apps(includeUnpublished: Boolean, limit: Int!, offset: Int!): [App!]!
+  bestContactEmail: String
+  created: DateTime!
+
+  """Discord account linked to a user"""
+  discordUser: DiscordUser
+  displayName: String!
+  email: String!
+  emailVerified: Boolean!
+
+  """Experiments associated with this actor"""
+  experiments: [ActorExperiment!]!
+
+  """
+  Server feature gate values for this actor, optionally filtering by desired gates.
+  Only resolves for the viewer.
+  """
+  featureGates(filter: [String!]): JSONObject!
+  firstName: String
+  fullName: String
+
+  """GitHub account linked to a user"""
+  githubUser: GitHubUser
+  githubUsername: String @deprecated
+
+  """
+  Whether this user has any pending user invitations. Only resolves for the viewer.
+  """
+  hasPendingUserInvitations: Boolean!
+  id: ID!
+  industry: String @deprecated
+  isExpoAdmin: Boolean!
+  isLegacy: Boolean! @deprecated
+  isSecondFactorAuthenticationEnabled: Boolean!
+  lastName: String
+  location: String @deprecated
+  notificationSubscriptions(filter: NotificationSubscriptionFilter): [NotificationSubscription!]!
+
+  """Pending UserInvitations for this user. Only resolves for the viewer."""
+  pendingUserInvitations: [UserInvitation!]!
+
+  """Associated accounts"""
+  primaryAccount: Account!
+  profilePhoto: String!
+
+  """Get all certified second factor authentication methods"""
+  secondFactorDevices: [UserSecondFactorDevice!]!
+
+  """Snacks associated with this account"""
+  snacks(limit: Int!, offset: Int!): [Snack!]!
+  twitterUsername: String @deprecated
+  username: String!
+  websiteNotifications: [Notification!]! @deprecated
+  websiteNotificationsPaginated(after: String, before: String, first: Int, last: Int): WebsiteNotificationsConnection!
+}
+
+"""
+A human user (type User or SSOUser) that can login to the Expo website, use Expo services, and be a member of accounts.
+"""
+interface UserActor implements Actor {
+  """Access Tokens belonging to this user actor"""
+  accessTokens: [AccessToken!]!
+  accounts: [Account!]!
+
+  """
+  Coalesced project activity for all apps belonging to all accounts this user actor belongs to.
+  Only resolves for the viewer.
+  """
+  activityTimelineProjectActivities(
+    """ Offset the query """
+    createdBefore: DateTime
+
+    """ Types of objects to filter """
+    filterTypes: [ActivityTimelineProjectActivityType!]
+    limit: Int!
+  ): [ActivityTimelineProjectActivity!]!
+  appCount: Int!
+  appetizeCode: String @deprecated
+
+  """Apps this user has published"""
+  apps(includeUnpublished: Boolean, limit: Int!, offset: Int!): [App!]!
+  bestContactEmail: String
+  created: DateTime!
+
+  """Discord account linked to a user"""
+  discordUser: DiscordUser
+
+  """
+  Best-effort human readable name for this human actor for use in user interfaces during action attribution.
+  For example, when displaying a sentence indicating that actor X created a build or published an update.
+  """
+  displayName: String!
+
+  """Experiments associated with this actor"""
+  experiments: [ActorExperiment!]!
+
+  """
+  Server feature gate values for this user actor, optionally filtering by desired gates.
+  Only resolves for the viewer.
+  """
+  featureGates(filter: [String!]): JSONObject!
+  firstName: String
+  fullName: String
+
+  """GitHub account linked to a user"""
+  githubUser: GitHubUser
+  githubUsername: String @deprecated
+  id: ID!
+  industry: String @deprecated
+  isExpoAdmin: Boolean!
+  lastName: String
+  location: String @deprecated
+  notificationSubscriptions(filter: NotificationSubscriptionFilter): [NotificationSubscription!]!
+
+  """Associated accounts"""
+  primaryAccount: Account!
+  profilePhoto: String!
+
+  """Snacks associated with this user's personal account"""
+  snacks(limit: Int!, offset: Int!): [Snack!]!
+  twitterUsername: String @deprecated
+  username: String!
+  websiteNotifications: [Notification!]! @deprecated
+  websiteNotificationsPaginated(after: String, before: String, first: Int, last: Int): WebsiteNotificationsConnection!
+}
+
+"""
+A human user (type User or SSOUser) that can login to the Expo website, use Expo services, and be a member of accounts.
+"""
+type UserActorPublicData {
+  """Apps this user has published"""
+  apps(includeUnpublished: Boolean, limit: Int!, offset: Int!): [App!]!
+  firstName: String
+  id: ID!
+  lastName: String
+  profilePhoto: String!
+
+  """Snacks associated with this user's personal account"""
+  snacks(limit: Int!, offset: Int!): [Snack!]!
+  username: String!
+}
+
+type UserActorPublicDataQuery {
+  """Get UserActorPublicData by username"""
+  byUsername(username: String!): UserActorPublicData!
+}
+
+type UserActorQuery {
+  """Query a UserActor by ID"""
+  byId(id: ID!): UserActor! @deprecated(reason: "Public user actor queries are no longer supported")
+
+  """Query a UserActor by username"""
+  byUsername(username: String!): UserActor! @deprecated(reason: "Public user actor queries are no longer supported")
+}
+
+input UserDataInput {
+  email: String
+  firstName: String
+  fullName: String
+  id: ID
+  lastName: String
+  profilePhoto: String
+  username: String
+}
+
+"""
+An pending invitation sent to an email granting membership on an Account.
+"""
+type UserInvitation {
+  accountName: String!
+
+  """
+  If the invite is for a personal team, the profile photo of account owner
+  """
+  accountProfilePhoto: String
+  created: DateTime!
+
+  """Email to which this invitation was sent"""
+  email: String!
+  expires: DateTime!
+  id: ID!
+
+  """If the invite is for an organization or a personal team"""
+  isForOrganization: Boolean!
+
+  """Account permissions to be granted upon acceptance of this invitation"""
+  permissions: [Permission!]!
+
+  """Role to be granted upon acceptance of this invitation"""
+  role: Role!
+}
+
+type UserInvitationMutation {
+  """
+  Accept UserInvitation by ID. Viewer must have matching email and email must be verified.
+  """
+  acceptUserInvitationAsViewer(id: ID!): AcceptUserInvitationResult!
+
+  """
+  Accept UserInvitation by token. Note that the viewer's email is not required to match
+  the email on the invitation. If viewer's email does match that of the invitation,
+  their email will also be verified.
+  """
+  acceptUserInvitationByTokenAsViewer(token: ID!): AcceptUserInvitationResult!
+
+  """
+  Create a UserInvitation for an email that when accepted grants
+  the specified permissions on an Account
+  """
+  createUserInvitationForAccount(accountID: ID!, email: String!, permissions: [Permission]!): UserInvitation!
+
+  """Rescind UserInvitation by ID"""
+  deleteUserInvitation(id: ID!): RescindUserInvitationResult!
+
+  """
+  Delete UserInvitation by token. Note that the viewer's email is not required to match
+  the email on the invitation.
+  """
+  deleteUserInvitationByToken(token: ID!): RescindUserInvitationResult!
+
+  """Re-send UserInivitation by ID"""
+  resendUserInvitation(id: ID!): UserInvitation!
+}
+
+"""Publicly visible data for a UserInvitation."""
+type UserInvitationPublicData {
+  accountName: String!
+  accountProfilePhoto: String
+  created: DateTime!
+  email: String!
+  expires: DateTime!
+
+  """Email to which this invitation was sent"""
+  id: ID!
+  isForOrganization: Boolean!
+}
+
+type UserInvitationPublicDataQuery {
+  """Get UserInvitationPublicData by token"""
+  byToken(token: ID!): UserInvitationPublicData!
+}
+
+type UserPermission {
+  actor: Actor!
+  permissions: [Permission!]!
+  role: Role!
+  user: User @deprecated(reason: "User type is deprecated")
+  userActor: UserActor
+}
+
+type UserQuery {
+  """Query a User by ID"""
+  byId(userId: ID!): User! @deprecated(reason: "Public user queries are no longer supported")
+
+  """Query a User by username"""
+  byUsername(username: String!): User! @deprecated(reason: "Public user queries are no longer supported")
+}
+
+"""A second factor device belonging to a User"""
+type UserSecondFactorDevice {
+  createdAt: DateTime!
+  id: ID!
+  isCertified: Boolean!
+  isPrimary: Boolean!
+  method: SecondFactorMethod!
+  name: String!
+  smsPhoneNumber: String
+  updatedAt: DateTime!
+  user: User!
+}
+
+input WebNotificationUpdateReadStateInput {
+  id: ID!
+  isRead: Boolean!
+}
+
+type Webhook {
+  appId: ID!
+  createdAt: DateTime!
+  event: WebhookType!
+  id: ID!
+  updatedAt: DateTime!
+  url: String!
+}
+
+input WebhookFilter {
+  event: WebhookType
+}
+
+input WebhookInput {
+  event: WebhookType!
+  secret: String!
+  url: String!
+}
+
+type WebhookMutation {
+  """Create a Webhook"""
+  createWebhook(appId: String!, webhookInput: WebhookInput!): Webhook!
+
+  """Delete a Webhook"""
+  deleteWebhook(webhookId: ID!): DeleteWebhookResult!
+
+  """Update a Webhook"""
+  updateWebhook(webhookId: ID!, webhookInput: WebhookInput!): Webhook!
+}
+
+type WebhookQuery {
+  byId(id: ID!): Webhook!
+}
+
+enum WebhookType {
+  BUILD
+  SUBMIT
+}
+
+type WebsiteNotificationEdge {
+  cursor: String!
+  node: Notification!
+}
+
+type WebsiteNotificationMutation {
+  updateAllWebsiteNotificationReadStateAsRead: Boolean!
+  updateNotificationReadState(input: WebNotificationUpdateReadStateInput!): Notification!
+}
+
+type WebsiteNotificationsConnection {
+  edges: [WebsiteNotificationEdge!]!
+  pageInfo: PageInfo!
+}
+
+type deleteAndroidAppBuildCredentialsResult {
+  id: ID!
+}
+
+type deleteAndroidFcmResult {
+  id: ID!
+}
+
+type deleteAppStoreConnectApiKeyResult {
+  id: ID!
+}
+
+type deleteApplePushKeyResult {
+  id: ID!
+}
