@@ -15,6 +15,9 @@ PODS:
     - hermes-engine/Pre-built (= 0.71.8)
   - hermes-engine/Pre-built (0.71.8)
   - libevent (2.1.12)
+  - MMKV (1.3.0):
+    - MMKVCore (~> 1.3.0)
+  - MMKVCore (1.3.0)
   - RCT-Folly (2021.07.22.00):
     - boost
     - DoubleConversion
@@ -281,6 +284,9 @@ PODS:
   - React-jsinspector (0.71.8)
   - React-logger (0.71.8):
     - glog
+  - react-native-mmkv (2.10.2):
+    - MMKV (>= 1.2.13)
+    - React-Core
   - React-perflogger (0.71.8)
   - React-RCTActionSheet (0.71.8):
     - React-Core/RCTActionSheetHeaders (= 0.71.8)
@@ -397,6 +403,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../../../node_modules/react-native-macos/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../../../node_modules/react-native-macos/ReactCommon/jsinspector`)
   - React-logger (from `../../../node_modules/react-native-macos/ReactCommon/logger`)
+  - react-native-mmkv (from `../../../node_modules/react-native-mmkv`)
   - React-perflogger (from `../../../node_modules/react-native-macos/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../../../node_modules/react-native-macos/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../../../node_modules/react-native-macos/Libraries/NativeAnimation`)
@@ -419,6 +426,8 @@ SPEC REPOS:
   trunk:
     - fmt
     - libevent
+    - MMKV
+    - MMKVCore
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -462,6 +471,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-macos/ReactCommon/jsinspector"
   React-logger:
     :path: "../../../node_modules/react-native-macos/ReactCommon/logger"
+  react-native-mmkv:
+    :path: "../../../node_modules/react-native-mmkv"
   React-perflogger:
     :path: "../../../node_modules/react-native-macos/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -506,6 +517,8 @@ SPEC CHECKSUMS:
   glog: 6df0a3d6e2750a50609471fd1a01fd2948d405b5
   hermes-engine: 47986d26692ae75ee7a17ab049caee8864f855de
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
+  MMKV: 9c6c3fa4ddd849f28c7b9a5c9d23aab84f14ee35
+  MMKVCore: 9bb7440b170181ac5b81f542ac258103542e693d
   RCT-Folly: bf7b4921a91932051ebf1c5c2d297154b1fa3c8c
   RCTRequired: ee6cb61ee803c4e9af4a470628a0aec55e8816af
   RCTTypeSafety: 5366e6aec9fb4961690a04534a1b121ed9604472
@@ -520,6 +533,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: d83e779104f5592c3a8b964b095b19f09a16988e
   React-jsinspector: f86ac70bc189da1e5710d31344c2de918d5073a2
   React-logger: 0abe7957bb0bf514d6e0de7d17bc1c84b6458dc0
+  react-native-mmkv: 9ae7ca3977e8ef48dbf7f066974eb844c20b5fd7
   React-perflogger: 27b97dc88bc735d579a429f6840be32d56eefafa
   React-RCTActionSheet: 0d796c47a3c5b819785bdf5f6405cdb217cdd769
   React-RCTAnimation: 9c210930eab657eb91fc2622c7e7097cb974dda4
