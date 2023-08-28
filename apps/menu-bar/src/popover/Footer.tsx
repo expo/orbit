@@ -1,10 +1,10 @@
-import {memo} from 'react';
-import {StyleSheet} from 'react-native';
+import { memo } from 'react';
+import { StyleSheet } from 'react-native';
 
-import MenuBarModule from '../modules/MenuBarModule';
-import {Divider, Text, View} from '../components';
-import {WindowsNavigator} from '../windows';
 import Item from './Item';
+import { Divider, Text, View } from '../components';
+import MenuBarModule from '../modules/MenuBarModule';
+import { WindowsNavigator } from '../windows';
 
 export const FOOTER_HEIGHT = 62;
 

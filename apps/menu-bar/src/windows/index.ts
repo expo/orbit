@@ -1,9 +1,6 @@
-import {
-  WindowStyleMask,
-  createWindowsNavigator,
-} from '../modules/WindowManager';
 import Onboarding from './Onboarding';
 import Settings from './Settings';
+import { WindowStyleMask, createWindowsNavigator } from '../modules/WindowManager';
 
 export const WindowsNavigator = createWindowsNavigator({
   Settings: {

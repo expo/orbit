@@ -1,5 +1,5 @@
-import {useEffect, useRef, useState} from 'react';
-import {DeviceEventEmitter, Dimensions} from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { DeviceEventEmitter, Dimensions } from 'react-native';
 
 export const SAFE_AREA_FACTOR = 0.85;
 
@@ -32,10 +32,7 @@ export const useSafeDisplayDimensions = () => {
 
   return {
     ...dimensions,
-    height:
-      dimensions.height !== 0
-        ? dimensions.height * SAFE_AREA_FACTOR
-        : undefined,
+    height: dimensions.height !== 0 ? dimensions.height * SAFE_AREA_FACTOR : undefined,
     width: dimensions.width * SAFE_AREA_FACTOR,
   };
 };

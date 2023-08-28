@@ -1,9 +1,13 @@
 module.exports = {
   root: true,
-  extends: '@react-native-community',
-  plugins: ['react-hooks'],
+  extends: 'universe/native',
+  overrides: [
+    {
+      extends: 'universe/node',
+      files: ['metro.config.js'],
+    },
+  ],
   rules: {
-    // suppress errors for missing 'import React' in files
-    'react/react-in-jsx-scope': 'off',
+    'react-hooks/exhaustive-deps': 'error',
   },
 };

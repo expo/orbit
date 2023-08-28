@@ -1,7 +1,7 @@
-import React, {memo} from 'react';
+import React, { memo } from 'react';
 
-import {Text, View} from '../components';
-import {useTheme} from '../providers/ThemeProvider';
+import { Text, View } from '../components';
+import { useTheme } from '../providers/ThemeProvider';
 
 export const SECTION_HEADER_HEIGHT = 20;
 
@@ -9,7 +9,7 @@ type Props = {
   label: string;
 };
 
-const SectionHeader = ({label}: Props) => {
+const SectionHeader = ({ label }: Props) => {
   const theme = useTheme();
   return (
     <View px="medium">
@@ -17,9 +17,7 @@ const SectionHeader = ({label}: Props) => {
         weight="semibold"
         size="tiny"
         color="default"
-        // @ts-ignore
-        // eslint-disable-next-line react-native/no-inline-styles
-        style={{opacity: theme === 'dark' ? 0.65 : 0.85}}>
+        style={{ opacity: theme === 'dark' ? 0.65 : 0.85 }}>
         {label}
       </Text>
     </View>

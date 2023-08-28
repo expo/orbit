@@ -5,14 +5,15 @@
  * @format
  */
 
+const { getDefaultConfig } = require('metro-config');
 const path = require('path');
+
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, '../..');
-const {getDefaultConfig} = require('metro-config');
 
 module.exports = (async () => {
   const {
-    resolver: {sourceExts, assetExts},
+    resolver: { sourceExts, assetExts },
   } = await getDefaultConfig();
   return {
     watchFolders: [workspaceRoot],
@@ -22,7 +23,7 @@ module.exports = (async () => {
         path.resolve(projectRoot, 'node_modules'),
         path.resolve(workspaceRoot, 'node_modules'),
       ],
-      assetExts: assetExts.filter(ext => ext !== 'svg'),
+      assetExts: assetExts.filter((ext) => ext !== 'svg'),
       sourceExts: [...sourceExts, 'svg'],
     },
     transformer: {

@@ -1,14 +1,14 @@
-import React, {memo, PropsWithChildren, useState} from 'react';
+import React, { memo, PropsWithChildren, useState } from 'react';
+import { Pressable, PressableProps, StyleSheet } from 'react-native';
 
-import {Pressable, PressableProps, StyleSheet} from 'react-native';
-import {Row, Text} from '../components';
-import {useCurrentTheme} from '../utils/useExpoTheme';
+import { Row, Text } from '../components';
+import { useCurrentTheme } from '../utils/useExpoTheme';
 
 type Props = PropsWithChildren<PressableProps> & {
   shortcut?: string;
 };
 
-const Item = ({children, onPress, shortcut}: Props) => {
+const Item = ({ children, onPress, shortcut }: Props) => {
   const [isHovered, setHovered] = useState(false);
   const theme = useCurrentTheme();
 
@@ -19,10 +19,8 @@ const Item = ({children, onPress, shortcut}: Props) => {
       onPress={onPress}
       style={[
         styles.itemContainer,
-        // eslint-disable-next-line react-native/no-inline-styles
         isHovered && {
-          backgroundColor:
-            theme === 'dark' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)',
+          backgroundColor: theme === 'dark' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)',
         },
       ]}>
       <Row gap="1.5" my="tiny" px="2.5">

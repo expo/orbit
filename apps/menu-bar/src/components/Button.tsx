@@ -1,3 +1,4 @@
+import { darkTheme, lightTheme, palette } from '@expo/styleguide-native';
 import {
   PlatformColor,
   StyleProp,
@@ -7,11 +8,10 @@ import {
   TouchableOpacityProps,
   ViewStyle,
 } from 'react-native';
-import {darkTheme, lightTheme, palette} from '@expo/styleguide-native';
 
-import {Text} from './Text';
-import {useCurrentTheme} from '../utils/useExpoTheme';
-import {addOpacity} from '../utils/theme';
+import { Text } from './Text';
+import { addOpacity } from '../utils/theme';
+import { useCurrentTheme } from '../utils/useExpoTheme';
 
 type Color = 'default' | 'primary';
 type Props = TouchableOpacityProps & {
@@ -19,20 +19,15 @@ type Props = TouchableOpacityProps & {
   title: string;
 };
 
-const Button = ({title, color = 'default', disabled, ...otherProps}: Props) => {
+const Button = ({ title, color = 'default', disabled, ...otherProps }: Props) => {
   const theme = useCurrentTheme();
-  const {textStyle, touchableStyle} = getStylesForColor(color, theme);
+  const { textStyle, touchableStyle } = getStylesForColor(color, theme);
 
   return (
     <TouchableOpacity
       {...otherProps}
       disabled={disabled}
-      style={[
-        styles.base,
-        touchableStyle,
-        disabled && styles.disabled,
-        otherProps.style,
-      ]}>
+      style={[styles.base, touchableStyle, disabled && styles.disabled, otherProps.style]}>
       <Text style={textStyle} size="tiny" weight="semibold">
         {title}
       </Text>
@@ -42,10 +37,7 @@ const Button = ({title, color = 'default', disabled, ...otherProps}: Props) => {
 
 export default Button;
 
-function getStylesForColor(
-  color: Color,
-  theme: ReturnType<typeof useCurrentTheme>,
-) {
+function getStylesForColor(color: Color, theme: ReturnType<typeof useCurrentTheme>) {
   let textStyle: StyleProp<TextStyle> = {};
   let touchableStyle: StyleProp<ViewStyle> = {};
 
@@ -56,10 +48,7 @@ function getStylesForColor(
           theme === 'light'
             ? addOpacity(lightTheme.background.default, 0.8)
             : addOpacity(darkTheme.background.default, 0.4),
-        borderColor:
-          theme === 'light'
-            ? addOpacity(lightTheme.border.default, 1)
-            : 'transparent',
+        borderColor: theme === 'light' ? addOpacity(lightTheme.border.default, 1) : 'transparent',
         borderWidth: 1,
       };
 

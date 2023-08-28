@@ -14,10 +14,7 @@ export const getUserPreferences = async () => {
 };
 
 export const saveUserPreferences = async (preferences: UserPreferences) => {
-  await AsyncStorage.setItem(
-    userPreferencesStorageKey,
-    JSON.stringify(preferences),
-  );
+  await AsyncStorage.setItem(userPreferencesStorageKey, JSON.stringify(preferences));
 };
 
 const selectedDevicesIdsStorageKey = 'selected-devices-ids';
@@ -32,13 +29,8 @@ export const getSelectedDevicesIds = async () => {
   return selectedDevicesIds;
 };
 
-export const saveSelectedDevicesIds = async (
-  devicesIds: SelectedDevicesIds,
-) => {
-  await AsyncStorage.setItem(
-    selectedDevicesIdsStorageKey,
-    JSON.stringify(devicesIds),
-  );
+export const saveSelectedDevicesIds = async (devicesIds: SelectedDevicesIds) => {
+  await AsyncStorage.setItem(selectedDevicesIdsStorageKey, JSON.stringify(devicesIds));
 };
 
 export const resetStorage = async () => AsyncStorage.clear();

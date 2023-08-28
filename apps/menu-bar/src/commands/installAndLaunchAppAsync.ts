@@ -12,6 +12,6 @@ export const installAndLaunchAppAsync = async ({
   await MenuBarModule.runCli(
     'install-and-launch',
     ['--app-path', appPath, '--device-id', deviceId],
-    undefined,
+    undefined
   );
 };

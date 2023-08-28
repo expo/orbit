@@ -1,17 +1,17 @@
 import React from 'react';
 
-import {Text, View} from '../components';
-import Footer from './Footer';
 import Core from './Core';
-import {ErrorBoundary, FallbackProps} from './ErrorBoundary';
-import {useSafeDisplayDimensions} from '../hooks/useSafeDisplayDimensions';
+import { ErrorBoundary, FallbackProps } from './ErrorBoundary';
+import Footer from './Footer';
+import { Text, View } from '../components';
+import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 
 type Props = {
   isDevWindow: boolean;
 };
 
 function Popover(props: Props) {
-  const {height} = useSafeDisplayDimensions();
+  const { height } = useSafeDisplayDimensions();
   return (
     <View
       style={{
@@ -31,7 +31,7 @@ function Popover(props: Props) {
 
 export default Popover;
 
-const Fallback = ({error}: FallbackProps) => {
+const Fallback = ({ error }: FallbackProps) => {
   return (
     <View px="medium" pb="small" gap="2">
       <Text weight="medium">Something went wrong, please restart the app</Text>

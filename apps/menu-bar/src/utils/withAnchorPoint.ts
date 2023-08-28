@@ -1,4 +1,4 @@
-import {TransformsStyle} from 'react-native';
+import { TransformsStyle } from 'react-native';
 
 export interface Point {
   x: number;
@@ -10,13 +10,9 @@ export interface Size {
   height: number;
 }
 
-const defaultAnchorPoint = {x: 0.5, y: 0.5};
+const defaultAnchorPoint = { x: 0.5, y: 0.5 };
 
-export const withAnchorPoint = (
-  transform: TransformsStyle,
-  anchorPoint: Point,
-  size: Size,
-) => {
+export const withAnchorPoint = (transform: TransformsStyle, anchorPoint: Point, size: Size) => {
   let injectedTransform = transform.transform;
   if (!injectedTransform) {
     return transform;
@@ -37,11 +33,11 @@ export const withAnchorPoint = (
   }
 
   if (!Array.isArray(injectedTransform)) {
-    return {transform: injectedTransform};
+    return { transform: injectedTransform };
   }
 
   if (anchorPoint.y !== defaultAnchorPoint.y && size.height) {
-    let shiftTranslateY = [];
+    const shiftTranslateY = [];
     // shift before rotation
     shiftTranslateY.push({
       translateY: size.height * (anchorPoint.y - defaultAnchorPoint.y),
@@ -53,5 +49,5 @@ export const withAnchorPoint = (
     });
   }
 
-  return {transform: injectedTransform};
+  return { transform: injectedTransform };
 };

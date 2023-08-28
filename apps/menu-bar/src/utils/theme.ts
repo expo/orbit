@@ -6,7 +6,7 @@ import {
   typography,
   palette,
 } from '@expo/styleguide-native';
-import {TextStyle, Platform, StyleSheet, PlatformColor} from 'react-native';
+import { TextStyle, Platform, StyleSheet, PlatformColor } from 'react-native';
 
 type SpacingKey = `${keyof typeof spacing}`;
 type DescriptiveScale = 'micro' | 'tiny' | 'small' | 'medium' | 'large' | 'xl';
@@ -24,13 +24,13 @@ export const scale: Scale = {
 };
 
 function fullSpacingScaleForAttributes(attributes: string[]) {
-  const obj: {[scaleKey: string]: any} = {};
+  const obj: { [scaleKey: string]: any } = {};
 
-  Object.keys(scale).forEach(key => {
+  Object.keys(scale).forEach((key) => {
     key = `${key}`;
-    const value: {[attribute: string]: number} = {};
+    const value: { [attribute: string]: number } = {};
 
-    attributes.forEach(attribute => {
+    attributes.forEach((attribute) => {
       value[attribute] = scale[key as ScaleKey];
     });
 
@@ -62,15 +62,15 @@ export const height = fullSpacingScaleForAttributes(['height']);
 
 export const rounded = {
   rounded: {
-    none: {borderRadius: 0},
-    small: {borderRadius: borderRadius.small},
-    medium: {borderRadius: borderRadius.medium},
-    large: {borderRadius: borderRadius.large},
-    full: {borderRadius: 99999},
+    none: { borderRadius: 0 },
+    small: { borderRadius: borderRadius.small },
+    medium: { borderRadius: borderRadius.medium },
+    large: { borderRadius: borderRadius.large },
+    full: { borderRadius: 99999 },
   },
 
   roundedTop: {
-    none: {borderTopLeftRadius: 0, borderTopRightRadius: 0},
+    none: { borderTopLeftRadius: 0, borderTopRightRadius: 0 },
     small: {
       borderTopLeftRadius: borderRadius.small,
       borderTopRightRadius: borderRadius.small,
@@ -83,11 +83,11 @@ export const rounded = {
       borderTopLeftRadius: borderRadius.large,
       borderTopRightRadius: borderRadius.large,
     },
-    full: {borderTopLeftRadius: 9999, borderTopRightRadius: 9999},
+    full: { borderTopLeftRadius: 9999, borderTopRightRadius: 9999 },
   },
 
   roundedBottom: {
-    none: {borderBottomLeftRadius: 0, borderBottomRightRadius: 0},
+    none: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
     small: {
       borderBottomLeftRadius: borderRadius.small,
       borderBottomRightRadius: borderRadius.small,
@@ -100,13 +100,13 @@ export const rounded = {
       borderBottomLeftRadius: borderRadius.large,
       borderBottomRightRadius: borderRadius.large,
     },
-    full: {borderBottomLeftRadius: 9999, borderBottomRightRadius: 9999},
+    full: { borderBottomLeftRadius: 9999, borderBottomRightRadius: 9999 },
   },
 };
 
 export const text = {
   align: {
-    center: {textAlign: 'center' as TextStyle['textAlign']},
+    center: { textAlign: 'center' as TextStyle['textAlign'] },
   },
 
   size: {
@@ -117,33 +117,33 @@ export const text = {
   },
 
   leading: {
-    large: {lineHeight: 18},
-    medium: {lineHeight: 15},
-    small: {lineHeight: 13},
+    large: { lineHeight: 18 },
+    medium: { lineHeight: 15 },
+    small: { lineHeight: 13 },
   },
 
   type: {
     mono: {
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
-    InterBlack: {fontFamily: 'Inter-Black'},
-    InterBlackItalic: {fontFamily: 'Inter-BlackItalic'},
-    InterBold: {fontFamily: 'Inter-Bold'},
-    InterBoldItalic: {fontFamily: 'Inter-BoldItalic'},
-    InterExtraBold: {fontFamily: 'Inter-ExtraBold'},
-    InterExtraBoldItalic: {fontFamily: 'Inter-ExtraBoldItalic'},
-    InterExtraLight: {fontFamily: 'Inter-ExtraLight'},
-    InterExtraLightItalic: {fontFamily: 'Inter-ExtraLightItalic'},
-    InterRegular: {fontFamily: 'Inter-Regular'},
-    InterItalic: {fontFamily: 'Inter-Italic'},
-    InterLight: {fontFamily: 'Inter-Light'},
-    InterLightItalic: {fontFamily: 'Inter-LightItalic'},
-    InterMedium: {fontFamily: 'Inter-Medium'},
-    InterMediumItalic: {fontFamily: 'Inter-MediumItalic'},
-    InterSemiBold: {fontFamily: 'Inter-SemiBold'},
-    InterSemiBoldItalic: {fontFamily: 'Inter-SemiBoldItalic'},
-    InterThin: {fontFamily: 'Inter-Thin'},
-    InterThinItalic: {fontFamily: 'Inter-ThinItalic'},
+    InterBlack: { fontFamily: 'Inter-Black' },
+    InterBlackItalic: { fontFamily: 'Inter-BlackItalic' },
+    InterBold: { fontFamily: 'Inter-Bold' },
+    InterBoldItalic: { fontFamily: 'Inter-BoldItalic' },
+    InterExtraBold: { fontFamily: 'Inter-ExtraBold' },
+    InterExtraBoldItalic: { fontFamily: 'Inter-ExtraBoldItalic' },
+    InterExtraLight: { fontFamily: 'Inter-ExtraLight' },
+    InterExtraLightItalic: { fontFamily: 'Inter-ExtraLightItalic' },
+    InterRegular: { fontFamily: 'Inter-Regular' },
+    InterItalic: { fontFamily: 'Inter-Italic' },
+    InterLight: { fontFamily: 'Inter-Light' },
+    InterLightItalic: { fontFamily: 'Inter-LightItalic' },
+    InterMedium: { fontFamily: 'Inter-Medium' },
+    InterMediumItalic: { fontFamily: 'Inter-MediumItalic' },
+    InterSemiBold: { fontFamily: 'Inter-SemiBold' },
+    InterSemiBoldItalic: { fontFamily: 'Inter-SemiBoldItalic' },
+    InterThin: { fontFamily: 'Inter-Thin' },
+    InterThinItalic: { fontFamily: 'Inter-ThinItalic' },
   },
 
   weight: {
@@ -186,45 +186,45 @@ export const text = {
   },
 
   color: {
-    default: {color: PlatformColor('labelColor')},
-    error: {color: lightTheme.text.error},
-    warning: {color: lightTheme.text.warning},
-    success: {color: lightTheme.text.success},
-    secondary: {color: palette.light.gray['800']},
-    primary: {color: lightTheme.button.primary.background},
-    link: {color: lightTheme.link.default},
+    default: { color: PlatformColor('labelColor') },
+    error: { color: lightTheme.text.error },
+    warning: { color: lightTheme.text.warning },
+    success: { color: lightTheme.text.success },
+    secondary: { color: palette.light.gray['800'] },
+    primary: { color: lightTheme.button.primary.background },
+    link: { color: lightTheme.link.default },
   },
 };
 
 export const textDark = {
   color: {
-    default: {color: PlatformColor('labelColor')},
-    error: {color: darkTheme.text.error},
-    warning: {color: darkTheme.text.warning},
-    success: {color: darkTheme.text.success},
-    secondary: {color: palette.dark.gray['800']},
-    primary: {color: darkTheme.button.primary.background},
-    link: {color: darkTheme.link.default},
+    default: { color: PlatformColor('labelColor') },
+    error: { color: darkTheme.text.error },
+    warning: { color: darkTheme.text.warning },
+    success: { color: darkTheme.text.success },
+    secondary: { color: palette.dark.gray['800'] },
+    primary: { color: darkTheme.button.primary.background },
+    link: { color: darkTheme.link.default },
   },
 };
 
 export const bg = {
-  none: {backgroundColor: 'transparent'},
-  default: {backgroundColor: lightTheme.background.default},
-  secondary: {backgroundColor: lightTheme.background.secondary},
-  overlay: {backgroundColor: lightTheme.background.overlay},
-  success: {backgroundColor: lightTheme.background.success},
-  warning: {backgroundColor: lightTheme.background.warning},
-  error: {backgroundColor: lightTheme.background.error},
+  none: { backgroundColor: 'transparent' },
+  default: { backgroundColor: lightTheme.background.default },
+  secondary: { backgroundColor: lightTheme.background.secondary },
+  overlay: { backgroundColor: lightTheme.background.overlay },
+  success: { backgroundColor: lightTheme.background.success },
+  warning: { backgroundColor: lightTheme.background.warning },
+  error: { backgroundColor: lightTheme.background.error },
 };
 
 export const bgDark = {
-  default: {backgroundColor: darkTheme.background.default},
-  secondary: {backgroundColor: darkTheme.background.secondary},
-  overlay: {backgroundColor: darkTheme.background.overlay},
-  success: {backgroundColor: darkTheme.background.success},
-  warning: {backgroundColor: darkTheme.background.warning},
-  error: {backgroundColor: darkTheme.background.error},
+  default: { backgroundColor: darkTheme.background.default },
+  secondary: { backgroundColor: darkTheme.background.secondary },
+  overlay: { backgroundColor: darkTheme.background.overlay },
+  success: { backgroundColor: darkTheme.background.success },
+  warning: { backgroundColor: darkTheme.background.warning },
+  error: { backgroundColor: darkTheme.background.error },
 };
 
 export const border = {
@@ -232,7 +232,7 @@ export const border = {
     borderColor: PlatformColor('gridColor'),
     borderWidth: 1,
   },
-  warning: {borderColor: lightTheme.border.warning, borderWidth: 1},
+  warning: { borderColor: lightTheme.border.warning, borderWidth: 1 },
   hairline: {
     borderColor: lightTheme.border.default,
     borderWidth: StyleSheet.hairlineWidth,
@@ -244,8 +244,8 @@ export const borderDark = {
     borderColor: PlatformColor('controlColor'),
     borderWidth: 1,
   },
-  warning: {borderColor: darkTheme.border.warning, borderWidth: 1},
-  error: {borderColor: darkTheme.border.error, borderWidth: 1},
+  warning: { borderColor: darkTheme.border.warning, borderWidth: 1 },
+  error: { borderColor: darkTheme.border.error, borderWidth: 1 },
   hairline: {
     borderColor: darkTheme.border.default,
     borderWidth: StyleSheet.hairlineWidth,

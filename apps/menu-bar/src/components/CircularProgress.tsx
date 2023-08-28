@@ -1,9 +1,8 @@
 import React from 'react';
-import {ColorValue, View} from 'react-native';
-import Svg from 'react-native-svg';
-import {G, Circle} from 'react-native-svg';
+import { ColorValue, View } from 'react-native';
+import Svg, { G, Circle } from 'react-native-svg';
 
-import {withAnchorPoint} from '../utils/withAnchorPoint';
+import { withAnchorPoint } from '../utils/withAnchorPoint';
 
 interface ProgressCircleProps {
   progress: number;
@@ -26,15 +25,10 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
   const circleRadius = radius + strokeWidth / 2;
   const circleCircumference = 2 * Math.PI * circleRadius;
 
-  const strokeColor = activeStrokeColor;
-
   let biggestValue: number = Math.max(progress, 100);
   biggestValue = biggestValue <= 0 ? 1 : biggestValue;
-  const maxPercentage: number = true
-    ? (100 * progress) / biggestValue
-    : (100 * -progress) / biggestValue;
-  const strokeDashoffset =
-    circleCircumference - (circleCircumference * maxPercentage) / 100;
+  const maxPercentage = (100 * progress) / biggestValue;
+  const strokeDashoffset = circleCircumference - (circleCircumference * maxPercentage) / 100;
 
   return (
     <View
@@ -45,16 +39,13 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
         },
         withAnchorPoint(
           {
-            transform: [{rotateZ: '270deg'}],
+            transform: [{ rotateZ: '270deg' }],
           },
-          {x: 0.5, y: 0.5},
-          {width: size, height: size},
+          { x: 0.5, y: 0.5 },
+          { width: size, height: size }
         ),
       ]}>
-      <Svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${viewBox * 2} ${viewBox * 2}`}>
+      <Svg width={size} height={size} viewBox={`0 0 ${viewBox * 2} ${viewBox * 2}`}>
         <G>
           <Circle
             cx="50%"
@@ -67,12 +58,12 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
           <Circle
             cx="50%"
             cy="50%"
-            stroke={strokeColor}
+            stroke={activeStrokeColor}
             strokeWidth={strokeWidth}
             r={circleRadius}
             fill="none"
             strokeDasharray={circleCircumference}
-            strokeLinecap={'round'}
+            strokeLinecap="round"
             strokeDashoffset={strokeDashoffset}
           />
         </G>

@@ -1,9 +1,4 @@
-import React, {
-  ErrorInfo,
-  FunctionComponent,
-  PropsWithChildren,
-  createElement,
-} from 'react';
+import React, { ErrorInfo, FunctionComponent, PropsWithChildren, createElement } from 'react';
 
 export type FallbackProps = {
   error?: Error;
@@ -28,12 +23,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromError(_error: Error) {
-    return {hasError: true};
+    return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
-      error: error,
+      error,
       errorInfo: JSON.stringify(errorInfo),
     });
   }

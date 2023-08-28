@@ -1,11 +1,12 @@
-import {AppRegistry, NativeModule, NativeModules} from 'react-native';
-import {withThemeProvider} from '../utils/useExpoTheme';
+import { AppRegistry, NativeModule, NativeModules } from 'react-native';
 
-type WindowsManager = NativeModule & {
+import { withThemeProvider } from '../utils/useExpoTheme';
+
+type WindowsManagerType = NativeModule & {
   openWindow: (window: string, options: WindowOptions) => Promise<void>;
   closeWindow(window: string): void;
 };
-const WindowsManager: WindowsManager = NativeModules.WindowsManager;
+const WindowsManager: WindowsManagerType = NativeModules.WindowsManager;
 
 const WindowsManagerConstants = NativeModules.WindowsManager.getConstants();
 
@@ -42,9 +43,7 @@ type WindowsConfig = {
 
 export function createWindowsNavigator<T extends WindowsConfig>(config: T) {
   Object.entries(config).forEach(([key, value]) => {
-    AppRegistry.registerComponent(key, () =>
-      withThemeProvider(value.component),
-    );
+    AppRegistry.registerComponent(key, () => withThemeProvider(value.component));
   });
 
   return {

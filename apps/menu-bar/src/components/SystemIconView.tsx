@@ -1,13 +1,11 @@
-import {requireNativeComponent, ImageProps} from 'react-native';
+import { requireNativeComponent, ImageProps } from 'react-native';
 
-type Props = Omit<ImageProps, 'source'> & {systemIconName: string};
+type Props = Omit<ImageProps, 'source'> & { systemIconName: string };
 
 const SystemIconViewInternal = requireNativeComponent<Props>('SystemIconView');
 
 const SystemIconView = (props: Props) => {
-  return (
-    <SystemIconViewInternal {...props} style={[defaultStyle, props?.style]} />
-  );
+  return <SystemIconViewInternal {...props} style={[defaultStyle, props?.style]} />;
 };
 
 const defaultStyle = {
