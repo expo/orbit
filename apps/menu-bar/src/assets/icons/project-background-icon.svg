@@ -1,0 +1,49 @@
+<svg
+  width="100%"
+  height="100%"
+  viewBox="0 0 32 32"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg">
+  <path
+    id="236964db"
+    opacity="0.25"
+    d="M16.0001 0V31.9999"
+    stroke="white"
+    strokeWidth="0.5"
+  />
+  <path
+    id="f2d3e9b4"
+    opacity="0.25"
+    d="M8.29639 0V31.9999"
+    stroke="white"
+    strokeWidth="0.5"
+  />
+  <path
+    id="959c405b"
+    opacity="0.25"
+    d="M23.7035 0V31.9999"
+    stroke="white"
+    strokeWidth="0.5"
+  />
+  <path
+    id="c2b76433"
+    opacity="0.25"
+    d="M31.9999 16.0001L-6.4373e-06 16.0001"
+    stroke="white"
+    strokeWidth="0.5"
+  />
+  <path
+    id="155bd64e"
+    opacity="0.25"
+    d="M31.9999 8.29642L-6.4373e-06 8.29642"
+    stroke="white"
+    strokeWidth="0.5"
+  />
+  <path
+    id="8821303d"
+    opacity="0.25"
+    d="M31.9999 23.7035L-6.4373e-06 23.7035"
+    stroke="white"
+    strokeWidth="0.5"
+  />
+</svg>
