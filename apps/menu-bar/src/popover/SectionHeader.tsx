@@ -1,18 +1,19 @@
 import React, { memo } from 'react';
 
-import { Text, View } from '../components';
+import { Row, Text } from '../components';
 import { useTheme } from '../providers/ThemeProvider';
 
 export const SECTION_HEADER_HEIGHT = 20;
 
 type Props = {
   label: string;
+  accessoryRight?: React.ReactNode;
 };
 
-const SectionHeader = ({ label }: Props) => {
+const SectionHeader = ({ accessoryRight, label }: Props) => {
   const theme = useTheme();
   return (
-    <View px="medium">
+    <Row px="medium" justify="between">
       <Text
         weight="semibold"
         size="tiny"
@@ -20,7 +21,8 @@ const SectionHeader = ({ label }: Props) => {
         style={{ opacity: theme === 'dark' ? 0.65 : 0.85 }}>
         {label}
       </Text>
-    </View>
+      {accessoryRight ? accessoryRight : null}
+    </Row>
   );
 };
 
