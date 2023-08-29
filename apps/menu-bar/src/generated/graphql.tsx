@@ -2853,9 +2853,21 @@ export type DeploymentFilterInput = {
 
 export type DeploymentInsights = {
   __typename?: 'DeploymentInsights';
+  embeddedUpdateTotalUniqueUsers: Scalars['Int']['output'];
+  embeddedUpdateUniqueUsersOverTime: UniqueUsersOverTimeData;
   id: Scalars['ID']['output'];
   mostPopularUpdates: Array<Update>;
   uniqueUsersOverTime: UniqueUsersOverTimeData;
+};
+
+
+export type DeploymentInsightsEmbeddedUpdateTotalUniqueUsersArgs = {
+  timespan: InsightsTimespan;
+};
+
+
+export type DeploymentInsightsEmbeddedUpdateUniqueUsersOverTimeArgs = {
+  timespan: InsightsTimespan;
 };
 
 
@@ -5800,17 +5812,18 @@ export type DeleteApplePushKeyResult = {
   id: Scalars['ID']['output'];
 };
 
-export type AppForPinnedListFragment = { __typename?: 'App', id: string, name: string, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } };
+export type AppForPinnedListFragment = { __typename?: 'App', id: string, name: string, slug: string, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } };
 
 export type GetAppsForPinnedListQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', viewer?: { __typename?: 'User', accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
+export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', viewer?: { __typename?: 'User', accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
 
 export const AppForPinnedListFragmentDoc = gql`
     fragment AppForPinnedList on App {
   id
   name
+  slug
   icon {
     url
     primaryColor

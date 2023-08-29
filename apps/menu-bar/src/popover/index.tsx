@@ -1,13 +1,10 @@
-import { ApolloProvider } from '@apollo/client';
 import React from 'react';
 
 import Core from './Core';
 import { ErrorBoundary, FallbackProps } from './ErrorBoundary';
 import Footer from './Footer';
-import { useApolloClient } from '../api/ApolloClient';
 import { Text, View } from '../components';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
-import { storage } from '../modules/Storage';
 
 type Props = {
   isDevWindow: boolean;
@@ -15,10 +12,6 @@ type Props = {
 
 function Popover(props: Props) {
   const { height } = useSafeDisplayDimensions();
-  const sessionSecret = storage.getString('sessionSecret');
-  const { client } = useApolloClient({ sessionSecret });
-
-  if (!client) return null;
 
   return (
     <View
@@ -29,11 +22,9 @@ function Popover(props: Props) {
          */
         maxHeight: height,
       }}>
-      <ApolloProvider client={client}>
-        <ErrorBoundary fallback={Fallback}>
-          <Core isDevWindow={props.isDevWindow} />
-        </ErrorBoundary>
-      </ApolloProvider>
+      <ErrorBoundary fallback={Fallback}>
+        <Core isDevWindow={props.isDevWindow} />
+      </ErrorBoundary>
       <Footer />
     </View>
   );

@@ -1972,6 +1972,8 @@ input DeploymentFilterInput {
 }
 
 type DeploymentInsights {
+  embeddedUpdateTotalUniqueUsers(timespan: InsightsTimespan!): Int!
+  embeddedUpdateUniqueUsersOverTime(timespan: InsightsTimespan!): UniqueUsersOverTimeData!
   id: ID!
   mostPopularUpdates(timespan: InsightsTimespan!): [Update!]!
   uniqueUsersOverTime(timespan: InsightsTimespan!): UniqueUsersOverTimeData!

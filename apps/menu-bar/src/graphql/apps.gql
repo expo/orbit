@@ -1,6 +1,7 @@
 fragment AppForPinnedList on App {
   id
   name
+  slug
   icon {
     url
     primaryColor
