@@ -1,7 +1,7 @@
 import { NativeModule, NativeModules } from 'react-native';
 
 type FilePickerModuleType = NativeModule & {
-  pickFileWithFilenameExtension: (extensions: string[]) => Promise<string>;
+  pickFileWithFilenameExtension: (extensions: string[], prompt?: string) => Promise<string>;
   pickFolder: () => Promise<string>;
 };
 

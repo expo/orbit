@@ -7,12 +7,16 @@
 RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(pickFileWithFilenameExtension:(NSArray<NSString *> *)filenameExtensions
+                  prompt:(NSString *)prompt
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [NSApp activateIgnoringOtherApps:YES];
     NSOpenPanel *panel = [NSOpenPanel openPanel];
+    if(prompt){
+      [panel setPrompt:prompt]; 
+    }
     [panel setAllowsMultipleSelection:NO];
     [panel setCanChooseDirectories:YES];
     [panel setCanCreateDirectories:YES];
