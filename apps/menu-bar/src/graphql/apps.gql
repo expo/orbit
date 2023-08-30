@@ -1,6 +1,8 @@
 fragment AppForPinnedList on App {
   id
   name
+  slug
+  latestActivity
   icon {
     url
     primaryColor
@@ -14,7 +16,7 @@ query GetAppsForPinnedList {
   viewer {
     accounts {
       id
-      appsPaginated(first: 10) {
+      appsPaginated(first: 10, filter: { sortByField: LATEST_ACTIVITY_TIME }) {
         edges {
           cursor
           node {

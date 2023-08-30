@@ -6,6 +6,7 @@ import {
   InMemoryCache,
   NormalizedCacheObject,
   concat,
+  ApolloProvider,
 } from '@apollo/client';
 import { MMKVWrapper, persistCache } from 'apollo3-cache-persist';
 import { useEffect, useState } from 'react';
@@ -54,11 +55,8 @@ const cache = new InMemoryCache({
   },
 });
 
-interface UseApolloClientParams {
-  sessionSecret?: string;
-}
-
-export const useApolloClient = ({ sessionSecret }: UseApolloClientParams) => {
+export const useApolloClient = () => {
+  const [sessionSecret, setSessionSecret] = useState(storage.getString('sessionSecret'));
   const [client, setClient] = useState<ApolloClient<NormalizedCacheObject>>();
 
   useEffect(() => {
@@ -93,7 +91,35 @@ export const useApolloClient = ({ sessionSecret }: UseApolloClientParams) => {
     init();
   }, [sessionSecret]);
 
+  useEffect(() => {
+    const listener = storage.addOnValueChangedListener((changedKey) => {
+      if (changedKey === 'sessionSecret') {
+        setSessionSecret(storage.getString('sessionSecret'));
+      }
+    });
+
+    return () => {
+      listener.remove();
+    };
+  });
+
   return {
     client,
   };
 };
+
+export function withApolloProvider<P extends object>(Component: React.ComponentType<P>) {
+  return (props: P) => {
+    const { client } = useApolloClient();
+
+    if (!client) {
+      return null;
+    }
+
+    return (
+      <ApolloProvider client={client}>
+        <Component {...props} />
+      </ApolloProvider>
+    );
+  };
+}

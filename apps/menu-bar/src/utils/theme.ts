@@ -263,3 +263,28 @@ export function addOpacity(colorString: string, opacity: number) {
 
   return `#${color}${opacityHex}`;
 }
+
+const COLORS_MAP = {
+  'app-cyan': '#07c0cb',
+  'app-light-blue': '#1e92c4',
+  'app-dark-blue': '#0b67af',
+  'app-indigo': '#4b50b2',
+  'app-purple': '#8945a3',
+  'app-pink': '#c04891',
+  'app-orange': '#e96d3c',
+  'app-gold': '#f38f2f',
+  'app-yellow': '#eebc01',
+  'app-lime': '#aabd04',
+  'app-light-green': '#6aa72a',
+  'app-dark-green': '#3a8e39',
+} as const;
+
+const COLORS = Object.values(COLORS_MAP);
+
+function hashNameToColorIndex(name: string) {
+  return Array.from(name).reduce((acc, val) => (acc * 31 + val.charCodeAt(0)) % COLORS.length, 0);
+}
+
+export function getProjectBackgroundColor(name: string) {
+  return COLORS[hashNameToColorIndex(name)];
+}

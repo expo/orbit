@@ -3,7 +3,9 @@ import { Alert, SectionList } from 'react-native';
 
 import { FOOTER_HEIGHT } from './Footer';
 import Item from './Item';
+import ProjectsSection, { PROJECTS_SECTION_HEIGHT } from './ProjectsSection';
 import SectionHeader, { SECTION_HEADER_HEIGHT } from './SectionHeader';
+import { withApolloProvider } from '../api/ApolloClient';
 import Earth02Icon from '../assets/icons/earth-02.svg';
 import File05Icon from '../assets/icons/file-05.svg';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
@@ -13,6 +15,7 @@ import { launchSnackAsync } from '../commands/launchSnackAsync';
 import { Spacer, Text, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import ProgressIndicator from '../components/ProgressIndicator';
+import { useGetAppsForPinnedListQuery, AppForPinnedListFragment } from '../generated/graphql';
 import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useListDevices } from '../hooks/useListDevices';
@@ -46,6 +49,23 @@ function Core(props: Props) {
     ios: undefined,
   });
 
+  const { data } = useGetAppsForPinnedListQuery({
+    fetchPolicy: 'cache-and-network',
+  });
+
+  const apps = data?.viewer?.accounts
+    ?.reduce((acc: AppForPinnedListFragment[], account) => {
+      account.appsPaginated?.edges?.forEach((edge) => {
+        if (edge?.node) {
+          acc.push(edge.node);
+        }
+      });
+
+      return acc;
+    }, [])
+    ?.sort((a, b) => (b.latestActivity || '').localeCompare(a.latestActivity || ''));
+  const showProjectsSection = (apps?.length || 0) > 0;
+
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
@@ -55,9 +75,14 @@ function Core(props: Props) {
 
   const sections = getSectionsFromDeviceList(devices);
 
+  // TODO: Extract into a hook
   const displayDimensions = useSafeDisplayDimensions();
   const estimatedAvailableSizeForDevices =
-    (displayDimensions.height || 0) - FOOTER_HEIGHT - BUILDS_SECTION_HEIGHT - 30;
+    (displayDimensions.height || 0) -
+    FOOTER_HEIGHT -
+    BUILDS_SECTION_HEIGHT -
+    (showProjectsSection ? PROJECTS_SECTION_HEIGHT : 0) -
+    30;
   const heightOfAllDevices =
     DEVICE_ITEM_HEIGHT * devices?.length + SECTION_HEADER_HEIGHT * (sections?.length || 0);
   const estimatedListHeight =
@@ -242,6 +267,7 @@ function Core(props: Props) {
           </View>
         ) : null}
       </View>
+      {apps?.length ? <ProjectsSection apps={apps} /> : null}
       <View shrink="1" pt="tiny">
         <SectionList
           sections={sections}
@@ -272,4 +298,4 @@ function Core(props: Props) {
 
 const Separator = () => <Spacer.Vertical size="tiny" />;
 
-export default memo(Core);
+export default memo(withApolloProvider(Core));

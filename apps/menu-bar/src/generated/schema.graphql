@@ -1967,11 +1967,13 @@ type DeploymentEdge {
 }
 
 input DeploymentFilterInput {
-  channelId: String
-  runtimeId: String
+  channel: String
+  runtimeVersion: String
 }
 
 type DeploymentInsights {
+  embeddedUpdateTotalUniqueUsers(timespan: InsightsTimespan!): Int!
+  embeddedUpdateUniqueUsersOverTime(timespan: InsightsTimespan!): UniqueUsersOverTimeData!
   id: ID!
   mostPopularUpdates(timespan: InsightsTimespan!): [Update!]!
   uniqueUsersOverTime(timespan: InsightsTimespan!): UniqueUsersOverTimeData!
