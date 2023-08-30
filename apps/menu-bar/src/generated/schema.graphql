@@ -1967,8 +1967,8 @@ type DeploymentEdge {
 }
 
 input DeploymentFilterInput {
-  channelId: String
-  runtimeId: String
+  channel: String
+  runtimeVersion: String
 }
 
 type DeploymentInsights {
