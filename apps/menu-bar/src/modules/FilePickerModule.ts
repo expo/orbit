@@ -10,7 +10,10 @@ const FilePickerModule: FilePickerModuleType = NativeModules.FilePicker;
 export default {
   ...FilePickerModule,
   getAppAsync: () => {
-    return FilePickerModule.pickFileWithFilenameExtension(['apk', 'app', 'gzip', 'ipa', 'tar']);
+    return FilePickerModule.pickFileWithFilenameExtension(
+      ['apk', 'app', 'gzip', 'ipa', 'tar'],
+      'Select'
+    );
   },
   pickFolder: async () => FilePickerModule.pickFolder(),
 };
