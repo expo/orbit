@@ -60,9 +60,10 @@
       [self->_windowsMap setObject:newWindow forKey:moduleName];
       window = newWindow;
     }else{
-      NSRect currentFrame = [window frame];
-      if(currentFrame.size.width != width || currentFrame.size.height != height){
-        NSRect newFrame = NSMakeRect(originX, originY, width, height);
+      NSRect contentRect = [window contentRectForFrameRect:[window frame]];
+      if(contentRect.size.width != width || contentRect.size.height != height){
+        CGFloat titleBarHeight = [window frame].size.height - contentRect.size.height;
+        NSRect newFrame = NSMakeRect(originX, originY, width, height + titleBarHeight);
         [window setFrame:newFrame display:YES];
       }
     }
