@@ -11,8 +11,8 @@ export const WindowsNavigator = createWindowsNavigator({
         // eslint-disable-next-line no-bitwise
         mask: WindowStyleMask.Titled | WindowStyleMask.Closable,
         titlebarAppearsTransparent: true,
-        height: 275,
-        width: 400,
+        height: 352,
+        width: 500,
       },
     },
   },
