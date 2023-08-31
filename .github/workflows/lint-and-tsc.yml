@@ -1,4 +1,4 @@
-name: Lint and TSC
+name: Lint, TSC and Changelog checker
 
 on:
   push:
@@ -9,6 +9,11 @@ on:
       - packages/**
       - ts-declarations/**
   pull_request:
+    # The specific activity types are listed here to include "labeled" and "unlabeled"
+    # (which are not included by default for the "pull_request" trigger).
+    # This is needed to allow skipping enforcement of the changelog in PRs with specific labels,
+    # as defined in the (optional) "skipLabels" property.
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
     paths:
       - .github/workflows/lint-and-tsc.yml
       - apps/**
@@ -51,3 +56,9 @@ jobs:
       - name: 🏗️ TSC "CLI" app files
         run: yarn tsc --noEmit
         working-directory: apps/cli
+
+      - name: Check CHANGELOG entry
+        uses: dangoslen/changelog-enforcer@v3.2.0
+        with:
+          skipLabels: "skip-changelog-check"
+          missingUpdateErrorMessage: "Your changes should be noted in the changelog. Read [Updating Changelogs](https://github.com/expo/expo/blob/main/guides/contributing/Updating%20Changelogs.md) guide and consider adding an appropriate entry."
