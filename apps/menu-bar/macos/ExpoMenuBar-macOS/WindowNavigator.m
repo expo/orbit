@@ -28,6 +28,10 @@
 
 - (void)openWindow:(NSString *)moduleName options:(NSDictionary *)options {
   dispatch_async(dispatch_get_main_queue(), ^{
+    if(self->_windowsMap.count == 0){
+      [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    }
+    
     NSWindow *window = self->_windowsMap[moduleName];
     NSString *title = options[@"title"] ?: moduleName;
 
@@ -50,6 +54,9 @@
 
       newWindow.deallocCallback = ^{
         [self->_windowsMap removeObjectForKey:moduleName];
+        if(self->_windowsMap.count == 0){
+          [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+        }
       };
 
       RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
