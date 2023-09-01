@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Prevent the AutoLauncher process from running in the background after launching the main app. ([#51](https://github.com/expo/orbit/pull/51) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 ## 0.1.2 — 2023-08-13
