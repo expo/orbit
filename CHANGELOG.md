@@ -6,6 +6,7 @@
 
 ### 🎉 New features
 
+- Added local HTTP server to circumvent deep-link limitations. ([#52](https://github.com/expo/orbit/pull/52) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
