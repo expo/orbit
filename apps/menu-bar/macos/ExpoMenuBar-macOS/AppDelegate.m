@@ -7,6 +7,8 @@
 
 #import "DevViewController.h"
 #import "WindowNavigator.h"
+#import "Expo_Orbit-Swift.h"
+
 
 @interface AppDelegate () <RCTBridgeDelegate>
 #if RCT_DEV
@@ -58,6 +60,8 @@
   #endif
 #endif
   [NSApp activateIgnoringOtherApps:YES];
+  
+  httpServer = [[SwifterWrapper alloc] init]; 
 }
 
 - (NSMenu *)createContextMenu {

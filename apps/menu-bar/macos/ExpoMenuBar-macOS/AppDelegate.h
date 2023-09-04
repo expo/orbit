@@ -1,11 +1,14 @@
 #import <Cocoa/Cocoa.h>
 
+#import "Expo_Orbit-Swift.h"
+
 @class RCTBridge;
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 {
   NSStatusItem *statusItem;
   NSPopover *popover;
+  SwifterWrapper *httpServer;
 }
 
 @property(nonatomic, readonly) RCTBridge *bridge;

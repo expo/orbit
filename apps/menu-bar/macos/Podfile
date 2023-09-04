@@ -27,7 +27,10 @@ target 'ExpoMenuBar-macOS' do
   )
 
   # Pods specifically for macOS target
+  pod 'Swifter', '~> 1.5.0'
 end
+
+use_frameworks! :linkage => :static
 
 post_install do |installer|
   react_native_post_install(installer, relative_rn_macos_path)

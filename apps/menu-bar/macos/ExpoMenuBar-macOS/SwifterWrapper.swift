@@ -1,0 +1,90 @@
+import Foundation
+import Swifter
+import Dispatch
+
+private let PORTS = [35783, 47909, 44171, 50799]
+private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test"]
+
+@objc class SwifterWrapper: NSObject {
+  let server = HttpServer()
+
+  override init() {
+    super.init()
+
+    server.middleware.append { request in
+      guard let origin = request.headers["origin"], (request.headers["referer"] != nil) else {
+        return .forbidden
+      }
+
+      if !WHITELISTED_DOMAINS.contains(self.extractRootDomain(from: origin)) {
+        return .forbidden
+      }
+
+      return nil
+    }
+
+    server.GET["/orbit/status"] = { _ in
+      let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+      return HttpResponse.ok(.json(["ok": true, "version": version]))
+    }
+
+    server.GET["/orbit/open"] = { request in
+      guard let (_, urlParam) = request.queryParams.first(where: { $0.0 == "url" }) else {
+        return .badRequest(nil)
+      }
+
+      if !WHITELISTED_DOMAINS.contains(self.extractRootDomain(from: urlParam)) {
+        return .badRequest(nil)
+      }
+
+      let deepLinkURLString = urlParam.replacingOccurrences(of: "https://", with: "expo-orbit://")
+      let appleEvent = NSAppleEventDescriptor(eventClass: AEEventClass(kInternetEventClass),
+                                              eventID: AEEventID(kAEGetURL),
+                                              targetDescriptor: NSAppleEventDescriptor.currentProcess(),
+                                              returnID: AEReturnID(kAutoGenerateReturnID),
+                                              transactionID: AETransactionID(kAnyTransactionID))
+      appleEvent.setDescriptor(NSAppleEventDescriptor(string: deepLinkURLString), forKeyword: keyDirectObject)
+      DispatchQueue.main.sync {
+        do {
+          try appleEvent.sendEvent(timeout: 3)
+        } catch {
+          print("An error occurred: \(error)")
+        }
+      }
+
+      return HttpResponse.ok(.json(["ok": true]))
+    }
+
+    startServer()
+  }
+
+  private func startServer(attempts: Int = 0) {
+    if PORTS.count - 1 < attempts {
+      return
+    }
+
+    let port: UInt16 = UInt16(PORTS[attempts])
+    do {
+      try server.start(port)
+      print("Local server running on port \(try server.port()).")
+    } catch SocketError.bindFailed(let message) where message == "Address already in use" {
+      startServer(attempts: attempts + 1)
+    } catch {
+      print("Server start error: \(error)")
+    }
+  }
+
+  private func extractRootDomain(from urlString: String) -> String {
+    guard let originUrl = URL(string: urlString),
+          let hostName = originUrl.host else {
+      return ""
+    }
+
+    let components = hostName.components(separatedBy: ".")
+    if components.count > 2 {
+      return components.suffix(2).joined(separator: ".")
+    } else {
+      return hostName
+    }
+  }
+}
