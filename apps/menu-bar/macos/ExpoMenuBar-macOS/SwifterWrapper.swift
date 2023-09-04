@@ -3,7 +3,7 @@ import Swifter
 import Dispatch
 
 private let PORTS = [35783, 47909, 44171, 50799]
-private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test"]
+private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
 
 @objc class SwifterWrapper: NSObject {
   let server = HttpServer()
@@ -23,9 +23,9 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test"]
       return nil
     }
 
-    server.GET["/orbit/status"] = { _ in
+    server.GET["/orbit/status"] = { request in
       let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
-      return HttpResponse.ok(.json(["ok": true, "version": version]))
+      return self.okJsonResponseWithCorsHeaders(json: ["ok": true, "version": version], request: request)
     }
 
     server.GET["/orbit/open"] = { request in
@@ -52,7 +52,7 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test"]
         }
       }
 
-      return HttpResponse.ok(.json(["ok": true]))
+      return self.okJsonResponseWithCorsHeaders(json: ["ok": true], request: request)
     }
 
     startServer()
@@ -86,5 +86,20 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test"]
     } else {
       return hostName
     }
+  }
+
+  func okJsonResponseWithCorsHeaders(json: Any, request: HttpRequest) -> HttpResponse {
+    var extraHeaders = ["Content-Type": "application/json"]
+    if request.headers["origin"] != nil {
+      extraHeaders["Access-Control-Allow-Origin"] = request.headers["origin"]
+    }
+
+    return .raw(200, "OK", extraHeaders, { writer in
+      guard JSONSerialization.isValidJSONObject(json) else {
+        throw SerializationError.invalidObject
+      }
+      let data = try JSONSerialization.data(withJSONObject: json)
+      try? writer.write(data)
+    })
   }
 }
