@@ -75,7 +75,7 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
   }
 
   private func extractRootDomain(from urlString: String) -> String {
-    guard let originUrl = URL(string: urlString),
+    guard let originUrl = URL(string: urlString.removingPercentEncoding ?? ""),
           let hostName = originUrl.host else {
       return ""
     }
