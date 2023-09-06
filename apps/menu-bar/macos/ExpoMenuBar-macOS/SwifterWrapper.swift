@@ -29,7 +29,8 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
     }
 
     server.GET["/orbit/open"] = { request in
-      guard let (_, urlParam) = request.queryParams.first(where: { $0.0 == "url" }) else {
+      guard let (_, urlParam) = request.queryParams.first(where: { $0.0 == "url" }),
+            let decodedURLParam = urlParam.removingPercentEncoding else {
         return .badRequest(nil)
       }
 
@@ -37,13 +38,15 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
         return .badRequest(nil)
       }
 
-      let deepLinkURLString = urlParam.replacingOccurrences(of: "https://", with: "expo-orbit://")
+      let deeplinkURLString = decodedURLParam.replacingOccurrences(of: "https://", with: "expo-orbit://")
+                                             .replacingOccurrences(of: "exp://", with: "expo-orbit://")
+
       let appleEvent = NSAppleEventDescriptor(eventClass: AEEventClass(kInternetEventClass),
                                               eventID: AEEventID(kAEGetURL),
                                               targetDescriptor: NSAppleEventDescriptor.currentProcess(),
                                               returnID: AEReturnID(kAutoGenerateReturnID),
                                               transactionID: AETransactionID(kAnyTransactionID))
-      appleEvent.setDescriptor(NSAppleEventDescriptor(string: deepLinkURLString), forKeyword: keyDirectObject)
+      appleEvent.setDescriptor(NSAppleEventDescriptor(string: deeplinkURLString), forKeyword: keyDirectObject)
       DispatchQueue.main.sync {
         do {
           try appleEvent.sendEvent(timeout: 3)
