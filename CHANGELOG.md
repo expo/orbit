@@ -8,10 +8,14 @@
 
 - Added local HTTP server to circumvent deep-link limitations. ([#52](https://github.com/expo/orbit/pull/52), [#53](https://github.com/expo/orbit/pull/53), [#54](https://github.com/expo/orbit/pull/54), [#55](https://github.com/expo/orbit/pull/55) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add Projects section to the menu bar. ([#46](https://github.com/expo/orbit/pull/46) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add support for login to Expo. ([#41](https://github.com/expo/orbit/pull/41), [#43](https://github.com/expo/orbit/pull/43), [#44](https://github.com/expo/orbit/pull/44), [#45](https://github.com/expo/orbit/pull/45) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
 - Prevent the AutoLauncher process from running in the background after launching the main app. ([#51](https://github.com/expo/orbit/pull/51) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix WindowNavigator size calculations when showing an existing window. ([#48](https://github.com/expo/orbit/pull/48) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Remove additional spacing from Builds header. ([#40](https://github.com/expo/orbit/pull/40) by [@Simek](https://github.com/Simek))
 
 ### 💡 Others
 
