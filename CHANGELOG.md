@@ -6,6 +6,7 @@
 
 ### 🎉 New features
 
+- Added drag and drop support for installing apps. ([#57](https://github.com/expo/orbit/pull/57) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added support for installing apps directly from Finder. ([#56](https://github.com/expo/orbit/pull/56) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added local HTTP server to circumvent deep-link limitations. ([#52](https://github.com/expo/orbit/pull/52), [#53](https://github.com/expo/orbit/pull/53), [#54](https://github.com/expo/orbit/pull/54), [#55](https://github.com/expo/orbit/pull/55) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
