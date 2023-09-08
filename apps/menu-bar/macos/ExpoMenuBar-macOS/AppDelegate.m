@@ -9,6 +9,7 @@
 #import "WindowNavigator.h"
 #import "FileHandler.h"
 #import "Expo_Orbit-Swift.h"
+#import "DragDropStatusItemView.h"
 
 
 @interface AppDelegate () <RCTBridgeDelegate>
@@ -28,9 +29,11 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
   statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
-  NSImage *image = [NSImage imageNamed:@"menu-bar-icon"];
-  [image setTemplate:YES];
-  statusItem.button.image = image;
+  DragDropStatusItemView *dragDropView = [[DragDropStatusItemView alloc] initWithFrame:NSMakeRect(0, 0, 22, 22)];
+   dragDropView.openPopoverAction = ^{
+     [self openPopover];
+   };
+  [statusItem.button addSubview:dragDropView];
   [statusItem.button setTarget:self];
   [statusItem.button sendActionOn:NSEventMaskRightMouseUp | NSEventMaskLeftMouseUp];
   [statusItem.button setAction:@selector(onPressStatusItem:)];
