@@ -20,6 +20,7 @@ import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useListDevices } from '../hooks/useListDevices';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
+import { useFileHandler } from '../modules/FileHandlerModule';
 import FilePicker from '../modules/FilePickerModule';
 import {
   SelectedDevicesIds,
@@ -149,10 +150,11 @@ function Core(props: Props) {
     [devices, selectedDevicesIds]
   );
 
-  const handleEASUrl = useCallback(
-    async (url: string) => {
+  const installAppFromURI = useCallback(
+    async (appURI: string) => {
       try {
-        const platform = getPlatformFromURI(url);
+        let localFilePath = appURI.startsWith('/') ? appURI : undefined;
+        const platform = getPlatformFromURI(appURI);
         const device = getDeviceByPlatform(platform);
         if (!device) {
           Alert.alert(
@@ -161,15 +163,21 @@ function Core(props: Props) {
           return;
         }
 
-        const deviceId = getDeviceId(device);
-        setStatus(Status.DOWNLOADING);
-        const [buildPath] = await Promise.all([
-          downloadBuildAsync(url, setProgress),
-          ensureDeviceIsRunning(device),
-        ]);
+        if (!localFilePath) {
+          setStatus(Status.DOWNLOADING);
+          const [buildPath] = await Promise.all([
+            downloadBuildAsync(appURI, setProgress),
+            ensureDeviceIsRunning(device),
+          ]);
+
+          localFilePath = buildPath;
+        } else {
+          await ensureDeviceIsRunning(device);
+        }
 
         setStatus(Status.INSTALLING);
-        await installAndLaunchAppAsync({ appPath: buildPath, deviceId });
+        const deviceId = getDeviceId(device);
+        await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
       } catch (error) {
         console.log(`error ${error}`);
       } finally {
@@ -182,29 +190,11 @@ function Core(props: Props) {
   );
 
   const openFilePicker = async () => {
-    try {
-      const appPath = await FilePicker.getAppAsync();
-      const platform = getPlatformFromURI(appPath);
-
-      const device = getDeviceByPlatform(platform);
-      if (!device) {
-        return; // handle error
-      }
-
-      await ensureDeviceIsRunning(device);
-
-      const deviceId = getDeviceId(device);
-      setStatus(Status.INSTALLING);
-      await installAndLaunchAppAsync({
-        appPath,
-        deviceId,
-      });
-    } finally {
-      setTimeout(() => {
-        setStatus(Status.LISTENING);
-      }, 2000);
-    }
+    const appPath = await FilePicker.getAppAsync();
+    await installAppFromURI(appPath);
   };
+
+  useFileHandler({ onOpenFile: installAppFromURI });
 
   useDeepLinking(
     useCallback(
@@ -217,10 +207,10 @@ function Core(props: Props) {
             return handleSnackUrl(`exp://${urlWithoutProtocol}`);
           }
 
-          handleEASUrl(`https://${urlWithoutProtocol}`);
+          installAppFromURI(`https://${urlWithoutProtocol}`);
         }
       },
-      [props.isDevWindow, handleEASUrl, handleSnackUrl]
+      [props.isDevWindow, installAppFromURI, handleSnackUrl]
     )
   );
 

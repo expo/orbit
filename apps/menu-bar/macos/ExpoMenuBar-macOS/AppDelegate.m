@@ -7,6 +7,7 @@
 
 #import "DevViewController.h"
 #import "WindowNavigator.h"
+#import "FileHandler.h"
 #import "Expo_Orbit-Swift.h"
 
 
@@ -60,8 +61,15 @@
   #endif
 #endif
   [NSApp activateIgnoringOtherApps:YES];
-  
-  httpServer = [[SwifterWrapper alloc] init]; 
+
+  httpServer = [[SwifterWrapper alloc] init];
+}
+
+- (BOOL)application:(NSApplication *)_ openFile:(NSString *)filename
+{
+  [self openPopover];
+  [[FileHandler shared] notifyFileOpened:filename];
+  return  YES;
 }
 
 - (NSMenu *)createContextMenu {
