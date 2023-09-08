@@ -6,6 +6,45 @@
 	<string>fonts</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+			<dict>
+					<key>CFBundleTypeExtensions</key>
+					<array>
+							<string>apk</string>
+					</array>
+					<key>CFBundleTypeName</key>
+					<string>APK</string>
+					<key>CFBundleTypeRole</key>
+					<string>Viewer</string>
+					<key>LSHandlerRank</key>
+					<string>Alternate</string>
+			</dict>
+			<dict>
+					<key>CFBundleTypeExtensions</key>
+					<array>
+							<string>ipa</string>
+					</array>
+					<key>CFBundleTypeName</key>
+					<string>IPA</string>
+					<key>CFBundleTypeRole</key>
+					<string>Viewer</string>
+					<key>LSHandlerRank</key>
+					<string>Alternate</string>
+			</dict>
+			<dict>
+					<key>LSItemContentTypes</key>
+					<array>
+							<string>org.gnu.gnu-zip-archive</string>
+					</array>
+					<key>CFBundleTypeName</key>
+					<string>tar.gz</string>
+					<key>CFBundleTypeRole</key>
+					<string>Viewer</string>
+					<key>LSHandlerRank</key>
+					<string>Alternate</string>
+			</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIconFile</key>

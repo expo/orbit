@@ -25,6 +25,8 @@
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
 		C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */; };
+		C06B8F8A2AAA9024009F2BB5 /* FileHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = C06B8F892AAA9024009F2BB5 /* FileHandler.m */; };
+		C06B8F8D2AAA9058009F2BB5 /* FileHandlerManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C06B8F8C2AAA9058009F2BB5 /* FileHandlerManager.m */; };
 		C081507F2A610E9C00E8890F /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = C081507E2A610E9C00E8890F /* fonts */; };
 		C08E65212A5C411D0079E3A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E65202A5C411D0079E3A9 /* AppDelegate.swift */; };
 		C08E652E2A5C42950079E3A9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E652D2A5C42950079E3A9 /* main.swift */; };
@@ -92,6 +94,10 @@
 		C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemIconViewManager.h; sourceTree = "<group>"; };
 		C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SystemIconViewManager.m; sourceTree = "<group>"; };
 		C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTImageView+Private.h"; sourceTree = "<group>"; };
+		C06B8F892AAA9024009F2BB5 /* FileHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FileHandler.m; sourceTree = "<group>"; };
+		C06B8F8B2AAA9032009F2BB5 /* FileHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileHandler.h; sourceTree = "<group>"; };
+		C06B8F8C2AAA9058009F2BB5 /* FileHandlerManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FileHandlerManager.m; sourceTree = "<group>"; };
+		C06B8F8E2AAA906A009F2BB5 /* FileHandlerManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileHandlerManager.h; sourceTree = "<group>"; };
 		C081507E2A610E9C00E8890F /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../src/assets/fonts; sourceTree = "<group>"; };
 		C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C08E65202A5C411D0079E3A9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -201,6 +207,10 @@
 				C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */,
 				C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */,
 				C051EC0C2AA227C600C6D615 /* ExpoMenuBar-macOS-Bridging-Header.h */,
+				C06B8F892AAA9024009F2BB5 /* FileHandler.m */,
+				C06B8F8B2AAA9032009F2BB5 /* FileHandler.h */,
+				C06B8F8C2AAA9058009F2BB5 /* FileHandlerManager.m */,
+				C06B8F8E2AAA906A009F2BB5 /* FileHandlerManager.h */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -462,10 +472,12 @@
 			files = (
 				C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */,
 				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
+				C06B8F8A2AAA9024009F2BB5 /* FileHandler.m in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */,
 				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
+				C06B8F8D2AAA9058009F2BB5 /* FileHandlerManager.m in Sources */,
 				C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */,
 				C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */,
 				C051E6BB2A991C4200C6D615 /* WebAuthenticationSession.m in Sources */,
@@ -517,10 +529,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -552,10 +561,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
