@@ -10,7 +10,7 @@
 - Added support for installing apps directly from Finder. ([#56](https://github.com/expo/orbit/pull/56) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added local HTTP server to circumvent deep-link limitations. ([#52](https://github.com/expo/orbit/pull/52), [#53](https://github.com/expo/orbit/pull/53), [#54](https://github.com/expo/orbit/pull/54), [#55](https://github.com/expo/orbit/pull/55) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Added Projects section to the menu bar. ([#46](https://github.com/expo/orbit/pull/46) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Added Projects section to the menu bar. ([#46](https://github.com/expo/orbit/pull/46), [#59](https://github.com/expo/orbit/pull/59) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added support for login to Expo. ([#41](https://github.com/expo/orbit/pull/41), [#43](https://github.com/expo/orbit/pull/43), [#44](https://github.com/expo/orbit/pull/44), [#45](https://github.com/expo/orbit/pull/45) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
