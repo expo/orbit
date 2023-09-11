@@ -12,7 +12,7 @@ export const ProjectIcon = ({ name, iconUrl, isPinned }: Props) => {
   const backgroundColor = getProjectBackgroundColor(name);
 
   return (
-    <View style={styles.icon}>
+    <View style={styles.icon} align="centered">
       <View rounded="small" overflow="hidden" style={styles.icon}>
         {iconUrl ? (
           <Image source={{ uri: iconUrl }} style={styles.flex} />
@@ -21,7 +21,7 @@ export const ProjectIcon = ({ name, iconUrl, isPinned }: Props) => {
             <View inset="full">
               <ProjectBackgroundIcon />
             </View>
-            <Text weight="medium" size="large">
+            <Text weight="medium" size="large" style={styles.text}>
               {name[0]?.toUpperCase()}
             </Text>
           </View>
@@ -44,5 +44,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
+  },
+  text: {
+    textAlign: 'center',
   },
 });

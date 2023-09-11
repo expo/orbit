@@ -15,9 +15,9 @@ import { launchSnackAsync } from '../commands/launchSnackAsync';
 import { Spacer, Text, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import ProgressIndicator from '../components/ProgressIndicator';
-import { useGetAppsForPinnedListQuery, AppForPinnedListFragment } from '../generated/graphql';
 import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
+import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
 import { useListDevices } from '../hooks/useListDevices';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import { useFileHandler } from '../modules/FileHandlerModule';
@@ -50,22 +50,8 @@ function Core(props: Props) {
     ios: undefined,
   });
 
-  const { data } = useGetAppsForPinnedListQuery({
-    fetchPolicy: 'cache-and-network',
-  });
-
-  const apps = data?.viewer?.accounts
-    ?.reduce((acc: AppForPinnedListFragment[], account) => {
-      account.appsPaginated?.edges?.forEach((edge) => {
-        if (edge?.node) {
-          acc.push(edge.node);
-        }
-      });
-
-      return acc;
-    }, [])
-    ?.sort((a, b) => (b.latestActivity || '').localeCompare(a.latestActivity || ''));
-  const showProjectsSection = (apps?.length || 0) > 0;
+  const { apps } = useGetPinnedApps();
+  const showProjectsSection = Boolean(apps?.length);
 
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
