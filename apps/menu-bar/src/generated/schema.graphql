@@ -491,6 +491,7 @@ input AndroidBuilderEnvironmentInput {
   image: String
   ndk: String
   node: String
+  pnpm: String
   yarn: String
 }
 
@@ -2524,6 +2525,7 @@ input IosBuilderEnvironmentInput {
   fastlane: String
   image: String
   node: String
+  pnpm: String
   yarn: String
 }
 
@@ -2770,6 +2772,7 @@ type MeteredBillingStatus {
 }
 
 type Notification {
+  accountName: String!
   createdAt: DateTime!
   event: NotificationEvent!
   id: ID!
@@ -3122,6 +3125,9 @@ type RootMutation {
   updateChannel: UpdateChannelMutation!
   uploadSession: UploadSession!
 
+  """Mutations that create, update, and delete pinned apps"""
+  userAppPins: UserAppPinMutation!
+
   """Mutations that create, delete, and accept UserInvitations"""
   userInvitation: UserInvitationMutation!
 
@@ -3312,6 +3318,7 @@ type SSOUser implements Actor & UserActor {
   lastName: String
   location: String @deprecated
   notificationSubscriptions(filter: NotificationSubscriptionFilter): [NotificationSubscription!]!
+  pinnedApps: [App!]!
 
   """Associated accounts"""
   primaryAccount: Account!
@@ -3321,7 +3328,6 @@ type SSOUser implements Actor & UserActor {
   snacks(limit: Int!, offset: Int!): [Snack!]!
   twitterUsername: String @deprecated
   username: String!
-  websiteNotifications: [Notification!]! @deprecated
   websiteNotificationsPaginated(after: String, before: String, first: Int, last: Int): WebsiteNotificationsConnection!
 }
 
@@ -3936,6 +3942,7 @@ type User implements Actor & UserActor {
 
   """Pending UserInvitations for this user. Only resolves for the viewer."""
   pendingUserInvitations: [UserInvitation!]!
+  pinnedApps: [App!]!
 
   """Associated accounts"""
   primaryAccount: Account!
@@ -3948,7 +3955,6 @@ type User implements Actor & UserActor {
   snacks(limit: Int!, offset: Int!): [Snack!]!
   twitterUsername: String @deprecated
   username: String!
-  websiteNotifications: [Notification!]! @deprecated
   websiteNotificationsPaginated(after: String, before: String, first: Int, last: Int): WebsiteNotificationsConnection!
 }
 
@@ -4009,6 +4015,7 @@ interface UserActor implements Actor {
   lastName: String
   location: String @deprecated
   notificationSubscriptions(filter: NotificationSubscriptionFilter): [NotificationSubscription!]!
+  pinnedApps: [App!]!
 
   """Associated accounts"""
   primaryAccount: Account!
@@ -4018,7 +4025,6 @@ interface UserActor implements Actor {
   snacks(limit: Int!, offset: Int!): [Snack!]!
   twitterUsername: String @deprecated
   username: String!
-  websiteNotifications: [Notification!]! @deprecated
   websiteNotificationsPaginated(after: String, before: String, first: Int, last: Int): WebsiteNotificationsConnection!
 }
 
@@ -4049,6 +4055,11 @@ type UserActorQuery {
 
   """Query a UserActor by username"""
   byUsername(username: String!): UserActor! @deprecated(reason: "Public user actor queries are no longer supported")
+}
+
+type UserAppPinMutation {
+  pinApp(appId: ID!): ID!
+  unpinApp(appId: ID!): ID
 }
 
 input UserDataInput {

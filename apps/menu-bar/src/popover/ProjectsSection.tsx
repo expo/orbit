@@ -5,11 +5,12 @@ import SectionHeader from './SectionHeader';
 import { Row, Text, View } from '../components';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { AppForPinnedListFragment } from '../generated/graphql';
+import { PinnedApp } from '../hooks/useGetPinnedApps';
 
 export const PROJECTS_SECTION_HEIGHT = 192;
 
 interface Props {
-  apps: AppForPinnedListFragment[];
+  apps: PinnedApp[];
 }
 
 export const ProjectsSection = ({ apps }: Props) => {
@@ -30,11 +31,11 @@ export const ProjectsSection = ({ apps }: Props) => {
           }
         />
         <View pt="1" gap="1">
-          {apps?.slice(0, 3)?.map((app) => {
+          {apps?.map((app) => {
             return (
               <Item key={app.id} onPress={() => openProjectURL(app)}>
                 <Row gap="2" align="center">
-                  <ProjectIcon name={app.name} iconUrl={app.icon?.url} />
+                  <ProjectIcon name={app.name} iconUrl={app.icon?.url} isPinned={app.isPinned} />
                   <View>
                     <Text size="small" color="default">
                       {app.name}

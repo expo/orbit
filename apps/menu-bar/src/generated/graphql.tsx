@@ -812,6 +812,7 @@ export type AndroidBuilderEnvironmentInput = {
   image?: InputMaybe<Scalars['String']['input']>;
   ndk?: InputMaybe<Scalars['String']['input']>;
   node?: InputMaybe<Scalars['String']['input']>;
+  pnpm?: InputMaybe<Scalars['String']['input']>;
   yarn?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -3622,6 +3623,7 @@ export type IosBuilderEnvironmentInput = {
   fastlane?: InputMaybe<Scalars['String']['input']>;
   image?: InputMaybe<Scalars['String']['input']>;
   node?: InputMaybe<Scalars['String']['input']>;
+  pnpm?: InputMaybe<Scalars['String']['input']>;
   yarn?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -3931,6 +3933,7 @@ export type MeteredBillingStatus = {
 
 export type Notification = {
   __typename?: 'Notification';
+  accountName: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   event: NotificationEvent;
   id: Scalars['ID']['output'];
@@ -4317,6 +4320,8 @@ export type RootMutation = {
   updateBranch: UpdateBranchMutation;
   updateChannel: UpdateChannelMutation;
   uploadSession: UploadSession;
+  /** Mutations that create, update, and delete pinned apps */
+  userAppPins: UserAppPinMutation;
   /** Mutations that create, delete, and accept UserInvitations */
   userInvitation: UserInvitationMutation;
   /** Mutations that create, delete, update Webhooks */
@@ -4531,6 +4536,7 @@ export type SsoUser = Actor & UserActor & {
   /** @deprecated No longer supported */
   location?: Maybe<Scalars['String']['output']>;
   notificationSubscriptions: Array<NotificationSubscription>;
+  pinnedApps: Array<App>;
   /** Associated accounts */
   primaryAccount: Account;
   profilePhoto: Scalars['String']['output'];
@@ -4539,8 +4545,6 @@ export type SsoUser = Actor & UserActor & {
   /** @deprecated No longer supported */
   twitterUsername?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
-  /** @deprecated No longer supported */
-  websiteNotifications: Array<Notification>;
   websiteNotificationsPaginated: WebsiteNotificationsConnection;
 };
 
@@ -5318,6 +5322,7 @@ export type User = Actor & UserActor & {
   notificationSubscriptions: Array<NotificationSubscription>;
   /** Pending UserInvitations for this user. Only resolves for the viewer. */
   pendingUserInvitations: Array<UserInvitation>;
+  pinnedApps: Array<App>;
   /** Associated accounts */
   primaryAccount: Account;
   profilePhoto: Scalars['String']['output'];
@@ -5328,8 +5333,6 @@ export type User = Actor & UserActor & {
   /** @deprecated No longer supported */
   twitterUsername?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
-  /** @deprecated No longer supported */
-  websiteNotifications: Array<Notification>;
   websiteNotificationsPaginated: WebsiteNotificationsConnection;
 };
 
@@ -5422,6 +5425,7 @@ export type UserActor = {
   /** @deprecated No longer supported */
   location?: Maybe<Scalars['String']['output']>;
   notificationSubscriptions: Array<NotificationSubscription>;
+  pinnedApps: Array<App>;
   /** Associated accounts */
   primaryAccount: Account;
   profilePhoto: Scalars['String']['output'];
@@ -5430,8 +5434,6 @@ export type UserActor = {
   /** @deprecated No longer supported */
   twitterUsername?: Maybe<Scalars['String']['output']>;
   username: Scalars['String']['output'];
-  /** @deprecated No longer supported */
-  websiteNotifications: Array<Notification>;
   websiteNotificationsPaginated: WebsiteNotificationsConnection;
 };
 
@@ -5541,6 +5543,22 @@ export type UserActorQueryByIdArgs = {
 
 export type UserActorQueryByUsernameArgs = {
   username: Scalars['String']['input'];
+};
+
+export type UserAppPinMutation = {
+  __typename?: 'UserAppPinMutation';
+  pinApp: Scalars['ID']['output'];
+  unpinApp?: Maybe<Scalars['ID']['output']>;
+};
+
+
+export type UserAppPinMutationPinAppArgs = {
+  appId: Scalars['ID']['input'];
+};
+
+
+export type UserAppPinMutationUnpinAppArgs = {
+  appId: Scalars['ID']['input'];
 };
 
 export type UserDataInput = {
@@ -5817,7 +5835,7 @@ export type AppForPinnedListFragment = { __typename?: 'App', id: string, name: s
 export type GetAppsForPinnedListQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', viewer?: { __typename?: 'User', accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
+export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', viewer?: { __typename?: 'User', pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
 
 export const AppForPinnedListFragmentDoc = gql`
     fragment AppForPinnedList on App {
@@ -5837,6 +5855,9 @@ export const AppForPinnedListFragmentDoc = gql`
 export const GetAppsForPinnedListDocument = gql`
     query GetAppsForPinnedList {
   viewer {
+    pinnedApps {
+      ...AppForPinnedList
+    }
     accounts {
       id
       appsPaginated(first: 10, filter: {sortByField: LATEST_ACTIVITY_TIME}) {
