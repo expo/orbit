@@ -9,7 +9,6 @@
     "typecheck": "tsc"
   },
   "devDependencies": {
-    "@types/cli-progress": "^3.11.0",
     "@types/debug": "^4.1.7",
     "@types/fs-extra": "^11.0.1",
     "@types/getenv": "^1.0.0",
@@ -27,11 +26,9 @@
     "@expo/spawn-async": "^1.7.2",
     "axios": "0.27.2",
     "bplist-parser": "^0.3.0",
-    "cli-progress": "^3.12.0",
     "debug": "^4.3.4",
     "env-paths": "2.2.0",
     "exec-async": "2.2.0",
-    "figures": "3.2.0",
     "getenv": "^1.0.0",
     "lodash": "^4.17.21",
     "node-fetch": "2.6.7",
@@ -40,7 +37,6 @@
     "querystring": "0.2.0",
     "semver": "7.3.2",
     "tar": "6.1.13",
-    "terminal-link": "2.1.1",
     "uuid": "9.0.0"
   }
 }
