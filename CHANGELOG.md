@@ -6,6 +6,7 @@
 
 ### 🎉 New features
 
+- Improved performance when running `cli` commands. ([#61](https://github.com/expo/orbit/pull/61) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
