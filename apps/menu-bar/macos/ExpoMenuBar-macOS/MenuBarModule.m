@@ -124,85 +124,72 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSTask *task = [[NSTask alloc] init];
-  NSPipe *pipe = [NSPipe pipe];
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSTask *task = [[NSTask alloc] init];
+    NSPipe *pipe = [NSPipe pipe];
 
-  NSString *executablePath = [[NSBundle mainBundle] pathForResource:getCliResourceNameForArch() ofType:nil];
+    NSString *executablePath = [[NSBundle mainBundle] pathForResource:getCliResourceNameForArch() ofType:nil];
 
-  [task setLaunchPath:executablePath];
-  [task setArguments:[@[command] arrayByAddingObjectsFromArray:arguments]];
+    [task setLaunchPath:executablePath];
+    [task setArguments:[@[command] arrayByAddingObjectsFromArray:arguments]];
 
-  NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithDictionary:[[NSProcessInfo processInfo] environment]];
-  // Retrieve the envVars from NSUserDefaults
-  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-  NSDictionary *envVars = [userDefaults objectForKey:@"envVars"];
+    NSMutableDictionary *environment = [NSMutableDictionary dictionaryWithDictionary:[[NSProcessInfo processInfo] environment]];
+    // Retrieve the envVars from NSUserDefaults
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *envVars = [userDefaults objectForKey:@"envVars"];
 
-  // Check if the retrieved object is indeed a NSDictionary
-  if ([envVars isKindOfClass:[NSDictionary class]] && [envVars count] > 0) {
-    for (NSString *key in envVars) {
-      [environment setObject:envVars[key] forKey:key];
-      NSLog(@"Key: %@ - value: %@", key,envVars[key]);
+    // Check if the retrieved object is indeed a NSDictionary
+    if ([envVars isKindOfClass:[NSDictionary class]] && [envVars count] > 0) {
+      [environment addEntriesFromDictionary:envVars];
+      [task setEnvironment:environment];
     }
-    [task setEnvironment:environment];
-  }
 
-  [task setStandardOutput:pipe];
-  [task setStandardError:pipe];
+    [task setStandardOutput:pipe];
+    [task setStandardError:pipe];
 
-  NSFileHandle *file = [pipe fileHandleForReading];
-  __block NSString *returnOutput = @"";
-  __block BOOL hasReachedReturnOutput = false;
-  __block BOOL hasReachedError = false;
+    NSFileHandle *file = [pipe fileHandleForReading];
+    NSMutableString *returnOutput = [NSMutableString string];
+    __block BOOL hasReachedReturnOutput = NO;
+    __block BOOL hasReachedError = NO;
 
-  [task launch];
+    [file setReadabilityHandler:^(NSFileHandle * _Nonnull handle) {
+      NSData *availableData = [handle availableData];
+      NSString *wholeOutput = [[NSString alloc] initWithData:availableData encoding:NSUTF8StringEncoding];
+      NSArray *outputs = [wholeOutput componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
 
-  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-  [notificationCenter addObserverForName:NSFileHandleReadCompletionNotification
-                                  object:file
-                                    queue:nil
-                              usingBlock:^(NSNotification *notification) {
-                                  NSData *chunk = notification.userInfo[NSFileHandleNotificationDataItem];
-                                  NSString *wholeOutput = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
-                                  NSArray *outputs = [wholeOutput componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+      for (NSString *output in outputs) {
+        if ([output isEqualToString:@""]) {
+          continue;
+        }
 
-                                  for (NSString *output in outputs) {
-                                    if ([output isEqualToString:@""]) {
-                                      continue;
-                                    }
+        if(hasReachedReturnOutput || hasReachedError){
+          [returnOutput appendString:output];
+        } else if([output isEqualToString:@"---- return output ----"]) {
+          hasReachedReturnOutput = YES;
+        } else if([output isEqualToString:@"---- thrown error ----"]) {
+          hasReachedError = YES;
+        } else if(self->hasListeners && output.length > 0 && ![output isEqualToString:@"\n"]) {
+          NSDictionary *eventData = @{
+            @"listenerId": listenerId,
+            @"output": output
+          };
+          [self sendEventWithName:@"onCLIOutput" body:eventData];
+        }
+      }
+    }];
 
-                                    if(hasReachedReturnOutput || hasReachedError){
-                                      returnOutput = [returnOutput stringByAppendingString:output];
-                                    } else if([output isEqualToString:@"---- return output ----"]){
-                                      hasReachedReturnOutput = true;
-                                    } else if([output isEqualToString:@"---- thrown error ----"]){
-                                      hasReachedError = true;
-                                    } else if(self->hasListeners && output.length > 0 && ![output isEqualToString:@"\n"]){
-                                      NSDictionary *eventData = @{
-                                        @"listenerId": listenerId,
-                                        @"output": output
-                                      };
-                                      [self sendEventWithName:@"onCLIOutput" body:eventData];
-                                    }
-                                  }
+    [task setTerminationHandler:^(NSTask * _Nonnull task) {
+      [file setReadabilityHandler:nil];
 
-                                  [file readInBackgroundAndNotify];
-                              }];
-  [notificationCenter addObserverForName:NSTaskDidTerminateNotification
-                                  object:task
-                                    queue:nil
-                              usingBlock:^(NSNotification *notification) {
-                                  [notificationCenter removeObserver:self];
-                              }];
+      if(hasReachedError){
+        reject(@"CLI_ERROR", returnOutput, nil);
+      } else {
+        resolve(hasReachedReturnOutput ? returnOutput : nil);
+      }
+    }];
 
-  [file readInBackgroundAndNotify];
-  [task waitUntilExit];
-
-  if(hasReachedError){
-    reject(@"CLI_ERROR", returnOutput, nil);
-    return;
-  }
-
-  resolve(hasReachedReturnOutput ? returnOutput : nil);
+    [task launch];
+  });
 }
 
 RCT_EXPORT_METHOD(setLoginItemEnabled:(BOOL)enabled
