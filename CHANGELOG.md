@@ -22,6 +22,7 @@
 ### 💡 Others
 
 - Add check for missing changelogs. ([#49](https://github.com/expo/orbit/pull/49) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Clean up eas-shared package. ([#60](https://github.com/expo/orbit/pull/60) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 0.1.2 — 2023-08-13
 
