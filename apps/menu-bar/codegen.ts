@@ -17,6 +17,9 @@ const config: CodegenConfig = {
     './src/generated/schema.graphql': {
       plugins: ['schema-ast'],
     },
+    './src/generated/graphql.possibleTypes.json': {
+      plugins: ['fragment-matcher'],
+    },
   },
 };
 

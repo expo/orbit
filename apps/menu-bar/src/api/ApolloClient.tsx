@@ -12,6 +12,7 @@ import { MMKVWrapper, persistCache } from 'apollo3-cache-persist';
 import { useEffect, useState } from 'react';
 
 import Config from './Config';
+import possibleTypesData from '../generated/graphql.possibleTypes.json';
 import { storage } from '../modules/Storage';
 
 const httpLink = new HttpLink({
@@ -27,8 +28,13 @@ const mergeBasedOnOffset = (existing: any[], incoming: any[], { args }: FieldFun
   return merged;
 };
 
+const { possibleTypes } = possibleTypesData;
 const cache = new InMemoryCache({
+  possibleTypes,
   typePolicies: {
+    UserActor: {
+      keyFields: ['id'],
+    },
     AppQuery: {
       keyFields: ['byId', ['id']],
     },
