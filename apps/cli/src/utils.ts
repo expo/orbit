@@ -9,7 +9,11 @@ export function returnLoggerMiddleware(
       console.log(result);
     } catch (error) {
       console.log("---- thrown error ----");
-      console.log(error);
+      if (error instanceof Error) {
+        console.log(error.message);
+      } else {
+        console.log(error);
+      }
     }
   };
 }

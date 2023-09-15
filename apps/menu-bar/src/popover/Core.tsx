@@ -171,7 +171,9 @@ function Core(props: Props) {
         const deviceId = getDeviceId(device);
         await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
       } catch (error) {
-        console.log(`error ${error}`);
+        if (error instanceof Error) {
+          Alert.alert('Something went wrong while installing the app.', error.message);
+        }
       } finally {
         setTimeout(() => {
           setStatus(Status.LISTENING);
