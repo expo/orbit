@@ -11,6 +11,7 @@
 
 ### 🐛 Bug fixes
 
+- Fix SVGs on macOS Sonoma. ([#63](https://github.com/expo/orbit/pull/63) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Prevent the AutoLauncher process from running in the background after launching the main app. ([#51](https://github.com/expo/orbit/pull/51) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
