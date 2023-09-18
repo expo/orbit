@@ -1,6 +1,6 @@
 # Changelog
 
-## Unpublished
+## 0.1.3 — 2023-09
 
 ### 🛠 Breaking changes
 
@@ -13,8 +13,8 @@
 
 - Fix SVGs on macOS Sonoma. ([#63](https://github.com/expo/orbit/pull/63) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Prevent the AutoLauncher process from running in the background after launching the main app. ([#51](https://github.com/expo/orbit/pull/51) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 💡 Others
+- Fix WindowNavigator size calculations when showing an existing window. ([#48](https://github.com/expo/orbit/pull/48) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Remove additional spacing from Builds header. ([#40](https://github.com/expo/orbit/pull/40) by [@Simek](https://github.com/Simek))
 
 ## 0.1.2 — 2023-08-13
 
