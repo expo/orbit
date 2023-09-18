@@ -10,5 +10,9 @@
   },
   "dependencies": {
     "@tsconfig/node12": "1.0.7"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
   }
 }
