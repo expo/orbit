@@ -8,6 +8,9 @@
       "packages/*"
     ]
   },
+  "scripts": {
+    "postinstall": "patch-package"
+  },
   "dependencies": {
     "@tsconfig/node12": "1.0.7"
   },
