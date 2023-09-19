@@ -6,6 +6,7 @@ import { Checkbox, View, Row, Text, Divider } from '../components';
 import Button from '../components/Button';
 import PathInput from '../components/PathInput';
 import MenuBarModule from '../modules/MenuBarModule';
+import SparkleModule from '../modules/SparkleModule';
 import {
   UserPreferences,
   getUserPreferences,
@@ -24,12 +25,14 @@ const Settings = () => {
 
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
+  const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
 
   useEffect(() => {
     getUserPreferences().then((value) => {
       setUserPreferences(value);
       setCustomSdkPathEnabled(Boolean(value.customSdkPath));
     });
+    SparkleModule.getAutomaticallyChecksForUpdates().then(setAutomaticallyChecksForUpdates);
   }, []);
 
   const onPressLaunchOnLogin = async (value: boolean) => {
@@ -55,6 +58,11 @@ const Settings = () => {
         );
       }
     }
+  };
+
+  const onPressSetAutomaticallyChecksForUpdates = async (value: boolean) => {
+    setAutomaticallyChecksForUpdates(value);
+    SparkleModule.setAutomaticallyChecksForUpdates(value);
   };
 
   const onPressEmulatorWithoutAudio = async (value: boolean) => {
@@ -113,21 +121,34 @@ const Settings = () => {
           )}
         </View>
         <Divider mb="tiny" />
-        <Row mb="3.5" align="center" gap="1">
+        <Row mb="3.5" align="center">
           <Checkbox
             value={userPreferences.launchOnLogin}
             onValueChange={onPressLaunchOnLogin}
             label="Launch on login"
           />
         </Row>
-        <Row mb="3.5" align="center" gap="1">
+        <Row mb="3.5" align="center" justify="between">
+          <Checkbox
+            value={automaticallyChecksForUpdates}
+            onValueChange={onPressSetAutomaticallyChecksForUpdates}
+            label="Check for updates automatically"
+          />
+          <Button
+            color="primary"
+            style={{}}
+            title="Check for updates"
+            onPress={SparkleModule.checkForUpdates}
+          />
+        </Row>
+        <Row mb="3.5" align="center">
           <Checkbox
             value={userPreferences.emulatorWithoutAudio}
             onValueChange={onPressEmulatorWithoutAudio}
             label="Run Android emulator without audio"
           />
         </Row>
-        <Row mb="2" align="center" gap="1">
+        <Row mb="2" align="center">
           <Checkbox
             value={customSdkPathEnabled}
             onValueChange={toggleCustomSdkPath}

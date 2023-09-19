@@ -10,6 +10,7 @@ import {
 import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
 
 import { Text } from './Text';
+import { Row } from './View';
 
 interface CheckboxChangeEventData extends TargetedEvent {
   value: boolean;
@@ -61,7 +62,7 @@ const Checkbox = ({ onChange, onValueChange, label, ...props }: CheckboxProps) =
   };
 
   return (
-    <>
+    <Row align="center" gap="1">
       <NativeCheckbox
         {...props}
         style={[styles.checkbox, props.style]}
@@ -77,7 +78,7 @@ const Checkbox = ({ onChange, onValueChange, label, ...props }: CheckboxProps) =
           <Text>{label}</Text>
         </Pressable>
       )}
-    </>
+    </Row>
   );
 };
 
