@@ -1,9 +1,11 @@
-import {useEffect, useState} from 'react';
-import {Alert, StyleSheet, TouchableOpacity} from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 
 import MenuBarModule from '../modules/MenuBarModule';
-import {Checkbox, View, Row, Text, Divider} from '../components';
+import { Checkbox, View, Row, Text, Divider } from '../components';
+import Button from '../components/Button';
 import PathInput from '../components/PathInput';
+import SparkleModule from '../modules/SparkleModule';
 import {
   UserPreferences,
   getUserPreferences,
@@ -14,19 +16,21 @@ import {
 const Settings = () => {
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
+  const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
 
   useEffect(() => {
-    getUserPreferences().then(value => {
+    getUserPreferences().then((value) => {
       setUserPreferences(value);
       setCustomSdkPathEnabled(Boolean(value.customSdkPath));
     });
+    SparkleModule.getAutomaticallyChecksForUpdates().then(setAutomaticallyChecksForUpdates);
   }, []);
 
   const onPressLaunchOnLogin = async (value: boolean) => {
     try {
       await MenuBarModule.setLoginItemEnabled(value);
-      setUserPreferences(prev => {
-        const newPreferences = {...prev, launchOnLogin: value};
+      setUserPreferences((prev) => {
+        const newPreferences = { ...prev, launchOnLogin: value };
         saveUserPreferences(newPreferences);
         return newPreferences;
       });
@@ -40,16 +44,21 @@ const Settings = () => {
               text: 'Open Settings',
               onPress: MenuBarModule.openSystemSettingsLoginItems,
             },
-            {text: 'Cancel', style: 'cancel'},
-          ],
+            { text: 'Cancel', style: 'cancel' },
+          ]
         );
       }
     }
   };
 
+  const onPressSetAutomaticallyChecksForUpdates = async (value: boolean) => {
+    setAutomaticallyChecksForUpdates(value);
+    SparkleModule.setAutomaticallyChecksForUpdates(value);
+  };
+
   const onPressEmulatorWithoutAudio = async (value: boolean) => {
-    setUserPreferences(prev => {
-      const newPreferences = {...prev, emulatorWithoutAudio: value};
+    setUserPreferences((prev) => {
+      const newPreferences = { ...prev, emulatorWithoutAudio: value };
       saveUserPreferences(newPreferences);
       return newPreferences;
     });
@@ -58,8 +67,8 @@ const Settings = () => {
   const toggleCustomSdkPath = (value: boolean) => {
     setCustomSdkPathEnabled(value);
     if (!value) {
-      setUserPreferences(prev => {
-        const newPreferences = {...prev, customSdkPath: undefined};
+      setUserPreferences((prev) => {
+        const newPreferences = { ...prev, customSdkPath: undefined };
         saveUserPreferences(newPreferences);
         MenuBarModule.setEnvVars({});
         return newPreferences;
@@ -70,21 +79,33 @@ const Settings = () => {
   return (
     <View flex="1" padding="medium">
       <View flex="1">
-        <Row mb="3.5" align="center" gap="1">
+        <Row mb="3.5" align="center">
           <Checkbox
             value={userPreferences.launchOnLogin}
             onValueChange={onPressLaunchOnLogin}
             label="Launch on login"
           />
         </Row>
-        <Row mb="3.5" align="center" gap="1">
+        <Row mb="3.5" align="center" justify="between">
+          <Checkbox
+            value={automaticallyChecksForUpdates}
+            onValueChange={onPressSetAutomaticallyChecksForUpdates}
+            label="Check for updates automatically"
+          />
+          <Button
+            color="primary"
+            title="Check for updates"
+            onPress={SparkleModule.checkForUpdates}
+          />
+        </Row>
+        <Row mb="3.5" align="center">
           <Checkbox
             value={userPreferences.emulatorWithoutAudio}
             onValueChange={onPressEmulatorWithoutAudio}
             label="Run Android emulator without audio"
           />
         </Row>
-        <Row mb="2" align="center" gap="1">
+        <Row mb="2" align="center">
           <Checkbox
             value={customSdkPathEnabled}
             onValueChange={toggleCustomSdkPath}
@@ -93,9 +114,9 @@ const Settings = () => {
         </Row>
         <PathInput
           editable={customSdkPathEnabled}
-          onChangeText={text => {
-            setUserPreferences(prev => {
-              const newPreferences = {...prev, customSdkPath: text};
+          onChangeText={(text) => {
+            setUserPreferences((prev) => {
+              const newPreferences = { ...prev, customSdkPath: text };
               saveUserPreferences(newPreferences);
               MenuBarModule.setEnvVars({
                 ANDROID_HOME: text,

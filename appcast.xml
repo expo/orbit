@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Orbit</title>
+    <link>https://raw.githubusercontent.com/expo/orbit/main/appcast.xml</link>
+    <description>Most recent changes with links to updates.</description>
+    <language>en</language>
+    <item>
+      <title>0.1.2</title>
+      <description>
+      <![CDATA[
+      <h3 id="newfeatures">🎉 New features</h3>
+      <ul>
+        <li>Added a context menu when right clicking on the menu bar icon. (<a href="https://github.com/expo/orbit/pull/36">#36</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="bugfixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fixed listing devices on Intel machines. (<a href="https://github.com/expo/orbit/pull/39">#39</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="others">💡 Others</h3>
+      <ul>
+        <li>Refetch devices list after launching a simulator. (<a href="https://github.com/expo/orbit/pull/37">#37</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve Popover height estimations. (<a href="https://github.com/expo/orbit/pull/38">#38</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add alert when trying to install build with no available device. (<a href="https://github.com/expo/orbit/pull/38">#38</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2023-08-13</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v0.1.2</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v0.1.2/expo-orbit.v0.1.2.zip"
+        sparkle:version="6"
+        sparkle:shortVersionString="0.1.2"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+  </channel>
+</rss>

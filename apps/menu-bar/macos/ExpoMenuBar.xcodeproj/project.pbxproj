@@ -30,6 +30,7 @@
 		C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */ = {isa = PBXBuildFile; fileRef = C08E65332A5D04910079E3A9 /* WindowNavigator.m */; };
 		C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36E9F2A65E25A004F2D8C /* Checkbox.m */; };
 		C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */; };
+		C0C820022AB8E5EE003D75AF /* SparkleModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0C820012AB8E5EE003D75AF /* SparkleModule.m */; };
 		C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */; };
 		E1CB5365F6C6CCE90A6EF541 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */; };
 /* End PBXBuildFile section */
@@ -97,6 +98,8 @@
 		C0B36E9F2A65E25A004F2D8C /* Checkbox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Checkbox.m; sourceTree = "<group>"; };
 		C0B36EA02A65E25A004F2D8C /* CheckboxManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CheckboxManager.h; sourceTree = "<group>"; };
 		C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckboxManager.m; sourceTree = "<group>"; };
+		C0C820012AB8E5EE003D75AF /* SparkleModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparkleModule.m; sourceTree = "<group>"; };
+		C0C820032AB8E600003D75AF /* SparkleModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparkleModule.h; sourceTree = "<group>"; };
 		C0E7CF462A15372D00C59DE5 /* MenuBarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MenuBarModule.h; sourceTree = "<group>"; };
 		C0E7CF472A15378D00C59DE5 /* MenuBarModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MenuBarModule.m; sourceTree = "<group>"; };
 		C6FA792906717DFD0B3546C1 /* libPods-ExpoMenuBar-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoMenuBar-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -191,6 +194,8 @@
 				C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */,
 				C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */,
 				C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */,
+				C0C820012AB8E5EE003D75AF /* SparkleModule.m */,
+				C0C820032AB8E600003D75AF /* SparkleModule.h */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -432,10 +437,12 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS-frameworks.sh",
+				"${PODS_ROOT}/Sparkle/Sparkle.framework",
 				"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/macosx/hermes.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sparkle.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -455,6 +462,7 @@
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */,
 				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
+				C0C820022AB8E5EE003D75AF /* SparkleModule.m in Sources */,
 				C0E7CF482A15378D00C59DE5 /* MenuBarModule.m in Sources */,
 				C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
@@ -504,7 +512,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = "$(inherited)  ";
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -532,7 +543,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Expo Orbit";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = "$(inherited)  ";
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

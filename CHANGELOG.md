@@ -2,10 +2,9 @@
 
 ## 0.1.3 — 2023-09
 
-### 🛠 Breaking changes
-
 ### 🎉 New features
 
+- Add auto update support. ([#65](https://github.com/expo/orbit/pull/65) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improved performance when running `cli` commands. ([#61](https://github.com/expo/orbit/pull/61) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
