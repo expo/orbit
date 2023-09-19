@@ -378,6 +378,7 @@ PODS:
   - RNSVG (13.9.0):
     - React-Core
   - SocketRocket (0.6.0)
+  - Sparkle (2.5.0)
   - Swifter (1.5.0)
   - Yoga (1.14.0)
 
@@ -421,6 +422,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - RNSVG (from `../../../node_modules/react-native-svg`)
+  - Sparkle (~> 2.5.0)
   - Swifter (~> 1.5.0)
   - Yoga (from `../../../node_modules/react-native-macos/ReactCommon/yoga`)
 
@@ -431,6 +433,7 @@ SPEC REPOS:
     - MMKV
     - MMKVCore
     - SocketRocket
+    - Sparkle
     - Swifter
 
 EXTERNAL SOURCES:
@@ -554,9 +557,10 @@ SPEC CHECKSUMS:
   RNCClipboard: 3f0451a8100393908bea5c5c5b16f96d45f30bfc
   RNSVG: 53c661b76829783cdaf9b7a57258f3d3b4c28315
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
+  Sparkle: 913cef92f73e08d0ae47a36ee20e523913e5f9e2
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
   Yoga: 4e076ec2978a0800817878be120de7e97b79bcf3
 
-PODFILE CHECKSUM: 0480b88b4de362c1f7a15c6b6d28dd204904af0e
+PODFILE CHECKSUM: 8518766949874a04cbc8e6440289152ea7a52098
 
 COCOAPODS: 1.12.1
