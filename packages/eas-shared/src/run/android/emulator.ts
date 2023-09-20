@@ -6,7 +6,10 @@ import os from "os";
 import path from "path";
 import { execFileSync } from "child_process";
 import semver from "semver";
-import { AndroidConnectedDevice, AndroidEmulator } from "common-types/devices";
+import {
+  AndroidConnectedDevice,
+  AndroidEmulator,
+} from "common-types/build/devices";
 
 import * as Versions from "../../versions";
 import Log from "../../log";

@@ -1,5 +1,5 @@
 import { palette } from '@expo/styleguide-native';
-import { Device } from 'common-types/devices';
+import { Device } from 'common-types/build/devices';
 import { useState } from 'react';
 import { StyleSheet, Pressable, PlatformColor } from 'react-native';
 

@@ -3,7 +3,7 @@ import spawnAsync from "@expo/spawn-async";
 import fs from "fs-extra";
 import path from "path";
 import semver from "semver";
-import { IosSimulator } from "common-types/devices";
+import { IosSimulator } from "common-types/build/devices";
 
 import * as CoreSimulator from "./CoreSimulator";
 import { simctlAsync } from "./simctl";

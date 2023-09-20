@@ -1,4 +1,4 @@
-import { Device } from 'common-types/devices';
+import { Device } from 'common-types/build/devices';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Alert, SectionList } from 'react-native';
 
@@ -29,12 +29,7 @@ import {
   saveSelectedDevicesIds,
 } from '../modules/Storage';
 import { openProjectsSelectorURL } from '../utils/constants';
-import {
-  getDeviceId,
-  getDeviceOS,
-  getSectionsFromDeviceList,
-  isVirtualDevice,
-} from '../utils/device';
+import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
 import { getPlatformFromURI } from '../utils/parseUrl';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
@@ -62,11 +57,9 @@ function Core(props: Props) {
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const { devices, refetch } = useListDevices();
+  const { devicesPerPlatform, numberOfDevices, sections, refetch } = useListDevices();
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
   const theme = useExpoTheme();
-
-  const sections = getSectionsFromDeviceList(devices);
 
   // TODO: Extract into a hook
   const displayDimensions = useSafeDisplayDimensions();
@@ -77,7 +70,7 @@ function Core(props: Props) {
     (showProjectsSection ? PROJECTS_SECTION_HEIGHT : 0) -
     30;
   const heightOfAllDevices =
-    DEVICE_ITEM_HEIGHT * devices?.length + SECTION_HEADER_HEIGHT * (sections?.length || 0);
+    DEVICE_ITEM_HEIGHT * numberOfDevices + SECTION_HEADER_HEIGHT * (sections?.length || 0);
   const estimatedListHeight =
     heightOfAllDevices <= estimatedAvailableSizeForDevices || estimatedAvailableSizeForDevices <= 0
       ? heightOfAllDevices
@@ -90,12 +83,14 @@ function Core(props: Props) {
   const getFirstAvailableDevice = useCallback(
     (_?: boolean) => {
       return (
-        devices.find((d) => getDeviceId(d) === selectedDevicesIds.ios) ??
-        devices.find((d) => getDeviceId(d) === selectedDevicesIds.android) ??
-        devices?.find((d) => isVirtualDevice(d) && d.state === 'Booted')
+        devicesPerPlatform.ios.devices.find((d) => getDeviceId(d) === selectedDevicesIds.ios) ??
+        devicesPerPlatform.android.devices.find(
+          (d) => getDeviceId(d) === selectedDevicesIds.android
+        ) ??
+        devicesPerPlatform.ios.devices?.find((d) => isVirtualDevice(d) && d.state === 'Booted')
       );
     },
-    [devices, selectedDevicesIds]
+    [devicesPerPlatform, selectedDevicesIds]
   );
 
   const ensureDeviceIsRunning = useCallback(
@@ -134,12 +129,13 @@ function Core(props: Props) {
 
   const getDeviceByPlatform = useCallback(
     (platform: 'android' | 'ios') => {
+      const devices: Device[] = devicesPerPlatform[platform].devices;
       return (
         devices.find((d) => getDeviceId(d) === selectedDevicesIds[platform]) ??
         devices.find((d) => getDeviceOS(d) === platform)
       );
     },
-    [devices, selectedDevicesIds]
+    [devicesPerPlatform, selectedDevicesIds]
   );
 
   const installAppFromURI = useCallback(

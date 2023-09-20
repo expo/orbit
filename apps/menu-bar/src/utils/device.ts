@@ -1,4 +1,5 @@
-import { Device, IosSimulator, AndroidEmulator } from 'common-types/devices';
+import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
+import { Device, IosSimulator, AndroidEmulator } from 'common-types/build/devices';
 import { SectionListData } from 'react-native';
 
 export type BaseDevice = {
@@ -25,35 +26,22 @@ export function getDeviceId(device: Device): string {
 }
 
 export function getSectionsFromDeviceList(
-  devices: Device[]
+  devicesPerPlatform: DevicesPerPlatform
 ): SectionListData<Device, { label: string }>[] {
-  const sections = devices
-    .reduce(
-      (acc, device) => {
-        if (device.osType === 'iOS') {
-          acc[0].data.push(device);
-        } else {
-          acc[1].data.push(device);
-        }
+  const sections = [
+    {
+      data: devicesPerPlatform.ios.devices,
+      key: 'ios',
+      label: 'iOS',
+    },
+    {
+      data: devicesPerPlatform.android.devices,
+      key: 'android',
+      label: 'Android',
+    },
+  ];
 
-        return acc;
-      },
-      [
-        {
-          data: [] as Device[],
-          key: 'ios',
-          label: 'iOS',
-        },
-        {
-          data: [] as Device[],
-          key: 'android',
-          label: 'Android',
-        },
-      ]
-    )
-    .filter((section) => section.data.length > 0);
-
-  return sections;
+  return sections.filter((section) => section.data.length > 0);
 }
 
 export function isVirtualDevice(device: Device): device is IosSimulator | AndroidEmulator {

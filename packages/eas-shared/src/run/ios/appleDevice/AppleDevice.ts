@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AppleConnectedDevice } from "common-types/devices";
+import { AppleConnectedDevice } from "common-types/build/devices";
 
 import { ClientManager } from "./ClientManager";
 import { XcodeDeveloperDiskImagePrerequisite } from "./XcodeDeveloperDiskImagePrerequisite";

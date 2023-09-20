@@ -1,4 +1,4 @@
-import { AndroidEmulator, IosSimulator } from "common-types/devices";
+import { AndroidEmulator, IosSimulator } from "common-types/build/devices";
 
 import * as Emulator from "./android/emulator";
 import * as Simulator from "./ios/simulator";

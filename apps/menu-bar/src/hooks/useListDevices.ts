@@ -1,19 +1,25 @@
-import { Device } from 'common-types/devices';
+import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
 import { useCallback, useEffect, useState } from 'react';
 import { DeviceEventEmitter } from 'react-native';
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
+import { getSectionsFromDeviceList } from '../utils/device';
 
 export const useListDevices = () => {
-  const [devices, setDevices] = useState<Device[]>([]);
+  const [devicesPerPlatform, setDevicesPerPlatform] = useState<DevicesPerPlatform>({
+    android: { devices: [] },
+    ios: { devices: [] },
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error>();
+
+  const sections = getSectionsFromDeviceList(devicesPerPlatform);
 
   const updateDevicesList = useCallback(async () => {
     setLoading(true);
     try {
       const devicesList = await listDevicesAsync({ platform: 'all' });
-      setDevices(devicesList);
+      setDevicesPerPlatform(devicesList);
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -33,7 +39,10 @@ export const useListDevices = () => {
   }, [updateDevicesList]);
 
   return {
-    devices,
+    devicesPerPlatform,
+    sections,
+    numberOfDevices:
+      devicesPerPlatform.android.devices.length + devicesPerPlatform.ios.devices.length,
     loading,
     error,
     refetch: updateDevicesList,

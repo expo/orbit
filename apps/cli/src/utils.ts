@@ -1,3 +1,6 @@
+import { Platform } from "common-types/build/cli-commands";
+import util from "util";
+
 export function returnLoggerMiddleware(
   fn: (...args: any[]) => any | Promise<any>
 ) {
@@ -6,7 +9,17 @@ export function returnLoggerMiddleware(
       const result = await fn(...args);
 
       console.log("---- return output ----");
-      console.log(result);
+      if (typeof result === "object" && result !== null) {
+        console.log(JSON.stringify(result));
+      } else {
+        console.log(
+          util.inspect(result, {
+            showHidden: false,
+            depth: null,
+            colors: false,
+          })
+        );
+      }
     } catch (error) {
       console.log("---- thrown error ----");
       if (error instanceof Error) {
@@ -16,12 +29,6 @@ export function returnLoggerMiddleware(
       }
     }
   };
-}
-
-export enum Platform {
-  Android = "android",
-  Ios = "ios",
-  All = "all",
 }
 
 export const getPlatformFromURI = (uri: string) => {
