@@ -1,3 +1,4 @@
+import { Device } from 'common-types/devices';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Alert, SectionList } from 'react-native';
 
@@ -28,7 +29,12 @@ import {
   saveSelectedDevicesIds,
 } from '../modules/Storage';
 import { openProjectsSelectorURL } from '../utils/constants';
-import { Device, getDeviceId, getDeviceOS, getSectionsFromDeviceList } from '../utils/device';
+import {
+  getDeviceId,
+  getDeviceOS,
+  getSectionsFromDeviceList,
+  isVirtualDevice,
+} from '../utils/device';
 import { getPlatformFromURI } from '../utils/parseUrl';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
@@ -86,7 +92,7 @@ function Core(props: Props) {
       return (
         devices.find((d) => getDeviceId(d) === selectedDevicesIds.ios) ??
         devices.find((d) => getDeviceId(d) === selectedDevicesIds.android) ??
-        devices?.find((d) => d.state === 'Booted')
+        devices?.find((d) => isVirtualDevice(d) && d.state === 'Booted')
       );
     },
     [devices, selectedDevicesIds]
@@ -94,7 +100,7 @@ function Core(props: Props) {
 
   const ensureDeviceIsRunning = useCallback(
     async (device: Device) => {
-      if (device.state !== 'Shutdown') {
+      if (!isVirtualDevice(device) || device.state === 'Booted') {
         return;
       }
 

@@ -1,3 +1,9 @@
 {
-  "extends": "@tsconfig/react-native/tsconfig.json"
+  "extends": "@tsconfig/react-native/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "common-types/*": ["../../common-types/src/*"]
+    }
+  },
+  "references": [{ "path": "../../common-types/tsconfig.json" }]
 }

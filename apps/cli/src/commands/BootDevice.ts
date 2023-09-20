@@ -1,3 +1,4 @@
+import { AndroidEmulator, IosSimulator } from "common-types/devices";
 import { Emulator, Simulator } from "eas-shared";
 import { getRunningDevicesAsync } from "eas-shared/build/run/android/adb";
 
@@ -16,7 +17,7 @@ export async function bootDeviceAsync({
     try {
       await Simulator.ensureSimulatorBootedAsync({
         udid: id,
-      } as Simulator.IosSimulator);
+      } as IosSimulator);
     } catch (error) {
       if (
         error instanceof Error &&
@@ -39,7 +40,7 @@ export async function bootDeviceAsync({
   await Emulator.bootEmulatorAsync(
     {
       name: id,
-    } as Emulator.AndroidDevice,
+    } as AndroidEmulator,
     { noAudio }
   );
 }

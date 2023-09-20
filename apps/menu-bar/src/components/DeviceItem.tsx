@@ -1,4 +1,5 @@
 import { palette } from '@expo/styleguide-native';
+import { Device } from 'common-types/devices';
 import { useState } from 'react';
 import { StyleSheet, Pressable, PlatformColor } from 'react-native';
 
@@ -9,7 +10,7 @@ import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
 import { useTheme } from '../providers/ThemeProvider';
-import { Device } from '../utils/device';
+import { isVirtualDevice } from '../utils/device';
 import { capitalize } from '../utils/helpers';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
@@ -27,6 +28,8 @@ const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
   const currentTheme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isDeviceLaunching, setDeviceLaunching] = useState(false);
+
+  const isVirtual = isVirtualDevice(device);
 
   return (
     <Pressable
@@ -71,11 +74,11 @@ const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
             <Text numberOfLines={1}>{device.name}</Text>
             <Text style={styles.description} color="secondary" leading="small">
               {capitalize(device.deviceType)}
-              {device.osVersion && ` · ${device.osVersion}`}
+              {'osVersion' in device && ` · ${device.osVersion}`}
             </Text>
           </View>
         </Row>
-        {device.deviceType === 'device' && (
+        {!isVirtual && (
           <>
             {device.connectionType === 'Network' ? (
               <WifiIcon height={20} width={20} fill={PlatformColor('text')} />
@@ -84,7 +87,7 @@ const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
             )}
           </>
         )}
-        {device.deviceType !== 'device' && device.state === 'Booted' && (
+        {isVirtual && device.state === 'Booted' && (
           <>
             <Text color="success" style={styles.indicator}>
               ●
@@ -95,32 +98,29 @@ const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
             </Text>
           </>
         )}
-        {device.deviceType !== 'device' && device.state === 'Shutdown' && isDeviceLaunching && (
+        {isVirtual && device.state === 'Shutdown' && isDeviceLaunching && (
           <Text color="secondary" style={styles.indicator}>
             Launching…
           </Text>
         )}
-        {isHovered &&
-          device.deviceType !== 'device' &&
-          device.state === 'Shutdown' &&
-          !isDeviceLaunching && (
-            <Button
-              title="Launch"
-              disabled={isDeviceLaunching}
-              color="primary"
-              onPress={async () => {
-                setDeviceLaunching(true);
-                try {
-                  await onPressLaunch();
-                } catch (error) {
-                  console.warn(error);
-                } finally {
-                  setDeviceLaunching(false);
-                }
-              }}
-              style={styles.button}
-            />
-          )}
+        {isHovered && isVirtual && device.state === 'Shutdown' && !isDeviceLaunching && (
+          <Button
+            title="Launch"
+            disabled={isDeviceLaunching}
+            color="primary"
+            onPress={async () => {
+              setDeviceLaunching(true);
+              try {
+                await onPressLaunch();
+              } catch (error) {
+                console.warn(error);
+              } finally {
+                setDeviceLaunching(false);
+              }
+            }}
+            style={styles.button}
+          />
+        )}
       </Row>
     </Pressable>
   );
