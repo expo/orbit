@@ -1,3 +1,4 @@
+import { Device, IosSimulator, AndroidEmulator } from 'common-types/devices';
 import { SectionListData } from 'react-native';
 
 export type BaseDevice = {
@@ -14,20 +15,6 @@ export type BaseDevice = {
       deviceType: 'simulator' | 'emulator';
     }
 );
-
-export type IOSDevice = BaseDevice & {
-  osType: 'iOS';
-  udid: string;
-  deviceType: 'simulator' | 'device';
-};
-
-export type AndroidDevice = BaseDevice & {
-  osType: 'android';
-  pid?: number;
-  deviceType: 'emulator' | 'device';
-};
-
-export type Device = AndroidDevice | IOSDevice;
 
 export function getDeviceOS(device: Device): 'android' | 'ios' {
   return device.osType.toLowerCase() as 'android' | 'ios';
@@ -67,4 +54,8 @@ export function getSectionsFromDeviceList(
     .filter((section) => section.data.length > 0);
 
   return sections;
+}
+
+export function isVirtualDevice(device: Device): device is IosSimulator | AndroidEmulator {
+  return device.deviceType === 'simulator' || device.deviceType === 'emulator';
 }

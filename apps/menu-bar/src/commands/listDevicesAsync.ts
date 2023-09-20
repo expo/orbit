@@ -1,5 +1,6 @@
+import { Device } from 'common-types/devices';
+
 import MenuBarModule from '../modules/MenuBarModule';
-import { Device } from '../utils/device';
 
 type ListDevicesAsyncOptions = {
   platform: 'android' | 'ios' | 'all';

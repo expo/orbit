@@ -3,6 +3,7 @@ import spawnAsync from "@expo/spawn-async";
 import fs from "fs-extra";
 import path from "path";
 import semver from "semver";
+import { IosSimulator } from "common-types/devices";
 
 import * as CoreSimulator from "./CoreSimulator";
 import { simctlAsync } from "./simctl";
@@ -15,19 +16,6 @@ import { delayAsync } from "../../utils/delayAsync";
 import { sleepAsync } from "../../utils/promise";
 import * as Versions from "../../versions";
 
-export interface IosSimulator {
-  runtime: string;
-  osVersion: string;
-  windowName: string;
-  osType: "iOS";
-  state: "Booted" | "Shutdown";
-  isAvailable: boolean;
-  name: string;
-  udid: string;
-  lastBootedAt?: number;
-  deviceType: "simulator";
-}
-
 const EXPO_GO_BUNDLE_IDENTIFIER = "host.exp.Exponent";
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
@@ -38,7 +26,7 @@ export async function selectSimulatorAsync(): Promise<IosSimulator> {
     return bootedSimulator;
   }
 
-  const simulators = await getAvaliableIosSimulatorsListAsync();
+  const simulators = await getAvailableIosSimulatorsListAsync();
 
   Log.newLine();
   const { selectedSimulator } = await promptAsync({
@@ -57,7 +45,7 @@ export async function selectSimulatorAsync(): Promise<IosSimulator> {
 export async function getFirstBootedIosSimulatorAsync(): Promise<
   IosSimulator | undefined
 > {
-  const bootedSimulators = await getAvaliableIosSimulatorsListAsync("booted");
+  const bootedSimulators = await getAvailableIosSimulatorsListAsync("booted");
 
   if (bootedSimulators.length > 0) {
     return bootedSimulators[0];
@@ -65,7 +53,7 @@ export async function getFirstBootedIosSimulatorAsync(): Promise<
   return undefined;
 }
 
-export async function getAvaliableIosSimulatorsListAsync(
+export async function getAvailableIosSimulatorsListAsync(
   query?: string
 ): Promise<IosSimulator[]> {
   const { stdout } = query

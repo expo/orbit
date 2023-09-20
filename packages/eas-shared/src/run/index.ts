@@ -1,3 +1,5 @@
+import { AndroidEmulator, IosSimulator } from "common-types/devices";
+
 import * as Emulator from "./android/emulator";
 import * as Simulator from "./ios/simulator";
 import { validateSystemRequirementsAsync } from "./ios/systemRequirements";
@@ -6,7 +8,7 @@ import { getAptParametersAsync } from "./android/aapt";
 
 export async function runAppOnIosSimulatorAsync(
   appPath: string,
-  simulator: Simulator.IosSimulator
+  simulator: IosSimulator
 ): Promise<void> {
   await validateSystemRequirementsAsync();
 
@@ -22,7 +24,7 @@ export async function runAppOnIosSimulatorAsync(
 
 export async function runAppOnAndroidEmulatorAsync(
   appPath: string,
-  emulator: Emulator.AndroidDevice
+  emulator: AndroidEmulator
 ): Promise<void> {
   await assertExecutablesExistAsync();
   const bootedEmulator = await Emulator.ensureEmulatorBootedAsync(emulator);

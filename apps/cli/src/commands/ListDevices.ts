@@ -1,31 +1,31 @@
-import {
-  AppleConnectedDevice,
-  AppleDevice,
-  Emulator,
-  Simulator,
-} from "eas-shared";
+import { AppleDevice, Emulator, Simulator } from "eas-shared";
 import { Platform } from "../utils";
+import {
+  IosSimulator,
+  AppleConnectedDevice,
+  AndroidConnectedDevice,
+  AndroidEmulator,
+} from "common-types/devices";
 
 type Device<P> = P extends Platform.Ios
-  ? Simulator.IosSimulator
+  ? IosSimulator | AppleConnectedDevice
   : P extends Platform.Android
-  ? Emulator.AndroidDevice
-  : Simulator.IosSimulator | Emulator.AndroidDevice;
+  ? AndroidConnectedDevice | AndroidEmulator
+  : never;
 
 export async function listDevicesAsync<P extends Platform>({
   platform,
 }: {
   platform: P;
 }): Promise<Device<P>[]> {
-  let availableAndroidDevices: Emulator.AndroidDevice[] = [];
-  let availableIosDevices: Array<
-    Simulator.IosSimulator | AppleConnectedDevice
-  > = [];
+  let availableAndroidDevices: (AndroidConnectedDevice | AndroidEmulator)[] =
+    [];
+  let availableIosDevices: Array<IosSimulator | AppleConnectedDevice> = [];
 
   if (platform === "ios" || platform === "all") {
     try {
       availableIosDevices = availableIosDevices.concat(
-        await Simulator.getAvaliableIosSimulatorsListAsync()
+        await Simulator.getAvailableIosSimulatorsListAsync()
       );
 
       const connectedDevices = await AppleDevice.getConnectedDevicesAsync();

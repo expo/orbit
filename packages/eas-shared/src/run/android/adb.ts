@@ -1,19 +1,11 @@
 import spawnAsync, { SpawnResult } from "@expo/spawn-async";
 import os from "os";
 import path from "path";
+import { AndroidConnectedDevice, AndroidEmulator } from "common-types/devices";
 
 import { getAndroidSdkRootAsync } from "./sdk";
 import Log from "../../log";
 import { sleepAsync } from "../../utils/promise";
-
-export type AndroidDevice = {
-  pid?: string;
-  model?: string;
-  name: string;
-  osType: "Android";
-  deviceType: "device" | "emulator";
-  connectionType?: "USB" | "Network";
-};
 
 const BEGINNING_OF_ADB_ERROR_MESSAGE = "error: ";
 
@@ -74,7 +66,9 @@ export async function getAdbNameForEmulatorIdAsync(
 }
 
 // TODO: This is very expensive for some operations.
-export async function getRunningDevicesAsync(): Promise<AndroidDevice[]> {
+export async function getRunningDevicesAsync(): Promise<
+  (AndroidConnectedDevice | AndroidEmulator)[]
+> {
   const { stdout } = await adbAsync("devices", "-l");
 
   const splitItems = stdout.trim().split(os.EOL);
@@ -87,52 +81,53 @@ export async function getRunningDevicesAsync(): Promise<AndroidDevice[]> {
       // authorized: ['FA8251A00719', 'device', 'usb:336592896X', 'product:walleye', 'model:Pixel_2', 'device:walleye', 'transport_id:4']
       // emulator: ['emulator-5554', 'offline', 'transport_id:1']
       const [pid, ...remainder] = line.split(" ").filter(Boolean);
-      const model = remainder
-        .find((item) => item.startsWith("model:"))
-        ?.substring(6);
+      const model =
+        remainder.find((item) => item.startsWith("model:"))?.substring(6) || "";
       const deviceType: "emulator" | "device" = line.includes("emulator")
         ? "emulator"
         : "device";
 
-      const result: Omit<AndroidDevice, "name"> = {
-        pid,
-        deviceType,
-        model,
-        osType: "Android",
-      };
-
       if (deviceType === "device") {
-        result.connectionType = line.includes("tcp") ? "Network" : "USB";
+        const result: Omit<AndroidConnectedDevice, "name"> = {
+          pid: line.includes("offline") ? undefined : pid,
+          deviceType,
+          model,
+          osType: "Android",
+          connectionType: line.includes("tcp") ? "Network" : "USB",
+        };
 
-        if (line.includes("offline")) {
-          result.pid = undefined;
-        }
+        return result;
+      } else {
+        const result: Omit<AndroidEmulator, "name"> = {
+          pid,
+          deviceType,
+          osType: "Android",
+          state: "Booted",
+        };
+
+        return result;
       }
-
-      return result;
     })
     .filter(({ pid }) => !!pid);
 
-  const devicePromises = attachedDevices.map<Promise<AndroidDevice>>(
-    async (device) => {
-      let name = device.model ?? "";
-      if (device.deviceType === "emulator" && device.pid) {
-        name = (await getAdbNameForEmulatorIdAsync(device.pid)) ?? name;
-      }
-      return {
-        ...device,
-        name,
-      };
+  const devicePromises = attachedDevices.map(async (device) => {
+    let name = "model" in device ? device.model : "";
+    if (device.deviceType === "emulator" && device.pid) {
+      name = (await getAdbNameForEmulatorIdAsync(device.pid)) ?? name;
     }
-  );
+
+    const result: AndroidConnectedDevice | AndroidEmulator = {
+      ...device,
+      name,
+    };
+    return result;
+  });
 
   return Promise.all(devicePromises);
 }
 
-export async function getFirstRunningEmulatorAsync(): Promise<AndroidDevice | null> {
-  const emulators = (await getRunningDevicesAsync()).filter(
-    ({ deviceType }) => deviceType === "emulator"
-  );
+export async function getFirstRunningEmulatorAsync(): Promise<AndroidEmulator | null> {
+  const emulators = (await getRunningDevicesAsync()).filter(isAndroidEmulator);
   return emulators[0] ?? null;
 }
 
@@ -164,7 +159,7 @@ export async function isEmulatorBootedAsync(
 export async function waitForEmulatorToBeBootedAsync(
   maxWaitTimeMs: number,
   intervalMs: number
-): Promise<AndroidDevice> {
+): Promise<AndroidEmulator> {
   Log.newLine();
   Log.log("Waiting for the Android emulator to start...");
 
@@ -177,4 +172,10 @@ export async function waitForEmulatorToBeBootedAsync(
     await sleepAsync(intervalMs);
   }
   throw new Error("Timed out waiting for the Android emulator to start.");
+}
+
+function isAndroidEmulator(
+  device: AndroidConnectedDevice | AndroidEmulator
+): device is AndroidEmulator {
+  return device.deviceType === "emulator";
 }

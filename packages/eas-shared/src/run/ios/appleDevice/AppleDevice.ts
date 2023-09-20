@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { AppleConnectedDevice } from "common-types/devices";
 
 import { ClientManager } from "./ClientManager";
 import { XcodeDeveloperDiskImagePrerequisite } from "./XcodeDeveloperDiskImagePrerequisite";
@@ -14,23 +15,6 @@ import { delayAsync } from "../../../utils/delayAsync";
 import { CommandError } from "../../../utils/errors";
 import { installExitHooks } from "../../../utils/exit";
 
-// NOTE(EvanBacon): I have a feeling this shape will change with new iOS versions (tested against iOS 15).
-export interface AppleConnectedDevice {
-  /** @example `00008101-001964A22629003A` */
-  udid: string;
-  /** @example `Evan's phone` */
-  name: string;
-  /** @example `iPhone13,4` */
-  model: string;
-  /** @example `device` */
-  deviceType: "device" | "catalyst";
-  /** @example `USB` */
-  connectionType: "USB" | "Network";
-  /** @example `15.4.1` */
-  osVersion: string;
-  osType: "iOS";
-}
-//
 /** @returns a list of connected Apple devices. */
 export async function getConnectedDevicesAsync(): Promise<
   AppleConnectedDevice[]
