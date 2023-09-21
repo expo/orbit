@@ -13,8 +13,8 @@ export const useGetPinnedApps = () => {
     fetchPolicy: 'cache-and-network',
   });
 
-  const pinnedApps = data?.viewer?.pinnedApps;
-  const accounts = data?.viewer?.accounts;
+  const pinnedApps = data?.meUserActor?.pinnedApps;
+  const accounts = data?.meUserActor?.accounts;
 
   const apps = useMemo(() => {
     let apps: PinnedApp[] = [];

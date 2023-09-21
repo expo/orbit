@@ -4,12 +4,10 @@ import {
   FieldFunctionOptions,
   HttpLink,
   InMemoryCache,
-  NormalizedCacheObject,
   concat,
   ApolloProvider,
 } from '@apollo/client';
 import { MMKVWrapper, persistCache } from 'apollo3-cache-persist';
-import { useEffect, useState } from 'react';
 
 import Config from './Config';
 import possibleTypesData from '../generated/graphql.possibleTypes.json';
@@ -32,9 +30,6 @@ const { possibleTypes } = possibleTypesData;
 const cache = new InMemoryCache({
   possibleTypes,
   typePolicies: {
-    UserActor: {
-      keyFields: ['id'],
-    },
     AppQuery: {
       keyFields: ['byId', ['id']],
     },
@@ -61,69 +56,38 @@ const cache = new InMemoryCache({
   },
 });
 
-export const useApolloClient = () => {
-  const [sessionSecret, setSessionSecret] = useState(storage.getString('sessionSecret'));
-  const [client, setClient] = useState<ApolloClient<NormalizedCacheObject>>();
+const authMiddlewareLink = new ApolloLink((operation, forward) => {
+  const sessionSecret = storage.getString('sessionSecret');
+  if (sessionSecret) {
+    operation.setContext(({ headers = {} }) => ({
+      headers: {
+        ...headers,
+        'expo-session': sessionSecret,
+      },
+    }));
+  }
 
-  useEffect(() => {
-    async function init() {
-      await persistCache({
-        cache,
-        storage: new MMKVWrapper(storage),
-        key: 'apollo-cache-persist',
-      });
+  return forward(operation);
+});
 
-      const authMiddlewareLink = new ApolloLink((operation, forward) => {
-        if (sessionSecret) {
-          operation.setContext(({ headers = {} }) => ({
-            headers: {
-              ...headers,
-              'expo-session': sessionSecret,
-            },
-          }));
-        }
-
-        return forward(operation);
-      });
-
-      setClient(
-        new ApolloClient({
-          link: concat(authMiddlewareLink, httpLink),
-          cache,
-        })
-      );
-    }
-
-    init();
-  }, [sessionSecret]);
-
-  useEffect(() => {
-    const listener = storage.addOnValueChangedListener((changedKey) => {
-      if (changedKey === 'sessionSecret') {
-        setSessionSecret(storage.getString('sessionSecret'));
-      }
-    });
-
-    return () => {
-      listener.remove();
-    };
+async function init() {
+  await persistCache({
+    cache,
+    storage: new MMKVWrapper(storage),
+    key: 'apollo-cache-persist',
   });
+}
+init();
 
-  return {
-    client,
-  };
-};
+export const apolloClient = new ApolloClient({
+  link: concat(authMiddlewareLink, httpLink),
+  cache,
+});
 
 export function withApolloProvider<P extends object>(Component: React.ComponentType<P>) {
   return (props: P) => {
-    const { client } = useApolloClient();
-
-    if (!client) {
-      return null;
-    }
-
     return (
-      <ApolloProvider client={client}>
+      <ApolloProvider client={apolloClient}>
         <Component {...props} />
       </ApolloProvider>
     );
