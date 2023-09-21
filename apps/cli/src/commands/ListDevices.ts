@@ -1,30 +1,21 @@
 import { AppleDevice, Emulator, Simulator } from "eas-shared";
-import { Platform } from "../utils";
-import {
-  IosSimulator,
-  AppleConnectedDevice,
-  AndroidConnectedDevice,
-  AndroidEmulator,
-} from "common-types/devices";
-
-type Device<P> = P extends Platform.Ios
-  ? IosSimulator | AppleConnectedDevice
-  : P extends Platform.Android
-  ? AndroidConnectedDevice | AndroidEmulator
-  : never;
+import { DevicesPerPlatform } from "common-types/build/cli-commands/listDevices";
+import { Platform } from "common-types/build/cli-commands";
+import { InternalError } from "common-types";
 
 export async function listDevicesAsync<P extends Platform>({
   platform,
 }: {
   platform: P;
-}): Promise<Device<P>[]> {
-  let availableAndroidDevices: (AndroidConnectedDevice | AndroidEmulator)[] =
-    [];
-  let availableIosDevices: Array<IosSimulator | AppleConnectedDevice> = [];
+}): Promise<DevicesPerPlatform> {
+  let result: DevicesPerPlatform = {
+    android: { devices: [], error: undefined },
+    ios: { devices: [], error: undefined },
+  };
 
   if (platform === "ios" || platform === "all") {
     try {
-      availableIosDevices = availableIosDevices.concat(
+      result.ios.devices = result.ios.devices.concat(
         await Simulator.getAvailableIosSimulatorsListAsync()
       );
 
@@ -38,9 +29,15 @@ export async function listDevicesAsync<P extends Platform>({
         }
       );
 
-      availableIosDevices = availableIosDevices.concat(uniqueConnectedDevices);
+      result.ios.devices = result.ios.devices.concat(uniqueConnectedDevices);
     } catch (error) {
       console.warn("Unable to get iOS devices", error);
+      if (error instanceof Error) {
+        result.ios.error = {
+          code: error instanceof InternalError ? error.code : "UNKNOWN_ERROR",
+          message: error.message,
+        };
+      }
     }
   }
 
@@ -48,7 +45,7 @@ export async function listDevicesAsync<P extends Platform>({
     try {
       const runningDevices = await Emulator.getRunningDevicesAsync();
 
-      availableAndroidDevices = (
+      result.android.devices = (
         await Emulator.getAvailableAndroidEmulatorsAsync()
       )?.map((emulator) => {
         const runningEmulator = runningDevices.find(
@@ -60,27 +57,18 @@ export async function listDevicesAsync<P extends Platform>({
           pid: runningEmulator?.pid,
         };
       });
-      availableAndroidDevices = availableAndroidDevices.concat(
+      result.android.devices = result.android.devices.concat(
         runningDevices.filter((r) => r.deviceType === "device")
       );
     } catch (error) {
       console.warn("Unable to get Android devices", error);
+      if (error instanceof Error) {
+        result.android.error = {
+          code: error instanceof InternalError ? error.code : "UNKNOWN_ERROR",
+          message: error.message,
+        };
+      }
     }
-  }
-
-  let result = new Array<Device<P>>();
-  if (
-    (platform === "all" || platform === Platform.Ios) &&
-    availableIosDevices?.length
-  ) {
-    result = result.concat(availableIosDevices as Device<P>[]);
-  }
-
-  if (
-    (platform === "all" || platform === Platform.Android) &&
-    availableAndroidDevices.length
-  ) {
-    result = result.concat(availableAndroidDevices as Device<P>[]);
   }
 
   return result;

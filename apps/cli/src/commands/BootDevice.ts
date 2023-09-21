@@ -1,4 +1,4 @@
-import { AndroidEmulator, IosSimulator } from "common-types/devices";
+import { AndroidEmulator, IosSimulator } from "common-types/build/devices";
 import { Emulator, Simulator } from "eas-shared";
 import { getRunningDevicesAsync } from "eas-shared/build/run/android/adb";
 

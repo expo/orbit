@@ -1,7 +1,10 @@
 import spawnAsync, { SpawnResult } from "@expo/spawn-async";
 import os from "os";
 import path from "path";
-import { AndroidConnectedDevice, AndroidEmulator } from "common-types/devices";
+import {
+  AndroidConnectedDevice,
+  AndroidEmulator,
+} from "common-types/build/devices";
 
 import { getAndroidSdkRootAsync } from "./sdk";
 import Log from "../../log";

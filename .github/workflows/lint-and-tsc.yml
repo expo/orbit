@@ -39,6 +39,10 @@ jobs:
       - name: 🧶 Install workspace node modules
         run: yarn install --frozen-lockfile
 
+      - name: 📦️ Build "common-types" package
+        run: yarn build
+        working-directory: packages/common-types
+
       - name: 🏗️ TSC "eas-shared" package files
         run: yarn tsc --noEmit
         working-directory: packages/eas-shared

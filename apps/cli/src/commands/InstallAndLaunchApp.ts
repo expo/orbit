@@ -1,10 +1,11 @@
 import {
-  AppPlatform,
   Emulator,
   Simulator,
   extractAppFromLocalArchiveAsync,
 } from "eas-shared";
-import { Platform, getPlatformFromURI } from "../utils";
+import { Platform } from "common-types/build/cli-commands";
+
+import { getPlatformFromURI } from "../utils";
 
 type InstallAndLaunchAppAsyncOptions = {
   appPath: string;
@@ -42,8 +43,7 @@ async function installAndLaunchAndroidAppAsync(
   }
 
   await Emulator.installAppAsync(emulator, appPath);
-  const { packageName, activityName } = await Emulator.getAptParametersAsync(
-    appPath
-  );
+  const { packageName, activityName } =
+    await Emulator.getAptParametersAsync(appPath);
   await Emulator.startAppAsync(emulator, packageName, activityName);
 }

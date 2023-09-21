@@ -1,4 +1,4 @@
-import { Device } from 'common-types/devices';
+import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
 
 import MenuBarModule from '../modules/MenuBarModule';
 
@@ -14,10 +14,5 @@ export const listDevicesAsync = async ({ platform }: ListDevicesAsyncOptions) =>
 
   const stringResult = await MenuBarModule.runCli('list-devices', args, undefined);
 
-  if (!stringResult) {
-    return [];
-  }
-
-  // eslint-disable-next-line no-eval
-  return eval(stringResult) as Device[];
+  return JSON.parse(stringResult) as DevicesPerPlatform;
 };

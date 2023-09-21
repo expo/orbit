@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "commander": "^10.0.1",
+    "common-types": "1.0.0",
     "eas-shared": "*",
     "strip-ansi": "^6.0.0"
   },

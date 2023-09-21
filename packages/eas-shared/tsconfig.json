@@ -17,11 +17,7 @@
       "../../ts-declarations",
       "src/ts-declarations",
       "./node_modules/@types"
-    ],
-    "paths": {
-      "common-types/*": ["../../common-types/src/*"]
-    }
+    ]
   },
-  "include": ["src/**/*"],
-  "references": [{ "path": "../../common-types/tsconfig.json" }]
+  "include": ["src/**/*"]
 }

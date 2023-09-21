@@ -6,6 +6,7 @@
 
 ### 🎉 New features
 
+- Improve feedback to the user when an error occurs. ([#64](https://github.com/expo/orbit/pull/64) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add auto update support. ([#65](https://github.com/expo/orbit/pull/65) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improved performance when running `cli` commands. ([#61](https://github.com/expo/orbit/pull/61) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added drag and drop support for installing apps. ([#57](https://github.com/expo/orbit/pull/57) by [@gabrieldonadel](https://github.com/gabrieldonadel))
