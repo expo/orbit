@@ -7,14 +7,27 @@
 ### 🎉 New features
 
 - Improve feedback to the user when an error occurs. ([#64](https://github.com/expo/orbit/pull/64) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Add auto update support. ([#65](https://github.com/expo/orbit/pull/65) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Improved performance when running `cli` commands. ([#61](https://github.com/expo/orbit/pull/61) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added drag and drop support for installing apps. ([#57](https://github.com/expo/orbit/pull/57) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added support for installing apps directly from Finder. ([#56](https://github.com/expo/orbit/pull/56) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added local HTTP server to circumvent deep-link limitations. ([#52](https://github.com/expo/orbit/pull/52), [#53](https://github.com/expo/orbit/pull/53), [#54](https://github.com/expo/orbit/pull/54), [#55](https://github.com/expo/orbit/pull/55) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added Projects section to the menu bar. ([#46](https://github.com/expo/orbit/pull/46), [#59](https://github.com/expo/orbit/pull/59) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added support for login to Expo. ([#41](https://github.com/expo/orbit/pull/41), [#43](https://github.com/expo/orbit/pull/43), [#44](https://github.com/expo/orbit/pull/44), [#45](https://github.com/expo/orbit/pull/45), [#62](https://github.com/expo/orbit/pull/62), [#67](https://github.com/expo/orbit/pull/67) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
+### 🐛 Bug fixes
+
+### 💡 Others
+
+- Add check for missing changelogs. ([#49](https://github.com/expo/orbit/pull/49) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Clean up eas-shared package. ([#60](https://github.com/expo/orbit/pull/60) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Unify device types across menu-bar, cli and eas-shared package. ([#66](https://github.com/expo/orbit/pull/66) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
+## 0.1.3 — 2023-09-21
+
+### 🎉 New features
+
+- Add auto update support. ([#65](https://github.com/expo/orbit/pull/65) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Improved performance when running `cli` commands. ([#61](https://github.com/expo/orbit/pull/61) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Show dock icon while windows are opened. ([#50](https://github.com/expo/orbit/pull/50) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
@@ -22,12 +35,6 @@
 - Prevent the AutoLauncher process from running in the background after launching the main app. ([#51](https://github.com/expo/orbit/pull/51) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix WindowNavigator size calculations when showing an existing window. ([#48](https://github.com/expo/orbit/pull/48) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Remove additional spacing from Builds header. ([#40](https://github.com/expo/orbit/pull/40) by [@Simek](https://github.com/Simek))
-
-### 💡 Others
-
-- Add check for missing changelogs. ([#49](https://github.com/expo/orbit/pull/49) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Clean up eas-shared package. ([#60](https://github.com/expo/orbit/pull/60) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Unify device types across menu-bar, cli and eas-shared package. ([#66](https://github.com/expo/orbit/pull/66) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 0.1.2 — 2023-08-13
 

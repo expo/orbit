@@ -6,6 +6,36 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>0.1.3</title>
+      <description>
+      <![CDATA[
+      <h3 id="newfeatures">🎉 New features</h3>
+      <ul>
+        <li>Add auto update support. (<a href="https://github.com/expo/orbit/pull/65">#65</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improved performance when running <code>cli</code> commands. (<a href="https://github.com/expo/orbit/pull/61">#61</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Show dock icon while windows are opened. (<a href="https://github.com/expo/orbit/pull/50">#50</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="bugfixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix SVGs on macOS Sonoma. (<a href="https://github.com/expo/orbit/pull/63">#63</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Prevent the AutoLauncher process from running in the background after launching the main app. (<a href="https://github.com/expo/orbit/pull/51">#51</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix WindowNavigator size calculations when showing an existing window. (<a href="https://github.com/expo/orbit/pull/48">#48</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Remove additional spacing from Builds header. (<a href="https://github.com/expo/orbit/pull/40">#40</a> by <a href="https://github.com/Simek">@Simek</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2023-09-21</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v0.1.3</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v0.1.3/expo-orbit.v0.1.3.zip"
+        sparkle:version="7"
+        sparkle:shortVersionString="0.1.3"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>0.1.2</title>
       <description>
       <![CDATA[
