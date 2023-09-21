@@ -1,10 +1,10 @@
-import Clipboard from '@react-native-clipboard/clipboard';
+import { useClipboard } from '@react-native-clipboard/clipboard';
 import { useState } from 'react';
 import { FlatList, PlatformColor, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 
 const NativeColorPalette = () => {
   const [selectedColor, setSelectedColor] = useState<string>();
-
+  const [, setClipboardString] = useClipboard();
   return (
     <View style={styles.container}>
       {selectedColor ? (
@@ -19,7 +19,7 @@ const NativeColorPalette = () => {
           />
           <TouchableOpacity
             style={styles.selectedColorText}
-            onPress={() => Clipboard.setString(selectedColor)}>
+            onPress={() => setClipboardString(selectedColor)}>
             <Text>{selectedColor}</Text>
           </TouchableOpacity>
         </View>

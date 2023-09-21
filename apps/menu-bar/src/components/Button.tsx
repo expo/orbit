@@ -37,7 +37,7 @@ const Button = ({ title, color = 'default', disabled, ...otherProps }: Props) =>
 
 export default Button;
 
-function getStylesForColor(color: Color, theme: ReturnType<typeof useCurrentTheme>) {
+export function getStylesForColor(color: Color, theme: ReturnType<typeof useCurrentTheme>) {
   let textStyle: StyleProp<TextStyle> = {};
   let touchableStyle: StyleProp<ViewStyle> = {};
 

@@ -1,0 +1,14 @@
+fragment CurrentUserData on UserActor {
+  id
+  username
+  firstName
+  lastName
+  bestContactEmail
+  profilePhoto
+}
+
+query GetCurrentUser {
+  meUserActor {
+    ...CurrentUserData
+  }
+}
