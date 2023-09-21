@@ -1,24 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
 
+import { WindowsNavigator } from './index';
+import { withApolloProvider } from '../api/ApolloClient';
 import Config from '../api/Config';
 import { Checkbox, View, Row, Text, Divider } from '../components';
-import Button from '../components/Button';
+import { Avatar } from '../components/Avatar';
+import Button, { getStylesForColor } from '../components/Button';
 import PathInput from '../components/PathInput';
+import SystemIconView from '../components/SystemIconView';
+import { useGetCurrentUserQuery } from '../generated/graphql';
 import MenuBarModule from '../modules/MenuBarModule';
 import SparkleModule from '../modules/SparkleModule';
 import {
   UserPreferences,
   getUserPreferences,
-  resetStorage,
   saveUserPreferences,
   storage,
 } from '../modules/Storage';
 import WebAuthenticationSessionModule, {
   WebBrowserResultType,
 } from '../modules/WebAuthenticationSessionModule';
+import { getCurrentUserDisplayName } from '../utils/helpers';
+import { useCurrentTheme } from '../utils/useExpoTheme';
 
 const Settings = () => {
+  const theme = useCurrentTheme();
   const [hasSessionSecret, setHasSessionSecret] = useState(
     Boolean(storage.getString('sessionSecret'))
   );
@@ -26,6 +33,12 @@ const Settings = () => {
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
+
+  const { data } = useGetCurrentUserQuery({
+    fetchPolicy: 'cache-and-network',
+    skip: !hasSessionSecret,
+  });
+  const currentUser = data?.meUserActor;
 
   useEffect(() => {
     getUserPreferences().then((value) => {
@@ -85,9 +98,9 @@ const Settings = () => {
     }
   };
 
-  const handleAuthentication = async () => {
+  const handleAuthentication = async (type: 'signup' | 'login') => {
     const redirectBase = 'expo-orbit://auth';
-    const authSessionURL = `${Config.website.origin}/login?app_redirect_uri=${encodeURIComponent(
+    const authSessionURL = `${Config.website.origin}/${type}?app_redirect_uri=${encodeURIComponent(
       redirectBase
     )}`;
     const result = await WebAuthenticationSessionModule.openAuthSessionAsync(authSessionURL);
@@ -111,17 +124,56 @@ const Settings = () => {
   };
 
   return (
-    <View flex="1" padding="medium">
+    <View flex="1" px="medium" pb="medium">
       <View flex="1">
-        <View padding="2">
+        <View mb="2">
+          <Text size="medium" weight="semibold">
+            Account
+          </Text>
           {hasSessionSecret ? (
-            <Button title="Logout" onPress={handleLogout} style={styles.button} />
+            <Row>
+              {currentUser ? (
+                <Row align="center" flex="1" mt="1">
+                  <Avatar
+                    name={getCurrentUserDisplayName(currentUser)}
+                    profilePhoto={currentUser.profilePhoto}
+                  />
+                  <View mx="2" flex="1">
+                    <Text weight="medium" numberOfLines={1}>
+                      {getCurrentUserDisplayName(currentUser)}
+                    </Text>
+                    <Text size="tiny">{currentUser.bestContactEmail}</Text>
+                  </View>
+                </Row>
+              ) : null}
+
+              <Button title="Logout" onPress={handleLogout} style={styles.button} />
+              {__DEV__ ? (
+                <TouchableOpacity
+                  onPress={() => WindowsNavigator.open('DebugMenu')}
+                  style={[styles.debugButton, getStylesForColor('primary', theme)?.touchableStyle]}>
+                  <SystemIconView systemIconName="ladybug" />
+                </TouchableOpacity>
+              ) : null}
+            </Row>
           ) : (
-            <Button title="Login" onPress={handleAuthentication} style={styles.button} />
+            <Row gap="2">
+              <Text style={styles.flex} size="tiny">
+                Log in or create an account to access your projects, builds and more.
+              </Text>
+              <Button
+                title="Sign Up"
+                onPress={() => handleAuthentication('signup')}
+                color="primary"
+              />
+              <Button title="Log In" onPress={() => handleAuthentication('login')} />
+            </Row>
           )}
         </View>
-        <Divider mb="tiny" />
-        <Row mb="3.5" align="center">
+        <Text size="medium" weight="semibold">
+          Preferences
+        </Text>
+        <Row mb="3.5" align="center" gap="1">
           <Checkbox
             value={userPreferences.launchOnLogin}
             onValueChange={onPressLaunchOnLogin}
@@ -169,16 +221,6 @@ const Settings = () => {
           }}
           value={userPreferences.customSdkPath}
         />
-        {__DEV__ ? (
-          <Row gap="2" py="medium">
-            <Text weight="medium">Dev mode only</Text>
-            <View border="warning" bg="warning" px="0.5">
-              <TouchableOpacity onPress={resetStorage}>
-                <Text color="warning">Reset storage</Text>
-              </TouchableOpacity>
-            </View>
-          </Row>
-        ) : null}
       </View>
       <Divider mb="tiny" />
       <View py="tiny">
@@ -193,13 +235,24 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default withApolloProvider(Settings);
 
 const styles = StyleSheet.create({
   about: {
     fontSize: 13,
   },
   button: {
-    alignSelf: 'flex-start',
+    marginLeft: 'auto',
+  },
+  flex: {
+    flex: 1,
+  },
+  debugButton: {
+    height: 32,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

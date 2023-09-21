@@ -5882,6 +5882,17 @@ export type GetAppsForPinnedListQueryVariables = Exact<{ [key: string]: never; }
 
 export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', meUserActor?: { __typename?: 'SSOUser', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | { __typename?: 'User', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
 
+type CurrentUserData_SsoUser_Fragment = { __typename?: 'SSOUser', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string };
+
+type CurrentUserData_User_Fragment = { __typename?: 'User', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string };
+
+export type CurrentUserDataFragment = CurrentUserData_SsoUser_Fragment | CurrentUserData_User_Fragment;
+
+export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCurrentUserQuery = { __typename?: 'RootQuery', meUserActor?: { __typename?: 'SSOUser', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string } | { __typename?: 'User', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string } | null };
+
 export const AppForPinnedListFragmentDoc = gql`
     fragment AppForPinnedList on App {
   id
@@ -5895,6 +5906,16 @@ export const AppForPinnedListFragmentDoc = gql`
   ownerAccount {
     name
   }
+}
+    `;
+export const CurrentUserDataFragmentDoc = gql`
+    fragment CurrentUserData on UserActor {
+  id
+  username
+  firstName
+  lastName
+  bestContactEmail
+  profilePhoto
 }
     `;
 export const GetAppsForPinnedListDocument = gql`
@@ -5945,3 +5966,37 @@ export function useGetAppsForPinnedListLazyQuery(baseOptions?: Apollo.LazyQueryH
 export type GetAppsForPinnedListQueryHookResult = ReturnType<typeof useGetAppsForPinnedListQuery>;
 export type GetAppsForPinnedListLazyQueryHookResult = ReturnType<typeof useGetAppsForPinnedListLazyQuery>;
 export type GetAppsForPinnedListQueryResult = Apollo.QueryResult<GetAppsForPinnedListQuery, GetAppsForPinnedListQueryVariables>;
+export const GetCurrentUserDocument = gql`
+    query GetCurrentUser {
+  meUserActor {
+    ...CurrentUserData
+  }
+}
+    ${CurrentUserDataFragmentDoc}`;
+
+/**
+ * __useGetCurrentUserQuery__
+ *
+ * To run a query within a React component, call `useGetCurrentUserQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCurrentUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCurrentUserQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetCurrentUserQuery(baseOptions?: Apollo.QueryHookOptions<GetCurrentUserQuery, GetCurrentUserQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetCurrentUserQuery, GetCurrentUserQueryVariables>(GetCurrentUserDocument, options);
+      }
+export function useGetCurrentUserLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCurrentUserQuery, GetCurrentUserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetCurrentUserQuery, GetCurrentUserQueryVariables>(GetCurrentUserDocument, options);
+        }
+export type GetCurrentUserQueryHookResult = ReturnType<typeof useGetCurrentUserQuery>;
+export type GetCurrentUserLazyQueryHookResult = ReturnType<typeof useGetCurrentUserLazyQuery>;
+export type GetCurrentUserQueryResult = Apollo.QueryResult<GetCurrentUserQuery, GetCurrentUserQueryVariables>;
