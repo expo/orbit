@@ -6,7 +6,7 @@ import semver from "semver";
 
 import ApiV2Client from "./api/APIV2";
 import * as FsCache from "./tools/FsCache";
-import InternalError from "./InternalError";
+import { InternalError } from "common-types";
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;

@@ -23,7 +23,7 @@ const Item = ({ children, onPress, shortcut }: Props) => {
           backgroundColor: theme === 'dark' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)',
         },
       ]}>
-      <Row gap="1.5" my="tiny" px="2.5">
+      <Row gap="1.5" my="tiny" px="2.5" align="center">
         {children}
         {shortcut && <Text style={styles.shortcut}>{shortcut}</Text>}
       </Row>

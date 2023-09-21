@@ -1,6 +1,7 @@
 import { AppleDevice, Emulator, Simulator } from "eas-shared";
 import { DevicesPerPlatform } from "common-types/build/cli-commands/listDevices";
 import { Platform } from "common-types/build/cli-commands";
+import { InternalError } from "common-types";
 
 export async function listDevicesAsync<P extends Platform>({
   platform,
@@ -32,7 +33,10 @@ export async function listDevicesAsync<P extends Platform>({
     } catch (error) {
       console.warn("Unable to get iOS devices", error);
       if (error instanceof Error) {
-        result.ios.error = error.message;
+        result.ios.error = {
+          code: error instanceof InternalError ? error.code : "UNKNOWN_ERROR",
+          message: error.message,
+        };
       }
     }
   }
@@ -59,7 +63,10 @@ export async function listDevicesAsync<P extends Platform>({
     } catch (error) {
       console.warn("Unable to get Android devices", error);
       if (error instanceof Error) {
-        result.android.error = error.message;
+        result.android.error = {
+          code: error instanceof InternalError ? error.code : "UNKNOWN_ERROR",
+          message: error.message,
+        };
       }
     }
   }

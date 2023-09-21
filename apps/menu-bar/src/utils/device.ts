@@ -27,21 +27,26 @@ export function getDeviceId(device: Device): string {
 
 export function getSectionsFromDeviceList(
   devicesPerPlatform: DevicesPerPlatform
-): SectionListData<Device, { label: string }>[] {
+): SectionListData<
+  Device,
+  { label: string; error?: DevicesPerPlatform[keyof DevicesPerPlatform]['error'] }
+>[] {
   const sections = [
     {
       data: devicesPerPlatform.ios.devices,
       key: 'ios',
       label: 'iOS',
+      error: devicesPerPlatform.ios.error,
     },
     {
       data: devicesPerPlatform.android.devices,
       key: 'android',
       label: 'Android',
+      error: devicesPerPlatform.android.error,
     },
   ];
 
-  return sections.filter((section) => section.data.length > 0);
+  return sections.filter((section) => section.data.length > 0 || section.error);
 }
 
 export function isVirtualDevice(device: Device): device is IosSimulator | AndroidEmulator {

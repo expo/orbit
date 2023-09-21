@@ -2,9 +2,9 @@ const ERROR_PREFIX = "Error: ";
 export default class InternalError extends Error {
   override readonly name = "InternalError";
 
-  code: string;
+  code: InternalErrorCode;
 
-  constructor(code: ErrorCode, message: string) {
+  constructor(code: InternalErrorCode, message: string) {
     super("");
 
     // If e.toString() was called to get `message` we don't want it to look
@@ -18,7 +18,7 @@ export default class InternalError extends Error {
   }
 }
 
-export type ErrorCode =
+export type InternalErrorCode =
   // Auth Errors
   | "INVALID_USERNAME_PASSWORD"
   | "TOO_MANY_ATTEMPTS"

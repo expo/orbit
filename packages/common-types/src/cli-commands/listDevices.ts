@@ -15,6 +15,6 @@ type Device<P> = P extends Platform.Ios
 export type DevicesPerPlatform = {
   [P in Exclude<Platform, Platform.All>]: {
     devices: Array<Device<P>>;
-    error?: string;
+    error?: { code: string; message: string };
   };
 };

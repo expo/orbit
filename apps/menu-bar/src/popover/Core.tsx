@@ -2,6 +2,7 @@ import { Device } from 'common-types/build/devices';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Alert, SectionList } from 'react-native';
 
+import DeviceListSectionHeader from './DeviceListSectionHeader';
 import { FOOTER_HEIGHT } from './Footer';
 import Item from './Item';
 import ProjectsSection, { PROJECTS_SECTION_HEIGHT } from './ProjectsSection';
@@ -253,7 +254,9 @@ function Core(props: Props) {
           sections={sections}
           style={{ minHeight: estimatedListHeight }}
           SectionSeparatorComponent={Separator}
-          renderSectionHeader={({ section: { label } }) => <SectionHeader label={label} />}
+          renderSectionHeader={({ section: { label, error } }) => (
+            <DeviceListSectionHeader label={label} errorMessage={error?.message} />
+          )}
           renderItem={({ item: device }: { item: Device }) => {
             const platform = getDeviceOS(device);
             const id = getDeviceId(device);

@@ -10,7 +10,7 @@ import {
 
 import { Text } from './Text';
 import { View } from './View';
-import AlertIcon from '../assets/icons/alert-triangle.svg';
+import AlertIcon from '../assets/icons/AlertTriangle';
 import CheckIcon from '../assets/icons/check-circle.svg';
 
 interface Props {
