@@ -2177,6 +2177,7 @@ export enum BuildCredentialsSource {
 
 export type BuildError = {
   __typename?: 'BuildError';
+  buildPhase?: Maybe<BuildPhase>;
   docsUrl?: Maybe<Scalars['String']['output']>;
   errorCode: Scalars['String']['output'];
   message: Scalars['String']['output'];
@@ -2430,6 +2431,50 @@ export type BuildParamsInput = {
   resourceClass: BuildResourceClass;
   sdkVersion?: InputMaybe<Scalars['String']['input']>;
 };
+
+export enum BuildPhase {
+  BuilderInfo = 'BUILDER_INFO',
+  CleanUpCredentials = 'CLEAN_UP_CREDENTIALS',
+  CompleteBuild = 'COMPLETE_BUILD',
+  ConfigureExpoUpdates = 'CONFIGURE_EXPO_UPDATES',
+  ConfigureXcodeProject = 'CONFIGURE_XCODE_PROJECT',
+  Custom = 'CUSTOM',
+  DownloadApplicationArchive = 'DOWNLOAD_APPLICATION_ARCHIVE',
+  EasBuildInternal = 'EAS_BUILD_INTERNAL',
+  FailBuild = 'FAIL_BUILD',
+  FixGradlew = 'FIX_GRADLEW',
+  InstallCustomTools = 'INSTALL_CUSTOM_TOOLS',
+  InstallDependencies = 'INSTALL_DEPENDENCIES',
+  InstallPods = 'INSTALL_PODS',
+  OnBuildCancelHook = 'ON_BUILD_CANCEL_HOOK',
+  OnBuildCompleteHook = 'ON_BUILD_COMPLETE_HOOK',
+  OnBuildErrorHook = 'ON_BUILD_ERROR_HOOK',
+  OnBuildSuccessHook = 'ON_BUILD_SUCCESS_HOOK',
+  ParseCustomWorkflowConfig = 'PARSE_CUSTOM_WORKFLOW_CONFIG',
+  PostInstallHook = 'POST_INSTALL_HOOK',
+  Prebuild = 'PREBUILD',
+  PrepareArtifacts = 'PREPARE_ARTIFACTS',
+  PrepareCredentials = 'PREPARE_CREDENTIALS',
+  PrepareProject = 'PREPARE_PROJECT',
+  PreInstallHook = 'PRE_INSTALL_HOOK',
+  PreUploadArtifactsHook = 'PRE_UPLOAD_ARTIFACTS_HOOK',
+  Queue = 'QUEUE',
+  ReadAppConfig = 'READ_APP_CONFIG',
+  ReadPackageJson = 'READ_PACKAGE_JSON',
+  RestoreCache = 'RESTORE_CACHE',
+  RunExpoDoctor = 'RUN_EXPO_DOCTOR',
+  RunFastlane = 'RUN_FASTLANE',
+  RunGradlew = 'RUN_GRADLEW',
+  SaveCache = 'SAVE_CACHE',
+  SetUpBuildEnvironment = 'SET_UP_BUILD_ENVIRONMENT',
+  SpinUpBuilder = 'SPIN_UP_BUILDER',
+  StartBuild = 'START_BUILD',
+  Unknown = 'UNKNOWN',
+  UploadApplicationArchive = 'UPLOAD_APPLICATION_ARCHIVE',
+  /** @deprecated No longer supported */
+  UploadArtifacts = 'UPLOAD_ARTIFACTS',
+  UploadBuildArtifacts = 'UPLOAD_BUILD_ARTIFACTS'
+}
 
 export type BuildPlanCreditThresholdExceededMetadata = {
   __typename?: 'BuildPlanCreditThresholdExceededMetadata';
@@ -5835,7 +5880,7 @@ export type AppForPinnedListFragment = { __typename?: 'App', id: string, name: s
 export type GetAppsForPinnedListQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', viewer?: { __typename?: 'User', pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
+export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', meUserActor?: { __typename?: 'SSOUser', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | { __typename?: 'User', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
 
 export const AppForPinnedListFragmentDoc = gql`
     fragment AppForPinnedList on App {
@@ -5854,7 +5899,8 @@ export const AppForPinnedListFragmentDoc = gql`
     `;
 export const GetAppsForPinnedListDocument = gql`
     query GetAppsForPinnedList {
-  viewer {
+  meUserActor {
+    id
     pinnedApps {
       ...AppForPinnedList
     }

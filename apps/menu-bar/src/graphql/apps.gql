@@ -13,7 +13,8 @@ fragment AppForPinnedList on App {
 }
 
 query GetAppsForPinnedList {
-  viewer {
+  meUserActor {
+    id
     pinnedApps {
       ...AppForPinnedList
     }
