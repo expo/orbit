@@ -14,11 +14,13 @@ Try out Expo Orbit now, explore its capabilities, and share your feedback. Your 
 
 ## Install
 
-1. Go to [orbit/releases](https://github.com/expo/eas-menu-bar/releases) and download the latest release.
+You can download Orbit from [orbit/releases](https://github.com/expo/eas-menu-bar/releases) or via Homebrew:
 
-2. Unzip the file and drag Expo Orbit to the Applications folder.
+```sh
+brew install expo-orbit
+```
 
-3. You're all set! If you want Orbit to automatically start when you log in, click on the Orbit icon in the menu bar, then "Settings" and select the "Launch on Login" option.
+If you want Orbit to automatically start when you log in, click on the Orbit icon in the menu bar, then "Settings" and select the "Launch on Login" option.
 
 ### Enabling Orbit buttons on EAS and Snack
 
