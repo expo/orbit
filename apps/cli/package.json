@@ -12,6 +12,7 @@
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc",
     "archive": "yarn build && pkg build/index.js --targets macos-arm64,macos-x64 -o dist/orbit-cli",
+    "archive:node18": "yarn build && pkg build/index.js --targets node18-macos-arm64,node18-macos-x64 -o dist/orbit-cli",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "watch": "tsc --watch --preserveWatchOutput",
