@@ -17,7 +17,7 @@ export async function xcrunAsync(
 }
 
 function throwXcrunError(e: any): never {
-  if (isLicenseOutOfDate(e.stdout) || isLicenseOutOfDate(e.stderr) || true) {
+  if (isLicenseOutOfDate(e.stdout) || isLicenseOutOfDate(e.stderr)) {
     throw new InternalError(
       "XCODE_LICENSE_NOT_ACCEPTED",
       "Xcode license is not accepted. Please run `sudo xcodebuild -license`."
