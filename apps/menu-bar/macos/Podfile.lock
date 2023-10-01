@@ -375,7 +375,7 @@ PODS:
     - React-Core
   - RNCClipboard (1.11.2):
     - React-Core
-  - RNSVG (13.9.0):
+  - RNSVG (13.14.0):
     - React-Core
   - SocketRocket (0.6.0)
   - Sparkle (2.5.0)
@@ -555,7 +555,7 @@ SPEC CHECKSUMS:
   ReactCommon: 6f818c11f4e4b7b678fbcbf2690a2d07bac2bb2d
   RNCAsyncStorage: 4b98ac3c64efa4e35c1197cb0c5ca5e9f5d4c666
   RNCClipboard: 3f0451a8100393908bea5c5c5b16f96d45f30bfc
-  RNSVG: 53c661b76829783cdaf9b7a57258f3d3b4c28315
+  RNSVG: d00c8f91c3cbf6d476451313a18f04d220d4f396
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Sparkle: 913cef92f73e08d0ae47a36ee20e523913e5f9e2
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
