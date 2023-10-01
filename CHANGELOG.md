@@ -15,6 +15,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix some build and running issues. ([#69](https://github.com/expo/orbit/pull/69) by [@douglowder](https://github.com/douglowder))
+
 ### 💡 Others
 
 - Add check for missing changelogs. ([#49](https://github.com/expo/orbit/pull/49) by [@gabrieldonadel](https://github.com/gabrieldonadel))
