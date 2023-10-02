@@ -154,22 +154,22 @@ function Core(props: Props) {
 
         if (!localFilePath) {
           setStatus(Status.DOWNLOADING);
-          const [buildPath] = await Promise.all([
-            downloadBuildAsync(appURI, setProgress),
-            ensureDeviceIsRunning(device),
-          ]);
-
+          const buildPath = await downloadBuildAsync(appURI, setProgress);
           localFilePath = buildPath;
-        } else {
-          await ensureDeviceIsRunning(device);
         }
 
         setStatus(Status.INSTALLING);
+        await ensureDeviceIsRunning(device);
         const deviceId = getDeviceId(device);
         await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
       } catch (error) {
         if (error instanceof Error) {
-          Alert.alert('Something went wrong while installing the app.', error.message);
+          if (__DEV__) {
+            console.log('Something went wrong while installing the app.', error.message);
+            console.log(`Stack: ${error.stack}`);
+          } else {
+            Alert.alert('Something went wrong while installing the app.', error.message);
+          }
         }
       } finally {
         setTimeout(() => {
