@@ -23,6 +23,7 @@
 - Clean up eas-shared package. ([#60](https://github.com/expo/orbit/pull/60) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Unify device types across menu-bar, cli and eas-shared package. ([#66](https://github.com/expo/orbit/pull/66) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade react-native-svg to 13.14.0 and remove patch. ([#70](https://github.com/expo/orbit/pull/70) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade react-native to 0.72.5. ([#71](https://github.com/expo/orbit/pull/71) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 0.1.3 — 2023-09-21
 
