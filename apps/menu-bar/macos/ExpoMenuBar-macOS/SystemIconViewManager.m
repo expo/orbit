@@ -4,20 +4,23 @@
 #import "RCTImageView+Private.h"
 
 @interface SystemIconView : RCTImageView
- 
+
 
 @end
 
 @implementation SystemIconView
- 
+
 
 - (void)setSystemIconName:(NSString *)systemIconName
-{ 
+{
   NSImage *systemIcon = [NSImage imageWithSystemSymbolName:systemIconName accessibilityDescription:nil];
-  
+ 
+  NSImageSymbolConfiguration *config = [NSImageSymbolConfiguration configurationWithPaletteColors:@[[NSColor textColor]]];
+  systemIcon = [systemIcon imageWithSymbolConfiguration:config];
+
   [super updateWithImage:systemIcon];
 }
- 
+
 
 @end
 

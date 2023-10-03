@@ -9,8 +9,8 @@ const SystemIconView = (props: Props) => {
 };
 
 const defaultStyle = {
-  height: 22,
-  width: 22,
+  height: 18,
+  width: 18,
 };
 
 export default SystemIconView;
