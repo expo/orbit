@@ -9,6 +9,9 @@ export function returnLoggerMiddleware(
       const result = await fn(...args);
 
       console.log("---- return output ----");
+      if (typeof result === "string") {
+        console.log(result);
+      } else
       if (typeof result === "object" && result !== null) {
         console.log(JSON.stringify(result));
       } else {

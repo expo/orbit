@@ -23,11 +23,10 @@ RCT_EXPORT_METHOD(pickFileWithFilenameExtension:(NSArray<NSString *> *)filenameE
 
     if (@available(macOS 11.0, *)) {
       NSMutableArray<UTType *> *allowedTypes = [NSMutableArray array];
+
       for (NSString *extension in filenameExtensions) {
-        UTType *utType = [UTType typeWithFilenameExtension:extension];
-        if (utType) {
-          [allowedTypes addObject:utType];
-        }
+        NSArray *utTypes = [UTType typesWithTag:extension tagClass:UTTagClassFilenameExtension conformingToType:nil];
+        [allowedTypes addObjectsFromArray:utTypes];
       }
       [panel setAllowedContentTypes:allowedTypes];
     }

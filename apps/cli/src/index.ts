@@ -49,4 +49,7 @@ program
   .option("-p, --platform <string>", "Selected platform")
   .action(returnLoggerMiddleware(checkToolsAsync));
 
+if (process.argv.length < 3) {
+  program.help()
+}
 program.parse();
