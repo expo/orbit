@@ -4,7 +4,7 @@
 
 @class RCTBridge;
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, NSUserNotificationCenterDelegate>
 {
   NSStatusItem *statusItem;
   NSPopover *popover;

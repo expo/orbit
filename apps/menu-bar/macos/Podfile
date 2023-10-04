@@ -17,9 +17,15 @@ relative_rn_macos_path = Pathname.new(rn_macos_path).relative_path_from(Pathname
 # Delete the codegen build folder
 FileUtils.remove_dir("./build", true)
 
+prepare_react_native_project!
+
 target 'ExpoMenuBar-macOS' do
   platform :macos, '10.15'
   use_native_modules!
+
+  # Flags change depending on the env values.
+  flags = get_default_flags()
+
   use_react_native!(
     :path => relative_rn_macos_path,
     # to enable hermes on macOS, change `false` to `true` and then install pods
