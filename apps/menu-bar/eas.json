@@ -1,0 +1,14 @@
+{
+  "cli": {
+    "version": ">= 3.18.3"
+  },
+  "build": {
+    "production": {
+      "config": "build.yml",
+      "withoutCredentials": true
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

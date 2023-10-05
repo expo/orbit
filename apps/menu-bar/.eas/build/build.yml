@@ -1,0 +1,25 @@
+build:
+  name: Run tests
+  steps:
+    - eas/checkout
+    - eas/install_node_modules
+    - run:
+        name: Build packages
+        working_directory: ../../
+        command: |
+          yarn build
+    - run:
+        name: Archive CLI
+        working_directory: ../../apps/cli
+        command: |
+          yarn archive
+    - run:
+        name: Install menu-bar pods
+        working_directory: ./macos
+        command: pod install
+    - run:
+        name: Archive menu-bar
+        working_directory: ../../apps/menu-bar
+        command: |
+          yarn archive
+    - eas/find_and_upload_build_artifacts
