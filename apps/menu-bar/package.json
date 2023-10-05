@@ -8,7 +8,8 @@
     "start": "react-native start",
     "test": "jest",
     "update-cli": "mkdir -p cli && cp -R ../cli/dist/ cli/",
-    "gql": "graphql-codegen --config codegen.ts"
+    "gql": "graphql-codegen --config codegen.ts",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@apollo/client": "^3.8.1",

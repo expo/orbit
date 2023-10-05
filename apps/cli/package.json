@@ -16,7 +16,8 @@
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "watch": "tsc --watch --preserveWatchOutput",
-    "codesign": "codesign --options=runtime --sign \"Developer ID Application: 650 Industries, Inc. (C8D8QTF339)\" --entitlements ./macos/entitlements.plist --force ./dist/orbit-cli-arm64 ./dist/orbit-cli-x64"
+    "codesign": "codesign --options=runtime --sign \"Developer ID Application: 650 Industries, Inc. (C8D8QTF339)\" --entitlements ./macos/entitlements.plist --force ./dist/orbit-cli-arm64 ./dist/orbit-cli-x64",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "commander": "^10.0.1",

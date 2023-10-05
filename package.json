@@ -2,19 +2,21 @@
   "private": true,
   "name": "monorepo",
   "version": "1.0.0",
-  "workspaces": {
-    "packages": [
-      "apps/*",
-      "packages/*"
-    ]
-  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
+    "build": "lerna run build",
+    "watch": "lerna run watch --stream",
+    "typecheck": "lerna run typecheck",
     "postinstall": "patch-package"
   },
   "dependencies": {
     "@tsconfig/node12": "1.0.7"
   },
   "devDependencies": {
+    "lerna": "^7.3.0",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0"
   }

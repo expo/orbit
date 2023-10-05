@@ -7,12 +7,11 @@
    - [node](https://nodejs.org/) (node 12 or higher is recommended)
    - [yarn](https://yarnpkg.com/)
 3. Install the Node packages (`yarn install`)
-4. Inside the `packages/common-types` directory, run `yarn build`
-5. Inside the `packages/eas-shared` directory, run `yarn build`
-6. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`
-7. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local cli file
+4. Build `common-types`, `eas-shared` and `cli` by running `yarn build` at the root of the project
+5. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`
+6. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local cli file
 
-> In step (6), if you are running Node 20, or another version of Node not supported by `pkg`, you can run `yarn archive:node18` instead
+> In step (5), if you are running Node 20, or another version of Node not supported by `pkg`, you can run `yarn archive:node18` instead
 
 ## 🏎️ Start the Development environment
 
