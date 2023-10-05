@@ -26,6 +26,7 @@
     "@expo/spawn-async": "^1.7.2",
     "axios": "0.27.2",
     "bplist-parser": "^0.3.0",
+    "common-types": "1.0.0",
     "debug": "^4.3.4",
     "env-paths": "2.2.0",
     "exec-async": "2.2.0",
