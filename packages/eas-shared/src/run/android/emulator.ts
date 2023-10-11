@@ -13,10 +13,8 @@ import {
 
 import * as Versions from "../../versions";
 import Log from "../../log";
-import { promptAsync } from "../../prompts";
 import {
   adbAsync,
-  getFirstRunningEmulatorAsync,
   isEmulatorBootedAsync,
   waitForEmulatorToBeBootedAsync,
 } from "./adb";
@@ -104,32 +102,6 @@ export async function bootEmulatorAsync(
   emulatorProcess.child.unref();
 
   return await waitForEmulatorToBeBootedAsync(timeout, interval);
-}
-
-export async function selectEmulatorAsync(): Promise<AndroidEmulator> {
-  const runningEmulator = await getFirstRunningEmulatorAsync();
-
-  if (runningEmulator) {
-    Log.newLine();
-    Log.log(`Using open emulator: ${chalk.bold(runningEmulator.name)}`);
-
-    return runningEmulator;
-  }
-
-  const emulators = await getAvailableAndroidEmulatorsAsync();
-
-  Log.newLine();
-  const { selectedEmulator } = await promptAsync({
-    type: "select",
-    message: `Select an emulator to run your app on`,
-    name: "selectedEmulator",
-    choices: emulators.map((emulator) => ({
-      title: emulator.name,
-      value: emulator,
-    })),
-  });
-
-  return selectedEmulator;
 }
 
 export async function ensureEmulatorBootedAsync(

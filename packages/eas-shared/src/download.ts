@@ -9,10 +9,11 @@ import { v4 as uuidv4 } from "uuid";
 
 import fetch, { RequestInit, Response } from "./fetch";
 import Log from "./log";
-import { promptAsync } from "./prompts";
 import { formatBytes } from "./files";
 import { getTmpDirectory } from "./paths";
 import { ProgressHandler, createProgressTracker } from "./progress";
+import { InternalError } from "common-types";
+import { MultipleAppsInTarballErrorDetails } from "common-types/build/InternalError";
 
 export enum AppPlatform {
   Android = "ANDROID",
@@ -200,19 +201,18 @@ async function getAppPathAsync(
   Log.newLine();
   Log.log("Detected multiple apps in the tarball:");
   Log.newLine();
-  const { selectedFile } = await promptAsync({
-    type: "select",
-    message: "Select the app to run:",
-    name: "selectedFile",
-    choices: [
-      ...appFilePaths.map((filePath) => ({
-        title: filePath,
-        value: filePath,
-      })),
-    ],
-  });
 
-  return path.join(outputDir, selectedFile);
+  const details: MultipleAppsInTarballErrorDetails = {
+    apps: appFilePaths.map((filePath) => ({
+      name: filePath,
+      path: path.join(outputDir, filePath),
+    })),
+  };
+  throw new InternalError(
+    "MULTIPLE_APPS_IN_TARBALL",
+    "Multiple apps detected in the tarball.",
+    details
+  );
 }
 
 export async function tarExtractAsync(
