@@ -1,17 +1,17 @@
-import spawnAsync from '@expo/spawn-async';
-import chalk from 'chalk';
-import semver from 'semver';
+import spawnAsync from "@expo/spawn-async";
+import chalk from "chalk";
+import semver from "semver";
 
-import Log from '../../log';
-import { promptAsync } from '../../prompts';
-import { getSimulatorAppIdAsync } from './simulator';
-import * as xcode from './xcode';
-import { installXcrunAsync, isXcrunInstalledAsync } from './xcrun';
+import Log from "../../log";
+import { getSimulatorAppIdAsync } from "./simulator";
+import * as xcode from "./xcode";
+import { isXcrunInstalledAsync } from "./xcrun";
+import { InternalError } from "common-types";
 
 function assertPlatform(): void {
-  if (process.platform !== 'darwin') {
-    Log.error('iOS simulator apps can only be run on macOS devices.');
-    throw Error('iOS simulator apps can only be run on macOS devices.');
+  if (process.platform !== "darwin") {
+    Log.error("iOS simulator apps can only be run on macOS devices.");
+    throw Error("iOS simulator apps can only be run on macOS devices.");
   }
 }
 
@@ -19,26 +19,14 @@ async function assertCorrectXcodeVersionInstalledAsync(): Promise<void> {
   const xcodeVersion = await xcode.getXcodeVersionAsync();
 
   if (!xcodeVersion) {
-    const { goToAppStore } = await promptAsync({
-      type: 'select',
-      message: 'Xcode needs to be installed, would you like to continue to the App Store?',
-      name: 'goToAppStore',
-      choices: [
-        { title: 'Yes', value: true },
-        { title: 'No', value: false },
-      ],
-    });
-
-    if (goToAppStore) {
-      await xcode.openAppStoreAsync(xcode.APP_STORE_ID);
-    }
-
-    throw Error('Please try again once Xcode is installed');
+    throw new InternalError("XCODE_NOT_INSTALLED", "Xcode is not installed.");
   }
 
   if (semver.lt(xcodeVersion, xcode.MIN_XCODE_VERSION)) {
     throw Error(
-      `Xcode version ${chalk.bold(xcodeVersion)} is too old. Please upgrade to version ${chalk.bold(
+      `Xcode version ${chalk.bold(
+        xcodeVersion
+      )} is too old. Please upgrade to version ${chalk.bold(
         xcode.MIN_XCODE_VERSION
       )} or higher.`
     );
@@ -47,22 +35,10 @@ async function assertCorrectXcodeVersionInstalledAsync(): Promise<void> {
 
 async function ensureXcrunInstalledAsync(): Promise<void> {
   if (!isXcrunInstalledAsync()) {
-    const { installXcrun } = await promptAsync({
-      type: 'select',
-      message: 'Xcode Command Line Tools need to be installed, continue?',
-      name: 'installXcrun',
-      choices: [
-        { title: 'Yes', value: true },
-        { title: 'No', value: false },
-      ],
-    });
-
-    if (installXcrun) {
-      await installXcrunAsync();
-      return;
-    }
-
-    throw Error('Please try again once Xcode Command Line Tools are installed');
+    throw new InternalError(
+      "XCODE_COMMAND_LINE_TOOLS_NOT_INSTALLED",
+      "Please try again once Xcode Command Line Tools are installed"
+    );
   }
 }
 
@@ -75,8 +51,8 @@ async function assertSimulatorAppInstalledAsync(): Promise<void> {
   }
 
   if (
-    simulatorAppId !== 'com.apple.iphonesimulator' &&
-    simulatorAppId !== 'com.apple.CoreSimulator.SimulatorTrampoline'
+    simulatorAppId !== "com.apple.iphonesimulator" &&
+    simulatorAppId !== "com.apple.CoreSimulator.SimulatorTrampoline"
   ) {
     throw new Error(
       `Simulator is installed but is identified as '${simulatorAppId}', can't recognize what that is`
@@ -85,11 +61,11 @@ async function assertSimulatorAppInstalledAsync(): Promise<void> {
 
   try {
     // make sure we can run simctl
-    await spawnAsync('xcrun', ['simctl', 'help']);
+    await spawnAsync("xcrun", ["simctl", "help"]);
   } catch (error: any) {
     Log.warn(`Unable to run simctl:\n${error.toString()}`);
     throw new Error(
-      'xcrun is not configured correctly. Ensure `sudo xcode-select --reset` works before running this command again.'
+      "xcrun is not configured correctly. Ensure `sudo xcode-select --reset` works before running this command again."
     );
   }
 }

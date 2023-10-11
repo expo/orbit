@@ -10,7 +10,6 @@ import { simctlAsync } from "./simctl";
 import { xcrunAsync } from "./xcrun";
 import { downloadAppAsync } from "../../downloadAppAsync";
 import Log from "../../log";
-import { promptAsync } from "../../prompts";
 import UserSettings from "../../userSettings";
 import { delayAsync } from "../../utils/delayAsync";
 import { sleepAsync } from "../../utils/promise";
@@ -18,29 +17,6 @@ import * as Versions from "../../versions";
 
 const EXPO_GO_BUNDLE_IDENTIFIER = "host.exp.Exponent";
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
-
-export async function selectSimulatorAsync(): Promise<IosSimulator> {
-  const bootedSimulator = await getFirstBootedIosSimulatorAsync();
-
-  if (bootedSimulator) {
-    return bootedSimulator;
-  }
-
-  const simulators = await getAvailableIosSimulatorsListAsync();
-
-  Log.newLine();
-  const { selectedSimulator } = await promptAsync({
-    type: "select",
-    message: `Select a simulator to run your app on`,
-    name: "selectedSimulator",
-    choices: simulators.map((simulator) => ({
-      title: `iOS ${simulator.osVersion} ${simulator.name}`,
-      value: simulator,
-    })),
-  });
-
-  return selectedSimulator;
-}
 
 export async function getFirstBootedIosSimulatorAsync(): Promise<
   IosSimulator | undefined
