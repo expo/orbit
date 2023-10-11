@@ -6,6 +6,7 @@
 
 ### 🎉 New features
 
+- Add support for opening tarballs with multiple apps. ([#73](https://github.com/expo/orbit/pull/73) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve feedback to the user when an error occurs. ([#64](https://github.com/expo/orbit/pull/64) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added drag and drop support for installing apps. ([#57](https://github.com/expo/orbit/pull/57) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added support for installing apps directly from Finder. ([#56](https://github.com/expo/orbit/pull/56) by [@gabrieldonadel](https://github.com/gabrieldonadel))
