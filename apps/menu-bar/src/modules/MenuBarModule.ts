@@ -1,5 +1,7 @@
 import { NativeEventEmitter, NativeModule, NativeModules } from 'react-native';
 
+import { convertCliErrorObjectToError } from '../utils/helpers';
+
 type MenuBarModuleType = NativeModule & {
   exitApp(): void;
   openSystemSettingsLoginItems(): void;
@@ -7,6 +9,7 @@ type MenuBarModuleType = NativeModule & {
   runCommand: (command: string, args: string[]) => Promise<void>;
   setLoginItemEnabled: (enabled: boolean) => Promise<void>;
   setEnvVars: (envVars: { [key: string]: string }) => void;
+  showMultiOptionAlert: (title: string, message: string, options: string[]) => Promise<number>;
 };
 
 type MenuBarModuleConstants = {
@@ -33,6 +36,10 @@ async function runCli(command: string, args: string[], callback?: (status: strin
     const result = await MenuBarModule.runCli(command, args, id);
     return result;
   } catch (error) {
+    if (error instanceof Error) {
+      // Original error from CLI is a stringified JSON object
+      throw convertCliErrorObjectToError(JSON.parse(error.message));
+    }
     throw error;
   } finally {
     listener.remove();

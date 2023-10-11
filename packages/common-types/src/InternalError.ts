@@ -1,10 +1,12 @@
+import { JSONValue } from "@expo/json-file";
+
 const ERROR_PREFIX = "Error: ";
 export default class InternalError extends Error {
   override readonly name = "InternalError";
-
   code: InternalErrorCode;
+  details?: JSONValue;
 
-  constructor(code: InternalErrorCode, message: string) {
+  constructor(code: InternalErrorCode, message: string, details?: JSONValue) {
     super("");
 
     // If e.toString() was called to get `message` we don't want it to look
@@ -15,42 +17,21 @@ export default class InternalError extends Error {
 
     this.message = message;
     this.code = code;
+    this.details = details;
   }
 }
 
 export type InternalErrorCode =
-  // Auth Errors
-  | "INVALID_USERNAME_PASSWORD"
-  | "TOO_MANY_ATTEMPTS"
-  | "REGISTRATION_ERROR"
-  | "LEGACY_ACCOUNT_ERROR"
-  | "ROBOT_ACCOUNT_ERROR"
-  | "USER_ACCOUNT_ERROR"
-  | "DIRECTORY_ALREADY_EXISTS"
-  | "HOOK_INITIALIZATION_ERROR"
-  | "INVALID_ARGUMENT"
-  | "INVALID_ASSETS"
-  | "INVALID_BUNDLE"
-  | "INVALID_JSON"
-  | "INVALID_MANIFEST"
-  | "INVALID_OPTIONS"
   | "INVALID_VERSION"
-  | "NGROK_ERROR"
-  | "NO_EXPO_SERVER_PORT"
-  | "NO_PACKAGE_JSON"
-  | "NO_PACKAGER_PORT"
-  | "NO_PORT_FOUND"
-  | "NO_PROJECT_ROOT"
-  | "NO_SDK_VERSION"
-  | "NOT_LOGGED_IN"
-  | "PLATFORM_NOT_SUPPORTED"
-  | "PUBLISH_VALIDATION_ERROR"
-  | "WONT_OVERWRITE_WITHOUT_FORCE"
+  | "MULTIPLE_APPS_IN_TARBALL"
+  | "XCODE_COMMAND_LINE_TOOLS_NOT_INSTALLED"
   | "XCODE_LICENSE_NOT_ACCEPTED"
-  | "APP_NOT_INSTALLED"
-  | "SIMCTL_NOT_AVAILABLE"
-  | "WEB_NOT_CONFIGURED"
-  | "NETWORK_REQUIRED"
-  | "ROBOT_OWNER_ERROR"
-  // Shell Apps
-  | "CREDENTIAL_ERROR";
+  | "XCODE_NOT_INSTALLED"
+  | "SIMCTL_NOT_AVAILABLE";
+
+export type MultipleAppsInTarballErrorDetails = {
+  apps: Array<{
+    name: string;
+    path: string;
+  }>;
+};

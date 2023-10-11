@@ -1,3 +1,5 @@
+import { InternalError } from 'common-types';
+import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
 import { Device } from 'common-types/build/devices';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Alert, SectionList } from 'react-native';
@@ -24,6 +26,7 @@ import { useListDevices } from '../hooks/useListDevices';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import { useFileHandler } from '../modules/FileHandlerModule';
 import FilePicker from '../modules/FilePickerModule';
+import MenuBarModule from '../modules/MenuBarModule';
 import {
   SelectedDevicesIds,
   getSelectedDevicesIds,
@@ -161,15 +164,34 @@ function Core(props: Props) {
         setStatus(Status.INSTALLING);
         await ensureDeviceIsRunning(device);
         const deviceId = getDeviceId(device);
-        await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
+        try {
+          await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
+        } catch (error) {
+          if (
+            error instanceof InternalError &&
+            error.code === 'MULTIPLE_APPS_IN_TARBALL' &&
+            error.details
+          ) {
+            const { apps } = error.details as MultipleAppsInTarballErrorDetails;
+            const selectedAppNameIndex = await MenuBarModule.showMultiOptionAlert(
+              'Multiple apps where detected in the tarball',
+              'Select which app to run:',
+              apps.map((app) => app.name)
+            );
+
+            await installAndLaunchAppAsync({
+              appPath: apps[selectedAppNameIndex].path,
+              deviceId,
+            });
+          }
+        }
       } catch (error) {
         if (error instanceof Error) {
           if (__DEV__) {
             console.log('Something went wrong while installing the app.', error.message);
             console.log(`Stack: ${error.stack}`);
-          } else {
-            Alert.alert('Something went wrong while installing the app.', error.message);
           }
+          Alert.alert('Something went wrong while installing the app.', error.message);
         }
       } finally {
         setTimeout(() => {

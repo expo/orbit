@@ -1,3 +1,5 @@
+import { InternalError } from 'common-types';
+
 import { CurrentUserDataFragment } from '../generated/graphql';
 
 export function capitalize(word: string) {
@@ -12,4 +14,17 @@ export function getCurrentUserDisplayName(personalAccount: CurrentUserDataFragme
   } else {
     return personalAccount.username;
   }
+}
+
+export function convertCliErrorObjectToError(errorObject: any) {
+  let error: Error | InternalError;
+
+  if (errorObject?.name === 'InternalError') {
+    error = new InternalError(errorObject.code, errorObject.message, errorObject.details);
+  } else {
+    error = new Error(errorObject.message);
+  }
+
+  error.stack = errorObject.stack;
+  return error;
 }
