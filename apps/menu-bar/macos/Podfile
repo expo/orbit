@@ -48,6 +48,18 @@ post_install do |installer|
     if target.name == 'ExpoMenuBar-macOS'  # Replace with your actual target name
       target.build_configurations.each do |config|
         config.build_settings['OTHER_CFLAGS'] = other_cflags
+
+        xcconfig_path = config.base_configuration_reference.real_path
+        xcconfig = File.read(xcconfig_path)
+        xcode_major_version = `(xcodebuild -version | grep -oE '[0-9]*' | head -n 1)`.strip
+
+        if $xcode_major_version.to_i >= 15
+          xcconfig_mod = xcconfig.gsub(/DT_TOOLCHAIN_DIR/, "TOOLCHAIN_DIR")
+        else
+          xcconfig_mod = xcconfig.gsub(/TOOLCHAIN_DIR/, "DT_TOOLCHAIN_DIR")
+        end
+
+        File.open(xcconfig_path, "w") { |file| file << xcconfig_mod }
       end
     end
   end
