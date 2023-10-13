@@ -15,7 +15,7 @@ RCT_EXPORT_METHOD(pickFileWithFilenameExtension:(NSArray<NSString *> *)filenameE
     [NSApp activateIgnoringOtherApps:YES];
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     if(prompt){
-      [panel setPrompt:prompt]; 
+      [panel setPrompt:prompt];
     }
     [panel setAllowsMultipleSelection:NO];
     [panel setCanChooseDirectories:YES];
@@ -27,16 +27,21 @@ RCT_EXPORT_METHOD(pickFileWithFilenameExtension:(NSArray<NSString *> *)filenameE
       for (NSString *extension in filenameExtensions) {
         NSArray *utTypes = [UTType typesWithTag:extension tagClass:UTTagClassFilenameExtension conformingToType:nil];
         [allowedTypes addObjectsFromArray:utTypes];
+
+        UTType *utType = [UTType typeWithFilenameExtension:extension];
+        if (utType && ![allowedTypes doesContain:utType]) {
+          [allowedTypes addObject:utType];
+        }
       }
       [panel setAllowedContentTypes:allowedTypes];
     }
-    
+
     if ([panel runModal] == NSModalResponseOK){
       resolve(panel.URL.path);
     } else {
       reject(@"FILE_PICKER_ERROR", @"NSModalResponseCancel", nil);
     }
-    
+
   });
 }
 

@@ -10,6 +10,7 @@ type MenuBarModuleType = NativeModule & {
   setLoginItemEnabled: (enabled: boolean) => Promise<void>;
   setEnvVars: (envVars: { [key: string]: string }) => void;
   showMultiOptionAlert: (title: string, message: string, options: string[]) => Promise<number>;
+  openPopover(): void;
 };
 
 type MenuBarModuleConstants = {
@@ -62,4 +63,5 @@ export default {
     listener.remove();
     return result;
   },
+  openPopover: () => MenuBarModule.openPopover(),
 };

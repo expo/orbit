@@ -204,6 +204,7 @@ function Core(props: Props) {
 
   const openFilePicker = async () => {
     const appPath = await FilePicker.getAppAsync();
+    MenuBarModule.openPopover();
     await installAppFromURI(appPath);
   };
 
