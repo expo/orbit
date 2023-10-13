@@ -53,7 +53,7 @@ post_install do |installer|
         xcconfig = File.read(xcconfig_path)
         xcode_major_version = `(xcodebuild -version | grep -oE '[0-9]*' | head -n 1)`.strip
 
-        if $xcode_major_version.to_i >= 15
+        if xcode_major_version.to_i >= 15
           xcconfig_mod = xcconfig.gsub(/DT_TOOLCHAIN_DIR/, "TOOLCHAIN_DIR")
         else
           xcconfig_mod = xcconfig.gsub(/TOOLCHAIN_DIR/, "DT_TOOLCHAIN_DIR")

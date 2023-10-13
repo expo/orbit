@@ -8,7 +8,7 @@ const {
   cache: CACHE_PATH,
   log: LOG_PATH,
   temp: TEMP_PATH,
-} = envPaths("eas-cli");
+} = envPaths("expo-orbit");
 
 export const getDataDirectory = (): string => DATA_PATH;
 export const getConfigDirectory = (): string => CONFIG_PATH;

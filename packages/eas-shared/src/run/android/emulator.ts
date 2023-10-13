@@ -199,7 +199,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 }
 
 export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
-  // await activateEmulatorWindowAsync({ pid });
+  await activateEmulatorWindowAsync({ pid, deviceType: "emulator" });
 
   try {
     // NOTE(brentvatne): temporary workaround! launch Expo Go first, then
