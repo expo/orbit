@@ -9,6 +9,7 @@ import { assertExecutablesExistAsync as validateAndroidSystemRequirementsAsync }
 import AppleDevice from "./run/ios/device";
 import * as Simulator from "./run/ios/simulator";
 import { validateSystemRequirementsAsync as validateIOSSystemRequirementsAsync } from "./run/ios/systemRequirements";
+import * as Env from "./env";
 
 export {
   AppPlatform,
@@ -21,4 +22,5 @@ export {
   Emulator,
   Simulator,
   AppleDevice,
+  Env,
 };

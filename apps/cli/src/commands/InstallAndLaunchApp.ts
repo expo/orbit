@@ -36,14 +36,14 @@ async function installAndLaunchAndroidAppAsync(
   appPath: string,
   deviceId: string
 ) {
-  const runningEmulators = await Emulator.getRunningDevicesAsync();
-  const emulator = runningEmulators.find(({ name }) => name === deviceId);
-  if (!emulator) {
-    throw new Error(`Emulator ${deviceId} is not running`);
+  const runningDevices = await Emulator.getRunningDevicesAsync();
+  const device = runningDevices.find(({ name }) => name === deviceId);
+  if (!device) {
+    throw new Error(`Device or Emulator ${deviceId} is not running`);
   }
 
-  await Emulator.installAppAsync(emulator, appPath);
+  await Emulator.installAppAsync(device, appPath);
   const { packageName, activityName } =
     await Emulator.getAptParametersAsync(appPath);
-  await Emulator.startAppAsync(emulator, packageName, activityName);
+  await Emulator.startAppAsync(device, packageName, activityName);
 }
