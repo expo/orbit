@@ -28,6 +28,7 @@ export async function runAppOnAndroidEmulatorAsync(
 ): Promise<void> {
   await assertExecutablesExistAsync();
   const bootedEmulator = await Emulator.ensureEmulatorBootedAsync(emulator);
+  await Emulator.activateEmulatorWindowAsync(bootedEmulator);
   await Emulator.installAppAsync(bootedEmulator, appPath);
   const { packageName, activityName } = await getAptParametersAsync(appPath);
   await Emulator.startAppAsync(bootedEmulator, packageName, activityName);

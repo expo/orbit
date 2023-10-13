@@ -122,6 +122,10 @@ export async function installAppAsync(
   Log.log("Installing your app...");
 
   assert(emulator.pid);
+  await activateEmulatorWindowAsync({
+    pid: emulator.pid,
+    deviceType: "emulator",
+  });
   await adbAsync("-s", emulator.pid, "install", "-r", "-d", apkFilePath);
 
   Log.succeed("Successfully installed your app!");
