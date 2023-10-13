@@ -16,7 +16,7 @@ import { bootDeviceAsync } from '../commands/bootDeviceAsync';
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchSnackAsync } from '../commands/launchSnackAsync';
-import { Spacer, Text, View } from '../components';
+import { Checkbox, Spacer, Text, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import ProgressIndicator from '../components/ProgressIndicator';
 import { useDeepLinking } from '../hooks/useDeepLinking';
@@ -31,6 +31,10 @@ import {
   SelectedDevicesIds,
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
+  UserPreferences,
+  defaultUserPreferences,
+  getUserPreferences,
+  saveUserPreferences,
 } from '../modules/Storage';
 import { openProjectsSelectorURL } from '../utils/constants';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
@@ -54,6 +58,14 @@ function Core(props: Props) {
     android: undefined,
     ios: undefined,
   });
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(defaultUserPreferences);
+
+  useEffect(() => {
+    getUserPreferences().then((value) => {
+      saveUserPreferences(value);
+      setUserPreferences(value);
+    });
+  }, []);
 
   const { apps } = useGetPinnedApps();
   const showProjectsSection = Boolean(apps?.length);
@@ -61,7 +73,8 @@ function Core(props: Props) {
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const { devicesPerPlatform, numberOfDevices, sections, refetch } = useListDevices();
+  const { devicesPerPlatform, numberOfDevices, sections, refetch } =
+    useListDevices(userPreferences);
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
   const theme = useExpoTheme();
 
@@ -112,6 +125,36 @@ function Core(props: Props) {
     },
     [emulatorWithoutAudio]
   );
+
+  const onPressShowIosSimulators = async (value: boolean) => {
+    const newPreferences = {
+      ...userPreferences,
+      showIosSimulators: value,
+    };
+    saveUserPreferences(newPreferences).then(() => {
+      setUserPreferences(newPreferences);
+    });
+  };
+
+  const onPressShowTvosSimulators = async (value: boolean) => {
+    const newPreferences = {
+      ...userPreferences,
+      showTvosSimulators: value,
+    };
+    saveUserPreferences(newPreferences).then(() => {
+      setUserPreferences(newPreferences);
+    });
+  };
+
+  const onPressShowAndroidEmulators = async (value: boolean) => {
+    const newPreferences = {
+      ...userPreferences,
+      showAndroidEmulators: value,
+    };
+    saveUserPreferences(newPreferences).then(() => {
+      setUserPreferences(newPreferences);
+    });
+  };
 
   // @TODO: create another hook
   const handleSnackUrl = useCallback(
@@ -276,6 +319,28 @@ function Core(props: Props) {
             <Text>{status === Status.DOWNLOADING ? 'Downloading build...' : 'Installing...'}</Text>
           </View>
         ) : null}
+      </View>
+      <View px="medium" style={{ flexDirection: 'row' }}>
+        <Text size="small" weight="normal">
+          Devices to show:
+        </Text>
+        <Checkbox
+          value={userPreferences.showIosSimulators}
+          onValueChange={onPressShowIosSimulators}
+          label="iOS"
+        />
+        {userPreferences.showExperimentalFeatures ? (
+          <Checkbox
+            value={userPreferences.showTvosSimulators}
+            onValueChange={onPressShowTvosSimulators}
+            label="tvOS"
+          />
+        ) : null}
+        <Checkbox
+          value={userPreferences.showAndroidEmulators}
+          onValueChange={onPressShowAndroidEmulators}
+          label="Android"
+        />
       </View>
       {apps?.length ? <ProjectsSection apps={apps} /> : null}
       <View shrink="1" pt="tiny">

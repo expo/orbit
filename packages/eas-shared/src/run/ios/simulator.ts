@@ -46,7 +46,7 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
     // Create an array [tvOS, 13, 4]
     const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
 
-    if (osType === 'iOS') {
+    if (osType === 'iOS' || osType === 'tvOS') {
       // Join the end components [13, 4] -> '13.4'
       const osVersion = osVersionComponents.join('.');
       const sims = info.devices[runtime];
@@ -56,8 +56,8 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
             ...device,
             runtime,
             osVersion,
-            windowName: `${device.name} (${osVersion})`,
-            osType: 'iOS' as const,
+            windowName: `${device.osType} ${device.name} (${osVersion})`,
+            osType,
             state: device.state as 'Booted' | 'Shutdown',
             deviceType: 'simulator',
             lastBootedAt: device.lastBootedAt ? new Date(device.lastBootedAt).getTime() : undefined,

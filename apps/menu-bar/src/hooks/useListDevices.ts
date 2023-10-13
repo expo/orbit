@@ -3,9 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { DeviceEventEmitter } from 'react-native';
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
+import { UserPreferences } from '../modules/Storage';
 import { getSectionsFromDeviceList } from '../utils/device';
 
-export const useListDevices = () => {
+export const useListDevices = (userPreferences: UserPreferences) => {
   const [devicesPerPlatform, setDevicesPerPlatform] = useState<DevicesPerPlatform>({
     android: { devices: [] },
     ios: { devices: [] },
@@ -19,13 +20,30 @@ export const useListDevices = () => {
     setLoading(true);
     try {
       const devicesList = await listDevicesAsync({ platform: 'all' });
+      const showIos = userPreferences.showIosSimulators;
+      const showTvos =
+        userPreferences.showExperimentalFeatures && userPreferences.showTvosSimulators;
+      const showAndroid = userPreferences.showAndroidEmulators;
+      if (!showIos) {
+        devicesList.ios.devices = devicesList.ios.devices.filter(
+          (device) => device.osType !== 'iOS'
+        );
+      }
+      if (!showTvos) {
+        devicesList.ios.devices = devicesList.ios.devices.filter(
+          (device) => device.osType !== 'tvOS'
+        );
+      }
+      if (!showAndroid) {
+        devicesList.android.devices = [];
+      }
       setDevicesPerPlatform(devicesList);
     } catch (err) {
       setError(err as Error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userPreferences]);
 
   useEffect(() => {
     const listener = DeviceEventEmitter.addListener('popoverFocused', () => {
