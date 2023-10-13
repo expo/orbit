@@ -1,5 +1,6 @@
 import { InternalError } from "common-types";
 import { Platform } from "common-types/build/cli-commands";
+import { Env } from "eas-shared";
 import util from "util";
 
 export function returnLoggerMiddleware(
@@ -8,21 +9,31 @@ export function returnLoggerMiddleware(
   return async function (...args: any[]) {
     try {
       const result = await fn(...args);
-
-      console.log("---- return output ----");
-      if (typeof result === "string") {
-        console.log(result);
-      } else if (typeof result === "object" && result !== null) {
-        console.log(JSON.stringify(result));
-      } else {
-        console.log(
-          util.inspect(result, {
-            showHidden: false,
-            depth: null,
-            colors: false,
-          })
-        );
+      if (Env.isMenuBar()) {
+        console.log("---- return output ----");
+        if (typeof result === "string") {
+          console.log(result);
+        } else if (typeof result === "object" && result !== null) {
+          console.log(JSON.stringify(result));
+        } else {
+          console.log(
+            util.inspect(result, {
+              showHidden: false,
+              depth: null,
+              colors: false,
+            })
+          );
+        }
+        return;
       }
+
+      return console.log(
+        util.inspect(result, {
+          showHidden: false,
+          depth: null,
+          colors: true,
+        })
+      );
     } catch (error) {
       console.log("---- thrown error ----");
       if (error instanceof InternalError) {

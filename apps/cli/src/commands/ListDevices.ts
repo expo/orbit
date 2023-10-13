@@ -20,16 +20,13 @@ export async function listDevicesAsync<P extends Platform>({
       );
 
       const connectedDevices = await AppleDevice.getConnectedDevicesAsync();
-      const uniqueConnectedDevices = connectedDevices.filter(
-        (element, index) => {
-          return (
-            connectedDevices.findIndex(({ udid }) => udid === element.udid) !==
-            index
-          );
+      for (let connectedDevice of connectedDevices) {
+        if (
+          !result.ios.devices.some(({ udid }) => udid === connectedDevice.udid)
+        ) {
+          result.ios.devices.push(connectedDevice);
         }
-      );
-
-      result.ios.devices = result.ios.devices.concat(uniqueConnectedDevices);
+      }
     } catch (error) {
       console.warn("Unable to get iOS devices", error);
       if (error instanceof Error) {

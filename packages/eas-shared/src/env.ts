@@ -15,6 +15,10 @@ export function isLocal(): boolean {
   return getenv.boolish("EXPO_LOCAL", false);
 }
 
+export function isMenuBar(): boolean {
+  return getenv.boolish("EXPO_MENU_BAR", false);
+}
+
 export function getFeatureGateOverrides(): {
   enable: string[];
   disable: string[];

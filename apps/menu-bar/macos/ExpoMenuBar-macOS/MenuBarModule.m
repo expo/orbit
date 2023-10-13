@@ -134,6 +134,8 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
     [task setArguments:[@[command] arrayByAddingObjectsFromArray:arguments]];
 
     NSMutableDictionary *environment = [NSMutableDictionary dictionaryWithDictionary:[[NSProcessInfo processInfo] environment]];
+    [environment addEntriesFromDictionary:@{@"EXPO_MENU_BAR": @YES}];
+    
     // Retrieve the envVars from NSUserDefaults
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     NSDictionary *envVars = [userDefaults objectForKey:@"envVars"];
@@ -141,9 +143,9 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
     // Check if the retrieved object is indeed a NSDictionary
     if ([envVars isKindOfClass:[NSDictionary class]] && [envVars count] > 0) {
       [environment addEntriesFromDictionary:envVars];
-      [task setEnvironment:environment];
     }
-
+    
+    [task setEnvironment:environment];
     [task setStandardOutput:pipe];
     [task setStandardError:pipe];
 

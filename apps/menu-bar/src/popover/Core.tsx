@@ -183,6 +183,8 @@ function Core(props: Props) {
               appPath: apps[selectedAppNameIndex].path,
               deviceId,
             });
+          } else {
+            throw error;
           }
         }
       } catch (error) {
