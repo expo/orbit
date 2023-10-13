@@ -122,6 +122,10 @@ export async function installAppAsync(
   Log.log("Installing your app...");
 
   assert(emulator.pid);
+  await activateEmulatorWindowAsync({
+    pid: emulator.pid,
+    deviceType: "emulator",
+  });
   await adbAsync("-s", emulator.pid, "install", "-r", "-d", apkFilePath);
 
   Log.succeed("Successfully installed your app!");
@@ -199,7 +203,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 }
 
 export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
-  // await activateEmulatorWindowAsync({ pid });
+  await activateEmulatorWindowAsync({ pid, deviceType: "emulator" });
 
   try {
     // NOTE(brentvatne): temporary workaround! launch Expo Go first, then

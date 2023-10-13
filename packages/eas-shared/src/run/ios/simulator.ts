@@ -117,7 +117,7 @@ export async function launchAppAsync(
 ): Promise<void> {
   Log.newLine();
   Log.log("Launching your app...");
-
+  await activateSimulatorWindowAsync();
   await simctlAsync(["launch", simulatorUdid, bundleIdentifier]);
 
   Log.succeed("Successfully launched your app!");
@@ -144,6 +144,24 @@ async function waitForSimulatorAppToStartAsync(
     );
   }
   throw new Error("Timed out waiting for the iOS simulator to start.");
+}
+
+export async function activateSimulatorWindowAsync(): Promise<void> {
+  await osascript.execAsync(`
+    tell application "System Events"
+      set assistiveAccess to UI elements enabled
+    end tell
+
+    if assistiveAccess then
+      tell application "System Events" to tell process "Simulator"
+        perform action "AXRaise" of window 0
+      end tell
+    else
+      tell application "Simulator"
+        activate
+      end tell
+    end if
+  `);
 }
 
 async function isSimulatorAppRunningAsync(): Promise<boolean> {
@@ -223,6 +241,7 @@ export async function openURLAsync(options: {
   udid: string;
   url: string;
 }): Promise<void> {
+  await activateSimulatorWindowAsync();
   await xcrunAsync(["simctl", "openurl", options.udid, options.url]);
 }
 
