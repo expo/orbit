@@ -214,18 +214,18 @@ RCT_EXPORT_METHOD(showMultiOptionAlert:(NSString *)title
     [alert setInformativeText:message];
     [alert addButtonWithTitle:@"OK"];
     [alert addButtonWithTitle:@"Cancel"];
-    
+
     NSPopUpButton *popUpButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 250, 24) pullsDown:NO];
     [popUpButton addItemsWithTitles:options];
-    
+
     [alert setAccessoryView:popUpButton];
-    
+
     NSInteger response = [alert runModal];
     if (response == NSAlertFirstButtonReturn) {
       resolve(@([popUpButton indexOfSelectedItem]));
     } else {
       reject(@"MULTI_OPTION_ALERT", @"Selection was canceled.", nil);
-    } 
+    }
   });
 }
 
@@ -247,5 +247,11 @@ RCT_EXPORT_METHOD(setEnvVars:(NSDictionary *)envVars)
   [userDefaults synchronize];
 }
 
+RCT_EXPORT_METHOD(openPopover)
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [((AppDelegate *)[NSApp delegate]) openPopover];
+  });
+}
 
 @end
