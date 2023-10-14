@@ -1,11 +1,11 @@
-import chalk from "chalk";
-import { boolish } from "getenv";
-import logSymbols from "log-symbols";
+import chalk from 'chalk';
+import { boolish } from 'getenv';
+import logSymbols from 'log-symbols';
 
 type Color = (...text: string[]) => string;
 
 export default class Log {
-  public static readonly isDebug = boolish("EXPO_DEBUG", false);
+  public static readonly isDebug = boolish('EXPO_DEBUG', false);
 
   public static log(...args: any[]): void {
     Log.consoleLog(...args);
@@ -40,7 +40,7 @@ export default class Log {
   }
 
   public static warnDeprecatedFlag(flag: string, message: string): void {
-    Log.warn(`› ${chalk.bold("--" + flag)} flag is deprecated. ${message}`);
+    Log.warn(`› ${chalk.bold('--' + flag)} flag is deprecated. ${message}`);
   }
 
   public static fail(message: string): void {
@@ -67,10 +67,7 @@ export default class Log {
       Log.isLastLineNewLine = true;
     } else {
       const lastArg = args[args.length - 1];
-      if (
-        typeof lastArg === "string" &&
-        (lastArg === "" || lastArg.match(/[\r\n]$/))
-      ) {
+      if (typeof lastArg === 'string' && (lastArg === '' || lastArg.match(/[\r\n]$/))) {
         Log.isLastLineNewLine = true;
       } else {
         Log.isLastLineNewLine = false;
@@ -89,7 +86,7 @@ export function error(...message: string[]): void {
 
 /** Print an error and provide additional info (the stack trace) in debug mode. */
 export function exception(e: Error): void {
-  error(chalk.red(e.toString()) + ("\n" + chalk.gray(e.stack)));
+  error(chalk.red(e.toString()) + ('\n' + chalk.gray(e.stack)));
 }
 
 /** Log a message and exit the current process. If the `code` is non-zero then `console.error` will be used instead of `console.log`. */

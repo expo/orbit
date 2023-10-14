@@ -6,18 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import plist from "@expo/plist";
-import Debug from "debug";
-import { Socket } from "net";
+import plist from '@expo/plist';
+import Debug from 'debug';
+import { Socket } from 'net';
 
-import type { ProtocolWriter } from "./AbstractProtocol";
-import {
-  PlistProtocolReader,
-  ProtocolClient,
-  ProtocolReaderFactory,
-} from "./AbstractProtocol";
+import type { ProtocolWriter } from './AbstractProtocol';
+import { PlistProtocolReader, ProtocolClient, ProtocolReaderFactory } from './AbstractProtocol';
 
-const debug = Debug("expo:apple-device:protocol:usbmux");
+const debug = Debug('expo:apple-device:protocol:usbmux');
 
 export const USBMUXD_HEADER_SIZE = 16;
 
@@ -28,11 +24,7 @@ export interface UsbmuxMessage {
 
 export class UsbmuxProtocolClient extends ProtocolClient<UsbmuxMessage> {
   constructor(socket: Socket) {
-    super(
-      socket,
-      new ProtocolReaderFactory(UsbmuxProtocolReader),
-      new UsbmuxProtocolWriter()
-    );
+    super(socket, new ProtocolReaderFactory(UsbmuxProtocolReader), new UsbmuxProtocolWriter());
   }
 }
 
@@ -60,10 +52,10 @@ export class UsbmuxProtocolWriter implements ProtocolWriter {
     debug(`socket write: ${JSON.stringify(msg)}`);
     const { messageType, extraFields } = msg;
     const plistMessage = plist.build({
-      BundleID: "dev.expo.native-run", // TODO
-      ClientVersionString: "usbmux.js", // TODO
+      BundleID: 'dev.expo.native-run', // TODO
+      ClientVersionString: 'usbmux.js', // TODO
       MessageType: messageType,
-      ProgName: "native-run", // TODO
+      ProgName: 'native-run', // TODO
       kLibUSBMuxVersion: 3,
       ...extraFields,
     });

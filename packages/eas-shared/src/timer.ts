@@ -1,4 +1,4 @@
-const LABEL = "DEFAULT";
+const LABEL = 'DEFAULT';
 const startTimes: Record<string, number> = {};
 
 export function hasTimer(label: string): number | null {
@@ -36,21 +36,21 @@ export function formatMilliseconds(duration: number): string {
   const msInHour = 1000 * 60 * 60;
   const hours = Math.trunc(duration / msInHour);
   if (hours > 0) {
-    portions.push(hours + "h");
+    portions.push(hours + 'h');
     duration = duration - hours * msInHour;
   }
 
   const msInMinute = 1000 * 60;
   const minutes = Math.trunc(duration / msInMinute);
   if (minutes > 0) {
-    portions.push(minutes + "m");
+    portions.push(minutes + 'm');
     duration = duration - minutes * msInMinute;
   }
 
   const seconds = Math.trunc(duration / 1000);
   if (seconds > 0) {
-    portions.push(seconds + "s");
+    portions.push(seconds + 's');
   }
 
-  return portions.join(" ");
+  return portions.join(' ');
 }

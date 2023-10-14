@@ -5,8 +5,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import Debug from "debug";
-import { Socket } from "net";
+import Debug from 'debug';
+import { Socket } from 'net';
 
 import {
   ProtocolClient,
@@ -14,11 +14,11 @@ import {
   ProtocolReaderCallback,
   ProtocolReaderFactory,
   ProtocolWriter,
-} from "./AbstractProtocol";
-import { CommandError } from "../../../../utils/errors";
+} from './AbstractProtocol';
+import { CommandError } from '../../../../utils/errors';
 
-const debug = Debug("expo:apple-device:protocol:gdb");
-const ACK_SUCCESS = "+".charCodeAt(0);
+const debug = Debug('expo:apple-device:protocol:gdb');
+const ACK_SUCCESS = '+'.charCodeAt(0);
 
 export interface GDBMessage {
   cmd: string;
@@ -27,11 +27,7 @@ export interface GDBMessage {
 
 export class GDBProtocolClient extends ProtocolClient<GDBMessage> {
   constructor(socket: Socket) {
-    super(
-      socket,
-      new ProtocolReaderFactory(GDBProtocolReader),
-      new GDBProtocolWriter()
-    );
+    super(socket, new ProtocolReaderFactory(GDBProtocolReader), new GDBProtocolWriter());
   }
 }
 
@@ -57,7 +53,7 @@ export class GDBProtocolReader extends ProtocolReader {
         // we have a valid header so check the body. GDB packets will always be a leading '$', data bytes,
         // a trailing '#', and a two digit checksum. minimum valid body is the empty response '$#00'
         // https://developer.apple.com/library/archive/documentation/DeveloperTools/gdb/gdb/gdb_33.html
-        const packetData = this.buffer.toString().match("\\$.*#[0-9a-f]{2}");
+        const packetData = this.buffer.toString().match('\\$.*#[0-9a-f]{2}');
         if (packetData == null) {
           return; // incomplete body, wait for more
         }
@@ -77,10 +73,7 @@ export class GDBProtocolReader extends ProtocolReader {
 
   parseHeader(data: Buffer) {
     if (data[0] !== ACK_SUCCESS) {
-      throw new CommandError(
-        "APPLE_DEVICE_GDB",
-        "Unsuccessful debugserver response"
-      );
+      throw new CommandError('APPLE_DEVICE_GDB', 'Unsuccessful debugserver response');
     } // TODO: retry?
     return -1;
   }
@@ -94,24 +87,21 @@ export class GDBProtocolReader extends ProtocolReader {
       const msg = buffer.slice(1, -3).toString();
       if (validateChecksum(checksum, msg)) {
         return msg;
-      } else if (msg.startsWith("E")) {
+      } else if (msg.startsWith('E')) {
         if (msg.match(/the device was not, or could not be, unlocked/)) {
-          throw new CommandError(
-            "APPLE_DEVICE_LOCKED",
-            "Device is currently locked."
-          );
+          throw new CommandError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
         }
 
         // Error message from debugserver -- Drop the `E`
         return msg.slice(1);
       } else {
         throw new CommandError(
-          "APPLE_DEVICE_GDB",
+          'APPLE_DEVICE_GDB',
           `Invalid checksum received from debugserver. (checksum: ${checksum}, msg: ${msg})`
         );
       }
     } else {
-      throw new CommandError("APPLE_DEVICE_GDB", "Didn't receive checksum");
+      throw new CommandError('APPLE_DEVICE_GDB', "Didn't receive checksum");
     }
   }
 }
@@ -122,7 +112,7 @@ export class GDBProtocolWriter implements ProtocolWriter {
     debug(`Socket write: ${cmd}, args: ${args}`);
     // hex encode and concat all args
     const encodedArgs = args
-      .map((arg) => Buffer.from(arg).toString("hex"))
+      .map((arg) => Buffer.from(arg).toString('hex'))
       .join()
       .toUpperCase();
     const checksumStr = calculateChecksum(cmd + encodedArgs);
@@ -147,7 +137,7 @@ function calculateChecksum(cmdStr: string) {
 
 export function validateChecksum(checksum: string, msg: string) {
   // remove '#' from checksum
-  const checksumVal = checksum.startsWith("#") ? checksum.slice(1) : checksum;
+  const checksumVal = checksum.startsWith('#') ? checksum.slice(1) : checksum;
   // remove '$' from msg and calculate its checksum
   const computedChecksum = calculateChecksum(msg);
   // debug(`Checksum: ${checksumVal}, computed checksum: ${computedChecksum}`);

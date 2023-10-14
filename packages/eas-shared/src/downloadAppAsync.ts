@@ -1,9 +1,9 @@
-import axios, { AxiosRequestConfig, Canceler } from "axios";
-import fs from "fs-extra";
-import path from "path";
+import axios, { AxiosRequestConfig, Canceler } from 'axios';
+import fs from 'fs-extra';
+import path from 'path';
 
-import UserSettings from "./userSettings";
-import { tarExtractAsync } from "./download";
+import UserSettings from './userSettings';
+import { tarExtractAsync } from './download';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
@@ -32,19 +32,17 @@ async function _downloadAsync(
   const tmpPath = `${outputPath}.download`;
   const config: AxiosRequestConfig = {
     timeout: TIMEOUT,
-    responseType: "stream",
+    responseType: 'stream',
     cancelToken: token,
   };
   const response = await axios(url, config);
   await new Promise<void>((resolve) => {
-    const totalDownloadSize = response.data.headers["content-length"];
+    const totalDownloadSize = response.data.headers['content-length'];
     let downloadProgress = 0;
     response.data
-      .on("data", (chunk: Buffer) => {
+      .on('data', (chunk: Buffer) => {
         downloadProgress += chunk.length;
-        const roundedProgress = Math.floor(
-          (downloadProgress / totalDownloadSize) * 100
-        );
+        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);
@@ -61,7 +59,7 @@ async function _downloadAsync(
           }
         }
       })
-      .on("end", () => {
+      .on('end', () => {
         clearTimeout(warningTimer);
         if (progressFunction && currentProgress !== 100) {
           progressFunction(100);
@@ -82,7 +80,7 @@ export async function downloadAppAsync(
 ): Promise<void> {
   if (extract) {
     const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-    const tmpPath = path.join(dotExpoHomeDirectory, "tmp-download-file");
+    const tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
     await _downloadAsync(url, tmpPath, progressFunction);
     await tarExtractAsync(tmpPath, outputPath);
     fs.removeSync(tmpPath);

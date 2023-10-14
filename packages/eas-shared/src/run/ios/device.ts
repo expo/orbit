@@ -1,11 +1,8 @@
 import {
   getConnectedDevicesAsync,
   getBundleIdentifierForBinaryAsync,
-} from "./appleDevice/AppleDevice";
-import {
-  getAppDeltaDirectory,
-  installOnDeviceAsync,
-} from "./appleDevice/installOnDeviceAsync";
+} from './appleDevice/AppleDevice';
+import { getAppDeltaDirectory, installOnDeviceAsync } from './appleDevice/installOnDeviceAsync';
 
 const AppleDevice = {
   getConnectedDevicesAsync,

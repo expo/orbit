@@ -5,17 +5,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import Debug from "debug";
-import { Socket } from "net";
+import Debug from 'debug';
+import { Socket } from 'net';
 
-import { ResponseError, ServiceClient } from "./ServiceClient";
-import { LockdownProtocolClient } from "../protocol/LockdownProtocol";
-import type {
-  LockdownCommand,
-  LockdownResponse,
-} from "../protocol/LockdownProtocol";
+import { ResponseError, ServiceClient } from './ServiceClient';
+import { LockdownProtocolClient } from '../protocol/LockdownProtocol';
+import type { LockdownCommand, LockdownResponse } from '../protocol/LockdownProtocol';
 
-const debug = Debug("expo:apple-device:client:installation_proxy");
+const debug = Debug('expo:apple-device:client:installation_proxy');
 
 export type OnInstallProgressCallback = (props: {
   status: string;
@@ -25,33 +22,33 @@ export type OnInstallProgressCallback = (props: {
 }) => void;
 
 interface IPOptions {
-  ApplicationsType?: "Any";
-  PackageType?: "Developer";
+  ApplicationsType?: 'Any';
+  PackageType?: 'Developer';
   CFBundleIdentifier?: string;
 
   ReturnAttributes?: (
-    | "CFBundleIdentifier"
-    | "ApplicationDSID"
-    | "ApplicationType"
-    | "CFBundleExecutable"
-    | "CFBundleDisplayName"
-    | "CFBundleIconFile"
-    | "CFBundleName"
-    | "CFBundleShortVersionString"
-    | "CFBundleSupportedPlatforms"
-    | "CFBundleURLTypes"
-    | "CodeInfoIdentifier"
-    | "Container"
-    | "Entitlements"
-    | "HasSettingsBundle"
-    | "IsUpgradeable"
-    | "MinimumOSVersion"
-    | "Path"
-    | "SignerIdentity"
-    | "UIDeviceFamily"
-    | "UIFileSharingEnabled"
-    | "UIStatusBarHidden"
-    | "UISupportedInterfaceOrientations"
+    | 'CFBundleIdentifier'
+    | 'ApplicationDSID'
+    | 'ApplicationType'
+    | 'CFBundleExecutable'
+    | 'CFBundleDisplayName'
+    | 'CFBundleIconFile'
+    | 'CFBundleName'
+    | 'CFBundleShortVersionString'
+    | 'CFBundleSupportedPlatforms'
+    | 'CFBundleURLTypes'
+    | 'CodeInfoIdentifier'
+    | 'Container'
+    | 'Entitlements'
+    | 'HasSettingsBundle'
+    | 'IsUpgradeable'
+    | 'MinimumOSVersion'
+    | 'Path'
+    | 'SignerIdentity'
+    | 'UIDeviceFamily'
+    | 'UIFileSharingEnabled'
+    | 'UIStatusBarHidden'
+    | 'UISupportedInterfaceOrientations'
   )[];
   BundleIDs?: string[];
   [key: string]: undefined | string | string[];
@@ -66,7 +63,7 @@ interface IPInstallCFBundleIdentifierResponseItem {
 }
 
 interface IPInstallCompleteResponseItem extends LockdownResponse {
-  Status: "Complete";
+  Status: 'Complete';
 }
 /*
  *  [{ "PercentComplete": 5, "Status": "CreatingStagingDirectory" }]
@@ -76,8 +73,7 @@ interface IPInstallCompleteResponseItem extends LockdownResponse {
  *  [{ "Status": "Complete" }]
  */
 type IPInstallPercentCompleteResponse = IPInstallPercentCompleteResponseItem[];
-type IPInstallCFBundleIdentifierResponse =
-  IPInstallCFBundleIdentifierResponseItem[];
+type IPInstallCFBundleIdentifierResponse = IPInstallCFBundleIdentifierResponseItem[];
 type IPInstallCompleteResponse = IPInstallCompleteResponseItem[];
 
 interface IPMessage extends LockdownCommand {
@@ -110,9 +106,7 @@ function isIPLookupResponse(resp: any): resp is IPLookupResponse {
   return resp.length && resp[0].LookupResult !== undefined;
 }
 
-function isIPInstallPercentCompleteResponse(
-  resp: any
-): resp is IPInstallPercentCompleteResponse {
+function isIPInstallPercentCompleteResponse(resp: any): resp is IPInstallPercentCompleteResponse {
   return resp.length && resp[0].PercentComplete !== undefined;
 }
 
@@ -122,15 +116,11 @@ function isIPInstallCFBundleIdentifierResponse(
   return resp.length && resp[0].CFBundleIdentifier !== undefined;
 }
 
-function isIPInstallCompleteResponse(
-  resp: any
-): resp is IPInstallCompleteResponse {
-  return resp.length && resp[0].Status === "Complete";
+function isIPInstallCompleteResponse(resp: any): resp is IPInstallCompleteResponse {
+  return resp.length && resp[0].Status === 'Complete';
 }
 
-export class InstallationProxyClient extends ServiceClient<
-  LockdownProtocolClient<IPMessage>
-> {
+export class InstallationProxyClient extends ServiceClient<LockdownProtocolClient<IPMessage>> {
   constructor(public override socket: Socket) {
     super(socket, new LockdownProtocolClient(socket));
   }
@@ -138,19 +128,14 @@ export class InstallationProxyClient extends ServiceClient<
   async lookupApp(
     bundleIds: string[],
     options: IPOptions = {
-      ReturnAttributes: [
-        "Path",
-        "Container",
-        "CFBundleExecutable",
-        "CFBundleIdentifier",
-      ],
-      ApplicationsType: "Any",
+      ReturnAttributes: ['Path', 'Container', 'CFBundleExecutable', 'CFBundleIdentifier'],
+      ApplicationsType: 'Any',
     }
   ) {
     debug(`lookupApp, options: ${JSON.stringify(options)}`);
 
     let resp = await this.protocolClient.sendMessage({
-      Command: "Lookup",
+      Command: 'Lookup',
       ClientOptions: {
         BundleIDs: bundleIds,
         ...options,
@@ -168,8 +153,8 @@ export class InstallationProxyClient extends ServiceClient<
     packagePath: string,
     bundleId: string,
     options: IPOptions = {
-      ApplicationsType: "Any",
-      PackageType: "Developer",
+      ApplicationsType: 'Any',
+      PackageType: 'Developer',
     },
     onProgress: OnInstallProgressCallback
   ) {
@@ -177,7 +162,7 @@ export class InstallationProxyClient extends ServiceClient<
 
     return this.protocolClient.sendMessage(
       {
-        Command: "Install",
+        Command: 'Install',
         PackagePath: packagePath,
         ClientOptions: {
           CFBundleIdentifier: bundleId,
@@ -200,16 +185,13 @@ export class InstallationProxyClient extends ServiceClient<
             progress: resp[0].PercentComplete,
             status: resp[0].Status,
           });
-          debug(
-            `Installation status: ${resp[0].Status}, %${resp[0].PercentComplete}`
-          );
+          debug(`Installation status: ${resp[0].Status}, %${resp[0].PercentComplete}`);
         } else if (isIPInstallCFBundleIdentifierResponse(resp)) {
           debug(`Installed app: ${resp[0].CFBundleIdentifier}`);
         } else {
           reject(
             new ResponseError(
-              "There was an error installing app: " +
-                require("util").inspect(resp),
+              'There was an error installing app: ' + require('util').inspect(resp),
               resp
             )
           );

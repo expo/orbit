@@ -1,12 +1,12 @@
-import type { ExpoConfig } from "@expo/config";
-import getenv from "getenv";
-import pickBy from "lodash/pickBy";
-import path from "path";
-import semver from "semver";
+import type { ExpoConfig } from '@expo/config';
+import getenv from 'getenv';
+import pickBy from 'lodash/pickBy';
+import path from 'path';
+import semver from 'semver';
 
-import ApiV2Client from "./api/APIV2";
-import * as FsCache from "./tools/FsCache";
-import { InternalError } from "common-types";
+import ApiV2Client from './api/APIV2';
+import * as FsCache from './tools/FsCache';
+import { InternalError } from 'common-types';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;
@@ -41,19 +41,17 @@ type Versions = {
   turtleSdkVersions: TurtleSDKVersionsOld;
 };
 
-export async function versionsAsync(options?: {
-  skipCache?: boolean;
-}): Promise<Versions> {
+export async function versionsAsync(options?: { skipCache?: boolean }): Promise<Versions> {
   const api = new ApiV2Client();
   const versionCache = new FsCache.Cacher(
-    () => api.getAsync("versions/latest"),
-    "versions.json",
+    () => api.getAsync('versions/latest'),
+    'versions.json',
     0,
-    path.join(__dirname, "../caches/versions.json")
+    path.join(__dirname, '../caches/versions.json')
   );
 
   // Clear cache when opting in to beta because things can change quickly in beta
-  if (getenv.boolish("EXPO_BETA", false) || options?.skipCache) {
+  if (getenv.boolish('EXPO_BETA', false) || options?.skipCache) {
     versionCache.clearAsync();
   }
 
@@ -72,20 +70,19 @@ export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
   const sdkVersions = await sdkVersionsAsync();
   return pickBy(
     sdkVersions,
-    (data: SDKVersion) =>
-      !!data.releaseNoteUrl || (getenv.boolish("EXPO_BETA", false) && data.beta)
+    (data: SDKVersion) => !!data.releaseNoteUrl || (getenv.boolish('EXPO_BETA', false) && data.beta)
   );
 }
 
 export function gteSdkVersion(
-  expJson: Pick<ExpoConfig, "sdkVersion">,
+  expJson: Pick<ExpoConfig, 'sdkVersion'>,
   sdkVersion: string
 ): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
 
-  if (expJson.sdkVersion === "UNVERSIONED") {
+  if (expJson.sdkVersion === 'UNVERSIONED') {
     return true;
   }
 
@@ -93,21 +90,21 @@ export function gteSdkVersion(
     return semver.gte(expJson.sdkVersion, sdkVersion);
   } catch {
     throw new InternalError(
-      "INVALID_VERSION",
+      'INVALID_VERSION',
       `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
 }
 
 export function lteSdkVersion(
-  expJson: Pick<ExpoConfig, "sdkVersion">,
+  expJson: Pick<ExpoConfig, 'sdkVersion'>,
   sdkVersion: string
 ): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
 
-  if (expJson.sdkVersion === "UNVERSIONED") {
+  if (expJson.sdkVersion === 'UNVERSIONED') {
     return false;
   }
 
@@ -115,14 +112,14 @@ export function lteSdkVersion(
     return semver.lte(expJson.sdkVersion, sdkVersion);
   } catch {
     throw new InternalError(
-      "INVALID_VERSION",
+      'INVALID_VERSION',
       `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
 }
 
 export function parseSdkVersionFromTag(tag: string): string {
-  if (tag.startsWith("sdk-")) {
+  if (tag.startsWith('sdk-')) {
     return tag.substring(4);
   }
 
@@ -136,11 +133,11 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
   version: string;
   data: SDKVersion | null;
 }> {
-  const betaOptInEnabled = getenv.boolish("EXPO_BETA", false);
+  const betaOptInEnabled = getenv.boolish('EXPO_BETA', false);
   const sdkVersions = await sdkVersionsAsync();
 
   let result = null;
-  let highestMajorVersion = "0.0.0";
+  let highestMajorVersion = '0.0.0';
 
   for (const [version, data] of Object.entries(sdkVersions)) {
     const hasReleaseNotes = !!data.releaseNoteUrl;
@@ -162,13 +159,8 @@ export async function newestReleasedSdkVersionAsync(): Promise<{
 
 export async function oldestSupportedMajorVersionAsync(): Promise<number> {
   const sdkVersions = await sdkVersionsAsync();
-  const supportedVersions = pickBy(
-    sdkVersions,
-    (v: SDKVersion) => !v.isDeprecated
-  );
-  const versionNumbers = Object.keys(supportedVersions).map((version) =>
-    semver.major(version)
-  );
+  const supportedVersions = pickBy(sdkVersions, (v: SDKVersion) => !v.isDeprecated);
+  const versionNumbers = Object.keys(supportedVersions).map((version) => semver.major(version));
   return Math.min(...versionNumbers);
 }
 
@@ -176,24 +168,23 @@ export async function canTurtleBuildSdkVersion(
   sdkVersion: string,
   platform: keyof TurtleSDKVersions
 ): Promise<boolean> {
-  if (sdkVersion === "UNVERSIONED") {
+  if (sdkVersion === 'UNVERSIONED') {
     return true;
   }
 
   if (semver.valid(sdkVersion) == null) {
     throw new InternalError(
-      "INVALID_VERSION",
+      'INVALID_VERSION',
       `"${sdkVersion}" is not a valid version. Must be in the form of x.y.z`
     );
   }
 
   const supportedVersions = await getSdkVersionsSupportedByTurtle();
-  const supportedVersionsForPlatform: string[] =
-    supportedVersions[platform] ?? [];
+  const supportedVersionsForPlatform: string[] = supportedVersions[platform] ?? [];
   return supportedVersionsForPlatform.indexOf(sdkVersion) !== -1;
 }
 
 async function getSdkVersionsSupportedByTurtle(): Promise<TurtleSDKVersions> {
   const api = new ApiV2Client();
-  return await api.getAsync("standalone-build/supportedSDKVersions");
+  return await api.getAsync('standalone-build/supportedSDKVersions');
 }

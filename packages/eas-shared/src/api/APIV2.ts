@@ -1,9 +1,9 @@
-import { JSONObject, JSONValue } from "@expo/json-file";
-import axios, { AxiosRequestConfig } from "axios";
-import merge from "lodash/merge";
-import QueryString, { ParsedUrlQueryInput } from "querystring";
+import { JSONObject, JSONValue } from '@expo/json-file';
+import axios, { AxiosRequestConfig } from 'axios';
+import merge from 'lodash/merge';
+import QueryString, { ParsedUrlQueryInput } from 'querystring';
 
-import { Config, ConnectionStatus } from "./internal";
+import { Config, ConnectionStatus } from './internal';
 
 const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
 const MAX_BODY_LENGTH = 100 /* MB */ * 1024 * 1024;
@@ -16,27 +16,27 @@ function _rootBaseUrl() {
 function _apiBaseUrl() {
   let rootBaseUrl = _rootBaseUrl();
   if (Config.api.port) {
-    rootBaseUrl += ":" + Config.api.port;
+    rootBaseUrl += ':' + Config.api.port;
   }
-  return rootBaseUrl + "/--/api/v2";
+  return rootBaseUrl + '/--/api/v2';
 }
 
 export class ApiV2Error extends Error {
-  override readonly name = "ApiV2Error";
+  override readonly name = 'ApiV2Error';
   code: string;
   details?: JSONValue;
   serverStack?: string;
   metadata?: object;
   readonly _isApiError = true;
 
-  constructor(message: string, code: string = "UNKNOWN") {
+  constructor(message: string, code: string = 'UNKNOWN') {
     super(message);
     this.code = code;
   }
 }
 
 type RequestOptions = {
-  httpMethod: "get" | "post" | "put" | "patch" | "delete";
+  httpMethod: 'get' | 'post' | 'put' | 'patch' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
   timeout?: number;
@@ -55,7 +55,7 @@ type APIV2ClientOptions = {
 };
 
 export default class ApiV2Client {
-  static exponentClient: string = "xdl";
+  static exponentClient: string = 'xdl';
   sessionSecret: string | null = null;
   accessToken: string | null = null;
 
@@ -89,7 +89,7 @@ export default class ApiV2Client {
     return this._requestAsync(
       methodName,
       {
-        httpMethod: "get",
+        httpMethod: 'get',
         queryParameters: args,
       },
       extraOptions,
@@ -106,7 +106,7 @@ export default class ApiV2Client {
     return this._requestAsync(
       methodName,
       {
-        httpMethod: "post",
+        httpMethod: 'post',
         body: data,
       },
       extraOptions,
@@ -123,7 +123,7 @@ export default class ApiV2Client {
     return this._requestAsync(
       methodName,
       {
-        httpMethod: "put",
+        httpMethod: 'put',
         body: data,
       },
       extraOptions,
@@ -140,7 +140,7 @@ export default class ApiV2Client {
     return this._requestAsync(
       methodName,
       {
-        httpMethod: "patch",
+        httpMethod: 'patch',
         body: data,
       },
       extraOptions,
@@ -157,7 +157,7 @@ export default class ApiV2Client {
     return this._requestAsync(
       methodName,
       {
-        httpMethod: "delete",
+        httpMethod: 'delete',
         queryParameters: args,
       },
       extraOptions,
@@ -174,20 +174,20 @@ export default class ApiV2Client {
   ) {
     const url = `${_apiBaseUrl()}/${methodName}`;
     let reqOptions: AxiosRequestConfig & {
-      headers: NonNullable<AxiosRequestConfig["headers"]>;
+      headers: NonNullable<AxiosRequestConfig['headers']>;
     } = {
       url,
       method: options.httpMethod,
       headers: {
-        "Exponent-Client": ApiV2Client.exponentClient,
+        'Exponent-Client': ApiV2Client.exponentClient,
       },
     };
 
     // Handle auth method, prioritizing authorization tokens before session secrets
     if (this.accessToken) {
-      reqOptions.headers["Authorization"] = `Bearer ${this.accessToken}`;
+      reqOptions.headers['Authorization'] = `Bearer ${this.accessToken}`;
     } else if (this.sessionSecret) {
-      reqOptions.headers["Expo-Session"] = this.sessionSecret;
+      reqOptions.headers['Expo-Session'] = this.sessionSecret;
     }
 
     // Handle qs
@@ -202,10 +202,7 @@ export default class ApiV2Client {
       reqOptions.data = options.body;
     }
 
-    if (
-      !extraRequestOptions.hasOwnProperty("timeout") &&
-      ConnectionStatus.isOffline()
-    ) {
+    if (!extraRequestOptions.hasOwnProperty('timeout') && ConnectionStatus.isOffline()) {
       reqOptions.timeout = 1;
     }
 

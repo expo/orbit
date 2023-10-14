@@ -1,5 +1,5 @@
 export enum Platform {
-  Android = "android",
-  Ios = "ios",
-  All = "all",
+  Android = 'android',
+  Ios = 'ios',
+  All = 'all',
 }

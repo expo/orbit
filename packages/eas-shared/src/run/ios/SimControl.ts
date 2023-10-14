@@ -1,7 +1,7 @@
-type DeviceState = "Shutdown" | "Booted";
+type DeviceState = 'Shutdown' | 'Booted';
 
 export type SimulatorDevice = {
-  availabilityError: "runtime profile not found";
+  availabilityError: 'runtime profile not found';
   /**
    * '/Users/name/Library/Developer/CoreSimulator/Devices/00E55DC0-0364-49DF-9EC6-77BE587137D4/data'
    */
@@ -50,11 +50,11 @@ export type XCTraceDevice = {
    */
   name: string;
 
-  deviceType: "device" | "catalyst";
+  deviceType: 'device' | 'catalyst';
   /**
    * '13.4'
    */
   osVersion: string;
 };
 
-type OSType = "iOS" | "tvOS" | "watchOS" | "macOS";
+type OSType = 'iOS' | 'tvOS' | 'watchOS' | 'macOS';

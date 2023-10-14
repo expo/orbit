@@ -5,22 +5,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import { Socket } from "net";
-import { Duplex } from "stream";
-import * as tls from "tls";
+import { Socket } from 'net';
+import { Duplex } from 'stream';
+import * as tls from 'tls';
 
-import { AFCClient } from "./client/AFCClient";
-import { DebugserverClient } from "./client/DebugserverClient";
-import { InstallationProxyClient } from "./client/InstallationProxyClient";
-import { LockdowndClient } from "./client/LockdowndClient";
-import { MobileImageMounterClient } from "./client/MobileImageMounterClient";
-import { ServiceClient } from "./client/ServiceClient";
-import {
-  UsbmuxdClient,
-  UsbmuxdDevice,
-  UsbmuxdPairRecord,
-} from "./client/UsbmuxdClient";
-import { CommandError } from "../../../utils/errors";
+import { AFCClient } from './client/AFCClient';
+import { DebugserverClient } from './client/DebugserverClient';
+import { InstallationProxyClient } from './client/InstallationProxyClient';
+import { LockdowndClient } from './client/LockdowndClient';
+import { MobileImageMounterClient } from './client/MobileImageMounterClient';
+import { ServiceClient } from './client/ServiceClient';
+import { UsbmuxdClient, UsbmuxdDevice, UsbmuxdPairRecord } from './client/UsbmuxdClient';
+import { CommandError } from '../../../utils/errors';
 
 export class ClientManager {
   private connections: Socket[];
@@ -33,13 +29,9 @@ export class ClientManager {
   }
 
   static async create(udid?: string) {
-    const usbmuxClient = new UsbmuxdClient(
-      UsbmuxdClient.connectUsbmuxdSocket()
-    );
+    const usbmuxClient = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
     const device = await usbmuxClient.getDevice(udid);
-    const pairRecord = await usbmuxClient.readPairRecord(
-      device.Properties.SerialNumber
-    );
+    const pairRecord = await usbmuxClient.readPairRecord(device.Properties.SerialNumber);
     const lockdownSocket = await usbmuxClient.connect(device, 62078);
     const lockdownClient = new LockdowndClient(lockdownSocket);
     await lockdownClient.doHandshake(pairRecord);
@@ -47,17 +39,13 @@ export class ClientManager {
   }
 
   async getUsbmuxdClient() {
-    const usbmuxClient = new UsbmuxdClient(
-      UsbmuxdClient.connectUsbmuxdSocket()
-    );
+    const usbmuxClient = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
     this.connections.push(usbmuxClient.socket);
     return usbmuxClient;
   }
 
   async getLockdowndClient() {
-    const usbmuxClient = new UsbmuxdClient(
-      UsbmuxdClient.connectUsbmuxdSocket()
-    );
+    const usbmuxClient = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
     const lockdownSocket = await usbmuxClient.connect(this.device, 62078);
     const lockdownClient = new LockdowndClient(lockdownSocket);
     this.connections.push(lockdownClient.socket);
@@ -71,37 +59,27 @@ export class ClientManager {
   }
 
   async getAFCClient() {
-    return this.getServiceClient("com.apple.afc", AFCClient);
+    return this.getServiceClient('com.apple.afc', AFCClient);
   }
 
   async getInstallationProxyClient() {
-    return this.getServiceClient(
-      "com.apple.mobile.installation_proxy",
-      InstallationProxyClient
-    );
+    return this.getServiceClient('com.apple.mobile.installation_proxy', InstallationProxyClient);
   }
 
   async getMobileImageMounterClient() {
-    return this.getServiceClient(
-      "com.apple.mobile.mobile_image_mounter",
-      MobileImageMounterClient
-    );
+    return this.getServiceClient('com.apple.mobile.mobile_image_mounter', MobileImageMounterClient);
   }
 
   async getDebugserverClient() {
     try {
       // iOS 14 added support for a secure debug service so try to connect to that first
       return await this.getServiceClient(
-        "com.apple.debugserver.DVTSecureSocketProxy",
+        'com.apple.debugserver.DVTSecureSocketProxy',
         DebugserverClient
       );
     } catch {
       // otherwise, fall back to the previous implementation
-      return this.getServiceClient(
-        "com.apple.debugserver",
-        DebugserverClient,
-        true
-      );
+      return this.getServiceClient('com.apple.debugserver', DebugserverClient, true);
     }
   }
 
@@ -110,11 +88,8 @@ export class ClientManager {
     ServiceType: new (...args: any[]) => T,
     disableSSL = false
   ) {
-    const { port: servicePort, enableServiceSSL } =
-      await this.lockdowndClient.startService(name);
-    const usbmuxClient = new UsbmuxdClient(
-      UsbmuxdClient.connectUsbmuxdSocket()
-    );
+    const { port: servicePort, enableServiceSSL } = await this.lockdowndClient.startService(name);
+    const usbmuxClient = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
     let usbmuxdSocket = await usbmuxClient.connect(this.device, servicePort);
 
     if (enableServiceSSL) {
@@ -143,10 +118,7 @@ export class ClientManager {
         await new Promise<void>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
             reject(
-              new CommandError(
-                "APPLE_DEVICE",
-                "The TLS handshake failed to complete after 5s."
-              )
+              new CommandError('APPLE_DEVICE', 'The TLS handshake failed to complete after 5s.')
             );
           }, 5000);
           tls.connect(tlsOptions, function (this: tls.TLSSocket) {
@@ -181,16 +153,12 @@ class UsbmuxdProxy extends Duplex {
   constructor(private usbmuxdSock: Socket) {
     super();
 
-    this.usbmuxdSock.on("data", (data) => {
+    this.usbmuxdSock.on('data', (data) => {
       this.push(data);
     });
   }
 
-  override _write(
-    chunk: any,
-    _encoding: string,
-    callback: (err?: Error) => void
-  ) {
+  override _write(chunk: any, _encoding: string, callback: (err?: Error) => void) {
     this.usbmuxdSock.write(chunk);
     callback();
   }

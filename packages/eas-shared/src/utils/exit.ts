@@ -1,15 +1,10 @@
-import { guardAsync } from "./fn";
+import { guardAsync } from './fn';
 
-const debug = require("debug")("expo:utils:exit") as typeof console.log;
+const debug = require('debug')('expo:utils:exit') as typeof console.log;
 
 type AsyncExitHook = (signal: NodeJS.Signals) => void | Promise<void>;
 
-const PRE_EXIT_SIGNALS: NodeJS.Signals[] = [
-  "SIGHUP",
-  "SIGINT",
-  "SIGTERM",
-  "SIGBREAK",
-];
+const PRE_EXIT_SIGNALS: NodeJS.Signals[] = ['SIGHUP', 'SIGINT', 'SIGTERM', 'SIGBREAK'];
 
 // We create a queue since Node.js throws an error if we try to append too many listeners:
 // (node:4405) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGINT listeners added to [process]. Use emitter.setMaxListeners() to increase limit

@@ -1,11 +1,11 @@
 import {
   validateAndroidSystemRequirementsAsync,
   validateIOSSystemRequirementsAsync,
-} from "eas-shared";
-import stripAnsi from "strip-ansi";
+} from 'eas-shared';
+import stripAnsi from 'strip-ansi';
 
 type CheckToolsOptions = {
-  platform: "android" | "ios" | "all";
+  platform: 'android' | 'ios' | 'all';
 };
 
 type PlatformToolsResult = {
@@ -13,15 +13,14 @@ type PlatformToolsResult = {
   reason?: string;
 };
 
-export async function checkToolsAsync({ platform = "all" }: CheckToolsOptions) {
-  const result: { android?: PlatformToolsResult; ios?: PlatformToolsResult } =
-    {};
+export async function checkToolsAsync({ platform = 'all' }: CheckToolsOptions) {
+  const result: { android?: PlatformToolsResult; ios?: PlatformToolsResult } = {};
 
-  if (platform === "android" || platform === "all") {
+  if (platform === 'android' || platform === 'all') {
     result.android = await checkAndroidToolsAsync();
   }
 
-  if (platform === "ios" || platform === "all") {
+  if (platform === 'ios' || platform === 'all') {
     result.ios = await checkIosToolsAsync();
   }
 

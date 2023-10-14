@@ -1,10 +1,10 @@
-import JsonFile from "@expo/json-file";
-import fs from "fs-extra";
-import os from "os";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
+import JsonFile from '@expo/json-file';
+import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
-import * as Env from "./env";
+import * as Env from './env';
 
 export type UserSettingsData = {
   developmentCodeSigningId?: string;
@@ -26,7 +26,7 @@ export type UserData = {
   sessionSecret?: string;
 };
 
-const SETTINGS_FILE_NAME = "state.json";
+const SETTINGS_FILE_NAME = 'state.json';
 
 function userSettingsFile(): string {
   return path.join(dotExpoHomeDirectory(), SETTINGS_FILE_NAME);
@@ -47,11 +47,11 @@ function dotExpoHomeDirectory() {
     const home = os.homedir();
 
     if (Env.isStaging()) {
-      dirPath = path.join(home, ".expo-staging");
+      dirPath = path.join(home, '.expo-staging');
     } else if (Env.isLocal()) {
-      dirPath = path.join(home, ".expo-local");
+      dirPath = path.join(home, '.expo-local');
     } else {
-      dirPath = path.join(home, ".expo");
+      dirPath = path.join(home, '.expo');
     }
   }
   if (!mkdirped) {
@@ -64,11 +64,11 @@ function dotExpoHomeDirectory() {
 // returns an anonymous, unique identifier for a user on the current computer
 async function getAnonymousIdentifierAsync(): Promise<string> {
   const settings = await userSettingsJsonFile();
-  let id = await settings.getAsync("uuid", null);
+  let id = await settings.getAsync('uuid', null);
 
   if (!id) {
     id = uuidv4();
-    await settings.setAsync("uuid", id);
+    await settings.setAsync('uuid', id);
   }
 
   return id;
