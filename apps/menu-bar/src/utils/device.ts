@@ -18,11 +18,14 @@ export type BaseDevice = {
 );
 
 export function getDeviceOS(device: Device): 'android' | 'ios' {
+  if (device.osType === 'tvOS') {
+    return 'ios';
+  }
   return device.osType.toLowerCase() as 'android' | 'ios';
 }
 
 export function getDeviceId(device: Device): string {
-  return device.osType === 'iOS' ? device.udid : device.name;
+  return device.osType === 'iOS' || device.osType === 'tvOS' ? device.udid : device.name;
 }
 
 export function getSectionsFromDeviceList(

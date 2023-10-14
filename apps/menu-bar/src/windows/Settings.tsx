@@ -14,6 +14,7 @@ import MenuBarModule from '../modules/MenuBarModule';
 import SparkleModule from '../modules/SparkleModule';
 import {
   UserPreferences,
+  defaultUserPreferences,
   getUserPreferences,
   saveUserPreferences,
   storage,
@@ -30,7 +31,7 @@ const Settings = () => {
     Boolean(storage.getString('sessionSecret'))
   );
 
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>({});
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(defaultUserPreferences);
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
 
@@ -76,6 +77,14 @@ const Settings = () => {
   const onPressSetAutomaticallyChecksForUpdates = async (value: boolean) => {
     setAutomaticallyChecksForUpdates(value);
     SparkleModule.setAutomaticallyChecksForUpdates(value);
+  };
+
+  const onPressSetShowExperimentalFeatures = async (value: boolean) => {
+    setUserPreferences((prev) => {
+      const newPreferences = { ...prev, showExperimentalFeatures: value };
+      saveUserPreferences(newPreferences);
+      return newPreferences;
+    });
   };
 
   const onPressEmulatorWithoutAudio = async (value: boolean) => {
@@ -167,6 +176,13 @@ const Settings = () => {
                 color="primary"
               />
               <Button title="Log In" onPress={() => handleAuthentication('login')} />
+              {__DEV__ ? (
+                <TouchableOpacity
+                  onPress={() => WindowsNavigator.open('DebugMenu')}
+                  style={[styles.debugButton, getStylesForColor('primary', theme)?.touchableStyle]}>
+                  <SystemIconView systemIconName="ladybug" />
+                </TouchableOpacity>
+              ) : null}
             </Row>
           )}
         </View>
@@ -205,6 +221,13 @@ const Settings = () => {
             value={customSdkPathEnabled}
             onValueChange={toggleCustomSdkPath}
             label="Custom Android SDK root location"
+          />
+        </Row>
+        <Row mb="2" align="center">
+          <Checkbox
+            value={userPreferences.showExperimentalFeatures}
+            onValueChange={onPressSetShowExperimentalFeatures}
+            label="Show experimental features (requires restart)"
           />
         </Row>
         <PathInput

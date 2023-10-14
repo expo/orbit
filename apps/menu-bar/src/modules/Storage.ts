@@ -4,14 +4,28 @@ import { MMKV } from 'react-native-mmkv';
 const userPreferencesStorageKey = 'user-preferences';
 
 export type UserPreferences = {
-  launchOnLogin?: boolean;
-  emulatorWithoutAudio?: boolean;
+  launchOnLogin: boolean;
+  emulatorWithoutAudio: boolean;
   customSdkPath?: string;
+  showExperimentalFeatures: boolean;
+  showIosSimulators: boolean;
+  showTvosSimulators: boolean;
+  showAndroidEmulators: boolean;
+};
+
+export const defaultUserPreferences: UserPreferences = {
+  launchOnLogin: false,
+  emulatorWithoutAudio: false,
+  showExperimentalFeatures: false,
+  showIosSimulators: true,
+  showTvosSimulators: false,
+  showAndroidEmulators: true,
 };
 
 export const getUserPreferences = async () => {
-  const value = await AsyncStorage.getItem(userPreferencesStorageKey);
-  return JSON.parse(value ?? '{}') as UserPreferences;
+  const stringValue = await AsyncStorage.getItem(userPreferencesStorageKey);
+  const value = (stringValue ? JSON.parse(stringValue) : defaultUserPreferences) as UserPreferences;
+  return value;
 };
 
 export const saveUserPreferences = async (preferences: UserPreferences) => {
