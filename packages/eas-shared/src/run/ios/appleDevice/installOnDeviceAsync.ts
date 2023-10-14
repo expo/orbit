@@ -1,18 +1,18 @@
-import chalk from "chalk";
-import { Ora } from "ora";
-import os from "os";
-import path from "path";
+import chalk from 'chalk';
+import { Ora } from 'ora';
+import os from 'os';
+import path from 'path';
 
-import * as AppleDevice from "./AppleDevice";
-import { ora } from "../../../ora";
-import { ensureDirectory } from "../../../utils/dir";
-import { InternalError } from "common-types";
+import * as AppleDevice from './AppleDevice';
+import { ora } from '../../../ora';
+import { ensureDirectory } from '../../../utils/dir';
+import { InternalError } from 'common-types';
 
 /** Get the app_delta folder for faster subsequent rebuilds on devices. */
 export function getAppDeltaDirectory(bundleId: string): string {
   // TODO: Maybe use .expo folder instead for debugging
   // TODO: Reuse existing folder from xcode?
-  const deltaFolder = path.join(os.tmpdir(), "ios", "app-delta", bundleId);
+  const deltaFolder = path.join(os.tmpdir(), 'ios', 'app-delta', bundleId);
   ensureDirectory(deltaFolder);
   return deltaFolder;
 }
@@ -60,11 +60,11 @@ export async function installOnDeviceAsync(props: {
     if (indicator) {
       indicator.fail();
     }
-    if (error.code === "APPLE_DEVICE_LOCKED") {
+    if (error.code === 'APPLE_DEVICE_LOCKED') {
       // Get the app name from the binary path.
-      const appName = path.basename(bundle).split(".")[0] ?? "app";
+      const appName = path.basename(bundle).split('.')[0] ?? 'app';
       throw new InternalError(
-        "APPLE_DEVICE_LOCKED",
+        'APPLE_DEVICE_LOCKED',
         `Unable to launch ${appName} because the device is locked. Please launch the app manually.`
       );
     }

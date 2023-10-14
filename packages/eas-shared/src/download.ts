@@ -1,23 +1,23 @@
-import spawnAsync from "@expo/spawn-async";
-import glob from "fast-glob";
-import fs from "fs-extra";
-import path from "path";
-import { Stream } from "stream";
-import { extract } from "tar";
-import { promisify } from "util";
-import { v4 as uuidv4 } from "uuid";
+import spawnAsync from '@expo/spawn-async';
+import glob from 'fast-glob';
+import fs from 'fs-extra';
+import path from 'path';
+import { Stream } from 'stream';
+import { extract } from 'tar';
+import { promisify } from 'util';
+import { v4 as uuidv4 } from 'uuid';
 
-import fetch, { RequestInit, Response } from "./fetch";
-import Log from "./log";
-import { formatBytes } from "./files";
-import { getTmpDirectory } from "./paths";
-import { ProgressHandler, createProgressTracker } from "./progress";
-import { InternalError } from "common-types";
-import { MultipleAppsInTarballErrorDetails } from "common-types/build/InternalError";
+import fetch, { RequestInit, Response } from './fetch';
+import Log from './log';
+import { formatBytes } from './files';
+import { getTmpDirectory } from './paths';
+import { ProgressHandler, createProgressTracker } from './progress';
+import { InternalError } from 'common-types';
+import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
 
 export enum AppPlatform {
-  Android = "ANDROID",
-  Ios = "IOS",
+  Android = 'ANDROID',
+  Ios = 'IOS',
 }
 
 const pipeline = promisify(Stream.pipeline);
@@ -28,15 +28,11 @@ function wrapFetchWithProgress(): (
   progressHandler: ProgressHandler
 ) => Promise<Response> {
   let didProgressBarFinish = false;
-  return async (
-    url: string,
-    init: RequestInit,
-    progressHandler: ProgressHandler
-  ) => {
+  return async (url: string, init: RequestInit, progressHandler: ProgressHandler) => {
     const response = await fetch(url, init);
 
     if (response.ok) {
-      const totalDownloadSize = response.headers.get("Content-Length");
+      const totalDownloadSize = response.headers.get('Content-Length');
       const total = Number(totalDownloadSize);
 
       if (!totalDownloadSize || isNaN(total) || total < 0) {
@@ -66,11 +62,11 @@ function wrapFetchWithProgress(): (
         }
       };
 
-      response.body.on("data", (chunk) => {
+      response.body.on('data', (chunk) => {
         onProgress(chunk.length);
       });
 
-      response.body.on("end", () => {
+      response.body.on('end', () => {
         onProgress();
       });
     }
@@ -112,10 +108,7 @@ async function downloadFileWithProgressTrackerAsync(
   }
 }
 
-async function maybeCacheAppAsync(
-  appPath: string,
-  cachedAppPath?: string
-): Promise<string> {
+async function maybeCacheAppAsync(appPath: string, cachedAppPath?: string): Promise<string> {
   if (cachedAppPath) {
     await fs.ensureDir(path.dirname(cachedAppPath));
     await fs.move(appPath, cachedAppPath);
@@ -132,16 +125,13 @@ export async function downloadAndMaybeExtractAppAsync(
   const outputDir = path.join(getTmpDirectory(), uuidv4());
   await fs.promises.mkdir(outputDir, { recursive: true });
 
-  if (url.endsWith("apk")) {
+  if (url.endsWith('apk')) {
     const apkFilePath = path.join(outputDir, `${uuidv4()}.apk`);
     await downloadFileWithProgressTrackerAsync(
       url,
       apkFilePath,
-      (ratio, total) =>
-        `Downloading app (${formatBytes(total * ratio)} / ${formatBytes(
-          total
-        )})`,
-      "Successfully downloaded app"
+      (ratio, total) => `Downloading app (${formatBytes(total * ratio)} / ${formatBytes(total)})`,
+      'Successfully downloaded app'
     );
     return maybeCacheAppAsync(apkFilePath, cachedAppPath);
   } else {
@@ -154,44 +144,34 @@ export async function downloadAndMaybeExtractAppAsync(
       url,
       tmpArchivePath,
       (ratio, total) =>
-        `Downloading app archive (${formatBytes(total * ratio)} / ${formatBytes(
-          total
-        )})`,
-      "Successfully downloaded app archive"
+        `Downloading app archive (${formatBytes(total * ratio)} / ${formatBytes(total)})`,
+      'Successfully downloaded app archive'
     );
     await tarExtractAsync(tmpArchivePath, outputDir);
 
-    const appPath = await getAppPathAsync(
-      outputDir,
-      platform === AppPlatform.Ios ? "app" : "apk"
-    );
+    const appPath = await getAppPathAsync(outputDir, platform === AppPlatform.Ios ? 'app' : 'apk');
 
     return maybeCacheAppAsync(appPath, cachedAppPath);
   }
 }
 
-export async function extractAppFromLocalArchiveAsync(
-  appArchivePath: string
-): Promise<string> {
+export async function extractAppFromLocalArchiveAsync(appArchivePath: string): Promise<string> {
   const outputDir = path.join(getTmpDirectory(), uuidv4());
   await fs.promises.mkdir(outputDir, { recursive: true });
 
   await tarExtractAsync(appArchivePath, outputDir);
 
-  return await getAppPathAsync(outputDir, "(apk|app)");
+  return await getAppPathAsync(outputDir, '(apk|app)');
 }
 
-async function getAppPathAsync(
-  outputDir: string,
-  applicationExtension: string
-): Promise<string> {
+async function getAppPathAsync(outputDir: string, applicationExtension: string): Promise<string> {
   const appFilePaths = await glob(`./**/*.${applicationExtension}`, {
     cwd: outputDir,
     onlyFiles: false,
   });
 
   if (appFilePaths.length === 0) {
-    throw Error("Did not find any installable apps inside tarball.");
+    throw Error('Did not find any installable apps inside tarball.');
   }
 
   if (appFilePaths.length === 1) {
@@ -199,7 +179,7 @@ async function getAppPathAsync(
   }
 
   Log.newLine();
-  Log.log("Detected multiple apps in the tarball:");
+  Log.log('Detected multiple apps in the tarball:');
   Log.newLine();
 
   const details: MultipleAppsInTarballErrorDetails = {
@@ -209,20 +189,17 @@ async function getAppPathAsync(
     })),
   };
   throw new InternalError(
-    "MULTIPLE_APPS_IN_TARBALL",
-    "Multiple apps detected in the tarball.",
+    'MULTIPLE_APPS_IN_TARBALL',
+    'Multiple apps detected in the tarball.',
     details
   );
 }
 
-export async function tarExtractAsync(
-  input: string,
-  output: string
-): Promise<void> {
+export async function tarExtractAsync(input: string, output: string): Promise<void> {
   try {
-    if (process.platform !== "win32") {
-      await spawnAsync("tar", ["-xf", input, "-C", output], {
-        stdio: "inherit",
+    if (process.platform !== 'win32') {
+      await spawnAsync('tar', ['-xf', input, '-C', output], {
+        stdio: 'inherit',
       });
       return;
     }

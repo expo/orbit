@@ -1,7 +1,7 @@
-import chalk from "chalk";
+import chalk from 'chalk';
 
-import { Ora, ora } from "./ora";
-import { endTimer, formatMilliseconds, startTimer } from "./timer";
+import { Ora, ora } from './ora';
+import { endTimer, formatMilliseconds, startTimer } from './timer';
 
 export type Progress = {
   total: number;
@@ -34,7 +34,7 @@ export function createProgressTracker({
   const getMessage = (v: number, total: number): string => {
     const ratio = Math.min(Math.max(v, 0), 1);
     const percent = Math.floor(ratio * 100);
-    return typeof message === "string"
+    return typeof message === 'string'
       ? `${message} ${percent.toFixed(0)}%`
       : message(ratio, total);
   };
@@ -73,7 +73,7 @@ export function createProgressTracker({
       if (error) {
         bar.fail();
       } else if (isComplete) {
-        if (typeof completedMessage === "string") {
+        if (typeof completedMessage === 'string') {
           bar.succeed(`${completedMessage} ${chalk.dim(prettyTime)}`);
         } else {
           bar.succeed(completedMessage(prettyTime));

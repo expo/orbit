@@ -6,46 +6,42 @@ export interface AppleConnectedDevice {
   /** @example `iPhone13,4` */
   model: string;
   /** @example `device` */
-  deviceType: "device" | "catalyst";
+  deviceType: 'device' | 'catalyst';
   /** @example `USB` */
-  connectionType: "USB" | "Network";
+  connectionType: 'USB' | 'Network';
   /** @example `15.4.1` */
   osVersion: string;
-  osType: "iOS";
+  osType: 'iOS';
 }
 
 export interface IosSimulator {
   runtime: string;
   osVersion: string;
   windowName: string;
-  osType: "iOS";
-  state: "Booted" | "Shutdown";
+  osType: 'iOS';
+  state: 'Booted' | 'Shutdown';
   isAvailable: boolean;
   name: string;
   udid: string;
   lastBootedAt?: number;
-  deviceType: "simulator";
+  deviceType: 'simulator';
 }
 
 export interface AndroidEmulator {
   pid?: string;
   name: string;
-  osType: "Android";
-  deviceType: "emulator";
-  state: "Booted" | "Shutdown";
+  osType: 'Android';
+  deviceType: 'emulator';
+  state: 'Booted' | 'Shutdown';
 }
 
 export interface AndroidConnectedDevice {
   pid?: string;
   model: string;
   name: string;
-  osType: "Android";
-  deviceType: "device";
-  connectionType?: "USB" | "Network";
+  osType: 'Android';
+  deviceType: 'device';
+  connectionType?: 'USB' | 'Network';
 }
 
-export type Device =
-  | AppleConnectedDevice
-  | IosSimulator
-  | AndroidEmulator
-  | AndroidConnectedDevice;
+export type Device = AppleConnectedDevice | IosSimulator | AndroidEmulator | AndroidConnectedDevice;

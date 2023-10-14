@@ -1,6 +1,6 @@
-import plist from "@expo/plist";
-import binaryPlist from "bplist-parser";
-import fs from "fs";
+import plist from '@expo/plist';
+import binaryPlist from 'bplist-parser';
+import fs from 'fs';
 
 const CHAR_CHEVRON_OPEN = 60;
 const CHAR_B_LOWER = 98;
@@ -21,8 +21,6 @@ export function parsePlistBuffer(contents: Buffer) {
     if (Array.isArray(info)) return info[0];
     return info;
   } else {
-    throw new Error(
-      `Cannot parse plist of type byte (0x${contents[0].toString(16)})`
-    );
+    throw new Error(`Cannot parse plist of type byte (0x${contents[0].toString(16)})`);
   }
 }

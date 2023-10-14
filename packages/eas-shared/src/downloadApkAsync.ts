@@ -1,13 +1,13 @@
-import fs from "fs-extra";
-import path from "path";
+import fs from 'fs-extra';
+import path from 'path';
 
-import UserSettings from "./userSettings";
-import * as Versions from "./versions";
-import { downloadAppAsync } from "./downloadAppAsync";
+import UserSettings from './userSettings';
+import * as Versions from './versions';
+import { downloadAppAsync } from './downloadAppAsync';
 
 function _apkCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  const dir = path.join(dotExpoHomeDirectory, "android-apk-cache");
+  const dir = path.join(dotExpoHomeDirectory, 'android-apk-cache');
   fs.mkdirpSync(dir);
   return dir;
 }

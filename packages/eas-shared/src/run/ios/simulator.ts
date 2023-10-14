@@ -1,27 +1,25 @@
-import * as osascript from "@expo/osascript";
-import spawnAsync from "@expo/spawn-async";
-import fs from "fs-extra";
-import path from "path";
-import semver from "semver";
-import { IosSimulator } from "common-types/build/devices";
+import * as osascript from '@expo/osascript';
+import spawnAsync from '@expo/spawn-async';
+import fs from 'fs-extra';
+import path from 'path';
+import semver from 'semver';
+import { IosSimulator } from 'common-types/build/devices';
 
-import * as CoreSimulator from "./CoreSimulator";
-import { simctlAsync } from "./simctl";
-import { xcrunAsync } from "./xcrun";
-import { downloadAppAsync } from "../../downloadAppAsync";
-import Log from "../../log";
-import UserSettings from "../../userSettings";
-import { delayAsync } from "../../utils/delayAsync";
-import { sleepAsync } from "../../utils/promise";
-import * as Versions from "../../versions";
+import * as CoreSimulator from './CoreSimulator';
+import { simctlAsync } from './simctl';
+import { xcrunAsync } from './xcrun';
+import { downloadAppAsync } from '../../downloadAppAsync';
+import Log from '../../log';
+import UserSettings from '../../userSettings';
+import { delayAsync } from '../../utils/delayAsync';
+import { sleepAsync } from '../../utils/promise';
+import * as Versions from '../../versions';
 
-const EXPO_GO_BUNDLE_IDENTIFIER = "host.exp.Exponent";
+const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.Exponent';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
-export async function getFirstBootedIosSimulatorAsync(): Promise<
-  IosSimulator | undefined
-> {
-  const bootedSimulators = await getAvailableIosSimulatorsListAsync("booted");
+export async function getFirstBootedIosSimulatorAsync(): Promise<IosSimulator | undefined> {
+  const bootedSimulators = await getAvailableIosSimulatorsListAsync('booted');
 
   if (bootedSimulators.length > 0) {
     return bootedSimulators[0];
@@ -29,32 +27,28 @@ export async function getFirstBootedIosSimulatorAsync(): Promise<
   return undefined;
 }
 
-export async function getAvailableIosSimulatorsListAsync(
-  query?: string
-): Promise<IosSimulator[]> {
+export async function getAvailableIosSimulatorsListAsync(query?: string): Promise<IosSimulator[]> {
   const { stdout } = query
-    ? await simctlAsync(["list", "devices", "--json", query])
-    : await simctlAsync(["list", "devices", "--json"]);
+    ? await simctlAsync(['list', 'devices', '--json', query])
+    : await simctlAsync(['list', 'devices', '--json']);
   const info = parseSimControlJsonResults(stdout);
 
   const iosSimulators = [];
 
   for (const runtime of Object.keys(info.devices)) {
     // Given a string like 'com.apple.CoreSimulator.SimRuntime.tvOS-13-4'
-    const runtimeSuffix = runtime
-      .split("com.apple.CoreSimulator.SimRuntime.")
-      .pop();
+    const runtimeSuffix = runtime.split('com.apple.CoreSimulator.SimRuntime.').pop();
 
     if (!runtimeSuffix) {
       continue;
     }
 
     // Create an array [tvOS, 13, 4]
-    const [osType, ...osVersionComponents] = runtimeSuffix.split("-");
+    const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
 
-    if (osType === "iOS") {
+    if (osType === 'iOS') {
       // Join the end components [13, 4] -> '13.4'
-      const osVersion = osVersionComponents.join(".");
+      const osVersion = osVersionComponents.join('.');
       const sims = info.devices[runtime];
       for (const device of sims) {
         if (device.isAvailable) {
@@ -63,12 +57,10 @@ export async function getAvailableIosSimulatorsListAsync(
             runtime,
             osVersion,
             windowName: `${device.name} (${osVersion})`,
-            osType: "iOS" as const,
-            state: device.state as "Booted" | "Shutdown",
-            deviceType: "simulator",
-            lastBootedAt: device.lastBootedAt
-              ? new Date(device.lastBootedAt).getTime()
-              : undefined,
+            osType: 'iOS' as const,
+            state: device.state as 'Booted' | 'Shutdown',
+            deviceType: 'simulator',
+            lastBootedAt: device.lastBootedAt ? new Date(device.lastBootedAt).getTime() : undefined,
           });
         }
       }
@@ -83,32 +75,28 @@ function parseSimControlJsonResults(input: string): any {
   } catch (error: any) {
     // Nov 15, 2020: Observed this can happen when opening the simulator and the simulator prompts the user to update the xcode command line tools.
     // Unexpected token I in JSON at position 0
-    if (error.message.includes("Unexpected token")) {
+    if (error.message.includes('Unexpected token')) {
       Log.error(`Apple's simctl returned malformed JSON:\n${input}`);
     }
     throw error;
   }
 }
 
-export async function ensureSimulatorBootedAsync(
-  simulator: IosSimulator
-): Promise<void> {
-  if (simulator.state === "Booted") {
+export async function ensureSimulatorBootedAsync(simulator: IosSimulator): Promise<void> {
+  if (simulator.state === 'Booted') {
     return;
   }
 
-  await simctlAsync(["boot", simulator.udid]);
+  await simctlAsync(['boot', simulator.udid]);
 }
 
-export async function openSimulatorAppAsync(
-  simulatorUdid: string
-): Promise<void> {
-  const args = ["-a", "Simulator"];
+export async function openSimulatorAppAsync(simulatorUdid: string): Promise<void> {
+  const args = ['-a', 'Simulator'];
   if (simulatorUdid) {
     // This has no effect if the app is already running.
-    args.push("--args", "-CurrentDeviceUDID", simulatorUdid);
+    args.push('--args', '-CurrentDeviceUDID', simulatorUdid);
   }
-  await spawnAsync("open", args);
+  await spawnAsync('open', args);
 }
 
 export async function launchAppAsync(
@@ -116,11 +104,11 @@ export async function launchAppAsync(
   bundleIdentifier: string
 ): Promise<void> {
   Log.newLine();
-  Log.log("Launching your app...");
+  Log.log('Launching your app...');
   await activateSimulatorWindowAsync();
-  await simctlAsync(["launch", simulatorUdid, bundleIdentifier]);
+  await simctlAsync(['launch', simulatorUdid, bundleIdentifier]);
 
-  Log.succeed("Successfully launched your app!");
+  Log.succeed('Successfully launched your app!');
 }
 
 // I think the app can be open while no simulators are booted.
@@ -129,21 +117,16 @@ async function waitForSimulatorAppToStartAsync(
   intervalMs: number
 ): Promise<void> {
   Log.newLine();
-  Log.log("Waiting for Simulator app to start...");
+  Log.log('Waiting for Simulator app to start...');
 
   const startTime = Date.now();
   while (Date.now() - startTime < maxWaitTimeMs) {
     if (await isSimulatorAppRunningAsync()) {
       return;
     }
-    await sleepAsync(
-      Math.min(
-        intervalMs,
-        Math.max(maxWaitTimeMs - (Date.now() - startTime), 0)
-      )
-    );
+    await sleepAsync(Math.min(intervalMs, Math.max(maxWaitTimeMs - (Date.now() - startTime), 0)));
   }
-  throw new Error("Timed out waiting for the iOS simulator to start.");
+  throw new Error('Timed out waiting for the iOS simulator to start.');
 }
 
 export async function activateSimulatorWindowAsync(): Promise<void> {
@@ -170,11 +153,11 @@ async function isSimulatorAppRunningAsync(): Promise<boolean> {
       'tell app "System Events" to count processes whose name is "Simulator"'
     );
 
-    if (result.trim() === "0") {
+    if (result.trim() === '0') {
       return false;
     }
   } catch (error: any) {
-    if (error.message.includes("Application isn’t running")) {
+    if (error.message.includes('Application isn’t running')) {
       return false;
     }
     throw error;
@@ -183,9 +166,7 @@ async function isSimulatorAppRunningAsync(): Promise<boolean> {
   return true;
 }
 
-export async function ensureSimulatorAppOpenedAsync(
-  simulatorUuid: string
-): Promise<void> {
+export async function ensureSimulatorAppOpenedAsync(simulatorUuid: string): Promise<void> {
   if (await isSimulatorAppRunningAsync()) {
     return;
   }
@@ -194,16 +175,13 @@ export async function ensureSimulatorAppOpenedAsync(
   await waitForSimulatorAppToStartAsync(60 * 1000, 1000);
 }
 
-export async function installAppAsync(
-  deviceId: string,
-  filePath: string
-): Promise<void> {
+export async function installAppAsync(deviceId: string, filePath: string): Promise<void> {
   Log.newLine();
-  Log.log("Installing your app on the simulator...");
+  Log.log('Installing your app on the simulator...');
 
-  await simctlAsync(["install", deviceId, filePath]);
+  await simctlAsync(['install', deviceId, filePath]);
 
-  Log.succeed("Successfully installed your app on the simulator!");
+  Log.succeed('Successfully installed your app on the simulator!');
 }
 
 export async function getSimulatorAppIdAsync(): Promise<string | undefined> {
@@ -214,35 +192,27 @@ export async function getSimulatorAppIdAsync(): Promise<string | undefined> {
   }
 }
 
-export async function getAppBundleIdentifierAsync(
-  appPath: string
-): Promise<string> {
-  const { stdout, stderr } = await spawnAsync("xcrun", [
-    "plutil",
-    "-extract",
-    "CFBundleIdentifier",
-    "raw",
-    path.join(appPath, "Info.plist"),
+export async function getAppBundleIdentifierAsync(appPath: string): Promise<string> {
+  const { stdout, stderr } = await spawnAsync('xcrun', [
+    'plutil',
+    '-extract',
+    'CFBundleIdentifier',
+    'raw',
+    path.join(appPath, 'Info.plist'),
   ]);
 
   if (!stdout) {
     throw new Error(
-      `Could not read app bundle identifier from ${path.join(
-        appPath,
-        "Info.plist"
-      )}: ${stderr}`
+      `Could not read app bundle identifier from ${path.join(appPath, 'Info.plist')}: ${stderr}`
     );
   }
 
   return stdout.trim();
 }
 
-export async function openURLAsync(options: {
-  udid: string;
-  url: string;
-}): Promise<void> {
+export async function openURLAsync(options: { udid: string; url: string }): Promise<void> {
   await activateSimulatorWindowAsync();
-  await xcrunAsync(["simctl", "openurl", options.udid, options.url]);
+  await xcrunAsync(['simctl', 'openurl', options.udid, options.url]);
 }
 
 /**
@@ -263,12 +233,7 @@ export async function getContainerPathAsync({
     return CoreSimulator.getContainerPathAsync({ udid, bundleIdentifier });
   }
   try {
-    const { stdout } = await xcrunAsync([
-      "simctl",
-      "get_app_container",
-      udid,
-      bundleIdentifier,
-    ]);
+    const { stdout } = await xcrunAsync(['simctl', 'get_app_container', udid, bundleIdentifier]);
     return stdout.trim();
   } catch (error: any) {
     if (error.message?.match(/No such file or directory/)) {
@@ -278,16 +243,11 @@ export async function getContainerPathAsync({
   }
 }
 
-export async function installAsync(options: {
-  udid: string;
-  dir: string;
-}): Promise<any> {
-  return simctlAsync(["install", options.udid, options.dir]);
+export async function installAsync(options: { udid: string; dir: string }): Promise<any> {
+  return simctlAsync(['install', options.udid, options.dir]);
 }
 
-export async function isExpoClientInstalledOnSimulatorAsync(
-  udid: string
-): Promise<boolean> {
+export async function isExpoClientInstalledOnSimulatorAsync(udid: string): Promise<boolean> {
   return !!(await getContainerPathAsync({
     udid,
     bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
@@ -310,9 +270,7 @@ async function getClientForSDK(sdkVersionString?: string) {
   };
 }
 
-export async function expoVersionOnSimulatorAsync(
-  udid: string
-): Promise<string | null> {
+export async function expoVersionOnSimulatorAsync(udid: string): Promise<string | null> {
   const localPath = await getContainerPathAsync({
     udid,
     bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
@@ -329,7 +287,7 @@ export async function expoVersionOnSimulatorAsync(
 
   let matched = regexMatch[1];
   // If the value is matched like 1.0.0. then remove the trailing dot.
-  if (matched.endsWith(".")) {
+  if (matched.endsWith('.')) {
     matched = matched.substr(0, matched.length - 1);
   }
   return matched;
@@ -337,7 +295,7 @@ export async function expoVersionOnSimulatorAsync(
 
 function simulatorCacheDirectory() {
   const dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  const dir = path.join(dotExpoHomeDirectory, "ios-simulator-app-cache");
+  const dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
   fs.mkdirpSync(dir);
   return dir;
 }
@@ -366,12 +324,7 @@ export async function _downloadSimulatorAppAsync(
 
   fs.mkdirpSync(dir);
   try {
-    await downloadAppAsync(
-      url,
-      dir,
-      { extract: true },
-      downloadProgressCallback
-    );
+    await downloadAppAsync(url, dir, { extract: true }, downloadProgressCallback);
   } catch (e: any) {
     fs.removeSync(dir);
     throw e;
@@ -397,12 +350,12 @@ export async function installExpoOnSimulatorAsync({
     }
     return setTimeout(() => {
       console.log(
-        "This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.dev/tools"
+        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.dev/tools'
       );
     }, INSTALL_WARNING_TIMEOUT);
   };
 
-  console.log("Downloading the Expo Go app");
+  console.log('Downloading the Expo Go app');
   warningTimer = setWarningTimer();
 
   const dir = await _downloadSimulatorAppAsync(url, (progress) => {
@@ -410,9 +363,7 @@ export async function installExpoOnSimulatorAsync({
   });
 
   console.log(
-    version
-      ? `Installing Expo Go ${version} on ${udid}`
-      : `Installing Expo Go on ${udid}`
+    version ? `Installing Expo Go ${version} on ${udid}` : `Installing Expo Go on ${udid}`
   );
   warningTimer = setWarningTimer();
 
@@ -437,9 +388,7 @@ export async function doesExpoClientNeedUpdatedAsync(
   return false;
 }
 
-export async function waitForExpoClientInstalledOnSimulatorAsync(
-  udid: string
-): Promise<boolean> {
+export async function waitForExpoClientInstalledOnSimulatorAsync(udid: string): Promise<boolean> {
   if (await isExpoClientInstalledOnSimulatorAsync(udid)) {
     return true;
   } else {
@@ -448,10 +397,7 @@ export async function waitForExpoClientInstalledOnSimulatorAsync(
   }
 }
 
-export async function ensureExpoClientInstalledAsync(
-  udid: string,
-  sdkVersion?: string
-) {
+export async function ensureExpoClientInstalledAsync(udid: string, sdkVersion?: string) {
   let isInstalled = await isExpoClientInstalledOnSimulatorAsync(udid);
   if (isInstalled && (await doesExpoClientNeedUpdatedAsync(udid, sdkVersion))) {
     isInstalled = false;

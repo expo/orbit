@@ -6,19 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import plist from "@expo/plist";
-import Debug from "debug";
-import { Socket } from "net";
+import plist from '@expo/plist';
+import Debug from 'debug';
+import { Socket } from 'net';
 
-import type { ProtocolWriter } from "./AbstractProtocol";
-import {
-  PlistProtocolReader,
-  ProtocolClient,
-  ProtocolReaderFactory,
-} from "./AbstractProtocol";
-import { CommandError } from "../../../../utils/errors";
+import type { ProtocolWriter } from './AbstractProtocol';
+import { PlistProtocolReader, ProtocolClient, ProtocolReaderFactory } from './AbstractProtocol';
+import { CommandError } from '../../../../utils/errors';
 
-const debug = Debug("expo:apple-device:protocol:lockdown");
+const debug = Debug('expo:apple-device:protocol:lockdown');
 export const LOCKDOWN_HEADER_SIZE = 4;
 
 export interface LockdownCommand {
@@ -43,28 +39,22 @@ export interface LockdownRequest {
 }
 
 function isDefined(val: any) {
-  return typeof val !== "undefined";
+  return typeof val !== 'undefined';
 }
 
 export function isLockdownResponse(resp: any): resp is LockdownResponse {
   return isDefined(resp.Status);
 }
 
-export function isLockdownErrorResponse(
-  resp: any
-): resp is LockdownErrorResponse {
+export function isLockdownErrorResponse(resp: any): resp is LockdownErrorResponse {
   return isDefined(resp.Error);
 }
 
 export class LockdownProtocolClient<
-  MessageType extends LockdownRequest | LockdownCommand = LockdownRequest
+  MessageType extends LockdownRequest | LockdownCommand = LockdownRequest,
 > extends ProtocolClient<MessageType> {
   constructor(socket: Socket) {
-    super(
-      socket,
-      new ProtocolReaderFactory(LockdownProtocolReader),
-      new LockdownProtocolWriter()
-    );
+    super(socket, new ProtocolReaderFactory(LockdownProtocolReader), new LockdownProtocolWriter());
   }
 }
 
@@ -81,23 +71,20 @@ export class LockdownProtocolReader extends PlistProtocolReader {
     const resp = super.parseBody(data);
     debug(`Response: ${JSON.stringify(resp)}`);
     if (isLockdownErrorResponse(resp)) {
-      if (resp.Error === "DeviceLocked") {
-        throw new CommandError(
-          "APPLE_DEVICE_LOCKED",
-          "Device is currently locked."
-        );
+      if (resp.Error === 'DeviceLocked') {
+        throw new CommandError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
       }
 
-      if (resp.Error === "InvalidService") {
+      if (resp.Error === 'InvalidService') {
         let errorMessage = `${resp.Error}: ${resp.Service} (request: ${resp.Request})`;
-        if (resp.Service === "com.apple.debugserver") {
+        if (resp.Service === 'com.apple.debugserver') {
           errorMessage +=
-            "\nTry reconnecting your device. You can also debug service logs with `export DEBUG=expo:xdl:ios:*`";
+            '\nTry reconnecting your device. You can also debug service logs with `export DEBUG=expo:xdl:ios:*`';
         }
-        throw new CommandError("APPLE_DEVICE_LOCKDOWN", errorMessage);
+        throw new CommandError('APPLE_DEVICE_LOCKDOWN', errorMessage);
       }
 
-      throw new CommandError("APPLE_DEVICE_LOCKDOWN", resp.Error);
+      throw new CommandError('APPLE_DEVICE_LOCKDOWN', resp.Error);
     }
     return resp;
   }

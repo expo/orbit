@@ -13,11 +13,7 @@
     "target": "ES2019",
     "outDir": "build",
     "rootDir": "src",
-    "typeRoots": [
-      "../../ts-declarations",
-      "src/ts-declarations",
-      "./node_modules/@types"
-    ]
+    "typeRoots": ["../../ts-declarations", "src/ts-declarations", "./node_modules/@types"]
   },
   "include": ["src/**/*"]
 }

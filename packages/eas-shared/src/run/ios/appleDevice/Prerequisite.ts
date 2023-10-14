@@ -1,10 +1,10 @@
-import { CommandError, UnimplementedError } from "../../../utils/errors";
-import { memoize } from "../../../utils/fn";
+import { CommandError, UnimplementedError } from '../../../utils/errors';
+import { memoize } from '../../../utils/fn';
 
 /** An error that is memoized and asserted whenever a Prerequisite.assertAsync is subsequently called. */
 export class PrerequisiteCommandError extends CommandError {
-  constructor(code: string, message: string = "") {
-    super(message ? "VALIDATE_" + code : code, message);
+  constructor(code: string, message: string = '') {
+    super(message ? 'VALIDATE_' + code : code, message);
   }
 }
 
@@ -46,10 +46,7 @@ export class Prerequisite<T = void, TProps = void> {
 }
 
 /** A prerequisite that is project specific. */
-export class ProjectPrerequisite<T = void, TProps = void> extends Prerequisite<
-  T,
-  TProps
-> {
+export class ProjectPrerequisite<T = void, TProps = void> extends Prerequisite<T, TProps> {
   constructor(protected projectRoot: string) {
     super();
   }

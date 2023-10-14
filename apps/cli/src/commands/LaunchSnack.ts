@@ -1,7 +1,7 @@
-import { Emulator, Simulator } from "eas-shared";
+import { Emulator, Simulator } from 'eas-shared';
 
 type launchSnackAsyncOptions = {
-  platform: "android" | "ios";
+  platform: 'android' | 'ios';
   deviceId: string;
 };
 
@@ -15,18 +15,14 @@ export async function launchSnackAsync(
   const match = snackURL.match(regex);
   const version = match ? match[1] : undefined;
 
-  if (platform === "android") {
+  if (platform === 'android') {
     launchSnackOnAndroidAsync(snackURL, deviceId, version);
   } else {
     launchSnackOnIOSAsync(snackURL, deviceId, version);
   }
 }
 
-async function launchSnackOnAndroidAsync(
-  snackURL: string,
-  deviceId: string,
-  version?: string
-) {
+async function launchSnackOnAndroidAsync(snackURL: string, deviceId: string, version?: string) {
   const runningEmulators = await Emulator.getRunningDevicesAsync();
   const emulator = runningEmulators.find(({ name }) => name === deviceId);
   if (!emulator?.pid) {
@@ -37,11 +33,7 @@ async function launchSnackOnAndroidAsync(
   await Emulator.openURLAsync({ url: snackURL, pid: emulator.pid });
 }
 
-async function launchSnackOnIOSAsync(
-  snackURL: string,
-  deviceId: string,
-  version?: string
-) {
+async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version?: string) {
   await Simulator.ensureExpoClientInstalledAsync(deviceId, version);
   await Simulator.openURLAsync({
     url: snackURL,

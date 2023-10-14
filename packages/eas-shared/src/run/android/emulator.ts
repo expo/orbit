@@ -1,40 +1,33 @@
-import spawnAsync, { SpawnResult } from "@expo/spawn-async";
-import * as osascript from "@expo/osascript";
-import assert from "assert";
-import chalk from "chalk";
-import os from "os";
-import path from "path";
-import { execFileSync } from "child_process";
-import semver from "semver";
-import {
-  AndroidConnectedDevice,
-  AndroidEmulator,
-} from "common-types/build/devices";
+import spawnAsync, { SpawnResult } from '@expo/spawn-async';
+import * as osascript from '@expo/osascript';
+import assert from 'assert';
+import chalk from 'chalk';
+import os from 'os';
+import path from 'path';
+import { execFileSync } from 'child_process';
+import semver from 'semver';
+import { AndroidConnectedDevice, AndroidEmulator } from 'common-types/build/devices';
 
-import * as Versions from "../../versions";
-import Log from "../../log";
-import {
-  adbAsync,
-  isEmulatorBootedAsync,
-  waitForEmulatorToBeBootedAsync,
-} from "./adb";
-import { getAndroidSdkRootAsync } from "./sdk";
-import { downloadApkAsync } from "../../downloadApkAsync";
+import * as Versions from '../../versions';
+import Log from '../../log';
+import { adbAsync, isEmulatorBootedAsync, waitForEmulatorToBeBootedAsync } from './adb';
+import { getAndroidSdkRootAsync } from './sdk';
+import { downloadApkAsync } from '../../downloadApkAsync';
 
-const BEGINNING_OF_ADB_ERROR_MESSAGE = "error: ";
+const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
-const EXPO_GO_BUNDLE_IDENTIFIER = "host.exp.exponent";
+const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.exponent';
 export const EMULATOR_MAX_WAIT_TIMEOUT_MS = 60 * 1000 * 3;
-export { getRunningDevicesAsync } from "./adb";
-export { getAptParametersAsync } from "./aapt";
+export { getRunningDevicesAsync } from './adb';
+export { getAptParametersAsync } from './aapt';
 
 export async function getEmulatorExecutableAsync(): Promise<string> {
   const sdkRoot = await getAndroidSdkRootAsync();
   if (sdkRoot) {
-    return path.join(sdkRoot, "emulator", "emulator");
+    return path.join(sdkRoot, 'emulator', 'emulator');
   }
 
-  return "emulator";
+  return 'emulator';
 }
 
 async function emulatorAsync(...options: string[]): Promise<SpawnResult> {
@@ -50,18 +43,18 @@ async function emulatorAsync(...options: string[]): Promise<SpawnResult> {
 }
 
 export async function getAvailableAndroidEmulatorsAsync(): Promise<
-  Omit<AndroidEmulator, "state">[]
+  Omit<AndroidEmulator, 'state'>[]
 > {
   try {
-    const { stdout } = await emulatorAsync("-list-avds");
+    const { stdout } = await emulatorAsync('-list-avds');
 
     return stdout
       .split(os.EOL)
       .filter(Boolean)
       .map((name) => ({
         name,
-        osType: "Android",
-        deviceType: "emulator",
+        osType: 'Android',
+        deviceType: 'emulator',
       }));
   } catch {
     return [];
@@ -88,12 +81,12 @@ export async function bootEmulatorAsync(
   const emulatorExecutable = await getEmulatorExecutableAsync();
   const spawnArgs = [`@${emulator.name}`];
   if (noAudio) {
-    spawnArgs.push("-no-audio");
+    spawnArgs.push('-no-audio');
   }
 
   // Start a process to open an emulator
   const emulatorProcess = spawnAsync(emulatorExecutable, spawnArgs, {
-    stdio: "ignore",
+    stdio: 'ignore',
     detached: true,
   });
 
@@ -119,16 +112,16 @@ export async function installAppAsync(
   apkFilePath: string
 ): Promise<void> {
   Log.newLine();
-  Log.log("Installing your app...");
+  Log.log('Installing your app...');
 
   assert(emulator.pid);
   await activateEmulatorWindowAsync({
     pid: emulator.pid,
-    deviceType: "emulator",
+    deviceType: 'emulator',
   });
-  await adbAsync("-s", emulator.pid, "install", "-r", "-d", apkFilePath);
+  await adbAsync('-s', emulator.pid, 'install', '-r', '-d', apkFilePath);
 
-  Log.succeed("Successfully installed your app!");
+  Log.succeed('Successfully installed your app!');
 }
 
 export async function startAppAsync(
@@ -137,37 +130,35 @@ export async function startAppAsync(
   activityName: string
 ): Promise<void> {
   Log.newLine();
-  Log.log("Starting your app...");
+  Log.log('Starting your app...');
 
   assert(emulator.pid);
   await adbAsync(
-    "-s",
+    '-s',
     emulator.pid,
-    "shell",
-    "am",
-    "start",
-    "-a",
-    "android.intent.action.MAIN",
-    "-f",
-    "0x20000000", // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
-    "-n",
+    'shell',
+    'am',
+    'start',
+    '-a',
+    'android.intent.action.MAIN',
+    '-f',
+    '0x20000000', // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
+    '-n',
     `${packageName}/${activityName}`
   );
 
-  Log.succeed("Successfully started your app!");
+  Log.succeed('Successfully started your app!');
 }
 
 // Expo installed
-async function isExpoClientInstalledOnEmulatorAsync(
-  pid: string
-): Promise<boolean> {
+async function isExpoClientInstalledOnEmulatorAsync(pid: string): Promise<boolean> {
   const packages = await adbAsync(
-    "-s",
+    '-s',
     pid,
-    "shell",
-    "pm",
-    "list",
-    "packages",
+    'shell',
+    'pm',
+    'list',
+    'packages',
     EXPO_GO_BUNDLE_IDENTIFIER
   );
 
@@ -184,18 +175,16 @@ async function isExpoClientInstalledOnEmulatorAsync(
 export async function getAdbOutputAsync(args: string[]): Promise<string> {
   try {
     const result = await adbAsync(...args);
-    return result.output.join("\n");
+    return result.output.join('\n');
   } catch (e: any) {
     // User pressed ctrl+c to cancel the process...
-    if (e.signal === "SIGINT") {
+    if (e.signal === 'SIGINT') {
       e.isAbortError = true;
     }
     // TODO: Support heap corruption for adb 29 (process exits with code -1073740940) (windows and linux)
     let errorMessage = (e.stderr || e.stdout || e.message).trim();
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
-      errorMessage = errorMessage.substring(
-        BEGINNING_OF_ADB_ERROR_MESSAGE.length
-      );
+      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
     e.message = errorMessage;
     throw e;
@@ -203,7 +192,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 }
 
 export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
-  await activateEmulatorWindowAsync({ pid, deviceType: "emulator" });
+  await activateEmulatorWindowAsync({ pid, deviceType: 'emulator' });
 
   try {
     // NOTE(brentvatne): temporary workaround! launch Expo Go first, then
@@ -212,26 +201,26 @@ export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
     // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
     // Note: this is not needed in Expo Development Client, it only applies to Expo Go
     await adbAsync(
-      "-s",
+      '-s',
       pid,
-      "shell",
-      "monkey",
-      "-p",
+      'shell',
+      'monkey',
+      '-p',
       EXPO_GO_BUNDLE_IDENTIFIER,
-      "-c",
-      "android.intent.category.LAUNCHER",
-      "1"
+      '-c',
+      'android.intent.category.LAUNCHER',
+      '1'
     );
 
     const openProject = await adbAsync(
-      "-s",
+      '-s',
       pid,
-      "shell",
-      "am",
-      "start",
-      "-a",
-      "android.intent.action.VIEW",
-      "-d",
+      'shell',
+      'am',
+      'start',
+      '-a',
+      'android.intent.action.VIEW',
+      '-d',
       url
     );
     return openProject;
@@ -241,22 +230,22 @@ export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
 }
 
 function getUnixPID(port: number | string) {
-  return execFileSync("lsof", [`-i:${port}`, "-P", "-t", "-sTCP:LISTEN"], {
-    encoding: "utf8",
-    stdio: ["pipe", "pipe", "ignore"],
+  return execFileSync('lsof', [`-i:${port}`, '-P', '-t', '-sTCP:LISTEN'], {
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'ignore'],
   })
-    .split("\n")[0]
+    .split('\n')[0]
     .trim();
 }
 
 export async function activateEmulatorWindowAsync(
-  device: Pick<AndroidEmulator, "deviceType" | "pid">
+  device: Pick<AndroidEmulator, 'deviceType' | 'pid'>
 ) {
   if (
     // only mac is supported for now.
-    process.platform !== "darwin" ||
+    process.platform !== 'darwin' ||
     // can only focus emulators
-    device.deviceType !== "emulator"
+    device.deviceType !== 'emulator'
   ) {
     return;
   }
@@ -296,14 +285,7 @@ async function getClientForSDK(sdkVersionString?: string) {
 }
 
 async function expoVersionOnEmulatorAsync(pid: string): Promise<string | null> {
-  const info = await adbAsync(
-    "-s",
-    pid,
-    "shell",
-    "dumpsys",
-    "package",
-    EXPO_GO_BUNDLE_IDENTIFIER
-  );
+  const info = await adbAsync('-s', pid, 'shell', 'dumpsys', 'package', EXPO_GO_BUNDLE_IDENTIFIER);
 
   const regex = /versionName=([0-9.]+)/;
   const regexMatch = regex.exec(info.stdout);
@@ -314,14 +296,10 @@ async function expoVersionOnEmulatorAsync(pid: string): Promise<string | null> {
   return regexMatch[1];
 }
 
-async function doesExpoClientNeedUpdatedAsync(
-  pid: string,
-  sdkVersion?: string
-): Promise<boolean> {
+async function doesExpoClientNeedUpdatedAsync(pid: string, sdkVersion?: string): Promise<boolean> {
   const versions = await Versions.versionsAsync();
   const clientForSdk = await getClientForSDK(sdkVersion);
-  const latestVersionForSdk =
-    clientForSdk?.version ?? versions.androidClientVersion;
+  const latestVersionForSdk = clientForSdk?.version ?? versions.androidClientVersion;
 
   const installedVersion = await expoVersionOnEmulatorAsync(pid);
   if (installedVersion && semver.lt(installedVersion, latestVersionForSdk)) {
@@ -346,23 +324,19 @@ export async function installExpoOnEmulatorAsync({
     }
     return setTimeout(() => {
       console.log(
-        "This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.dev/tools"
+        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.dev/tools'
       );
     }, INSTALL_WARNING_TIMEOUT);
   };
 
-  console.log("Downloading the Expo Go app");
+  console.log('Downloading the Expo Go app');
   warningTimer = setWarningTimer();
 
   const path = await downloadApkAsync(url, (progress) => {
     console.log(`Downloading: ${progress.toFixed(2)}%`);
   });
 
-  console.log(
-    version
-      ? `Installing Expo Go ${version} on ${pid}`
-      : `Installing Expo Go on ${pid}`
-  );
+  console.log(version ? `Installing Expo Go ${version} on ${pid}` : `Installing Expo Go on ${pid}`);
   warningTimer = setWarningTimer();
 
   const result = await installAppAsync({ pid } as AndroidEmulator, path);
@@ -371,10 +345,7 @@ export async function installExpoOnEmulatorAsync({
   return result;
 }
 
-export async function ensureExpoClientInstalledAsync(
-  pid: string,
-  sdkVersion?: string
-) {
+export async function ensureExpoClientInstalledAsync(pid: string, sdkVersion?: string) {
   let isInstalled = await isExpoClientInstalledOnEmulatorAsync(pid);
   if (isInstalled && (await doesExpoClientNeedUpdatedAsync(pid, sdkVersion))) {
     isInstalled = false;

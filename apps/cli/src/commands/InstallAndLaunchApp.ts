@@ -1,23 +1,16 @@
-import {
-  Emulator,
-  Simulator,
-  extractAppFromLocalArchiveAsync,
-  AppleDevice,
-} from "eas-shared";
-import { Platform } from "common-types/build/cli-commands";
+import { Emulator, Simulator, extractAppFromLocalArchiveAsync, AppleDevice } from 'eas-shared';
+import { Platform } from 'common-types/build/cli-commands';
 
-import { getPlatformFromURI } from "../utils";
+import { getPlatformFromURI } from '../utils';
 
 type InstallAndLaunchAppAsyncOptions = {
   appPath: string;
   deviceId: string;
 };
 
-export async function installAndLaunchAppAsync(
-  options: InstallAndLaunchAppAsyncOptions
-) {
+export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsyncOptions) {
   let appPath = options.appPath;
-  if (!appPath.endsWith(".app") && !appPath.endsWith(".apk")) {
+  if (!appPath.endsWith('.app') && !appPath.endsWith('.apk')) {
     appPath = await extractAppFromLocalArchiveAsync(appPath);
   }
   const platform = getPlatformFromURI(appPath);
@@ -29,12 +22,9 @@ export async function installAndLaunchAppAsync(
 
 async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
   if (
-    (await Simulator.getAvailableIosSimulatorsListAsync()).find(
-      ({ udid }) => udid === deviceId
-    )
+    (await Simulator.getAvailableIosSimulatorsListAsync()).find(({ udid }) => udid === deviceId)
   ) {
-    const bundleIdentifier =
-      await Simulator.getAppBundleIdentifierAsync(appPath);
+    const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
     await Simulator.installAppAsync(deviceId, appPath);
     await Simulator.launchAppAsync(deviceId, bundleIdentifier);
     return;
@@ -49,10 +39,7 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
   });
 }
 
-async function installAndLaunchAndroidAppAsync(
-  appPath: string,
-  deviceId: string
-) {
+async function installAndLaunchAndroidAppAsync(appPath: string, deviceId: string) {
   const runningDevices = await Emulator.getRunningDevicesAsync();
   const device = runningDevices.find(({ name }) => name === deviceId);
   if (!device) {
@@ -60,7 +47,6 @@ async function installAndLaunchAndroidAppAsync(
   }
 
   await Emulator.installAppAsync(device, appPath);
-  const { packageName, activityName } =
-    await Emulator.getAptParametersAsync(appPath);
+  const { packageName, activityName } = await Emulator.getAptParametersAsync(appPath);
   await Emulator.startAppAsync(device, packageName, activityName);
 }

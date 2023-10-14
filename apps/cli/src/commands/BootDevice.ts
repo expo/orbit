@@ -1,19 +1,15 @@
-import { AndroidEmulator, IosSimulator } from "common-types/build/devices";
-import { Emulator, Simulator } from "eas-shared";
-import { getRunningDevicesAsync } from "eas-shared/build/run/android/adb";
+import { AndroidEmulator, IosSimulator } from 'common-types/build/devices';
+import { Emulator, Simulator } from 'eas-shared';
+import { getRunningDevicesAsync } from 'eas-shared/build/run/android/adb';
 
 type BootDeviceAsyncOptions = {
-  platform: "android" | "ios";
+  platform: 'android' | 'ios';
   id: string;
   noAudio?: boolean;
 };
 
-export async function bootDeviceAsync({
-  platform,
-  id,
-  noAudio,
-}: BootDeviceAsyncOptions) {
-  if (platform === "ios") {
+export async function bootDeviceAsync({ platform, id, noAudio }: BootDeviceAsyncOptions) {
+  if (platform === 'ios') {
     try {
       await Simulator.ensureSimulatorBootedAsync({
         udid: id,
@@ -21,7 +17,7 @@ export async function bootDeviceAsync({
     } catch (error) {
       if (
         error instanceof Error &&
-        error.message.includes("Unable to boot device in current state: Booted")
+        error.message.includes('Unable to boot device in current state: Booted')
       ) {
         return;
       }

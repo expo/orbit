@@ -5,14 +5,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import Debug from "debug";
-import * as fs from "fs";
-import { Socket } from "net";
-import * as path from "path";
-import { promisify } from "util";
+import Debug from 'debug';
+import * as fs from 'fs';
+import { Socket } from 'net';
+import * as path from 'path';
+import { promisify } from 'util';
 
-import { ServiceClient } from "./ServiceClient";
-import { CommandError } from "../../../../utils/errors";
+import { ServiceClient } from './ServiceClient';
+import { CommandError } from '../../../../utils/errors';
 import {
   AFC_FILE_OPEN_FLAGS,
   AFC_OPS,
@@ -20,9 +20,9 @@ import {
   AFCError,
   AFCProtocolClient,
   AFCResponse,
-} from "../protocol/AFCProtocol";
+} from '../protocol/AFCProtocol';
 
-const debug = Debug("expo:apple-device:client:afc");
+const debug = Debug('expo:apple-device:client:afc');
 const MAX_OPEN_FILES = 240;
 
 export class AFCClient extends ServiceClient<AFCProtocolClient> {
@@ -40,12 +40,12 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
     debug(`getFileInfo:response: %O`, response);
 
     const strings: string[] = [];
-    let currentString = "";
+    let currentString = '';
     const tokens = response.data;
     tokens.forEach((token) => {
       if (token === 0) {
         strings.push(currentString);
-        currentString = "";
+        currentString = '';
       } else {
         currentString += String.fromCharCode(token);
       }
@@ -54,11 +54,7 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
   }
 
   async writeFile(fd: Buffer, data: Buffer): Promise<AFCResponse> {
-    debug(
-      `writeFile: ${Array.prototype.toString.call(fd)} data size: ${
-        data.length
-      }`
-    );
+    debug(`writeFile: ${Array.prototype.toString.call(fd)} data size: ${data.length}`);
 
     const response = await this.protocolClient.sendMessage({
       operation: AFC_OPS.FILE_WRITE,
@@ -91,7 +87,7 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
     }
 
     throw new CommandError(
-      "APPLE_DEVICE_AFC",
+      'APPLE_DEVICE_AFC',
       `There was an unknown error opening file ${path}, response: ${Array.prototype.toString.call(
         response.data
       )}`
@@ -154,14 +150,9 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
       const promises: Promise<void>[] = [];
       for (const file of fs.readdirSync(dirPath)) {
         const filePath = path.join(dirPath, file);
-        const remotePath = path.join(
-          destPath,
-          path.relative(srcPath, filePath)
-        );
+        const remotePath = path.join(destPath, path.relative(srcPath, filePath));
         if (fs.lstatSync(filePath).isDirectory()) {
-          promises.push(
-            _this.makeDirectory(remotePath).then(() => uploadDir(filePath))
-          );
+          promises.push(_this.makeDirectory(remotePath).then(() => uploadDir(filePath)));
         } else {
           // Create promise to add to promises array
           // this way it can be resolved once a pending upload has finished
@@ -190,9 +181,7 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
                 // Couldn't get fd for whatever reason, try again
                 // # of retries is arbitrary and can be adjusted
                 if (err.status === AFC_STATUS.NO_RESOURCES && tries < 10) {
-                  debug(
-                    `Received NO_RESOURCES from AFC, retrying ${filePath} upload. ${tries}`
-                  );
+                  debug(`Received NO_RESOURCES from AFC, retrying ${filePath} upload. ${tries}`);
                   uploadFile(tries++);
                 } else {
                   numOpenFiles--;

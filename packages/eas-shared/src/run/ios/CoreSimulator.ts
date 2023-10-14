@@ -1,14 +1,14 @@
-import fs from "fs";
-import { boolish } from "getenv";
-import { sync as globSync } from "fast-glob";
-import os from "os";
-import path from "path";
+import fs from 'fs';
+import { boolish } from 'getenv';
+import { sync as globSync } from 'fast-glob';
+import os from 'os';
+import path from 'path';
 
-import { SimulatorDevice } from "./SimControl";
-import { parseBinaryPlistAsync } from "../../utils/parseBinaryPlistAsync";
+import { SimulatorDevice } from './SimControl';
+import { parseBinaryPlistAsync } from '../../utils/parseBinaryPlistAsync';
 
 // Enable this to test the JS version of simctl
-const EXPO_USE_CORE_SIM = boolish("EXPO_USE_CORE_SIM", false);
+const EXPO_USE_CORE_SIM = boolish('EXPO_USE_CORE_SIM', false);
 
 export function isEnabled() {
   return EXPO_USE_CORE_SIM;
@@ -22,7 +22,7 @@ enum DeviceState {
 export class CoreSimulatorError extends Error {
   constructor(
     public override message: string,
-    public code?: "MALFORMED_BINARY" | "INVALID_UDID"
+    public code?: 'MALFORMED_BINARY' | 'INVALID_UDID'
   ) {
     super(message);
   }
@@ -34,7 +34,7 @@ export class CoreSimulatorError extends Error {
  * @returns /Users/evanbacon/Library/Developer/CoreSimulator/Devices
  */
 function getDevicesDirectory(): string {
-  return path.join(os.homedir(), "/Library/Developer/CoreSimulator/Devices/");
+  return path.join(os.homedir(), '/Library/Developer/CoreSimulator/Devices/');
 }
 
 /**
@@ -51,21 +51,21 @@ async function getDirectoryForDeviceAsync(udid: string): Promise<string> {
     const possibleUdids = await getDirectoriesAsync(getDevicesDirectory());
     let errorMessage = `Invalid iOS Simulator device UDID: ${udid}.`;
     if (possibleUdids.length) {
-      errorMessage += ` Expected one of: ${possibleUdids.join(", ")}`;
+      errorMessage += ` Expected one of: ${possibleUdids.join(', ')}`;
     }
-    throw new CoreSimulatorError(errorMessage, "INVALID_UDID");
+    throw new CoreSimulatorError(errorMessage, 'INVALID_UDID');
   }
   return deviceFolder;
 }
 
 async function resolveUdidAsync(udid: string): Promise<string> {
-  if (udid === "booted") {
+  if (udid === 'booted') {
     const bootedDevice = await getBootedDeviceAsync();
     if (!bootedDevice) {
-      throw new CoreSimulatorError("No devices are booted.", "INVALID_UDID");
+      throw new CoreSimulatorError('No devices are booted.', 'INVALID_UDID');
     }
     udid = bootedDevice.UDID;
-    console.log("Resolved booted device: " + udid);
+    console.log('Resolved booted device: ' + udid);
   }
   return udid;
 }
@@ -77,7 +77,7 @@ export async function listDevicesAsync(): Promise<SimulatorDevice[]> {
   return (
     await Promise.all(
       devices.map(async (device): Promise<SimulatorDevice | null> => {
-        const plistPath = path.join(devicesDirectory, device, "device.plist");
+        const plistPath = path.join(devicesDirectory, device, 'device.plist');
         if (!fs.existsSync(plistPath)) return null;
         // The plist is stored in binary format
         const data = await parseBinaryPlistAsync(plistPath);
@@ -90,43 +90,38 @@ export async function listDevicesAsync(): Promise<SimulatorDevice[]> {
 export async function getDeviceInfoAsync({
   udid,
 }: { udid?: string } = {}): Promise<SimulatorDevice> {
-  if (!udid || udid === "booted") {
+  if (!udid || udid === 'booted') {
     const bootedDevice = await getBootedDeviceAsync();
     if (!bootedDevice) {
-      throw new CoreSimulatorError("No devices are booted.", "INVALID_UDID");
+      throw new CoreSimulatorError('No devices are booted.', 'INVALID_UDID');
     }
     const deviceDirectory = await getDirectoryForDeviceAsync(bootedDevice.UDID);
     return devicePlistToSimulatorDevice(deviceDirectory, bootedDevice);
   }
 
   const deviceDirectory = await getDirectoryForDeviceAsync(udid);
-  const plistPath = path.join(deviceDirectory, "device.plist");
+  const plistPath = path.join(deviceDirectory, 'device.plist');
   // The plist is stored in binary format
   const data = await parseBinaryPlistAsync(plistPath);
   return devicePlistToSimulatorDevice(deviceDirectory, data);
 }
 
-export function devicePlistToSimulatorDevice(
-  deviceDirectory: string,
-  data: any
-): SimulatorDevice {
-  const runtimeSuffix = data.runtime
-    .split("com.apple.CoreSimulator.SimRuntime.")
-    .pop()!;
+export function devicePlistToSimulatorDevice(deviceDirectory: string, data: any): SimulatorDevice {
+  const runtimeSuffix = data.runtime.split('com.apple.CoreSimulator.SimRuntime.').pop()!;
   // Create an array [tvOS, 13, 4]
-  const [osType, ...osVersionComponents] = runtimeSuffix.split("-");
+  const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
   // Join the end components [13, 4] -> '13.4'
-  const osVersion = osVersionComponents.join(".");
+  const osVersion = osVersionComponents.join('.');
   return {
     ...data,
     /**
      * '/Users/name/Library/Developer/CoreSimulator/Devices/00E55DC0-0364-49DF-9EC6-77BE587137D4/data'
      */
-    dataPath: path.join(deviceDirectory, "data"),
+    dataPath: path.join(deviceDirectory, 'data'),
     /**
      * '/Users/name/Library/Logs/CoreSimulator/00E55DC0-0364-49DF-9EC6-77BE587137D4'
      */
-    logPath: path.join(os.homedir(), "Library/Logs/CoreSimulator", data.UDID),
+    logPath: path.join(os.homedir(), 'Library/Logs/CoreSimulator', data.UDID),
     /**
      * '00E55DC0-0364-49DF-9EC6-77BE587137D4'
      */
@@ -140,7 +135,7 @@ export function devicePlistToSimulatorDevice(
      * 'com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p'
      */
     deviceTypeIdentifier: data.deviceType,
-    state: data.state === DeviceState.BOOTED ? "Booted" : "Shutdown",
+    state: data.state === DeviceState.BOOTED ? 'Booted' : 'Shutdown',
     /**
      * 'Apple TV'
      */
@@ -149,7 +144,7 @@ export function devicePlistToSimulatorDevice(
     /**
      * 'iOS'
      */
-    osType: osType as SimulatorDevice["osType"],
+    osType: osType as SimulatorDevice['osType'],
     /**
      * '13.4'
      */
@@ -180,7 +175,7 @@ export async function getBootedDeviceAsync(): Promise<{ UDID: string } | null> {
       await Promise.all(
         devices.map(async (device) => {
           if (complete) return;
-          const plistPath = path.join(devicesDirectory, device, "device.plist");
+          const plistPath = path.join(devicesDirectory, device, 'device.plist');
           // The plist is stored in binary format
           const data = await parseBinaryPlistAsync(plistPath);
           // Compare state stored under `state` to 3 (booted)
@@ -222,7 +217,7 @@ export async function getContainerPathAsync({
   // TODO: Maybe shallow glob for `.com.apple.mobile_container_manager.metadata.plist` to find apps faster
   const appsFolder = path.join(
     await getDirectoryForDeviceAsync(udid),
-    "data/Containers/Bundle/Application"
+    'data/Containers/Bundle/Application'
   );
 
   // Get all apps for a device
@@ -239,7 +234,7 @@ export async function getContainerPathAsync({
           const appFolder = path.join(appsFolder, app);
           const plistPath = path.join(
             appFolder,
-            ".com.apple.mobile_container_manager.metadata.plist"
+            '.com.apple.mobile_container_manager.metadata.plist'
           );
           // The plist is stored in binary format
           const data = await parseBinaryPlistAsync(plistPath);
@@ -250,7 +245,7 @@ export async function getContainerPathAsync({
             if (!binaryPath) {
               throw new CoreSimulatorError(
                 `Found matching app container at "${appFolder}" but binary (*.app file) is missing.`,
-                "MALFORMED_BINARY"
+                'MALFORMED_BINARY'
               );
             }
             complete = true;
@@ -271,7 +266,7 @@ export async function getContainerPathAsync({
 
 function findBinaryFileInDirectory(folder: string) {
   // Find .app file in the app folder
-  const binaryPath = globSync("*.app", {
+  const binaryPath = globSync('*.app', {
     absolute: true,
     cwd: folder,
   })[0];
@@ -280,11 +275,7 @@ function findBinaryFileInDirectory(folder: string) {
 }
 
 async function getDirectoriesAsync(directory: string) {
-  return (
-    await fs.promises
-      .readdir(directory, { withFileTypes: true })
-      .catch(() => [])
-  )
+  return (await fs.promises.readdir(directory, { withFileTypes: true }).catch(() => []))
     .filter((device) => device.isDirectory())
     .map((device) => device.name);
 }

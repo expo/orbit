@@ -1,19 +1,17 @@
-import { InternalError } from "common-types";
-import { Platform } from "common-types/build/cli-commands";
-import { Env } from "eas-shared";
-import util from "util";
+import { InternalError } from 'common-types';
+import { Platform } from 'common-types/build/cli-commands';
+import { Env } from 'eas-shared';
+import util from 'util';
 
-export function returnLoggerMiddleware(
-  fn: (...args: any[]) => any | Promise<any>
-) {
+export function returnLoggerMiddleware(fn: (...args: any[]) => any | Promise<any>) {
   return async function (...args: any[]) {
     try {
       const result = await fn(...args);
       if (Env.isMenuBar()) {
-        console.log("---- return output ----");
-        if (typeof result === "string") {
+        console.log('---- return output ----');
+        if (typeof result === 'string') {
           console.log(result);
-        } else if (typeof result === "object" && result !== null) {
+        } else if (typeof result === 'object' && result !== null) {
           console.log(JSON.stringify(result));
         } else {
           console.log(
@@ -35,7 +33,7 @@ export function returnLoggerMiddleware(
         })
       );
     } catch (error) {
-      console.log("---- thrown error ----");
+      console.log('---- thrown error ----');
       if (error instanceof InternalError) {
         console.log(
           JSON.stringify({
@@ -62,7 +60,7 @@ export function returnLoggerMiddleware(
 }
 
 export const getPlatformFromURI = (uri: string) => {
-  if (uri.endsWith(".apk")) {
+  if (uri.endsWith('.apk')) {
     return Platform.Android;
   }
 

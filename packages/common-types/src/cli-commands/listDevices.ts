@@ -3,8 +3,8 @@ import {
   AndroidEmulator,
   AppleConnectedDevice,
   IosSimulator,
-} from "../devices";
-import { Platform } from "./index";
+} from '../devices';
+import { Platform } from './index';
 
 type Device<P> = P extends Platform.Ios
   ? IosSimulator | AppleConnectedDevice

@@ -1,10 +1,10 @@
-import { AndroidEmulator, IosSimulator } from "common-types/build/devices";
+import { AndroidEmulator, IosSimulator } from 'common-types/build/devices';
 
-import * as Emulator from "./android/emulator";
-import * as Simulator from "./ios/simulator";
-import { validateSystemRequirementsAsync } from "./ios/systemRequirements";
-import { assertExecutablesExistAsync } from "./android/systemRequirements";
-import { getAptParametersAsync } from "./android/aapt";
+import * as Emulator from './android/emulator';
+import * as Simulator from './ios/simulator';
+import { validateSystemRequirementsAsync } from './ios/systemRequirements';
+import { assertExecutablesExistAsync } from './android/systemRequirements';
+import { getAptParametersAsync } from './android/aapt';
 
 export async function runAppOnIosSimulatorAsync(
   appPath: string,

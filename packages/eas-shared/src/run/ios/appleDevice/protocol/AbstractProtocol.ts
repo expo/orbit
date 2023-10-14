@@ -5,18 +5,22 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import plist from "@expo/plist";
-import Debug from "debug";
-import { Socket } from "net";
+import plist from '@expo/plist';
+import Debug from 'debug';
+import { Socket } from 'net';
 
-import { CommandError } from "../../../../utils/errors";
-import { parsePlistBuffer } from "../../../../utils/parseBinaryPlistAsync";
+import { CommandError } from '../../../../utils/errors';
+import { parsePlistBuffer } from '../../../../utils/parseBinaryPlistAsync';
 
-const BPLIST_MAGIC = Buffer.from("bplist00");
-const debug = Debug("expo:apple-device:protocol");
+const BPLIST_MAGIC = Buffer.from('bplist00');
+const debug = Debug('expo:apple-device:protocol');
 
 export class ProtocolClientError extends CommandError {
-  constructor(msg: string, public error: Error, public protocolMessage?: any) {
+  constructor(
+    msg: string,
+    public error: Error,
+    public protocolMessage?: any
+  ) {
     super(msg);
   }
 }
@@ -24,9 +28,7 @@ export class ProtocolClientError extends CommandError {
 export type ProtocolReaderCallback = (resp: any, err?: Error) => void;
 
 export class ProtocolReaderFactory<T> {
-  constructor(
-    private ProtocolReader: new (callback: ProtocolReaderCallback) => T
-  ) {}
+  constructor(private ProtocolReader: new (callback: ProtocolReaderCallback) => T) {}
 
   create(callback: (resp: any, err?: Error) => void): T {
     return new this.ProtocolReader(callback);
@@ -97,7 +99,7 @@ export abstract class PlistProtocolReader extends ProtocolReader {
     if (BPLIST_MAGIC.compare(body, 0, 8) === 0) {
       return parsePlistBuffer(body);
     } else {
-      return plist.parse(body.toString("utf8"));
+      return plist.parse(body.toString('utf8'));
     }
   }
 }
@@ -123,7 +125,7 @@ export abstract class ProtocolClient<MessageType = any> {
     callback?: (response: ResponseType, resolve: any, reject: any) => void
   ): Promise<CallbackType | ResponseType> {
     const onError = (error: Error) => {
-      debug("Unexpected protocol socket error encountered: %s", error);
+      debug('Unexpected protocol socket error encountered: %s', error);
       throw new ProtocolClientError(
         `Unexpected protocol error encountered: ${error.message}`,
         error,
@@ -132,31 +134,29 @@ export abstract class ProtocolClient<MessageType = any> {
     };
 
     return new Promise<ResponseType | CallbackType>((resolve, reject) => {
-      const reader = this.readerFactory.create(
-        async (response: ResponseType, error?: Error) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-          if (callback) {
-            callback(
-              response,
-              (value: any) => {
-                this.socket.removeListener("data", reader.onData);
-                this.socket.removeListener("error", onError);
-                resolve(value);
-              },
-              reject
-            );
-          } else {
-            this.socket.removeListener("data", reader.onData);
-            this.socket.removeListener("error", onError);
-            resolve(response);
-          }
+      const reader = this.readerFactory.create(async (response: ResponseType, error?: Error) => {
+        if (error) {
+          reject(error);
+          return;
         }
-      );
-      this.socket.on("data", reader.onData);
-      this.socket.on("error", onError);
+        if (callback) {
+          callback(
+            response,
+            (value: any) => {
+              this.socket.removeListener('data', reader.onData);
+              this.socket.removeListener('error', onError);
+              resolve(value);
+            },
+            reject
+          );
+        } else {
+          this.socket.removeListener('data', reader.onData);
+          this.socket.removeListener('error', onError);
+          resolve(response);
+        }
+      });
+      this.socket.on('data', reader.onData);
+      this.socket.on('error', onError);
       this.writer.write(this.socket, msg);
     });
   }

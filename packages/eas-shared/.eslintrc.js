@@ -1,3 +1,3 @@
 module.exports = {
-  extends: "universe/node",
+  extends: 'universe/node',
 };
