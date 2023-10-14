@@ -2,6 +2,7 @@ import {
   Emulator,
   Simulator,
   extractAppFromLocalArchiveAsync,
+  AppleDevice,
 } from "eas-shared";
 import { Platform } from "common-types/build/cli-commands";
 
@@ -27,9 +28,25 @@ export async function installAndLaunchAppAsync(
 }
 
 async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
-  const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
-  await Simulator.installAppAsync(deviceId, appPath);
-  await Simulator.launchAppAsync(deviceId, bundleIdentifier);
+  if (
+    (await Simulator.getAvailableIosSimulatorsListAsync()).find(
+      ({ udid }) => udid === deviceId
+    )
+  ) {
+    const bundleIdentifier =
+      await Simulator.getAppBundleIdentifierAsync(appPath);
+    await Simulator.installAppAsync(deviceId, appPath);
+    await Simulator.launchAppAsync(deviceId, bundleIdentifier);
+    return;
+  }
+
+  const appId = await AppleDevice.getBundleIdentifierForBinaryAsync(appPath);
+  await AppleDevice.installOnDeviceAsync({
+    bundleIdentifier: appId,
+    bundle: appPath,
+    appDeltaDirectory: AppleDevice.getAppDeltaDirectory(appId),
+    udid: deviceId,
+  });
 }
 
 async function installAndLaunchAndroidAppAsync(

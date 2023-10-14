@@ -22,6 +22,7 @@ export default class InternalError extends Error {
 }
 
 export type InternalErrorCode =
+  | "APPLE_DEVICE_LOCKED"
   | "INVALID_VERSION"
   | "MULTIPLE_APPS_IN_TARBALL"
   | "XCODE_COMMAND_LINE_TOOLS_NOT_INSTALLED"

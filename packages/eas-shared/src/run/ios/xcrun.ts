@@ -28,6 +28,11 @@ function throwXcrunError(e: any): never {
         "sudo xcode-select -s /Applications/Xcode.app"
       )} and try again.`
     );
+  } else if (e.stderr?.match(/the device was not, or could not be, unlocked/)) {
+    throw new InternalError(
+      "APPLE_DEVICE_LOCKED",
+      "Device is currently locked."
+    );
   }
 
   if (Array.isArray(e.output)) {
