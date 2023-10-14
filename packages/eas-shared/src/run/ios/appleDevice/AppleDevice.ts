@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { AppleConnectedDevice } from "common-types/build/devices";
+import debug from "debug";
 
 import { ClientManager } from "./ClientManager";
 import { XcodeDeveloperDiskImagePrerequisite } from "./XcodeDeveloperDiskImagePrerequisite";
@@ -13,7 +14,9 @@ import { UsbmuxdClient } from "./client/UsbmuxdClient";
 import { AFC_STATUS, AFCError } from "./protocol/AFCProtocol";
 import { delayAsync } from "../../../utils/delayAsync";
 import { CommandError } from "../../../utils/errors";
+import { parseBinaryPlistAsync } from "../../../utils/parseBinaryPlistAsync";
 import { installExitHooks } from "../../../utils/exit";
+import { xcrunAsync } from "../xcrun";
 
 /** @returns a list of connected Apple devices. */
 export async function getConnectedDevicesAsync(): Promise<
@@ -115,9 +118,10 @@ export async function runOnDevice({
       await delayAsync(200);
       const debugServerClient = await launchApp(clientManager, {
         appInfo,
+        bundleId,
         detach: !waitForApp,
       });
-      if (waitForApp) {
+      if (waitForApp && debugServerClient) {
         installExitHooks(async () => {
           // causes continue() to return
           debugServerClient.halt();
@@ -191,7 +195,7 @@ async function uploadApp(
   await afcClient.uploadDirectory(appBinaryPath, destinationPath);
 }
 
-async function launchApp(
+async function launchAppWithUsbmux(
   clientManager: ClientManager,
   { appInfo, detach }: { appInfo: IPLookupResult[string]; detach?: boolean }
 ) {
@@ -228,4 +232,55 @@ async function launchApp(
     }
   }
   throw new CommandError("Unable to launch app, number of tries exceeded");
+}
+
+async function launchAppWithDeviceCtl(deviceId: string, bundleId: string) {
+  await xcrunAsync([
+    "devicectl",
+    "device",
+    "process",
+    "launch",
+    "--device",
+    deviceId,
+    bundleId,
+  ]);
+}
+
+/**
+ * iOS 17 introduces a new protocol called RemoteXPC.
+ * This is not yet implemented, so we fallback to devicectl.
+ *
+ * @see https://github.com/doronz88/pymobiledevice3/blob/master/misc/RemoteXPC.md#process-remoted
+ */
+async function launchApp(
+  clientManager: ClientManager,
+  {
+    bundleId,
+    appInfo,
+    detach,
+  }: { bundleId: string; appInfo: IPLookupResult[string]; detach?: boolean }
+) {
+  try {
+    return await launchAppWithUsbmux(clientManager, { appInfo, detach });
+  } catch (error) {
+    debug(
+      `Failed to launch app with Usbmuxd, falling back to xcrun... ${error}`
+    );
+
+    // Get the device UDID and close the connection, to allow `xcrun devicectl` to connect
+    const deviceId = clientManager.device.Properties.SerialNumber;
+    clientManager.end();
+
+    // Fallback to devicectl for iOS 17 support
+    return await launchAppWithDeviceCtl(deviceId, bundleId);
+  }
+}
+
+export async function getBundleIdentifierForBinaryAsync(
+  binaryPath: string
+): Promise<string> {
+  const builtInfoPlistPath = path.join(binaryPath, "Info.plist");
+  const { CFBundleIdentifier } =
+    await parseBinaryPlistAsync(builtInfoPlistPath);
+  return CFBundleIdentifier;
 }

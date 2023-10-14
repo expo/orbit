@@ -167,22 +167,26 @@ function Core(props: Props) {
         try {
           await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
         } catch (error) {
-          if (
-            error instanceof InternalError &&
-            error.code === 'MULTIPLE_APPS_IN_TARBALL' &&
-            error.details
-          ) {
-            const { apps } = error.details as MultipleAppsInTarballErrorDetails;
-            const selectedAppNameIndex = await MenuBarModule.showMultiOptionAlert(
-              'Multiple apps where detected in the tarball',
-              'Select which app to run:',
-              apps.map((app) => app.name)
-            );
+          if (error instanceof InternalError) {
+            if (error.code === 'MULTIPLE_APPS_IN_TARBALL' && error.details) {
+              const { apps } = error.details as MultipleAppsInTarballErrorDetails;
+              const selectedAppNameIndex = await MenuBarModule.showMultiOptionAlert(
+                'Multiple apps where detected in the tarball',
+                'Select which app to run:',
+                apps.map((app) => app.name)
+              );
 
-            await installAndLaunchAppAsync({
-              appPath: apps[selectedAppNameIndex].path,
-              deviceId,
-            });
+              await installAndLaunchAppAsync({
+                appPath: apps[selectedAppNameIndex].path,
+                deviceId,
+              });
+            }
+            if (error.code === 'APPLE_DEVICE_LOCKED') {
+              Alert.alert(
+                'Please unlock your device and open the app manually',
+                'We were unable to launch your app because the device is currently locked.'
+              );
+            }
           } else {
             throw error;
           }
