@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet } from 'react-native';
 
@@ -12,6 +11,7 @@ import { Text, View } from '../components';
 import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
 import MenuBarModule from '../modules/MenuBarModule';
+import { storage } from '../modules/Storage';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
@@ -28,9 +28,8 @@ const Onboarding = () => {
   const [platformToolsCheck, setPlatformToolsCheck] = useState<PlatformToolsCheck>({});
 
   const closeOnboarding = () => {
-    AsyncStorage.setItem(hasSeenOnboardingStorageKey, 'true').then(() => {
-      WindowsNavigator.close('Onboarding');
-    });
+    storage.set(hasSeenOnboardingStorageKey, true);
+    WindowsNavigator.close('Onboarding');
   };
 
   useEffect(() => {

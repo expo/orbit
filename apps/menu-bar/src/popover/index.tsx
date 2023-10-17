@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import Core from './Core';
 import { ErrorBoundary, FallbackProps } from './ErrorBoundary';
 import Footer from './Footer';
 import { Text, View } from '../components';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
+import { storage } from '../modules/Storage';
+import { WindowsNavigator } from '../windows';
+import { hasSeenOnboardingStorageKey } from '../windows/Onboarding';
 
 type Props = {
   isDevWindow: boolean;
@@ -12,6 +15,13 @@ type Props = {
 
 function Popover(props: Props) {
   const { height } = useSafeDisplayDimensions();
+
+  useEffect(() => {
+    const hasSeenOnboarding = storage.getBoolean(hasSeenOnboardingStorageKey);
+    if (!hasSeenOnboarding) {
+      WindowsNavigator.open('Onboarding');
+    }
+  }, []);
 
   return (
     <View
