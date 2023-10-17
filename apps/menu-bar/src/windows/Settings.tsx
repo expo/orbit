@@ -14,7 +14,6 @@ import MenuBarModule from '../modules/MenuBarModule';
 import SparkleModule from '../modules/SparkleModule';
 import {
   UserPreferences,
-  defaultUserPreferences,
   getUserPreferences,
   saveUserPreferences,
   storage,
@@ -31,8 +30,10 @@ const Settings = () => {
     Boolean(storage.getString('sessionSecret'))
   );
 
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(defaultUserPreferences);
-  const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(false);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
+  const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
+    Boolean(getUserPreferences().customSdkPath)
+  );
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
 
   const { data } = useGetCurrentUserQuery({
@@ -42,10 +43,6 @@ const Settings = () => {
   const currentUser = data?.meUserActor;
 
   useEffect(() => {
-    getUserPreferences().then((value) => {
-      setUserPreferences(value);
-      setCustomSdkPathEnabled(Boolean(value.customSdkPath));
-    });
     SparkleModule.getAutomaticallyChecksForUpdates().then(setAutomaticallyChecksForUpdates);
   }, []);
 
@@ -189,13 +186,6 @@ const Settings = () => {
         <Text size="medium" weight="semibold">
           Preferences
         </Text>
-        <Row mb="3.5" align="center" gap="1">
-          <Checkbox
-            value={userPreferences.launchOnLogin}
-            onValueChange={onPressLaunchOnLogin}
-            label="Launch on login"
-          />
-        </Row>
         <Row mb="3.5" align="center" justify="between">
           <Checkbox
             value={automaticallyChecksForUpdates}
@@ -209,6 +199,13 @@ const Settings = () => {
             onPress={SparkleModule.checkForUpdates}
           />
         </Row>
+        <Row mb="3.5" align="center" gap="1">
+          <Checkbox
+            value={userPreferences.launchOnLogin}
+            onValueChange={onPressLaunchOnLogin}
+            label="Launch on login"
+          />
+        </Row>
         <Row mb="3.5" align="center">
           <Checkbox
             value={userPreferences.emulatorWithoutAudio}
@@ -216,18 +213,18 @@ const Settings = () => {
             label="Run Android emulator without audio"
           />
         </Row>
+        <Row mb="3.5" align="center">
+          <Checkbox
+            value={userPreferences.showExperimentalFeatures}
+            onValueChange={onPressSetShowExperimentalFeatures}
+            label="Show experimental features (requires restart)"
+          />
+        </Row>
         <Row mb="2" align="center">
           <Checkbox
             value={customSdkPathEnabled}
             onValueChange={toggleCustomSdkPath}
             label="Custom Android SDK root location"
-          />
-        </Row>
-        <Row mb="2" align="center">
-          <Checkbox
-            value={userPreferences.showExperimentalFeatures}
-            onValueChange={onPressSetShowExperimentalFeatures}
-            label="Show experimental features (requires restart)"
           />
         </Row>
         <PathInput

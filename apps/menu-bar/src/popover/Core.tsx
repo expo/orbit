@@ -1,7 +1,7 @@
 import { InternalError } from 'common-types';
 import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
 import { Device } from 'common-types/build/devices';
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { Alert, SectionList } from 'react-native';
 
 import DeviceListSectionHeader from './DeviceListSectionHeader';
@@ -32,7 +32,6 @@ import {
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
   UserPreferences,
-  defaultUserPreferences,
   getUserPreferences,
   saveUserPreferences,
 } from '../modules/Storage';
@@ -48,24 +47,17 @@ enum Status {
 }
 
 const BUILDS_SECTION_HEIGHT = 88;
+const DEVICES_TO_SHOW_SECTION_HEIGHT = 22;
 
 type Props = {
   isDevWindow: boolean;
 };
 
 function Core(props: Props) {
-  const [selectedDevicesIds, setSelectedDevicesIds] = useState<SelectedDevicesIds>({
-    android: undefined,
-    ios: undefined,
-  });
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(defaultUserPreferences);
-
-  useEffect(() => {
-    getUserPreferences().then((value) => {
-      saveUserPreferences(value);
-      setUserPreferences(value);
-    });
-  }, []);
+  const [selectedDevicesIds, setSelectedDevicesIds] = useState<SelectedDevicesIds>(
+    getSelectedDevicesIds()
+  );
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
 
   const { apps } = useGetPinnedApps();
   const showProjectsSection = Boolean(apps?.length);
@@ -84,6 +76,7 @@ function Core(props: Props) {
     (displayDimensions.height || 0) -
     FOOTER_HEIGHT -
     BUILDS_SECTION_HEIGHT -
+    DEVICES_TO_SHOW_SECTION_HEIGHT -
     (showProjectsSection ? PROJECTS_SECTION_HEIGHT : 0) -
     30;
   const heightOfAllDevices =
@@ -92,10 +85,6 @@ function Core(props: Props) {
     heightOfAllDevices <= estimatedAvailableSizeForDevices || estimatedAvailableSizeForDevices <= 0
       ? heightOfAllDevices
       : estimatedAvailableSizeForDevices;
-
-  useEffect(() => {
-    getSelectedDevicesIds().then(setSelectedDevicesIds);
-  }, []);
 
   const getFirstAvailableDevice = useCallback(
     (_?: boolean) => {
@@ -131,9 +120,8 @@ function Core(props: Props) {
       ...userPreferences,
       showIosSimulators: value,
     };
-    saveUserPreferences(newPreferences).then(() => {
-      setUserPreferences(newPreferences);
-    });
+    saveUserPreferences(newPreferences);
+    setUserPreferences(newPreferences);
   };
 
   const onPressShowTvosSimulators = async (value: boolean) => {
@@ -141,9 +129,8 @@ function Core(props: Props) {
       ...userPreferences,
       showTvosSimulators: value,
     };
-    saveUserPreferences(newPreferences).then(() => {
-      setUserPreferences(newPreferences);
-    });
+    saveUserPreferences(newPreferences);
+    setUserPreferences(newPreferences);
   };
 
   const onPressShowAndroidEmulators = async (value: boolean) => {
@@ -151,9 +138,8 @@ function Core(props: Props) {
       ...userPreferences,
       showAndroidEmulators: value,
     };
-    saveUserPreferences(newPreferences).then(() => {
-      setUserPreferences(newPreferences);
-    });
+    saveUserPreferences(newPreferences);
+    setUserPreferences(newPreferences);
   };
 
   // @TODO: create another hook
@@ -320,7 +306,8 @@ function Core(props: Props) {
           </View>
         ) : null}
       </View>
-      <View px="medium" style={{ flexDirection: 'row' }}>
+      {apps?.length ? <ProjectsSection apps={apps} /> : null}
+      <View px="medium" style={{ flexDirection: 'row', height: DEVICES_TO_SHOW_SECTION_HEIGHT }}>
         <Text size="small" weight="normal">
           Devices to show:
         </Text>
@@ -342,7 +329,6 @@ function Core(props: Props) {
           label="Android"
         />
       </View>
-      {apps?.length ? <ProjectsSection apps={apps} /> : null}
       <View shrink="1" pt="tiny">
         <SectionList
           sections={sections}
