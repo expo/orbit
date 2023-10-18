@@ -23,6 +23,7 @@ import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
 import { useListDevices } from '../hooks/useListDevices';
+import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import { useFileHandler } from '../modules/FileHandlerModule';
 import FilePicker from '../modules/FilePickerModule';
@@ -59,7 +60,9 @@ function Core(props: Props) {
   );
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
 
-  const { apps } = useGetPinnedApps();
+  const { apps, refetch: refetchApps } = useGetPinnedApps();
+  usePopoverFocusEffect(refetchApps);
+
   const showProjectsSection = Boolean(apps?.length);
 
   const [status, setStatus] = useState(Status.LISTENING);

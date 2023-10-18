@@ -9,7 +9,7 @@ export type PinnedApp = AppForPinnedListFragment & {
 };
 
 export const useGetPinnedApps = () => {
-  const { data, loading } = useGetAppsForPinnedListQuery({
+  const { data, loading, refetch } = useGetAppsForPinnedListQuery({
     fetchPolicy: 'cache-and-network',
   });
 
@@ -49,6 +49,7 @@ export const useGetPinnedApps = () => {
   }, [accounts, pinnedApps]);
 
   return {
+    refetch,
     loading,
     apps,
   };
