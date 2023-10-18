@@ -12,7 +12,7 @@
 - Added drag and drop support for installing apps. ([#57](https://github.com/expo/orbit/pull/57) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added support for installing apps directly from Finder. ([#56](https://github.com/expo/orbit/pull/56) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added local HTTP server to circumvent deep-link limitations. ([#52](https://github.com/expo/orbit/pull/52), [#53](https://github.com/expo/orbit/pull/53), [#54](https://github.com/expo/orbit/pull/54), [#55](https://github.com/expo/orbit/pull/55) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Added Projects section to the menu bar. ([#46](https://github.com/expo/orbit/pull/46), [#59](https://github.com/expo/orbit/pull/59) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Added Projects section to the menu bar. ([#46](https://github.com/expo/orbit/pull/46), [#59](https://github.com/expo/orbit/pull/59), [#83](https://github.com/expo/orbit/pull/83) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added support for login to Expo. ([#41](https://github.com/expo/orbit/pull/41), [#43](https://github.com/expo/orbit/pull/43), [#44](https://github.com/expo/orbit/pull/44), [#45](https://github.com/expo/orbit/pull/45), [#62](https://github.com/expo/orbit/pull/62), [#67](https://github.com/expo/orbit/pull/67) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Focus simulator/emulator window when launching an app. ([#75](https://github.com/expo/orbit/pull/75) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for running iOS internal distribution apps on real devices. ([#79](https://github.com/expo/orbit/pull/79) by [@gabrieldonadel](https://github.com/gabrieldonadel))
