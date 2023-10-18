@@ -3,10 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { DeviceEventEmitter } from 'react-native';
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
-import { UserPreferences } from '../modules/Storage';
+import { getUserPreferences } from '../modules/Storage';
 import { getSectionsFromDeviceList } from '../utils/device';
 
-export const useListDevices = (userPreferences: UserPreferences) => {
+export const useListDevices = () => {
+  const userPreferences = getUserPreferences();
+
   const [devicesPerPlatform, setDevicesPerPlatform] = useState<DevicesPerPlatform>({
     android: { devices: [] },
     ios: { devices: [] },

@@ -16,7 +16,7 @@ import { bootDeviceAsync } from '../commands/bootDeviceAsync';
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchSnackAsync } from '../commands/launchSnackAsync';
-import { Checkbox, Spacer, Text, View } from '../components';
+import { Spacer, Text, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import ProgressIndicator from '../components/ProgressIndicator';
 import { useDeepLinking } from '../hooks/useDeepLinking';
@@ -32,9 +32,6 @@ import {
   SelectedDevicesIds,
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
-  UserPreferences,
-  getUserPreferences,
-  saveUserPreferences,
 } from '../modules/Storage';
 import { openProjectsSelectorURL } from '../utils/constants';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
@@ -48,7 +45,6 @@ enum Status {
 }
 
 const BUILDS_SECTION_HEIGHT = 88;
-const DEVICES_TO_SHOW_SECTION_HEIGHT = 22;
 
 type Props = {
   isDevWindow: boolean;
@@ -58,7 +54,6 @@ function Core(props: Props) {
   const [selectedDevicesIds, setSelectedDevicesIds] = useState<SelectedDevicesIds>(
     getSelectedDevicesIds()
   );
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
 
   const { apps, refetch: refetchApps } = useGetPinnedApps();
   usePopoverFocusEffect(refetchApps);
@@ -68,8 +63,7 @@ function Core(props: Props) {
   const [status, setStatus] = useState(Status.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const { devicesPerPlatform, numberOfDevices, sections, refetch } =
-    useListDevices(userPreferences);
+  const { devicesPerPlatform, numberOfDevices, sections, refetch } = useListDevices();
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
   const theme = useExpoTheme();
 
@@ -79,7 +73,6 @@ function Core(props: Props) {
     (displayDimensions.height || 0) -
     FOOTER_HEIGHT -
     BUILDS_SECTION_HEIGHT -
-    DEVICES_TO_SHOW_SECTION_HEIGHT -
     (showProjectsSection ? PROJECTS_SECTION_HEIGHT : 0) -
     30;
   const heightOfAllDevices =
@@ -117,33 +110,6 @@ function Core(props: Props) {
     },
     [emulatorWithoutAudio]
   );
-
-  const onPressShowIosSimulators = async (value: boolean) => {
-    const newPreferences = {
-      ...userPreferences,
-      showIosSimulators: value,
-    };
-    saveUserPreferences(newPreferences);
-    setUserPreferences(newPreferences);
-  };
-
-  const onPressShowTvosSimulators = async (value: boolean) => {
-    const newPreferences = {
-      ...userPreferences,
-      showTvosSimulators: value,
-    };
-    saveUserPreferences(newPreferences);
-    setUserPreferences(newPreferences);
-  };
-
-  const onPressShowAndroidEmulators = async (value: boolean) => {
-    const newPreferences = {
-      ...userPreferences,
-      showAndroidEmulators: value,
-    };
-    saveUserPreferences(newPreferences);
-    setUserPreferences(newPreferences);
-  };
 
   // @TODO: create another hook
   const handleSnackUrl = useCallback(
@@ -310,28 +276,6 @@ function Core(props: Props) {
         ) : null}
       </View>
       {apps?.length ? <ProjectsSection apps={apps} /> : null}
-      <View px="medium" style={{ flexDirection: 'row', height: DEVICES_TO_SHOW_SECTION_HEIGHT }}>
-        <Text size="small" weight="normal">
-          Devices to show:
-        </Text>
-        <Checkbox
-          value={userPreferences.showIosSimulators}
-          onValueChange={onPressShowIosSimulators}
-          label="iOS"
-        />
-        {userPreferences.showExperimentalFeatures ? (
-          <Checkbox
-            value={userPreferences.showTvosSimulators}
-            onValueChange={onPressShowTvosSimulators}
-            label="tvOS"
-          />
-        ) : null}
-        <Checkbox
-          value={userPreferences.showAndroidEmulators}
-          onValueChange={onPressShowAndroidEmulators}
-          label="Android"
-        />
-      </View>
       <View shrink="1" pt="tiny">
         <SectionList
           sections={sections}

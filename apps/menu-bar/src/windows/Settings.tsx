@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import { darkTheme, lightTheme } from '@expo/styleguide-native';
+import React, { Fragment, useEffect, useState } from 'react';
+import { Alert, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import { withApolloProvider } from '../api/ApolloClient';
@@ -22,7 +23,14 @@ import WebAuthenticationSessionModule, {
   WebBrowserResultType,
 } from '../modules/WebAuthenticationSessionModule';
 import { getCurrentUserDisplayName } from '../utils/helpers';
+import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
+
+const osList: { label: string; key: keyof UserPreferences; experimental?: boolean }[] = [
+  { label: 'Android', key: 'showAndroidEmulators' },
+  { label: 'iOS', key: 'showIosSimulators' },
+  { label: 'tvOS', key: 'showTvosSimulators', experimental: true },
+];
 
 const Settings = () => {
   const theme = useCurrentTheme();
@@ -129,6 +137,15 @@ const Settings = () => {
     setHasSessionSecret(false);
   };
 
+  const toggleOS = async (key: keyof UserPreferences, value: boolean) => {
+    const newPreferences = {
+      ...userPreferences,
+      [key]: value,
+    };
+    saveUserPreferences(newPreferences);
+    setUserPreferences(newPreferences);
+  };
+
   return (
     <View flex="1" px="medium" pb="medium">
       <View flex="1">
@@ -186,7 +203,7 @@ const Settings = () => {
         <Text size="medium" weight="semibold">
           Preferences
         </Text>
-        <Row mb="3.5" align="center" justify="between">
+        <Row mb="2" align="center" justify="between">
           <Checkbox
             value={automaticallyChecksForUpdates}
             onValueChange={onPressSetAutomaticallyChecksForUpdates}
@@ -194,7 +211,6 @@ const Settings = () => {
           />
           <Button
             color="primary"
-            style={{}}
             title="Check for updates"
             onPress={SparkleModule.checkForUpdates}
           />
@@ -217,30 +233,71 @@ const Settings = () => {
           <Checkbox
             value={userPreferences.showExperimentalFeatures}
             onValueChange={onPressSetShowExperimentalFeatures}
-            label="Show experimental features (requires restart)"
+            label="Show experimental features"
           />
         </Row>
-        <Row mb="2" align="center">
-          <Checkbox
-            value={customSdkPathEnabled}
-            onValueChange={toggleCustomSdkPath}
-            label="Custom Android SDK root location"
-          />
-        </Row>
-        <PathInput
-          editable={customSdkPathEnabled}
-          onChangeText={(text) => {
-            setUserPreferences((prev) => {
-              const newPreferences = { ...prev, customSdkPath: text };
-              saveUserPreferences(newPreferences);
-              MenuBarModule.setEnvVars({
-                ANDROID_HOME: text,
+        <View mb="3.5">
+          <Row mb="2" align="center">
+            <Checkbox
+              value={customSdkPathEnabled}
+              onValueChange={toggleCustomSdkPath}
+              label="Custom Android SDK root location"
+            />
+          </Row>
+          <PathInput
+            editable={customSdkPathEnabled}
+            onChangeText={(text) => {
+              setUserPreferences((prev) => {
+                const newPreferences = { ...prev, customSdkPath: text };
+                saveUserPreferences(newPreferences);
+                MenuBarModule.setEnvVars({
+                  ANDROID_HOME: text,
+                });
+                return newPreferences;
               });
-              return newPreferences;
-            });
-          }}
-          value={userPreferences.customSdkPath}
-        />
+            }}
+            value={userPreferences.customSdkPath}
+          />
+        </View>
+        <View>
+          <Text size="medium" weight="medium">
+            Platforms
+          </Text>
+          <Text size="tiny" color="secondary">
+            Only devices for the enabled platforms will be listed in the menu bar
+          </Text>
+          <View
+            mt="1.5"
+            rounded="medium"
+            style={{
+              backgroundColor:
+                theme === 'light'
+                  ? addOpacity(lightTheme.background.default, 0.6)
+                  : addOpacity(darkTheme.background.default, 0.2),
+            }}
+            border="light"
+            px="2">
+            {osList
+              .filter(
+                ({ experimental }) => !experimental || userPreferences.showExperimentalFeatures
+              )
+              .map(({ label, key }, index, list) => (
+                <Fragment key={key}>
+                  <Row align="center" justify="between">
+                    <Text size="small" weight="normal">
+                      {label}
+                    </Text>
+                    <Switch
+                      value={Boolean(userPreferences[key])}
+                      onValueChange={(value) => toggleOS(key, value)}
+                      style={styles.switch}
+                    />
+                  </Row>
+                  {list.length - 1 !== index ? <Divider /> : null}
+                </Fragment>
+              ))}
+          </View>
+        </View>
       </View>
       <Divider mb="tiny" />
       <View py="tiny">
@@ -274,5 +331,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  switch: {
+    width: 40,
+    height: 40,
   },
 });
