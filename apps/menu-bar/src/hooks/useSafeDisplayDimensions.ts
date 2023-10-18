@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { DeviceEventEmitter, Dimensions } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { Dimensions } from 'react-native';
+
+import { usePopoverFocusEffect } from './usePopoverFocus';
 
 export const SAFE_AREA_FACTOR = 0.85;
 
@@ -7,16 +9,12 @@ export const useSafeDisplayDimensions = () => {
   const [dimensions, setDimensions] = useState(Dimensions.get('screen'));
   const attemptsToGetDimensions = useRef(0);
 
-  useEffect(() => {
-    const listener = DeviceEventEmitter.addListener('popoverFocused', () => {
+  usePopoverFocusEffect(
+    useCallback(() => {
       attemptsToGetDimensions.current = 0;
       setDimensions(Dimensions.get('screen'));
-    });
-
-    return () => {
-      listener.remove();
-    };
-  }, []);
+    }, [])
+  );
 
   /**
    * Sometimes Dimensions.get('screen') returns height 0 after the computer goes to sleep

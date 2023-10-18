@@ -23,7 +23,10 @@ export const ProjectsSection = ({ apps }: Props) => {
         <SectionHeader
           label="Projects"
           accessoryRight={
-            <TouchableOpacity onPress={() => {}}>
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL('https://expo.dev/accounts/[account]/projects/[project]')
+              }>
               <Text size="tiny" color="default">
                 See all
               </Text>
