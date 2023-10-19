@@ -22,6 +22,7 @@
 - Fix some build and running issues. ([#69](https://github.com/expo/orbit/pull/69) by [@douglowder](https://github.com/douglowder))
 - Fix build using Xcode 15. ([#74](https://github.com/expo/orbit/pull/74) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix listing iOS connected devices. ([#78](https://github.com/expo/orbit/pull/78) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix SystemIconView not reacting to Appearance changes. ([#85](https://github.com/expo/orbit/pull/85) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
