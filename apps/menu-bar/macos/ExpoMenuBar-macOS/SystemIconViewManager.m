@@ -1,37 +1,36 @@
 // SystemIconViewManager.m
 #import "SystemIconViewManager.h"
-
-#import "RCTImageView+Private.h"
-
-@interface SystemIconView : RCTImageView
-
-
-@end
-
-@implementation SystemIconView
-
-
-- (void)setSystemIconName:(NSString *)systemIconName
-{
-  NSImage *systemIcon = [NSImage imageWithSystemSymbolName:systemIconName accessibilityDescription:nil];
  
-  NSImageSymbolConfiguration *config = [NSImageSymbolConfiguration configurationWithPaletteColors:@[[NSColor textColor]]];
-  systemIcon = [systemIcon imageWithSymbolConfiguration:config];
-
-  [super updateWithImage:systemIcon];
-}
-
-
-@end
 
 @implementation SystemIconViewManager
 
 RCT_EXPORT_MODULE()
 
-RCT_EXPORT_VIEW_PROPERTY(systemIconName, NSString)
+RCT_CUSTOM_VIEW_PROPERTY(tintColor, NSColor, NSImageView)
+{
+  view.contentTintColor = [RCTConvert NSColor:json];
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(systemIconName, NSString, NSImageView)
+{
+    NSString *symbolName = [RCTConvert NSString:json];
+    NSImage *systemImage = [NSImage imageWithSystemSymbolName:symbolName accessibilityDescription:nil];
+    [systemImage setTemplate:YES];
+
+    if (systemImage) {
+        view.image = systemImage;
+    } else {
+        NSLog(@"System symbol '%@' not found.", symbolName);
+    }
+}
+
 
 - (NSView *)view
 {
-  return [[SystemIconView alloc] initWithBridge:self.bridge];}
+    NSImageView *imageView = [[NSImageView alloc] init];
+    [imageView setImageScaling:NSImageScaleProportionallyUpOrDown];
+    return imageView;
+}
+
 
 @end
