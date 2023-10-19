@@ -1,3 +1,4 @@
+import { darkTheme, lightTheme } from '@expo/styleguide-native';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, TextInput as NativeTextInput } from 'react-native';
 
@@ -5,11 +6,13 @@ import { TextInput } from './Text';
 import { Row } from './View';
 import FolderIcon from '../assets/icons/folder.svg';
 import FilePicker from '../modules/FilePickerModule';
-import { useExpoTheme } from '../utils/useExpoTheme';
+import { addOpacity } from '../utils/theme';
+import { useCurrentTheme, useExpoTheme } from '../utils/useExpoTheme';
 
 const PathInput = React.forwardRef<NativeTextInput, React.ComponentProps<typeof TextInput>>(
   ({ onChangeText, editable, ...props }, forwardedRef) => {
-    const theme = useExpoTheme();
+    const theme = useCurrentTheme();
+    const expoTheme = useExpoTheme();
 
     const handleSelectFolder = async () => {
       try {
@@ -18,13 +21,17 @@ const PathInput = React.forwardRef<NativeTextInput, React.ComponentProps<typeof 
       } catch {}
     };
 
+    const backgroundColor =
+      theme === 'light'
+        ? addOpacity(lightTheme.background.default, 0.6)
+        : addOpacity(darkTheme.background.default, 0.2);
+
     return (
       <Row
-        border="default"
+        border="light"
         rounded="medium"
-        bg={editable ? 'overlay' : 'secondary'}
         align="center"
-        style={[styles.inputContainer, !editable && styles.inputDisabled]}>
+        style={[styles.inputContainer, { backgroundColor }, !editable && styles.inputDisabled]}>
         <TextInput
           shadow="input"
           {...props}
@@ -36,7 +43,7 @@ const PathInput = React.forwardRef<NativeTextInput, React.ComponentProps<typeof 
           placeholder="Android SDK root path"
         />
         <TouchableOpacity style={styles.icon} onPress={handleSelectFolder} disabled={!editable}>
-          <FolderIcon fill={theme.text.default} height={18} width={18} />
+          <FolderIcon fill={expoTheme.text.default} height={18} width={18} />
         </TouchableOpacity>
       </Row>
     );

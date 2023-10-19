@@ -14,6 +14,7 @@ import {
   borderDark,
   border,
   gap,
+  addOpacity,
 } from '../utils/theme';
 
 export const View = create(RNView, {
@@ -84,6 +85,7 @@ export const View = create(RNView, {
 
     border: {
       default: { borderColor: lightTheme.border.default, borderWidth: 1 },
+      light: { borderColor: addOpacity(lightTheme.border.default, 0.2), borderWidth: 1 },
       hairline: {
         borderColor: lightTheme.border.default,
         borderWidth: StyleSheet.hairlineWidth,
@@ -239,7 +241,7 @@ export const Divider = create(RNView, {
   base: {
     height: 1,
     backgroundColor: palette.light.gray['700'],
-    opacity: 0.4,
+    opacity: 0.1,
   },
 
   variants: {

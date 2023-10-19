@@ -232,6 +232,7 @@ export const border = {
     borderColor: PlatformColor('gridColor'),
     borderWidth: 1,
   },
+  light: { borderColor: addOpacity(lightTheme.border.default, 0.2), borderWidth: 1 },
   warning: { borderColor: lightTheme.border.warning, borderWidth: 1 },
   hairline: {
     borderColor: lightTheme.border.default,
