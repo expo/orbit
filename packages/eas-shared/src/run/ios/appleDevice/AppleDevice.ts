@@ -246,3 +246,35 @@ export async function getBundleIdentifierForBinaryAsync(binaryPath: string): Pro
   const { CFBundleIdentifier } = await parseBinaryPlistAsync(builtInfoPlistPath);
   return CFBundleIdentifier;
 }
+
+// TODO(gabrieldonadel): Figure out a way to open a deeplink using xcrun devicectl
+export async function checkIfAppIsInstalled({
+  udid,
+  bundleId,
+}: {
+  udid: string;
+  bundleId: string;
+}): Promise<IPLookupResult[keyof IPLookupResult] | undefined> {
+  const clientManager = await ClientManager.create(udid);
+  const client = await clientManager.getUsbmuxdClient();
+  client.connect(clientManager.device, 62078);
+
+  try {
+    await mountDeveloperDiskImage(clientManager);
+    const installer = await clientManager.getInstallationProxyClient();
+
+    const { [bundleId]: appInfo } = await installer.lookupApp([bundleId]);
+
+    await launchApp(clientManager, {
+      appInfo,
+      bundleId,
+      detach: false,
+    });
+
+    return appInfo;
+  } catch (error) {
+  } finally {
+    clientManager.end();
+  }
+  return undefined;
+}
