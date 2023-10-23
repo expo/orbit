@@ -22,8 +22,7 @@ export const useListDevices = () => {
     try {
       const devicesList = await listDevicesAsync({ platform: 'all' });
       const showIos = userPreferences.showIosSimulators;
-      const showTvos =
-        userPreferences.showExperimentalFeatures && userPreferences.showTvosSimulators;
+      const showTvos = userPreferences.showTvosSimulators;
       const showAndroid = userPreferences.showAndroidEmulators;
       if (!showIos) {
         devicesList.ios.devices = devicesList.ios.devices.filter(

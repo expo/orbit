@@ -26,10 +26,10 @@ import { getCurrentUserDisplayName } from '../utils/helpers';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
-const osList: { label: string; key: keyof UserPreferences; experimental?: boolean }[] = [
+const osList: { label: string; key: keyof UserPreferences }[] = [
   { label: 'Android', key: 'showAndroidEmulators' },
   { label: 'iOS', key: 'showIosSimulators' },
-  { label: 'tvOS', key: 'showTvosSimulators', experimental: true },
+  { label: 'tvOS (experimental)', key: 'showTvosSimulators' },
 ];
 
 const Settings = () => {
@@ -82,14 +82,6 @@ const Settings = () => {
   const onPressSetAutomaticallyChecksForUpdates = async (value: boolean) => {
     setAutomaticallyChecksForUpdates(value);
     SparkleModule.setAutomaticallyChecksForUpdates(value);
-  };
-
-  const onPressSetShowExperimentalFeatures = async (value: boolean) => {
-    setUserPreferences((prev) => {
-      const newPreferences = { ...prev, showExperimentalFeatures: value };
-      saveUserPreferences(newPreferences);
-      return newPreferences;
-    });
   };
 
   const onPressEmulatorWithoutAudio = async (value: boolean) => {
@@ -229,13 +221,6 @@ const Settings = () => {
             label="Run Android emulator without audio"
           />
         </Row>
-        <Row mb="3.5" align="center">
-          <Checkbox
-            value={userPreferences.showExperimentalFeatures}
-            onValueChange={onPressSetShowExperimentalFeatures}
-            label="Show experimental features"
-          />
-        </Row>
         <View mb="3.5">
           <Row mb="2" align="center">
             <Checkbox
@@ -277,25 +262,21 @@ const Settings = () => {
             }}
             border="light"
             px="2">
-            {osList
-              .filter(
-                ({ experimental }) => !experimental || userPreferences.showExperimentalFeatures
-              )
-              .map(({ label, key }, index, list) => (
-                <Fragment key={key}>
-                  <Row align="center" justify="between">
-                    <Text size="small" weight="normal">
-                      {label}
-                    </Text>
-                    <Switch
-                      value={Boolean(userPreferences[key])}
-                      onValueChange={(value) => toggleOS(key, value)}
-                      style={styles.switch}
-                    />
-                  </Row>
-                  {list.length - 1 !== index ? <Divider /> : null}
-                </Fragment>
-              ))}
+            {osList.map(({ label, key }, index, list) => (
+              <Fragment key={key}>
+                <Row align="center" justify="between">
+                  <Text size="small" weight="normal">
+                    {label}
+                  </Text>
+                  <Switch
+                    value={Boolean(userPreferences[key])}
+                    onValueChange={(value) => toggleOS(key, value)}
+                    style={styles.switch}
+                  />
+                </Row>
+                {list.length - 1 !== index ? <Divider /> : null}
+              </Fragment>
+            ))}
           </View>
         </View>
       </View>
