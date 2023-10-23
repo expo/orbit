@@ -23,8 +23,8 @@ export const defaultUserPreferences: UserPreferences = {
 
 export const getUserPreferences = () => {
   const stringValue = storage.getString(userPreferencesStorageKey);
-  const value = (stringValue ? JSON.parse(stringValue) : defaultUserPreferences) as UserPreferences;
-  return value;
+  const value = (stringValue ? JSON.parse(stringValue) : {}) as UserPreferences;
+  return { ...defaultUserPreferences, ...value };
 };
 
 export const saveUserPreferences = (preferences: UserPreferences) => {
