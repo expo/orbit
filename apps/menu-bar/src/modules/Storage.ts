@@ -6,7 +6,6 @@ export type UserPreferences = {
   launchOnLogin: boolean;
   emulatorWithoutAudio: boolean;
   customSdkPath?: string;
-  showExperimentalFeatures: boolean;
   showIosSimulators: boolean;
   showTvosSimulators: boolean;
   showAndroidEmulators: boolean;
@@ -15,7 +14,6 @@ export type UserPreferences = {
 export const defaultUserPreferences: UserPreferences = {
   launchOnLogin: false,
   emulatorWithoutAudio: false,
-  showExperimentalFeatures: false,
   showIosSimulators: true,
   showTvosSimulators: false,
   showAndroidEmulators: true,
