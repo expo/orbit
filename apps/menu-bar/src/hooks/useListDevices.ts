@@ -7,8 +7,6 @@ import { getUserPreferences } from '../modules/Storage';
 import { getSectionsFromDeviceList } from '../utils/device';
 
 export const useListDevices = () => {
-  const userPreferences = getUserPreferences();
-
   const [devicesPerPlatform, setDevicesPerPlatform] = useState<DevicesPerPlatform>({
     android: { devices: [] },
     ios: { devices: [] },
@@ -19,6 +17,7 @@ export const useListDevices = () => {
   const sections = getSectionsFromDeviceList(devicesPerPlatform);
 
   const updateDevicesList = useCallback(async () => {
+    const userPreferences = getUserPreferences();
     setLoading(true);
     try {
       const devicesList = await listDevicesAsync({ platform: 'all' });
@@ -45,7 +44,7 @@ export const useListDevices = () => {
     } finally {
       setLoading(false);
     }
-  }, [userPreferences]);
+  }, []);
 
   useEffect(() => {
     const listener = DeviceEventEmitter.addListener('popoverFocused', () => {

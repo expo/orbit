@@ -28,3 +28,12 @@ export function convertCliErrorObjectToError(errorObject: any) {
   error.stack = errorObject.stack;
   return error;
 }
+
+export enum MenuBarStatus {
+  LISTENING,
+  BOOTING_DEVICE,
+  DOWNLOADING,
+  INSTALLING_APP,
+  INSTALLING_SNACK,
+  OPENING_SNACK_PROJECT,
+}

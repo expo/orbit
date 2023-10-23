@@ -1,6 +1,6 @@
 import { MMKV } from 'react-native-mmkv';
 
-const userPreferencesStorageKey = 'user-preferences';
+export const userPreferencesStorageKey = 'user-preferences';
 
 export type UserPreferences = {
   launchOnLogin: boolean;

@@ -1,26 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
-import { DeviceEventEmitter } from 'react-native';
+import { useEffect, useState } from 'react';
 
-import { getUserPreferences } from '../modules/Storage';
+import { getUserPreferences, storage, userPreferencesStorageKey } from '../modules/Storage';
 
 export const useDeviceAudioPreferences = () => {
-  const [isEmulatorWithoutAudio, setEmulatorWithoutAudio] = useState<boolean>();
-
-  const getAudioPreferences = useCallback(async () => {
-    const { emulatorWithoutAudio } = await getUserPreferences();
-    setEmulatorWithoutAudio(emulatorWithoutAudio);
-  }, []);
+  const [isEmulatorWithoutAudio, setEmulatorWithoutAudio] = useState<boolean>(
+    getUserPreferences().emulatorWithoutAudio
+  );
 
   useEffect(() => {
-    const listener = DeviceEventEmitter.addListener('popoverFocused', () => {
-      getAudioPreferences();
+    const listener = storage.addOnValueChangedListener((key) => {
+      if (key === userPreferencesStorageKey) {
+        setEmulatorWithoutAudio(getUserPreferences().emulatorWithoutAudio);
+      }
     });
-    getAudioPreferences();
 
     return () => {
       listener.remove();
     };
-  }, [getAudioPreferences]);
+  }, []);
 
   return {
     emulatorWithoutAudio: isEmulatorWithoutAudio,

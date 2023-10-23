@@ -4,21 +4,18 @@ import { Device } from 'common-types/build/devices';
 import React, { memo, useCallback, useState } from 'react';
 import { Alert, SectionList } from 'react-native';
 
+import BuildsSection, { BUILDS_SECTION_HEIGHT } from './BuildsSection';
 import DeviceListSectionHeader from './DeviceListSectionHeader';
 import { FOOTER_HEIGHT } from './Footer';
-import Item from './Item';
 import ProjectsSection, { PROJECTS_SECTION_HEIGHT } from './ProjectsSection';
-import SectionHeader, { SECTION_HEADER_HEIGHT } from './SectionHeader';
+import { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import { withApolloProvider } from '../api/ApolloClient';
-import Earth02Icon from '../assets/icons/earth-02.svg';
-import File05Icon from '../assets/icons/file-05.svg';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchSnackAsync } from '../commands/launchSnackAsync';
-import { Spacer, Text, View } from '../components';
+import { Spacer, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
-import ProgressIndicator from '../components/ProgressIndicator';
 import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
@@ -26,25 +23,15 @@ import { useListDevices } from '../hooks/useListDevices';
 import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import { useFileHandler } from '../modules/FileHandlerModule';
-import FilePicker from '../modules/FilePickerModule';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   SelectedDevicesIds,
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
 } from '../modules/Storage';
-import { openProjectsSelectorURL } from '../utils/constants';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
+import { MenuBarStatus } from '../utils/helpers';
 import { getPlatformFromURI } from '../utils/parseUrl';
-import { useExpoTheme } from '../utils/useExpoTheme';
-
-enum Status {
-  LISTENING,
-  DOWNLOADING,
-  INSTALLING,
-}
-
-const BUILDS_SECTION_HEIGHT = 88;
 
 type Props = {
   isDevWindow: boolean;
@@ -60,12 +47,11 @@ function Core(props: Props) {
 
   const showProjectsSection = Boolean(apps?.length);
 
-  const [status, setStatus] = useState(Status.LISTENING);
+  const [status, setStatus] = useState(MenuBarStatus.LISTENING);
   const [progress, setProgress] = useState(0);
 
   const { devicesPerPlatform, numberOfDevices, sections, refetch } = useListDevices();
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
-  const theme = useExpoTheme();
 
   // TODO: Extract into a hook
   const displayDimensions = useSafeDisplayDimensions();
@@ -82,18 +68,43 @@ function Core(props: Props) {
       ? heightOfAllDevices
       : estimatedAvailableSizeForDevices;
 
-  const getFirstAvailableDevice = useCallback(
-    (_?: boolean) => {
-      return (
-        devicesPerPlatform.ios.devices.find((d) => getDeviceId(d) === selectedDevicesIds.ios) ??
-        devicesPerPlatform.android.devices.find(
-          (d) => getDeviceId(d) === selectedDevicesIds.android
-        ) ??
-        devicesPerPlatform.ios.devices?.find((d) => isVirtualDevice(d) && d.state === 'Booted')
-      );
-    },
-    [devicesPerPlatform, selectedDevicesIds]
-  );
+  const getAvailableDeviceForSnack = useCallback(() => {
+    const selectedIosDevice = devicesPerPlatform.ios.devices.find(
+      (d) => getDeviceId(d) === selectedDevicesIds.ios && isVirtualDevice(d)
+    );
+    const selectedAndroidDevice = devicesPerPlatform.android.devices.find(
+      (d) => getDeviceId(d) === selectedDevicesIds.android
+    );
+
+    if (selectedIosDevice || selectedAndroidDevice) {
+      return selectedIosDevice ?? selectedAndroidDevice;
+    }
+
+    const bootedIosDevice = devicesPerPlatform.ios.devices?.find(
+      (d) => isVirtualDevice(d) && d.state === 'Booted'
+    );
+    const bootedAndroidDevice = devicesPerPlatform.android.devices?.find(
+      (d) => isVirtualDevice(d) && d.state === 'Booted'
+    );
+
+    const fistDeviceAvailable =
+      devicesPerPlatform.ios.devices.find((d) => isVirtualDevice(d)) ??
+      devicesPerPlatform.android.devices?.[0];
+
+    const device = bootedIosDevice ?? bootedAndroidDevice ?? fistDeviceAvailable;
+
+    if (!device) {
+      Alert.alert("You don't have any device available to run Snack. Please check your setup.");
+      return;
+    }
+
+    setSelectedDevicesIds((prev) => {
+      const platform = getDeviceOS(device);
+      return { ...prev, [platform]: getDeviceId(device) };
+    });
+
+    return device;
+  }, [devicesPerPlatform, selectedDevicesIds]);
 
   const ensureDeviceIsRunning = useCallback(
     async (device: Device) => {
@@ -114,19 +125,29 @@ function Core(props: Props) {
   // @TODO: create another hook
   const handleSnackUrl = useCallback(
     async (url: string) => {
-      const device = getFirstAvailableDevice();
+      const device = getAvailableDeviceForSnack();
       if (!device) {
         return;
       }
 
-      ensureDeviceIsRunning(device);
-      await launchSnackAsync({
-        url,
-        deviceId: getDeviceId(device),
-        platform: getDeviceOS(device),
-      });
+      try {
+        setStatus(MenuBarStatus.BOOTING_DEVICE);
+        await ensureDeviceIsRunning(device);
+        setStatus(MenuBarStatus.OPENING_SNACK_PROJECT);
+        await launchSnackAsync({
+          url,
+          deviceId: getDeviceId(device),
+          platform: getDeviceOS(device),
+        });
+      } catch (error) {
+        console.log(`error: ${JSON.stringify(error)}`);
+      } finally {
+        setTimeout(() => {
+          setStatus(MenuBarStatus.LISTENING);
+        }, 2000);
+      }
     },
-    [ensureDeviceIsRunning, getFirstAvailableDevice]
+    [ensureDeviceIsRunning, getAvailableDeviceForSnack]
   );
 
   const getDeviceByPlatform = useCallback(
@@ -154,15 +175,16 @@ function Core(props: Props) {
         }
 
         if (!localFilePath) {
-          setStatus(Status.DOWNLOADING);
+          setStatus(MenuBarStatus.DOWNLOADING);
           const buildPath = await downloadBuildAsync(appURI, setProgress);
           localFilePath = buildPath;
         }
 
-        setStatus(Status.INSTALLING);
+        setStatus(MenuBarStatus.BOOTING_DEVICE);
         await ensureDeviceIsRunning(device);
         const deviceId = getDeviceId(device);
         try {
+          setStatus(MenuBarStatus.INSTALLING_APP);
           await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
         } catch (error) {
           if (error instanceof InternalError) {
@@ -199,18 +221,12 @@ function Core(props: Props) {
         }
       } finally {
         setTimeout(() => {
-          setStatus(Status.LISTENING);
+          setStatus(MenuBarStatus.LISTENING);
         }, 2000);
       }
     },
     [ensureDeviceIsRunning, getDeviceByPlatform]
   );
-
-  const openFilePicker = async () => {
-    const appPath = await FilePicker.getAppAsync();
-    MenuBarModule.openPopover();
-    await installAppFromURI(appPath);
-  };
 
   useFileHandler({ onOpenFile: installAppFromURI });
 
@@ -249,32 +265,7 @@ function Core(props: Props) {
 
   return (
     <View shrink="1">
-      <View style={{ height: BUILDS_SECTION_HEIGHT }}>
-        <View pt="2.5" pb="tiny">
-          <SectionHeader label="Builds" />
-        </View>
-        {status === Status.LISTENING ? (
-          <>
-            <Item onPress={openProjectsSelectorURL}>
-              <Earth02Icon stroke={theme.text.default} />
-              <Text>Select build from EAS…</Text>
-            </Item>
-            <Item onPress={openFilePicker}>
-              <File05Icon stroke={theme.text.default} />
-              <Text>Select build from local file…</Text>
-            </Item>
-          </>
-        ) : status === Status.DOWNLOADING || status === Status.INSTALLING ? (
-          <View px="medium">
-            <ProgressIndicator
-              progress={status === Status.DOWNLOADING ? progress : undefined}
-              indeterminate={status === Status.INSTALLING}
-              key={status}
-            />
-            <Text>{status === Status.DOWNLOADING ? 'Downloading build...' : 'Installing...'}</Text>
-          </View>
-        ) : null}
-      </View>
+      <BuildsSection status={status} installAppFromURI={installAppFromURI} progress={progress} />
       {apps?.length ? <ProjectsSection apps={apps} /> : null}
       <View shrink="1" pt="tiny">
         <SectionList

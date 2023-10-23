@@ -98,6 +98,7 @@ export interface IPLookupResult {
     Container: string;
     CFBundleIdentifier: string;
     CFBundleExecutable: string;
+    CFBundleShortVersionString: string;
     Path: string;
   };
 }
@@ -128,7 +129,13 @@ export class InstallationProxyClient extends ServiceClient<LockdownProtocolClien
   async lookupApp(
     bundleIds: string[],
     options: IPOptions = {
-      ReturnAttributes: ['Path', 'Container', 'CFBundleExecutable', 'CFBundleIdentifier'],
+      ReturnAttributes: [
+        'Path',
+        'Container',
+        'CFBundleExecutable',
+        'CFBundleIdentifier',
+        'CFBundleShortVersionString',
+      ],
       ApplicationsType: 'Any',
     }
   ) {
