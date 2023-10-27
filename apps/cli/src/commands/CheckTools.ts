@@ -16,13 +16,20 @@ type PlatformToolsResult = {
 export async function checkToolsAsync({ platform = 'all' }: CheckToolsOptions) {
   const result: { android?: PlatformToolsResult; ios?: PlatformToolsResult } = {};
 
-  if (platform === 'android' || platform === 'all') {
-    result.android = await checkAndroidToolsAsync();
-  }
-
-  if (platform === 'ios' || platform === 'all') {
-    result.ios = await checkIosToolsAsync();
-  }
+  await Promise.allSettled([
+    new Promise(async (resolve) => {
+      if (platform === 'android' || platform === 'all') {
+        result.android = await checkAndroidToolsAsync();
+      }
+      resolve(null);
+    }),
+    new Promise(async (resolve) => {
+      if (platform === 'ios' || platform === 'all') {
+        result.ios = await checkIosToolsAsync();
+      }
+      resolve(null);
+    }),
+  ]);
 
   return result;
 }
