@@ -1,3 +1,4 @@
+import { PlatformToolsCheck } from 'common-types/build/cli-commands/checkTools';
 import {
   validateAndroidSystemRequirementsAsync,
   validateIOSSystemRequirementsAsync,
@@ -8,26 +9,28 @@ type CheckToolsOptions = {
   platform: 'android' | 'ios' | 'all';
 };
 
-type PlatformToolsResult = {
-  success: boolean;
-  reason?: string;
-};
-
 export async function checkToolsAsync({ platform = 'all' }: CheckToolsOptions) {
-  const result: { android?: PlatformToolsResult; ios?: PlatformToolsResult } = {};
+  const result: PlatformToolsCheck = {};
 
-  if (platform === 'android' || platform === 'all') {
-    result.android = await checkAndroidToolsAsync();
-  }
-
-  if (platform === 'ios' || platform === 'all') {
-    result.ios = await checkIosToolsAsync();
-  }
+  await Promise.allSettled([
+    new Promise(async (resolve) => {
+      if (platform === 'android' || platform === 'all') {
+        result.android = await checkAndroidToolsAsync();
+      }
+      resolve(null);
+    }),
+    new Promise(async (resolve) => {
+      if (platform === 'ios' || platform === 'all') {
+        result.ios = await checkIosToolsAsync();
+      }
+      resolve(null);
+    }),
+  ]);
 
   return result;
 }
 
-async function checkAndroidToolsAsync(): Promise<PlatformToolsResult> {
+async function checkAndroidToolsAsync(): Promise<PlatformToolsCheck['android']> {
   try {
     await validateAndroidSystemRequirementsAsync();
     return { success: true };
@@ -36,7 +39,7 @@ async function checkAndroidToolsAsync(): Promise<PlatformToolsResult> {
   }
 }
 
-async function checkIosToolsAsync(): Promise<PlatformToolsResult> {
+async function checkIosToolsAsync(): Promise<PlatformToolsCheck['ios']> {
   try {
     await validateIOSSystemRequirementsAsync();
     return { success: true };

@@ -31,7 +31,7 @@
     if(self->_windowsMap.count == 0){
       [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     }
-    
+
     NSWindow *window = self->_windowsMap[moduleName];
     NSString *title = options[@"title"] ?: moduleName;
 
@@ -65,6 +65,7 @@
                                                 initialProperties:@{}];
       newWindow.contentView = rootView;
       [self->_windowsMap setObject:newWindow forKey:moduleName];
+      newWindow.delegate = self;
       window = newWindow;
     }else{
       NSRect contentRect = [window contentRectForFrameRect:[window frame]];
@@ -95,6 +96,20 @@
     NSWindow *window = [self->_windowsMap objectForKey:moduleName];
     [window close];
   });
+}
+
+- (void)windowDidBecomeKey:(NSNotification *)notification {
+  RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
+  NSWindow *keyWindow = notification.object;
+  
+  for (NSString *moduleName in self->_windowsMap) {
+    NSWindow *window = self->_windowsMap[moduleName];
+    if (window == keyWindow) {
+      [bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
+                        args:@[@"windowFocused", moduleName]];
+       break;
+    }
+  }
 }
 
 @end

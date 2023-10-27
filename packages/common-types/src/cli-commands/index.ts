@@ -1,4 +1,5 @@
 import * as ListDevices from './listDevices';
+import * as CheckTools from './checkTools';
 
 declare enum Platform {
   Android = 'android',
@@ -6,4 +7,4 @@ declare enum Platform {
   All = 'all',
 }
 
-export { Platform, ListDevices };
+export { Platform, ListDevices, CheckTools };
