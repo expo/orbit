@@ -35,6 +35,7 @@
 - Upgrade react-native to 0.72.5. ([#71](https://github.com/expo/orbit/pull/71) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Setup Lerna. ([#72](https://github.com/expo/orbit/pull/72) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Migrate AsyncStorage records to react-native-mmkv. ([#82](https://github.com/expo/orbit/pull/82) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Update Onboarding to rerun checks when focusing the window. ([#93](https://github.com/expo/orbit/pull/93) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 0.1.3 — 2023-09-21
 
