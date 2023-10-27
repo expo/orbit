@@ -14,6 +14,12 @@ import { CommandError } from '../../../utils/errors';
 import { parseBinaryPlistAsync } from '../../../utils/parseBinaryPlistAsync';
 import { installExitHooks } from '../../../utils/exit';
 import { xcrunAsync } from '../xcrun';
+import {
+  APP_STORE_BUNDLE_IDENTIFIER,
+  EXPO_GO_APP_STORE_URL,
+  EXPO_GO_BUNDLE_IDENTIFIER,
+} from '../constants';
+import { InternalError } from 'common-types';
 
 /** @returns a list of connected Apple devices. */
 export async function getConnectedDevicesAsync(): Promise<AppleConnectedDevice[]> {
@@ -252,7 +258,6 @@ export async function getBundleIdentifierForBinaryAsync(binaryPath: string): Pro
   return CFBundleIdentifier;
 }
 
-// TODO(gabrieldonadel): Figure out a way to open a deeplink using xcrun devicectl
 export async function checkIfAppIsInstalled({
   udid,
   bundleId,
@@ -261,20 +266,14 @@ export async function checkIfAppIsInstalled({
   bundleId: string;
 }): Promise<IPLookupResult[keyof IPLookupResult] | undefined> {
   const clientManager = await ClientManager.create(udid);
-  const client = await clientManager.getUsbmuxdClient();
-  client.connect(clientManager.device, 62078);
 
   try {
+    const client = await clientManager.getUsbmuxdClient();
+    client.connect(clientManager.device, 62078);
     await mountDeveloperDiskImage(clientManager);
     const installer = await clientManager.getInstallationProxyClient();
 
     const { [bundleId]: appInfo } = await installer.lookupApp([bundleId]);
-
-    await launchApp(clientManager, {
-      appInfo,
-      bundleId,
-      detach: false,
-    });
 
     return appInfo;
   } catch (error) {
@@ -282,4 +281,59 @@ export async function checkIfAppIsInstalled({
     clientManager.end();
   }
   return undefined;
+}
+
+export async function isExpoClientInstalledOnDeviceAsync(udid: string): Promise<boolean> {
+  const appInfo = await checkIfAppIsInstalled({
+    udid,
+    bundleId: EXPO_GO_BUNDLE_IDENTIFIER,
+  });
+
+  return Boolean(appInfo);
+}
+
+export async function ensureExpoClientInstalledAsync(udid: string) {
+  let isInstalled = await isExpoClientInstalledOnDeviceAsync(udid);
+
+  if (!isInstalled) {
+    await openExpoGoOnAppStoreAsync(udid);
+    throw new InternalError(
+      'EXPO_GO_NOT_INSTALLED_ON_DEVICE',
+      'Expo Go is not installed on device, please install it from the App Store and try again.'
+    );
+  }
+}
+
+export async function openURLAsync(options: {
+  udid: string;
+  url: string;
+  bundleId: string;
+}): Promise<void> {
+  await xcrunAsync([
+    'devicectl',
+    'device',
+    'process',
+    'launch',
+    '--device',
+    options.udid,
+    '--payload-url',
+    options.url,
+    options.bundleId,
+  ]);
+}
+
+export async function openSnackURLAsync(udid: string, url: string) {
+  return await openURLAsync({
+    bundleId: EXPO_GO_BUNDLE_IDENTIFIER,
+    udid,
+    url,
+  });
+}
+
+export async function openExpoGoOnAppStoreAsync(udid: string) {
+  return await openURLAsync({
+    udid,
+    bundleId: APP_STORE_BUNDLE_IDENTIFIER,
+    url: EXPO_GO_APP_STORE_URL,
+  });
 }
