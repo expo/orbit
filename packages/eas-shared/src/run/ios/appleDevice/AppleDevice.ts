@@ -18,29 +18,34 @@ import { xcrunAsync } from '../xcrun';
 /** @returns a list of connected Apple devices. */
 export async function getConnectedDevicesAsync(): Promise<AppleConnectedDevice[]> {
   const client = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
-  const devices = await client.getDevices();
-  client.socket.end();
+  try {
+    const devices = await client.getDevices();
 
-  return Promise.all(
-    devices.map(async (device): Promise<AppleConnectedDevice> => {
-      const socket = await new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket()).connect(
-        device,
-        62078
-      );
-      const deviceValues = await new LockdowndClient(socket).getAllValues();
-      socket.end();
-      // TODO: Add support for osType (ipad, watchos, etc)
-      return {
-        name: deviceValues.DeviceName ?? deviceValues.ProductType ?? 'unknown iOS device',
-        model: deviceValues.ProductType,
-        osVersion: deviceValues.ProductVersion,
-        deviceType: 'device',
-        connectionType: device.Properties.ConnectionType,
-        udid: device.Properties.SerialNumber,
-        osType: 'iOS',
-      };
-    })
-  );
+    return Promise.all(
+      devices.map(async (device): Promise<AppleConnectedDevice> => {
+        const socket = await new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket()).connect(
+          device,
+          62078
+        );
+        const deviceValues = await new LockdowndClient(socket).getAllValues();
+        socket.end();
+        // TODO: Add support for osType (ipad, watchos, etc)
+        return {
+          name: deviceValues.DeviceName ?? deviceValues.ProductType ?? 'unknown iOS device',
+          model: deviceValues.ProductType,
+          osVersion: deviceValues.ProductVersion,
+          deviceType: 'device',
+          connectionType: device.Properties.ConnectionType,
+          udid: device.Properties.SerialNumber,
+          osType: 'iOS',
+        };
+      })
+    );
+  } catch (error) {
+    throw error;
+  } finally {
+    client.socket.end();
+  }
 }
 
 /** Install and run an Apple app binary on a connected Apple device. */
