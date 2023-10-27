@@ -1,15 +1,15 @@
-import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
+import { CliCommands } from 'common-types';
 import { useCallback, useEffect, useState } from 'react';
 import { DeviceEventEmitter } from 'react-native';
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { getUserPreferences } from '../modules/Storage';
-import { getSectionsFromDeviceList } from '../utils/device';
+import { DevicesPerPlatform, getDeviceId, getSectionsFromDeviceList } from '../utils/device';
 
 export const useListDevices = () => {
   const [devicesPerPlatform, setDevicesPerPlatform] = useState<DevicesPerPlatform>({
-    android: { devices: [] },
-    ios: { devices: [] },
+    android: { devices: new Map() },
+    ios: { devices: new Map() },
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error>();
@@ -17,27 +17,48 @@ export const useListDevices = () => {
   const sections = getSectionsFromDeviceList(devicesPerPlatform);
 
   const updateDevicesList = useCallback(async () => {
-    const userPreferences = getUserPreferences();
+    const {
+      showIosSimulators: showIos,
+      showTvosSimulators: showTvos,
+      showAndroidEmulators: showAndroid,
+    } = getUserPreferences();
+
     setLoading(true);
     try {
       const devicesList = await listDevicesAsync({ platform: 'all' });
-      const showIos = userPreferences.showIosSimulators;
-      const showTvos = userPreferences.showTvosSimulators;
-      const showAndroid = userPreferences.showAndroidEmulators;
-      if (!showIos) {
-        devicesList.ios.devices = devicesList.ios.devices.filter(
-          (device) => device.osType !== 'iOS'
-        );
+      const iosDevices = new Map<
+        string,
+        CliCommands.ListDevices.Device<CliCommands.Platform.Ios>
+      >();
+      const androidDevices = new Map<
+        string,
+        CliCommands.ListDevices.Device<CliCommands.Platform.Android>
+      >();
+
+      if (showIos || showTvos) {
+        devicesList.ios.devices.forEach((device) => {
+          if ((device.osType === 'iOS' && showIos) || (device.osType === 'tvOS' && showTvos)) {
+            iosDevices.set(getDeviceId(device), device);
+          }
+        });
       }
-      if (!showTvos) {
-        devicesList.ios.devices = devicesList.ios.devices.filter(
-          (device) => device.osType !== 'tvOS'
-        );
+
+      if (showAndroid) {
+        devicesList.android.devices.forEach((device) => {
+          androidDevices.set(getDeviceId(device), device);
+        });
       }
-      if (!showAndroid) {
-        devicesList.android.devices = [];
-      }
-      setDevicesPerPlatform(devicesList);
+
+      setDevicesPerPlatform({
+        android: {
+          error: devicesList.android.error,
+          devices: androidDevices,
+        },
+        ios: {
+          error: devicesList.ios.error,
+          devices: iosDevices,
+        },
+      });
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -59,8 +80,7 @@ export const useListDevices = () => {
   return {
     devicesPerPlatform,
     sections,
-    numberOfDevices:
-      devicesPerPlatform.android.devices.length + devicesPerPlatform.ios.devices.length,
+    numberOfDevices: devicesPerPlatform.android.devices.size + devicesPerPlatform.ios.devices.size,
     loading,
     error,
     refetch: updateDevicesList,

@@ -1,21 +1,13 @@
-import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
+import { CliCommands } from 'common-types';
 import { Device, IosSimulator, AndroidEmulator } from 'common-types/build/devices';
 import { SectionListData } from 'react-native';
 
-export type BaseDevice = {
-  name: string;
-  osVersion?: string;
-  osType: 'iOS' | 'android';
-  state?: 'Booted' | 'Shutdown';
-} & (
-  | {
-      deviceType: 'device';
-      connectionType?: 'USB' | 'Network';
-    }
-  | {
-      deviceType: 'simulator' | 'emulator';
-    }
-);
+export type DevicesPerPlatform = {
+  [P in Exclude<CliCommands.Platform, CliCommands.Platform.All>]: {
+    devices: Map<string, CliCommands.ListDevices.Device<P>>;
+    error?: { code: string; message: string };
+  };
+};
 
 export function getDeviceOS(device: Device): 'android' | 'ios' {
   if (device.osType === 'tvOS') {
@@ -36,13 +28,13 @@ export function getSectionsFromDeviceList(
 >[] {
   const sections = [
     {
-      data: devicesPerPlatform.ios.devices,
+      data: Array.from(devicesPerPlatform.ios.devices.values()),
       key: 'ios',
       label: 'iOS',
       error: devicesPerPlatform.ios.error,
     },
     {
-      data: devicesPerPlatform.android.devices,
+      data: Array.from(devicesPerPlatform.android.devices.values()),
       key: 'android',
       label: 'Android',
       error: devicesPerPlatform.android.error,
