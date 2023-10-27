@@ -119,7 +119,6 @@ async function maybeCacheAppAsync(appPath: string, cachedAppPath?: string): Prom
 
 export async function downloadAndMaybeExtractAppAsync(
   url: string,
-  platform: AppPlatform,
   cachedAppPath?: string
 ): Promise<string> {
   const outputDir = path.join(getTmpDirectory(), uuidv4());
@@ -149,7 +148,7 @@ export async function downloadAndMaybeExtractAppAsync(
     );
     await tarExtractAsync(tmpArchivePath, outputDir);
 
-    const appPath = await getAppPathAsync(outputDir, platform === AppPlatform.Ios ? 'app' : 'apk');
+    const appPath = await getAppPathAsync(outputDir, '(apk|app|ipa)');
 
     return maybeCacheAppAsync(appPath, cachedAppPath);
   }
@@ -161,7 +160,7 @@ export async function extractAppFromLocalArchiveAsync(appArchivePath: string): P
 
   await tarExtractAsync(appArchivePath, outputDir);
 
-  return await getAppPathAsync(outputDir, '(apk|app)');
+  return await getAppPathAsync(outputDir, '(apk|app|ipa)');
 }
 
 async function getAppPathAsync(outputDir: string, applicationExtension: string): Promise<string> {

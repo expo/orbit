@@ -1,6 +1,8 @@
 import {
   getConnectedDevicesAsync,
   getBundleIdentifierForBinaryAsync,
+  openSnackURLAsync,
+  ensureExpoClientInstalledAsync,
 } from './appleDevice/AppleDevice';
 import { getAppDeltaDirectory, installOnDeviceAsync } from './appleDevice/installOnDeviceAsync';
 
@@ -9,6 +11,8 @@ const AppleDevice = {
   getAppDeltaDirectory,
   installOnDeviceAsync,
   getBundleIdentifierForBinaryAsync,
+  openSnackURLAsync,
+  ensureExpoClientInstalledAsync,
 };
 
 export default AppleDevice;

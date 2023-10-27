@@ -1,4 +1,4 @@
-import { Emulator, Simulator } from 'eas-shared';
+import { Emulator, Simulator, AppleDevice } from 'eas-shared';
 
 type launchSnackAsyncOptions = {
   platform: 'android' | 'ios';
@@ -16,9 +16,9 @@ export async function launchSnackAsync(
   const version = match ? match[1] : undefined;
 
   if (platform === 'android') {
-    launchSnackOnAndroidAsync(snackURL, deviceId, version);
+    await launchSnackOnAndroidAsync(snackURL, deviceId, version);
   } else {
-    launchSnackOnIOSAsync(snackURL, deviceId, version);
+    await launchSnackOnIOSAsync(snackURL, deviceId, version);
   }
 }
 
@@ -34,9 +34,17 @@ async function launchSnackOnAndroidAsync(snackURL: string, deviceId: string, ver
 }
 
 async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version?: string) {
-  await Simulator.ensureExpoClientInstalledAsync(deviceId, version);
-  await Simulator.openURLAsync({
-    url: snackURL,
-    udid: deviceId,
-  });
+  if (
+    (await Simulator.getAvailableIosSimulatorsListAsync()).find(({ udid }) => udid === deviceId)
+  ) {
+    await Simulator.ensureExpoClientInstalledAsync(deviceId, version);
+    await Simulator.openURLAsync({
+      url: snackURL,
+      udid: deviceId,
+    });
+    return;
+  }
+
+  await AppleDevice.ensureExpoClientInstalledAsync(deviceId);
+  await AppleDevice.openSnackURLAsync(deviceId, snackURL);
 }

@@ -69,27 +69,26 @@ function Core(props: Props) {
       : estimatedAvailableSizeForDevices;
 
   const getAvailableDeviceForSnack = useCallback(() => {
-    const selectedIosDevice = devicesPerPlatform.ios.devices.find(
-      (d) => getDeviceId(d) === selectedDevicesIds.ios && isVirtualDevice(d)
-    );
-    const selectedAndroidDevice = devicesPerPlatform.android.devices.find(
-      (d) => getDeviceId(d) === selectedDevicesIds.android
+    const selectedIosDevice = devicesPerPlatform.ios.devices.get(selectedDevicesIds.ios ?? '');
+    const selectedAndroidDevice = devicesPerPlatform.android.devices.get(
+      selectedDevicesIds.android ?? ''
     );
 
     if (selectedIosDevice || selectedAndroidDevice) {
       return selectedIosDevice ?? selectedAndroidDevice;
     }
 
-    const bootedIosDevice = devicesPerPlatform.ios.devices?.find(
+    const iosDevicesArray = Array.from(devicesPerPlatform.ios.devices.values());
+    const androidDevicesArray = Array.from(devicesPerPlatform.android.devices.values());
+
+    const bootedIosDevice = iosDevicesArray?.find(
       (d) => isVirtualDevice(d) && d.state === 'Booted'
     );
-    const bootedAndroidDevice = devicesPerPlatform.android.devices?.find(
+    const bootedAndroidDevice = androidDevicesArray?.find(
       (d) => isVirtualDevice(d) && d.state === 'Booted'
     );
 
-    const fistDeviceAvailable =
-      devicesPerPlatform.ios.devices.find((d) => isVirtualDevice(d)) ??
-      devicesPerPlatform.android.devices?.[0];
+    const fistDeviceAvailable = iosDevicesArray?.[0] ?? androidDevicesArray?.[0];
 
     const device = bootedIosDevice ?? bootedAndroidDevice ?? fistDeviceAvailable;
 
@@ -140,6 +139,9 @@ function Core(props: Props) {
           platform: getDeviceOS(device),
         });
       } catch (error) {
+        if (error instanceof InternalError) {
+          Alert.alert('Something went wrong', error.message);
+        }
         console.log(`error: ${JSON.stringify(error)}`);
       } finally {
         setTimeout(() => {
@@ -152,11 +154,14 @@ function Core(props: Props) {
 
   const getDeviceByPlatform = useCallback(
     (platform: 'android' | 'ios') => {
-      const devices: Device[] = devicesPerPlatform[platform].devices;
-      return (
-        devices.find((d) => getDeviceId(d) === selectedDevicesIds[platform]) ??
-        devices.find((d) => getDeviceOS(d) === platform)
-      );
+      const selectedDevicesId = selectedDevicesIds[platform];
+      if (selectedDevicesId) {
+        return devicesPerPlatform[platform].devices.get(selectedDevicesId);
+      }
+
+      const [firstDevice] = devicesPerPlatform[platform].devices.values();
+
+      return firstDevice;
     },
     [devicesPerPlatform, selectedDevicesIds]
   );

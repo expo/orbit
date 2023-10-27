@@ -14,8 +14,8 @@ import UserSettings from '../../userSettings';
 import { delayAsync } from '../../utils/delayAsync';
 import { sleepAsync } from '../../utils/promise';
 import * as Versions from '../../versions';
+import { EXPO_GO_BUNDLE_IDENTIFIER } from './constants';
 
-const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.Exponent';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
 export async function getFirstBootedIosSimulatorAsync(): Promise<IosSimulator | undefined> {

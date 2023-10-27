@@ -17,6 +17,7 @@
 - Added support for login to Expo. ([#41](https://github.com/expo/orbit/pull/41), [#43](https://github.com/expo/orbit/pull/43), [#44](https://github.com/expo/orbit/pull/44), [#45](https://github.com/expo/orbit/pull/45), [#62](https://github.com/expo/orbit/pull/62), [#67](https://github.com/expo/orbit/pull/67), [#89](https://github.com/expo/orbit/pull/89) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Focus simulator/emulator window when launching an app. ([#75](https://github.com/expo/orbit/pull/75) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for running iOS internal distribution apps on real devices. ([#79](https://github.com/expo/orbit/pull/79) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add support for opening snack projects on real iOS devices. ([#92](https://github.com/expo/orbit/pull/92) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 

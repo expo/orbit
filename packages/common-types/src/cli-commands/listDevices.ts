@@ -6,7 +6,7 @@ import {
 } from '../devices';
 import { Platform } from './index';
 
-type Device<P> = P extends Platform.Ios
+export type Device<P> = P extends Platform.Ios
   ? IosSimulator | AppleConnectedDevice
   : P extends Platform.Android
   ? AndroidConnectedDevice | AndroidEmulator
