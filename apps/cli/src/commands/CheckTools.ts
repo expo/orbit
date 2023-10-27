@@ -1,3 +1,4 @@
+import { PlatformToolsCheck } from 'common-types/build/cli-commands/checkTools';
 import {
   validateAndroidSystemRequirementsAsync,
   validateIOSSystemRequirementsAsync,
@@ -8,13 +9,8 @@ type CheckToolsOptions = {
   platform: 'android' | 'ios' | 'all';
 };
 
-type PlatformToolsResult = {
-  success: boolean;
-  reason?: string;
-};
-
 export async function checkToolsAsync({ platform = 'all' }: CheckToolsOptions) {
-  const result: { android?: PlatformToolsResult; ios?: PlatformToolsResult } = {};
+  const result: PlatformToolsCheck = {};
 
   await Promise.allSettled([
     new Promise(async (resolve) => {
@@ -34,7 +30,7 @@ export async function checkToolsAsync({ platform = 'all' }: CheckToolsOptions) {
   return result;
 }
 
-async function checkAndroidToolsAsync(): Promise<PlatformToolsResult> {
+async function checkAndroidToolsAsync(): Promise<PlatformToolsCheck['android']> {
   try {
     await validateAndroidSystemRequirementsAsync();
     return { success: true };
@@ -43,7 +39,7 @@ async function checkAndroidToolsAsync(): Promise<PlatformToolsResult> {
   }
 }
 
-async function checkIosToolsAsync(): Promise<PlatformToolsResult> {
+async function checkIosToolsAsync(): Promise<PlatformToolsCheck['ios']> {
   try {
     await validateIOSSystemRequirementsAsync();
     return { success: true };

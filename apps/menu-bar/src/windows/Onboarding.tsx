@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { CliCommands } from 'common-types';
+import { useCallback, useRef, useState } from 'react';
 import { Image, ScrollView, StyleSheet } from 'react-native';
 
 import { WindowsNavigator } from './index';
@@ -10,34 +11,49 @@ import Xcode from '../assets/images/xcode.png';
 import { Text, View } from '../components';
 import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
+import { useWindowFocusEffect } from '../hooks/useWindowFocus';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
 
-type PlatformToolsCheck = {
-  android?: { success: boolean; reason?: string };
-  ios?: { success: boolean; reason?: string };
-};
+enum Status {
+  IDLE,
+  RUNNING,
+  SUCCESS,
+  FAILED,
+}
 
 const WINDOW_TITLE_HEIGHT = 28;
 
 const Onboarding = () => {
   const theme = useExpoTheme();
-  const [platformToolsCheck, setPlatformToolsCheck] = useState<PlatformToolsCheck>({});
+  const [platformToolsCheck, setPlatformToolsCheck] =
+    useState<CliCommands.CheckTools.PlatformToolsCheck>({});
+  const checkStatus = useRef<Status>(Status.IDLE);
 
   const closeOnboarding = () => {
     storage.set(hasSeenOnboardingStorageKey, true);
     WindowsNavigator.close('Onboarding');
   };
 
-  useEffect(() => {
-    MenuBarModule.runCli('check-tools', []).then((output) => {
+  useWindowFocusEffect(
+    useCallback(async () => {
+      if (checkStatus.current === Status.SUCCESS) {
+        return;
+      }
+
+      setPlatformToolsCheck({});
+      checkStatus.current = Status.RUNNING;
+      const output = await MenuBarModule.runCli('check-tools', []);
       // eslint-disable-next-line no-eval
-      setPlatformToolsCheck(eval(`(${output})`));
-    });
-  }, []);
+      const result: CliCommands.CheckTools.PlatformToolsCheck = eval(`(${output})`);
+      checkStatus.current =
+        result?.android?.success && result?.ios?.success ? Status.SUCCESS : Status.FAILED;
+      setPlatformToolsCheck(result);
+    }, [])
+  );
 
   return (
     <View flex="1" bg="default">
