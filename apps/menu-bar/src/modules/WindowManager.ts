@@ -1,5 +1,6 @@
 import { AppRegistry, NativeModule, NativeModules } from 'react-native';
 
+import { withWindowProvider } from '../providers/WindowProdiver';
 import { withThemeProvider } from '../utils/useExpoTheme';
 
 type WindowsManagerType = NativeModule & {
@@ -43,7 +44,9 @@ type WindowsConfig = {
 
 export function createWindowsNavigator<T extends WindowsConfig>(config: T) {
   Object.entries(config).forEach(([key, value]) => {
-    AppRegistry.registerComponent(key, () => withThemeProvider(value.component));
+    AppRegistry.registerComponent(key, () =>
+      withWindowProvider(withThemeProvider(value.component), key)
+    );
   });
 
   return {

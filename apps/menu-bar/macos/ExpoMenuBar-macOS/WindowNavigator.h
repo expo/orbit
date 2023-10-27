@@ -1,5 +1,5 @@
 
-@interface WindowNavigator : NSObject
+@interface WindowNavigator : NSObject <NSWindowDelegate>
 
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NSWindow *> *windowsMap;
 
