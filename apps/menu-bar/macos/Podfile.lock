@@ -433,7 +433,7 @@ PODS:
     - React-perflogger (= 0.72.1)
   - RNCAsyncStorage (1.19.0):
     - React-Core
-  - RNCClipboard (1.11.2):
+  - RNCClipboard (1.12.1):
     - React-Core
   - RNSVG (13.14.0):
     - React-Core
@@ -596,12 +596,12 @@ SPEC CHECKSUMS:
   FBLazyVector: c1b10226447c9e666e3febea613f47a0ea8a7d0b
   FBReactNativeSpec: c88d89502b50ab72e449044bbf4662a9e867dbe9
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  glog: 6df0a3d6e2750a50609471fd1a01fd2948d405b5
-  hermes-engine: 9df83855a0fd15ef8eb61694652bae636b0c466e
+  glog: 3c476bdc6486bdf33416f24a12624f1d1a3fe0cc
+  hermes-engine: 353c47089f198a442f3dec7ca4acf051eb30a15b
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   MMKV: 9c6c3fa4ddd849f28c7b9a5c9d23aab84f14ee35
   MMKVCore: 9bb7440b170181ac5b81f542ac258103542e693d
-  RCT-Folly: bf7b4921a91932051ebf1c5c2d297154b1fa3c8c
+  RCT-Folly: 11f5241db0b3af773c763b0577f39cce78545730
   RCTRequired: e6862daa1f08a21f5ae0a65370678fde9f6997b0
   RCTTypeSafety: 8b25b7061c08d6a5e2e9fed58553923cc36856ac
   React: e0d2fbb2992d869f81f3b18d5756dd692a200733
@@ -635,13 +635,13 @@ SPEC CHECKSUMS:
   React-utils: d3c1b229649baa9b4ef99a17a92f962a5664e466
   ReactCommon: 4fc7741bd50d6b1a5cc6e702e9f59e08e52206b5
   RNCAsyncStorage: 4b98ac3c64efa4e35c1197cb0c5ca5e9f5d4c666
-  RNCClipboard: 3f0451a8100393908bea5c5c5b16f96d45f30bfc
+  RNCClipboard: d77213bfa269013bf4b857b7a9ca37ee062d8ef1
   RNSVG: d00c8f91c3cbf6d476451313a18f04d220d4f396
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Sparkle: 913cef92f73e08d0ae47a36ee20e523913e5f9e2
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
   Yoga: b01d8e70b1bc0e88b40040a7d9c50fdadb1054b9
 
-PODFILE CHECKSUM: 3ee64bd16ae5677f1957974b6e7eb9189851163d
+PODFILE CHECKSUM: 7121a3341f970d873213debac8c4be7d3308b430
 
 COCOAPODS: 1.13.0

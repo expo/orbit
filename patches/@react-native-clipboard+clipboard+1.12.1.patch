@@ -1,0 +1,17 @@
+diff --git a/node_modules/@react-native-clipboard/clipboard/macos/RNCClipboard.m b/node_modules/@react-native-clipboard/clipboard/macos/RNCClipboard.m
+index 9e729f8..488763f 100644
+--- a/node_modules/@react-native-clipboard/clipboard/macos/RNCClipboard.m
++++ b/node_modules/@react-native-clipboard/clipboard/macos/RNCClipboard.m
+@@ -31,4 +31,12 @@ - (dispatch_queue_t)methodQueue
+   resolve(([pasteboard stringForType:NSPasteboardTypeString] ? : @""));
+ }
+ 
++RCT_EXPORT_METHOD(addListener : (NSString *)eventName) {
++  // Keep: Required for RN built in Event Emitter Calls.
++}
++
++RCT_EXPORT_METHOD(removeListeners : (NSInteger)count) {
++  // Keep: Required for RN built in Event Emitter Calls.
++}
++
+ @end
