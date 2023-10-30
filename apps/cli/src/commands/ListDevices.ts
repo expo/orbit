@@ -1,7 +1,6 @@
 import { AppleDevice, Emulator, Simulator } from 'eas-shared';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
-import { Platform } from 'common-types/build/cli-commands';
-import { InternalError } from 'common-types';
+import { InternalError, Platform } from 'common-types';
 
 export async function listDevicesAsync<P extends Platform>({
   platform,
@@ -13,7 +12,7 @@ export async function listDevicesAsync<P extends Platform>({
     ios: { devices: [], error: undefined },
   };
 
-  if (platform === 'ios' || platform === 'all') {
+  if (platform === Platform.Ios || platform === Platform.All) {
     try {
       result.ios.devices = result.ios.devices.concat(
         await Simulator.getAvailableIosSimulatorsListAsync()
@@ -36,7 +35,7 @@ export async function listDevicesAsync<P extends Platform>({
     }
   }
 
-  if (platform === Platform.Android || platform === 'all') {
+  if (platform === Platform.Android || platform === Platform.All) {
     try {
       const runningDevices = await Emulator.getRunningDevicesAsync();
 

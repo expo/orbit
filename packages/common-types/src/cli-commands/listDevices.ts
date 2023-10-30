@@ -4,7 +4,7 @@ import {
   AppleConnectedDevice,
   IosSimulator,
 } from '../devices';
-import { Platform } from './index';
+import { Platform } from './platform';
 
 export type Device<P> = P extends Platform.Ios
   ? IosSimulator | AppleConnectedDevice
