@@ -1,14 +1,15 @@
 import React, { memo, PropsWithChildren, useState } from 'react';
-import { Pressable, PressableProps, StyleSheet } from 'react-native';
+import { Pressable, PressableProps, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
 import { Row, Text } from '../components';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
 type Props = PropsWithChildren<PressableProps> & {
   shortcut?: string;
+  style?: StyleProp<ViewStyle>;
 };
 
-const Item = ({ children, onPress, shortcut }: Props) => {
+const Item = ({ children, onPress, shortcut, style }: Props) => {
   const [isHovered, setHovered] = useState(false);
   const theme = useCurrentTheme();
 
@@ -19,6 +20,7 @@ const Item = ({ children, onPress, shortcut }: Props) => {
       onPress={onPress}
       style={[
         styles.itemContainer,
+        style,
         isHovered && {
           backgroundColor: theme === 'dark' ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.12)',
         },
