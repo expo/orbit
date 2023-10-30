@@ -1,4 +1,5 @@
-import { PlatformToolsCheck } from 'common-types/build/cli-commands/checkTools';
+import { InternalError } from 'common-types';
+import { FailureReason, PlatformToolsCheck } from 'common-types/build/cli-commands/checkTools';
 import {
   validateAndroidSystemRequirementsAsync,
   validateIOSSystemRequirementsAsync,
@@ -35,7 +36,12 @@ async function checkAndroidToolsAsync(): Promise<PlatformToolsCheck['android']> 
     await validateAndroidSystemRequirementsAsync();
     return { success: true };
   } catch (error: any) {
-    return { reason: stripAnsi(error.message), success: false };
+    const reason: FailureReason = { message: stripAnsi(error.message) };
+    if (error instanceof InternalError && typeof error?.details?.command === 'string') {
+      reason.command = error.details.command;
+    }
+
+    return { reason, success: false };
   }
 }
 
@@ -44,6 +50,11 @@ async function checkIosToolsAsync(): Promise<PlatformToolsCheck['ios']> {
     await validateIOSSystemRequirementsAsync();
     return { success: true };
   } catch (error: any) {
-    return { reason: stripAnsi(error.message), success: false };
+    const reason: FailureReason = { message: stripAnsi(error.message) };
+    if (error instanceof InternalError && typeof error?.details?.command === 'string') {
+      reason.command = error.details.command;
+    }
+
+    return { reason, success: false };
   }
 }

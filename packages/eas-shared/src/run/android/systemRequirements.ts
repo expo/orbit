@@ -4,12 +4,14 @@ import chalk from 'chalk';
 import { getAaptExecutableAsync } from './aapt';
 import { getAdbExecutableAsync } from './adb';
 import { getEmulatorExecutableAsync } from './emulator';
+import { InternalError } from 'common-types';
 
 async function assertExecutableExistsAsync(executable: string, options?: string[]): Promise<void> {
   try {
     await spawnAsync(executable, options);
   } catch (err: any) {
-    throw new Error(
+    throw new InternalError(
+      'TOOL_CHECK_FAILED',
       `${chalk.bold(
         executable
       )} executable doesn't seem to work. Please make sure Android Studio is installed on your device and ${chalk.bold(

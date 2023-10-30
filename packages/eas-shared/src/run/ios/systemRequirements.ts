@@ -43,8 +43,10 @@ async function ensureXcrunInstalledAsync(): Promise<void> {
 async function assertSimulatorAppInstalledAsync(): Promise<void> {
   const simulatorAppId = await getSimulatorAppIdAsync();
   if (!simulatorAppId) {
-    throw new Error(
-      `Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run 'sudo xcode-select -s /Applications/Xcode.app'`
+    throw new InternalError(
+      'TOOL_CHECK_FAILED',
+      `Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run 'sudo xcode-select -s /Applications/Xcode.app'`,
+      { command: 'sudo xcode-select -s /Applications/Xcode.app' }
     );
   }
 
@@ -62,8 +64,12 @@ async function assertSimulatorAppInstalledAsync(): Promise<void> {
     await spawnAsync('xcrun', ['simctl', 'help']);
   } catch (error: any) {
     Log.warn(`Unable to run simctl:\n${error.toString()}`);
-    throw new Error(
-      'xcrun is not configured correctly. Ensure `sudo xcode-select --reset` works before running this command again.'
+    throw new InternalError(
+      'TOOL_CHECK_FAILED',
+      'xcrun is not configured correctly. Ensure `sudo xcode-select --reset` works before running this command again.',
+      {
+        command: 'sudo xcode-select --reset',
+      }
     );
   }
 }

@@ -1,7 +1,10 @@
 import { spacing } from '@expo/styleguide-native';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { CliCommands } from 'common-types';
 import {
   ActivityIndicator,
   Alert,
+  AlertButton,
   Image,
   ImageSourcePropType,
   StyleSheet,
@@ -13,16 +16,28 @@ import { View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CheckIcon from '../assets/icons/check-circle.svg';
 
-interface Props {
+type Props = {
   title: string;
   description: string;
-  reason?: string;
-  success?: boolean;
   icon: ImageSourcePropType;
-}
+} & CliCommands.CheckTools.PlatformToolsCheck[keyof CliCommands.CheckTools.PlatformToolsCheck];
 
 const CommandCheckItem = ({ description, icon, title, reason, success }: Props) => {
-  const showWarningAlert = () => Alert.alert('Something went wrong', reason);
+  const showWarningAlert = () => {
+    const buttons: AlertButton[] = [{ text: 'OK', style: 'default' }];
+    const command = reason?.command;
+    if (command) {
+      buttons.unshift({
+        text: 'Copy command',
+        style: 'default',
+        onPress: () => {
+          Clipboard.setString(command);
+        },
+      });
+    }
+
+    Alert.alert('Something went wrong', reason?.message, buttons);
+  };
 
   return (
     <View
@@ -42,7 +57,7 @@ const CommandCheckItem = ({ description, icon, title, reason, success }: Props) 
         {reason ? (
           <TouchableOpacity onPress={showWarningAlert}>
             <Text size="tiny" color="warning" numberOfLines={2}>
-              {reason}
+              {reason.message}
             </Text>
           </TouchableOpacity>
         ) : null}
