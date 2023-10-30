@@ -1,10 +1,7 @@
-import chalk from 'chalk';
-import { Ora } from 'ora';
 import os from 'os';
 import path from 'path';
 
 import * as AppleDevice from './AppleDevice';
-import { ora } from '../../../ora';
 import { ensureDirectory } from '../../../utils/dir';
 import { InternalError } from 'common-types';
 
@@ -28,7 +25,6 @@ export async function installOnDeviceAsync(props: {
   udid: string;
 }): Promise<void> {
   const { bundle, bundleIdentifier, appDeltaDirectory, udid } = props;
-  let indicator: Ora | undefined;
 
   try {
     // TODO: Connect for logs
@@ -38,28 +34,11 @@ export async function installOnDeviceAsync(props: {
       bundleId: bundleIdentifier,
       waitForApp: false,
       deltaPath: appDeltaDirectory,
-      onProgress({
-        status,
-        isComplete,
-        progress,
-      }: {
-        status: string;
-        isComplete: boolean;
-        progress: number;
-      }) {
-        if (!indicator) {
-          indicator = ora(status).start();
-        }
-        indicator.text = `${chalk.bold(status)} ${progress}%`;
-        if (isComplete) {
-          indicator.succeed();
-        }
+      onProgress({ status, progress }: { status: string; isComplete: boolean; progress: number }) {
+        console.log(`status: ${status} ${progress}%`);
       },
     });
   } catch (error: any) {
-    if (indicator) {
-      indicator.fail();
-    }
     if (error.code === 'APPLE_DEVICE_LOCKED') {
       // Get the app name from the binary path.
       const appName = path.basename(bundle).split('.')[0] ?? 'app';
@@ -67,7 +46,15 @@ export async function installOnDeviceAsync(props: {
         'APPLE_DEVICE_LOCKED',
         `Unable to launch ${appName} because the device is locked. Please launch the app manually.`
       );
+    } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
+      // Get the app name from the binary path.
+      const appName = path.basename(bundle).split('.')[0] ?? 'app';
+      throw new InternalError(
+        'APPLE_APP_VERIFICATION_FAILED',
+        `Failed to verify code signature of ${appName}`
+      );
     }
+
     throw error;
   }
 }

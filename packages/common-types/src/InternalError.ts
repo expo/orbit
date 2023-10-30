@@ -22,6 +22,7 @@ export default class InternalError extends Error {
 }
 
 export type InternalErrorCode =
+  | 'APPLE_APP_VERIFICATION_FAILED'
   | 'APPLE_DEVICE_LOCKED'
   | 'EXPO_GO_NOT_INSTALLED_ON_DEVICE'
   | 'INVALID_VERSION'

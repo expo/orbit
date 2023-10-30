@@ -76,11 +76,11 @@
 
 - (void)setProgress:(double)progress
 {
+  [self setDoubleValue:progress]; 
   if(self.indeterminate){
     [super setIndeterminate:NO];
   }
 
-  [self setDoubleValue:progress];
   [self setNeedsDisplay:YES];
 }
 
