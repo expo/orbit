@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { AppForPinnedListFragment, useGetAppsForPinnedListQuery } from '../generated/graphql';
 
-const minNumberOfApps = 3;
+export const minNumberOfApps = 3;
 
 export type PinnedApp = AppForPinnedListFragment & {
   isPinned: boolean;
