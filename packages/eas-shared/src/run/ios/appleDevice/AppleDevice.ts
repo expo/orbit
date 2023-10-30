@@ -151,6 +151,7 @@ export async function runOnDevice({
 
 /** Mount the developer disk image for Xcode. */
 async function mountDeveloperDiskImage(clientManager: ClientManager) {
+  console.log(`Mounting the developer disk image for Xcode....\n`);
   const imageMounter = await clientManager.getMobileImageMounterClient();
   // Check if already mounted. If not, mount.
   if (!(await imageMounter.lookupImage()).ImageSignature) {
@@ -170,6 +171,7 @@ async function uploadApp(
   clientManager: ClientManager,
   { appBinaryPath, destinationPath }: { appBinaryPath: string; destinationPath: string }
 ) {
+  console.log('Uploading App...\n');
   const afcClient = await clientManager.getAFCClient();
   try {
     await afcClient.getFileInfo('PublicStaging');

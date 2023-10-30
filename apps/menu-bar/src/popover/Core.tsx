@@ -161,6 +161,7 @@ function Core(props: Props) {
 
       const [firstDevice] = devicesPerPlatform[platform].devices.values();
 
+      setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
       return firstDevice;
     },
     [devicesPerPlatform, selectedDevicesIds]
@@ -168,17 +169,18 @@ function Core(props: Props) {
 
   const installAppFromURI = useCallback(
     async (appURI: string) => {
-      try {
-        let localFilePath = appURI.startsWith('/') ? appURI : undefined;
-        const platform = getPlatformFromURI(appURI);
-        const device = getDeviceByPlatform(platform);
-        if (!device) {
-          Alert.alert(
-            `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`
-          );
-          return;
-        }
+      let localFilePath = appURI.startsWith('/') ? appURI : undefined;
+      const platform = getPlatformFromURI(appURI);
+      const device = getDeviceByPlatform(platform);
+      if (!device) {
+        Alert.alert(
+          `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`
+        );
+        return;
+      }
+      const deviceId = getDeviceId(device);
 
+      try {
         if (!localFilePath) {
           setStatus(MenuBarStatus.DOWNLOADING);
           const buildPath = await downloadBuildAsync(appURI, setProgress);
@@ -187,29 +189,21 @@ function Core(props: Props) {
 
         setStatus(MenuBarStatus.BOOTING_DEVICE);
         await ensureDeviceIsRunning(device);
-        const deviceId = getDeviceId(device);
+
         try {
           setStatus(MenuBarStatus.INSTALLING_APP);
           await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
         } catch (error) {
           if (error instanceof InternalError) {
-            if (error.code === 'MULTIPLE_APPS_IN_TARBALL' && error.details) {
-              const { apps } = error.details as MultipleAppsInTarballErrorDetails;
-              const selectedAppNameIndex = await MenuBarModule.showMultiOptionAlert(
-                'Multiple apps where detected in the tarball',
-                'Select which app to run:',
-                apps.map((app) => app.name)
-              );
-
-              await installAndLaunchAppAsync({
-                appPath: apps[selectedAppNameIndex].path,
-                deviceId,
-              });
-            }
             if (error.code === 'APPLE_DEVICE_LOCKED') {
               Alert.alert(
                 'Please unlock your device and open the app manually',
                 'We were unable to launch your app because the device is currently locked.'
+              );
+            } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
+              Alert.alert(
+                error.message,
+                'A valid provisioning profile for this executable was not found. Is this an internal distribution build?'
               );
             }
           } else {
@@ -217,7 +211,20 @@ function Core(props: Props) {
           }
         }
       } catch (error) {
-        if (error instanceof Error) {
+        if (
+          error instanceof InternalError &&
+          error.code === 'MULTIPLE_APPS_IN_TARBALL' &&
+          error.details
+        ) {
+          const { apps } = error.details as MultipleAppsInTarballErrorDetails;
+          const selectedAppNameIndex = await MenuBarModule.showMultiOptionAlert(
+            'Multiple apps where detected in the tarball',
+            'Select which app to run:',
+            apps.map((app) => app.name)
+          );
+
+          await installAppFromURI(apps[selectedAppNameIndex].path);
+        } else if (error instanceof Error) {
           if (__DEV__) {
             console.log('Something went wrong while installing the app.', error.message);
             console.log(`Stack: ${error.stack}`);

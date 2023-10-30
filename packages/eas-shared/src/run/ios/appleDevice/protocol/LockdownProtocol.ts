@@ -31,6 +31,7 @@ export interface LockdownErrorResponse {
   Error: string;
   Request?: string;
   Service?: string;
+  ErrorDescription?: string;
 }
 
 export interface LockdownRequest {
@@ -82,6 +83,10 @@ export class LockdownProtocolReader extends PlistProtocolReader {
             '\nTry reconnecting your device. You can also debug service logs with `export DEBUG=expo:xdl:ios:*`';
         }
         throw new CommandError('APPLE_DEVICE_LOCKDOWN', errorMessage);
+      }
+
+      if (resp.Error === 'ApplicationVerificationFailed') {
+        throw new CommandError('APPLE_APP_VERIFICATION_FAILED', resp.ErrorDescription);
       }
 
       throw new CommandError('APPLE_DEVICE_LOCKDOWN', resp.Error);
