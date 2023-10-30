@@ -24,9 +24,7 @@ export const ProjectsSection = ({ apps }: Props) => {
         label="Projects"
         accessoryRight={
           <TouchableOpacity
-            onPress={() =>
-              Linking.openURL('https://expo.dev/accounts/[account]/projects/[project]')
-            }>
+            onPress={() => Linking.openURL('https://expo.dev/accounts/[account]/projects/')}>
             <Text size="tiny" color="default">
               See all
             </Text>
