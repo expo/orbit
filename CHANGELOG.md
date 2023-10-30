@@ -7,7 +7,7 @@
 ### 🎉 New features
 
 - Add ability to show/hide different types of simulators, and add experimental TV support. ([#77](https://github.com/expo/orbit/pull/77) by [@douglowder](https://github.com/douglowder), [#84](https://github.com/expo/orbit/pull/84), [#90](https://github.com/expo/orbit/pull/90), [#91](https://github.com/expo/orbit/pull/91) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Add support for opening tarballs with multiple apps. ([#73](https://github.com/expo/orbit/pull/73) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add support for opening tarballs with multiple apps. ([#73](https://github.com/expo/orbit/pull/73), [#98](https://github.com/expo/orbit/pull/98) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve feedback to the user when an error occurs. ([#64](https://github.com/expo/orbit/pull/64), [#96](https://github.com/expo/orbit/pull/96) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve UI feedback when opening a snack project. ([#88](https://github.com/expo/orbit/pull/88) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Added drag and drop support for installing apps. ([#57](https://github.com/expo/orbit/pull/57) by [@gabrieldonadel](https://github.com/gabrieldonadel))
