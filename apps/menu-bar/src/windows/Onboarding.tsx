@@ -80,12 +80,15 @@ const Onboarding = () => {
               title="Android Studio"
               description="Install Android Studio to manage devices and install apps on Android"
               icon={AndroidStudio}
-              {...platformToolsCheck?.android}
+              success={platformToolsCheck?.android?.success ?? false}
+              reason={platformToolsCheck?.android?.reason}
             />
             <CommandCheckItem
               title="Xcode"
               description="Install Xcode to manage devices and install apps on iOS"
               icon={Xcode}
+              success={platformToolsCheck?.ios?.success ?? false}
+              reason={platformToolsCheck?.ios?.reason}
               {...platformToolsCheck?.ios}
             />
           </View>

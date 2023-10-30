@@ -20,10 +20,14 @@ function throwXcrunError(e: any): never {
       'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
     );
   } else if (e.stderr?.includes('not a developer tool or in PATH')) {
-    throw new Error(
+    throw new InternalError(
+      'XCODE_COMMAND_LINE_TOOLS_NOT_INSTALLED',
       `You may need to run ${chalk.bold(
         'sudo xcode-select -s /Applications/Xcode.app'
-      )} and try again.`
+      )} and try again.`,
+      {
+        command: 'sudo xcode-select -s /Applications/Xcode.app',
+      }
     );
   } else if (e.stderr?.match(/the device was not, or could not be, unlocked/)) {
     throw new InternalError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
