@@ -25,6 +25,7 @@
 - Fix build using Xcode 15. ([#74](https://github.com/expo/orbit/pull/74) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix listing iOS connected devices. ([#78](https://github.com/expo/orbit/pull/78) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix SystemIconView not reacting to Appearance changes. ([#85](https://github.com/expo/orbit/pull/85) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix useDeepLinking hook initial URL. ([#99](https://github.com/expo/orbit/pull/99) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
