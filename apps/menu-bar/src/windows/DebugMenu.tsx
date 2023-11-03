@@ -1,10 +1,9 @@
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
-import { apolloClient } from '../api/ApolloClient';
 import { View, Text } from '../components';
 import NativeColorPalette from '../components/NativeColorPalette';
 import MenuBarModule from '../modules/MenuBarModule';
-import { resetStorage, storage } from '../modules/Storage';
+import { resetApolloStore, resetStorage } from '../modules/Storage';
 
 const DebugMenu = () => {
   return (
@@ -12,11 +11,7 @@ const DebugMenu = () => {
       <TouchableOpacity onPress={resetStorage}>
         <Text color="warning">Reset storage</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => {
-          apolloClient.resetStore();
-          storage.delete('apollo-cache-persist');
-        }}>
+      <TouchableOpacity onPress={resetApolloStore}>
         <Text color="warning">Clear Apollo Store</Text>
       </TouchableOpacity>
       <NativeColorPalette />

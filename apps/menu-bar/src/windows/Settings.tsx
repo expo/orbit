@@ -16,8 +16,11 @@ import SparkleModule from '../modules/SparkleModule';
 import {
   UserPreferences,
   getUserPreferences,
+  saveSessionSecret,
   saveUserPreferences,
   storage,
+  sessionSecretStorageKey,
+  resetApolloStore,
 } from '../modules/Storage';
 import WebAuthenticationSessionModule, {
   WebBrowserResultType,
@@ -35,8 +38,18 @@ const osList: { label: string; key: keyof UserPreferences }[] = [
 const Settings = () => {
   const theme = useCurrentTheme();
   const [hasSessionSecret, setHasSessionSecret] = useState(
-    Boolean(storage.getString('sessionSecret'))
+    Boolean(storage.getString(sessionSecretStorageKey))
   );
+
+  useEffect(() => {
+    const listener = storage.addOnValueChangedListener((key) => {
+      if (key === sessionSecretStorageKey) {
+        setHasSessionSecret(Boolean(storage.getString(sessionSecretStorageKey)));
+      }
+    });
+
+    return listener.remove;
+  }, []);
 
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
@@ -48,6 +61,7 @@ const Settings = () => {
     fetchPolicy: 'cache-and-network',
     skip: !hasSessionSecret,
   });
+
   const currentUser = data?.meUserActor;
 
   useEffect(() => {
@@ -119,14 +133,13 @@ const Settings = () => {
         throw new Error('session_secret is missing in auth redirect query');
       }
 
-      storage.set('sessionSecret', sessionSecret);
-      setHasSessionSecret(true);
+      saveSessionSecret(sessionSecret);
     }
   };
 
-  const handleLogout = async () => {
-    storage.delete('sessionSecret');
-    setHasSessionSecret(false);
+  const handleLogout = () => {
+    storage.delete(sessionSecretStorageKey);
+    resetApolloStore();
   };
 
   const toggleOS = async (key: keyof UserPreferences, value: boolean) => {
@@ -162,7 +175,7 @@ const Settings = () => {
                 </Row>
               ) : null}
 
-              <Button title="Logout" onPress={handleLogout} style={styles.button} />
+              <Button title="Log Out" onPress={handleLogout} style={styles.button} />
               {__DEV__ ? (
                 <TouchableOpacity
                   onPress={() => WindowsNavigator.open('DebugMenu')}
