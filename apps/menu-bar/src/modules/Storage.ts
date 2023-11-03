@@ -1,6 +1,9 @@
 import { MMKV } from 'react-native-mmkv';
 
+import { apolloClient } from '../api/ApolloClient';
+
 export const userPreferencesStorageKey = 'user-preferences';
+export const sessionSecretStorageKey = 'sessionSecret';
 
 export type UserPreferences = {
   launchOnLogin: boolean;
@@ -57,3 +60,12 @@ export const resetStorage = () => {
 };
 
 export const storage = new MMKV();
+
+export function saveSessionSecret(sessionSecret: string) {
+  storage.set(sessionSecretStorageKey, sessionSecret);
+}
+
+export function resetApolloStore() {
+  apolloClient.resetStore();
+  storage.delete('apollo-cache-persist');
+}

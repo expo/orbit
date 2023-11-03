@@ -31,7 +31,7 @@ import {
 } from '../modules/Storage';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
 import { MenuBarStatus } from '../utils/helpers';
-import { getPlatformFromURI } from '../utils/parseUrl';
+import { getPlatformFromURI, handleAuthUrl } from '../utils/parseUrl';
 
 type Props = {
   isDevWindow: boolean;
@@ -248,12 +248,15 @@ function Core(props: Props) {
         if (!props.isDevWindow) {
           const urlWithoutProtocol = url.substring(url.indexOf('://') + 3);
           const isSnackUrl = url.includes('exp.host/');
+          const isAuthUrl = urlWithoutProtocol.startsWith('auth?');
 
-          if (isSnackUrl) {
-            return handleSnackUrl(`exp://${urlWithoutProtocol}`);
+          if (isAuthUrl) {
+            handleAuthUrl(url);
+          } else if (isSnackUrl) {
+            handleSnackUrl(`exp://${urlWithoutProtocol}`);
+          } else {
+            installAppFromURI(`https://${urlWithoutProtocol}`);
           }
-
-          installAppFromURI(`https://${urlWithoutProtocol}`);
         }
       },
       [props.isDevWindow, installAppFromURI, handleSnackUrl]
