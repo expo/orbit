@@ -33,7 +33,6 @@ RCT_EXPORT_METHOD(openAuthSessionAsync:(NSString *)urlString
       }
     }
   }];
-  [self.authSession setPrefersEphemeralWebBrowserSession:true];
 
   if (@available(macOS 10.15, *)) {
     self.authSession.presentationContextProvider = self;
