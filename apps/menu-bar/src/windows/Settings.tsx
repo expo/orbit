@@ -122,7 +122,7 @@ const Settings = () => {
     const redirectBase = 'expo-orbit://auth';
     const authSessionURL = `${
       Config.website.origin
-    }/${type}?choose_account=1&app_redirect_uri=${encodeURIComponent(redirectBase)}`;
+    }/${type}?confirm_account=1&app_redirect_uri=${encodeURIComponent(redirectBase)}`;
     const result = await WebAuthenticationSessionModule.openAuthSessionAsync(authSessionURL);
 
     if (result.type === WebBrowserResultType.SUCCESS) {
