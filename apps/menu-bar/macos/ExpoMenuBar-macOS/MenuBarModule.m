@@ -135,7 +135,7 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
 
     NSMutableDictionary *environment = [NSMutableDictionary dictionaryWithDictionary:[[NSProcessInfo processInfo] environment]];
     [environment addEntriesFromDictionary:@{@"EXPO_MENU_BAR": @YES}];
-    
+
     // Retrieve the envVars from NSUserDefaults
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     NSDictionary *envVars = [userDefaults objectForKey:@"envVars"];
@@ -144,7 +144,7 @@ RCT_EXPORT_METHOD(runCli:(NSString *)command
     if ([envVars isKindOfClass:[NSDictionary class]] && [envVars count] > 0) {
       [environment addEntriesFromDictionary:envVars];
     }
-    
+
     [task setEnvironment:environment];
     [task setStandardOutput:pipe];
     [task setStandardError:pipe];
@@ -253,6 +253,13 @@ RCT_EXPORT_METHOD(openPopover)
 {
   dispatch_async(dispatch_get_main_queue(), ^{
     [((AppDelegate *)[NSApp delegate]) openPopover];
+  });
+}
+
+RCT_EXPORT_METHOD(closePopover)
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [((AppDelegate *)[NSApp delegate]) closePopover];
   });
 }
 

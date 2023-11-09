@@ -7,6 +7,7 @@ import { Row, Text, View } from '../components';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { AppForPinnedListFragment } from '../generated/graphql';
 import { PinnedApp, minNumberOfApps } from '../hooks/useGetPinnedApps';
+import MenuBarModule from '../modules/MenuBarModule';
 
 export const PROJECTS_SECTION_HEIGHT = 192;
 
@@ -15,8 +16,12 @@ interface Props {
 }
 
 export const ProjectsSection = ({ apps }: Props) => {
-  const openProjectURL = (app: AppForPinnedListFragment) =>
-    Linking.openURL(`https://expo.dev/accounts/${app.ownerAccount.name}/projects/${app.slug}`);
+  const openProjectURL = (app: AppForPinnedListFragment) => {
+    Linking.openURL(
+      `https://expo.dev/accounts/${app.ownerAccount.name}/projects/${app.slug}/builds`
+    );
+    MenuBarModule.closePopover();
+  };
 
   return (
     <View pt="2.5" pb="tiny" gap="1" style={styles.container}>
@@ -24,7 +29,10 @@ export const ProjectsSection = ({ apps }: Props) => {
         label="Projects"
         accessoryRight={
           <TouchableOpacity
-            onPress={() => Linking.openURL('https://expo.dev/accounts/[account]/projects/')}>
+            onPress={() => {
+              Linking.openURL('https://expo.dev/accounts/[account]/projects/');
+              MenuBarModule.closePopover();
+            }}>
             <Text size="tiny" color="default">
               See all
             </Text>
