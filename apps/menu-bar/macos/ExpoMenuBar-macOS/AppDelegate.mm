@@ -104,6 +104,10 @@
                             args:@[@"popoverFocused"]];
 }
 
+- (void)closePopover {
+    [popover close];
+}
+
 - (void)onPressStatusItem:(id)sender {
   NSEvent *event = [NSApp currentEvent];
   if (event.type == NSEventTypeRightMouseUp) {
@@ -113,7 +117,7 @@
   }
 
   if (popover.isShown) {
-    [popover close];
+    [self closePopover];
   } else {
     [self openPopover];
   }

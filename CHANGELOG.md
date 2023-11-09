@@ -26,6 +26,7 @@
 - Fix listing iOS connected devices. ([#78](https://github.com/expo/orbit/pull/78) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix SystemIconView not reacting to Appearance changes. ([#85](https://github.com/expo/orbit/pull/85) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix useDeepLinking hook initial URL. ([#99](https://github.com/expo/orbit/pull/99) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix popover not closing when opening URLs. ([#102](https://github.com/expo/orbit/pull/102) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
