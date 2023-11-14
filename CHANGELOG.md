@@ -6,6 +6,12 @@
 
 ### 🎉 New features
 
+### 💡 Others
+
+## 1.0.0 — 2023-11-14
+
+### 🎉 New features
+
 - Add ability to show/hide different types of simulators, and add experimental TV support. ([#77](https://github.com/expo/orbit/pull/77) by [@douglowder](https://github.com/douglowder), [#84](https://github.com/expo/orbit/pull/84), [#90](https://github.com/expo/orbit/pull/90), [#91](https://github.com/expo/orbit/pull/91) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for opening tarballs with multiple apps. ([#73](https://github.com/expo/orbit/pull/73), [#98](https://github.com/expo/orbit/pull/98) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve feedback to the user when an error occurs. ([#64](https://github.com/expo/orbit/pull/64), [#96](https://github.com/expo/orbit/pull/96) by [@gabrieldonadel](https://github.com/gabrieldonadel))
