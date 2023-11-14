@@ -6,6 +6,59 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>1.0.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add ability to show/hide different types of simulators, and add experimental TV support. (<a href="https://github.com/expo/orbit/pull/77">#77</a> by <a href="https://github.com/douglowder">@douglowder</a>, <a href="https://github.com/expo/orbit/pull/84">#84</a>, <a href="https://github.com/expo/orbit/pull/90">#90</a>, <a href="https://github.com/expo/orbit/pull/91">#91</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add support for opening tarballs with multiple apps. (<a href="https://github.com/expo/orbit/pull/73">#73</a>, <a href="https://github.com/expo/orbit/pull/98">#98</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve feedback to the user when an error occurs. (<a href="https://github.com/expo/orbit/pull/64">#64</a>, <a href="https://github.com/expo/orbit/pull/96">#96</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve UI feedback when opening a snack project. (<a href="https://github.com/expo/orbit/pull/88">#88</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Added drag and drop support for installing apps. (<a href="https://github.com/expo/orbit/pull/57">#57</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Added support for installing apps directly from Finder. (<a href="https://github.com/expo/orbit/pull/56">#56</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Added local HTTP server to circumvent deep-link limitations. (<a href="https://github.com/expo/orbit/pull/52">#52</a>, <a href="https://github.com/expo/orbit/pull/53">#53</a>, <a href="https://github.com/expo/orbit/pull/54">#54</a>, <a href="https://github.com/expo/orbit/pull/55">#55</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Added Projects section to the menu bar. (<a href="https://github.com/expo/orbit/pull/46">#46</a>, <a href="https://github.com/expo/orbit/pull/59">#59</a>, <a href="https://github.com/expo/orbit/pull/83">#83</a>, <a href="https://github.com/expo/orbit/pull/95">#95</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Added support for login to Expo. (<a href="https://github.com/expo/orbit/pull/41">#41</a>, <a href="https://github.com/expo/orbit/pull/43">#43</a>, <a href="https://github.com/expo/orbit/pull/44">#44</a>, <a href="https://github.com/expo/orbit/pull/45">#45</a>, <a href="https://github.com/expo/orbit/pull/62">#62</a>, <a href="https://github.com/expo/orbit/pull/67">#67</a>, <a href="https://github.com/expo/orbit/pull/89">#89</a>, <a href="https://github.com/expo/orbit/pull/100">#100</a>, <a href="https://github.com/expo/orbit/pull/101">#101</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Focus simulator/emulator window when launching an app. (<a href="https://github.com/expo/orbit/pull/75">#75</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add support for running iOS internal distribution apps on real devices. (<a href="https://github.com/expo/orbit/pull/79">#79</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add support for opening snack projects on real iOS devices. (<a href="https://github.com/expo/orbit/pull/92">#92</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix some build and running issues. (<a href="https://github.com/expo/orbit/pull/69">#69</a> by <a href="https://github.com/douglowder">@douglowder</a>)</li>
+        <li>Fix build using Xcode 15. (<a href="https://github.com/expo/orbit/pull/74">#74</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix listing iOS connected devices. (<a href="https://github.com/expo/orbit/pull/78">#78</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix SystemIconView not reacting to Appearance changes. (<a href="https://github.com/expo/orbit/pull/85">#85</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix useDeepLinking hook initial URL. (<a href="https://github.com/expo/orbit/pull/99">#99</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix popover not closing when opening URLs. (<a href="https://github.com/expo/orbit/pull/102">#102</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Add check for missing changelogs. (<a href="https://github.com/expo/orbit/pull/49">#49</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Clean up eas-shared package. (<a href="https://github.com/expo/orbit/pull/60">#60</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Unify device types across menu-bar, cli and eas-shared package. (<a href="https://github.com/expo/orbit/pull/66">#66</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade react-native-svg to 13.14.0 and remove patch. (<a href="https://github.com/expo/orbit/pull/70">#70</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade react-native to 0.72.5. (<a href="https://github.com/expo/orbit/pull/71">#71</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Setup Lerna. (<a href="https://github.com/expo/orbit/pull/72">#72</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Migrate AsyncStorage records to react-native-mmkv. (<a href="https://github.com/expo/orbit/pull/82">#82</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Update Onboarding to rerun checks when focusing the window. (<a href="https://github.com/expo/orbit/pull/93">#93</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade @react-native-clipboard/clipboard to 1.12.1 and patch warnings. (<a href="https://github.com/expo/orbit/pull/70">#70</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2023-11-14</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.0.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.0.0/expo-orbit.v1.0.0.zip"
+        sparkle:version="12"
+        sparkle:shortVersionString="1.0.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>0.1.3</title>
       <description>
       <![CDATA[
