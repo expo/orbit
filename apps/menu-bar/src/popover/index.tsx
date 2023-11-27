@@ -5,7 +5,9 @@ import { ErrorBoundary, FallbackProps } from './ErrorBoundary';
 import Footer from './Footer';
 import { Text, View } from '../components';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
+import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
+import { useListDevices } from '../providers/DevicesProvider';
 import { WindowsNavigator } from '../windows';
 import { hasSeenOnboardingStorageKey } from '../windows/Onboarding';
 
@@ -15,6 +17,7 @@ type Props = {
 
 function Popover(props: Props) {
   const { height } = useSafeDisplayDimensions();
+  const { hasInitialized } = useListDevices();
 
   useEffect(() => {
     const hasSeenOnboarding = storage.getBoolean(hasSeenOnboardingStorageKey);
@@ -22,6 +25,12 @@ function Popover(props: Props) {
       WindowsNavigator.open('Onboarding');
     }
   }, []);
+
+  useEffect(() => {
+    if (hasInitialized && storage.getBoolean(hasSeenOnboardingStorageKey)) {
+      MenuBarModule.openPopover();
+    }
+  }, [hasInitialized]);
 
   return (
     <View
