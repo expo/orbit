@@ -19,7 +19,6 @@ import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
-import { useListDevices } from '../hooks/useListDevices';
 import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import { useFileHandler } from '../modules/FileHandlerModule';
@@ -29,6 +28,7 @@ import {
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
 } from '../modules/Storage';
+import { useListDevices } from '../providers/DevicesProvider';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
 import { MenuBarStatus } from '../utils/helpers';
 import { getPlatformFromURI, handleAuthUrl } from '../utils/parseUrl';
@@ -51,6 +51,11 @@ function Core(props: Props) {
   const [progress, setProgress] = useState(0);
 
   const { devicesPerPlatform, numberOfDevices, sections, refetch } = useListDevices();
+  usePopoverFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
 
   // TODO: Extract into a hook

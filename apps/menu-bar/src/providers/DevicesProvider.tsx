@@ -1,17 +1,39 @@
 import { CliCommands } from 'common-types';
-import { useCallback, useEffect, useState } from 'react';
-import { DeviceEventEmitter } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { getUserPreferences } from '../modules/Storage';
 import { DevicesPerPlatform, getDeviceId, getSectionsFromDeviceList } from '../utils/device';
 
-export const useListDevices = () => {
+type ListDevicesContext = {
+  devicesPerPlatform: DevicesPerPlatform;
+  sections: ReturnType<typeof getSectionsFromDeviceList>;
+  numberOfDevices: number;
+  hasInitialized: boolean;
+  error?: Error;
+  refetch: () => Promise<void>;
+};
+
+const defaultValues: ListDevicesContext = {
+  devicesPerPlatform: {
+    android: { devices: new Map() },
+    ios: { devices: new Map() },
+  },
+  sections: [],
+  numberOfDevices: 0,
+  hasInitialized: false,
+  refetch: async () => {},
+};
+
+const DevicesContext = React.createContext<ListDevicesContext>(defaultValues);
+export const useListDevices = () => React.useContext(DevicesContext);
+
+export function DevicesProvider({ children }: { children: React.ReactNode }) {
   const [devicesPerPlatform, setDevicesPerPlatform] = useState<DevicesPerPlatform>({
     android: { devices: new Map() },
     ios: { devices: new Map() },
   });
-  const [loading, setLoading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const [error, setError] = useState<Error>();
 
   const sections = getSectionsFromDeviceList(devicesPerPlatform);
@@ -23,7 +45,6 @@ export const useListDevices = () => {
       showAndroidEmulators: showAndroid,
     } = getUserPreferences();
 
-    setLoading(true);
     try {
       const devicesList = await listDevicesAsync({ platform: 'all' });
       const iosDevices = new Map<
@@ -61,28 +82,25 @@ export const useListDevices = () => {
       });
     } catch (err) {
       setError(err as Error);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const listener = DeviceEventEmitter.addListener('popoverFocused', () => {
-      updateDevicesList();
-    });
-    updateDevicesList();
-
-    return () => {
-      listener.remove();
-    };
+    updateDevicesList().then(() => setHasInitialized(true));
   }, [updateDevicesList]);
 
-  return {
-    devicesPerPlatform,
-    sections,
-    numberOfDevices: devicesPerPlatform.android.devices.size + devicesPerPlatform.ios.devices.size,
-    loading,
-    error,
-    refetch: updateDevicesList,
-  };
-};
+  return (
+    <DevicesContext.Provider
+      value={{
+        devicesPerPlatform,
+        sections,
+        numberOfDevices:
+          devicesPerPlatform.android.devices.size + devicesPerPlatform.ios.devices.size,
+        hasInitialized,
+        error,
+        refetch: updateDevicesList,
+      }}>
+      {children}
+    </DevicesContext.Provider>
+  );
+}
