@@ -137,6 +137,15 @@
                                                       andEventID:kAEGetURL];
 }
 
+// Called when the user tries to reopen the app from the Dock or Spotlight
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)visibleWindows {
+    if (!visibleWindows) {
+      [self openPopover];
+    }
+    
+    return YES;
+}
+
 - (void)getUrlEventHandler:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent
 {
     [self openPopover];
