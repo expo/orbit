@@ -160,6 +160,9 @@ function Core(props: Props) {
       }
 
       const [firstDevice] = devicesPerPlatform[platform].devices.values();
+      if (!firstDevice) {
+        return;
+      }
 
       setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
       return firstDevice;
@@ -170,22 +173,22 @@ function Core(props: Props) {
   const installAppFromURI = useCallback(
     async (appURI: string) => {
       let localFilePath = appURI.startsWith('/') ? appURI : undefined;
-      const platform = getPlatformFromURI(appURI);
-      const device = getDeviceByPlatform(platform);
-      if (!device) {
-        Alert.alert(
-          `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`
-        );
-        return;
-      }
-      const deviceId = getDeviceId(device);
-
       try {
         if (!localFilePath) {
           setStatus(MenuBarStatus.DOWNLOADING);
           const buildPath = await downloadBuildAsync(appURI, setProgress);
           localFilePath = buildPath;
         }
+
+        const platform = getPlatformFromURI(appURI);
+        const device = getDeviceByPlatform(platform);
+        if (!device) {
+          Alert.alert(
+            `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`
+          );
+          return;
+        }
+        const deviceId = getDeviceId(device);
 
         setStatus(MenuBarStatus.BOOTING_DEVICE);
         await ensureDeviceIsRunning(device);
