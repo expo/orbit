@@ -6,6 +6,10 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+- Fix installing EAS builds from cold start. ([#108](https://github.com/expo/orbit/pull/108) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 ## 1.0.0 — 2023-11-14
