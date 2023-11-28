@@ -82,6 +82,7 @@ const Onboarding = () => {
               icon={AndroidStudio}
               success={platformToolsCheck?.android?.success ?? false}
               reason={platformToolsCheck?.android?.reason}
+              loading={platformToolsCheck?.android?.success === undefined}
             />
             <CommandCheckItem
               title="Xcode"
@@ -89,7 +90,7 @@ const Onboarding = () => {
               icon={Xcode}
               success={platformToolsCheck?.ios?.success ?? false}
               reason={platformToolsCheck?.ios?.reason}
-              {...platformToolsCheck?.ios}
+              loading={platformToolsCheck?.ios?.success === undefined}
             />
           </View>
         </View>
