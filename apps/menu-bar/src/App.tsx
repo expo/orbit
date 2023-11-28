@@ -5,6 +5,7 @@ import AutoResizerRootView from './components/AutoResizerRootView';
 import { SAFE_AREA_FACTOR } from './hooks/useSafeDisplayDimensions';
 import { PersistGate } from './modules/PersistGate';
 import Popover from './popover';
+import { DevicesProvider } from './providers/DevicesProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
 
 type Props = {
@@ -19,7 +20,9 @@ function App(props: Props) {
       maxRelativeHeight={SAFE_AREA_FACTOR}>
       <PersistGate>
         <ThemeProvider themePreference="no-preference">
-          <Popover isDevWindow={props.isDevWindow} />
+          <DevicesProvider>
+            <Popover isDevWindow={props.isDevWindow} />
+          </DevicesProvider>
         </ThemeProvider>
       </PersistGate>
     </AutoResizerRootView>
