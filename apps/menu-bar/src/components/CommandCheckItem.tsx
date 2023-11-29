@@ -20,9 +20,10 @@ type Props = {
   title: string;
   description: string;
   icon: ImageSourcePropType;
+  loading: boolean;
 } & CliCommands.CheckTools.PlatformToolsCheck[keyof CliCommands.CheckTools.PlatformToolsCheck];
 
-const CommandCheckItem = ({ description, icon, title, reason, success }: Props) => {
+const CommandCheckItem = ({ description, icon, title, reason, success, loading }: Props) => {
   const showWarningAlert = () => {
     const buttons: AlertButton[] = [{ text: 'OK', style: 'default' }];
     const command = reason?.command;
@@ -62,7 +63,7 @@ const CommandCheckItem = ({ description, icon, title, reason, success }: Props) 
           </TouchableOpacity>
         ) : null}
       </View>
-      {success === undefined ? (
+      {loading ? (
         <ActivityIndicator />
       ) : success ? (
         <CheckIcon />
