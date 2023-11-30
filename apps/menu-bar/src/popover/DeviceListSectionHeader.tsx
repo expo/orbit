@@ -1,8 +1,9 @@
-import { Alert, PlatformColor, TouchableOpacity } from 'react-native';
+import { PlatformColor, TouchableOpacity } from 'react-native';
 
 import SectionHeader from './SectionHeader';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import { View } from '../components/View';
+import Alert from '../modules/Alert';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
 type Props = {

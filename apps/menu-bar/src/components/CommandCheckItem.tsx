@@ -3,7 +3,6 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { CliCommands } from 'common-types';
 import {
   ActivityIndicator,
-  Alert,
   AlertButton,
   Image,
   ImageSourcePropType,
@@ -15,6 +14,7 @@ import { Text } from './Text';
 import { View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CheckIcon from '../assets/icons/check-circle.svg';
+import Alert from '../modules/Alert';
 
 type Props = {
   title: string;

@@ -1,6 +1,6 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
 import React, { Fragment, useEffect, useState } from 'react';
-import { Alert, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { StyleSheet, TouchableOpacity, Switch } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import { withApolloProvider } from '../api/ApolloClient';
@@ -11,6 +11,7 @@ import Button, { getStylesForColor } from '../components/Button';
 import PathInput from '../components/PathInput';
 import SystemIconView from '../components/SystemIconView';
 import { useGetCurrentUserQuery } from '../generated/graphql';
+import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
 import SparkleModule from '../modules/SparkleModule';
 import {
