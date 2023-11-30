@@ -12,6 +12,7 @@
 
 - Fix installing EAS builds from cold start. ([#108](https://github.com/expo/orbit/pull/108) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix onboarding command check loading status. ([#110](https://github.com/expo/orbit/pull/110) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix undismissable Alerts. ([#112](https://github.com/expo/orbit/pull/112) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
