@@ -6,6 +6,16 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 🛠 Breaking changes
+
+### 💡 Others
+
+## 1.0.1 — 2023-12-01
+
+### 🎉 New features
+
 - Automatically open popover when the user tries to reopen the app from the Dock or Spotlight. ([#109](https://github.com/expo/orbit/pull/109) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
@@ -13,8 +23,6 @@
 - Fix installing EAS builds from cold start. ([#108](https://github.com/expo/orbit/pull/108) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix onboarding command check loading status. ([#110](https://github.com/expo/orbit/pull/110) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix undismissable Alerts. ([#112](https://github.com/expo/orbit/pull/112) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 💡 Others
 
 ## 1.0.0 — 2023-11-14
 
