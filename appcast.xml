@@ -5,6 +5,33 @@
     <link>https://raw.githubusercontent.com/expo/orbit/main/appcast.xml</link>
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
+     <item>
+      <title>1.0.1</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Automatically open popover when the user tries to reopen the app from the Dock or Spotlight. (<a href="https://github.com/expo/orbit/pull/109">#109</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix installing EAS builds from cold start. (<a href="https://github.com/expo/orbit/pull/108">#108</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix onboarding command check loading status. (<a href="https://github.com/expo/orbit/pull/110">#110</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix undismissable Alerts. (<a href="https://github.com/expo/orbit/pull/112">#112</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2023-12-01</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.0.1</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.0.1/expo-orbit.v1.0.1.zip"
+        sparkle:version="14"
+        sparkle:shortVersionString="1.0.1"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
     <item>
       <title>1.0.0</title>
       <description>
