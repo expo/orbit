@@ -161,8 +161,17 @@ function Core(props: Props) {
   const getDeviceByPlatform = useCallback(
     (platform: 'android' | 'ios') => {
       const selectedDevicesId = selectedDevicesIds[platform];
-      if (selectedDevicesId) {
+      if (selectedDevicesId && devicesPerPlatform[platform].devices.has(selectedDevicesId)) {
         return devicesPerPlatform[platform].devices.get(selectedDevicesId);
+      }
+
+      const devices = devicesPerPlatform[platform].devices.values();
+
+      for (const device of devices) {
+        if (isVirtualDevice(device) && device.state === 'Booted') {
+          setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(device) }));
+          return device;
+        }
       }
 
       const [firstDevice] = devicesPerPlatform[platform].devices.values();
