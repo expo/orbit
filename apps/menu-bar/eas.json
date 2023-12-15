@@ -1,11 +1,16 @@
 {
   "cli": {
-    "version": ">= 3.18.3"
+    "version": ">= 3.18.3",
+    "promptToConfigurePushNotifications": false
   },
   "build": {
     "production": {
       "config": "build.yml",
-      "withoutCredentials": true
+      "credentialsSource": "remote",
+      "ios": {
+        "image": "latest",
+        "applicationArchivePath": "build/Notarized/*.app"
+      }
     }
   },
   "submit": {

@@ -2,6 +2,9 @@ build:
   name: Run tests
   steps:
     - eas/checkout
+    - configure_macos_credentials:
+        inputs:
+          buildCredentials: ${ eas.job.secrets.buildCredentials }
     - eas/install_node_modules
     - run:
         name: Build packages
@@ -14,6 +17,11 @@ build:
         command: |
           yarn archive
     - run:
+        name: Codesign CLI
+        working_directory: ../../apps/cli
+        command: |
+          yarn codesign
+    - run:
         name: Install menu-bar pods
         working_directory: ./macos
         command: pod install
@@ -22,4 +30,21 @@ build:
         working_directory: ../../apps/menu-bar
         command: |
           yarn archive
+    - run:
+        name: Export archive menu-bar
+        working_directory: ../../apps/menu-bar
+        command: |
+          yarn export-archive
+    - run:
+        name: Notarize menu-bar
+        working_directory: ../../apps/menu-bar
+        command: |
+          yarn notarize
     - eas/find_and_upload_build_artifacts
+functions:
+  configure_macos_credentials:
+    name: Configure macOS Credentials
+    inputs:
+      - name: buildCredentials
+        type: json
+    path: ./configureMacOSCredentials

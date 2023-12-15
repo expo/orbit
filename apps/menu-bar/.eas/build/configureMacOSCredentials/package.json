@@ -1,0 +1,18 @@
+{
+  "name": "configure-macos-credentials",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./build/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register",
+    "watch": "ncc build ./src/index.ts -o build/ --minify --no-cache --no-source-map-register --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "typescript": "^5.1.6",
+    "@expo/steps": "^1.0.34"
+  }
+}

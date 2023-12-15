@@ -5,7 +5,7 @@
   "scripts": {
     "archive": "yarn update-cli && xcodebuild archive -workspace macos/ExpoMenuBar.xcworkspace -scheme ExpoMenuBar-macOS -destination 'generic/platform=macOS,name=Any Mac' -archivePath build/ExpoOrbit.xcarchive",
     "export-archive": "xcodebuild -exportArchive  -archivePath build/ExpoOrbit.xcarchive -exportOptionsPlist macos/ExportOptions.plist -exportPath build/Release",
-    "notorize": "xcodebuild -exportNotarizedApp -archivePath build/ExpoOrbit.xcarchive -exportPath build/Notarized",
+    "notarize": "xcodebuild -exportNotarizedApp -archivePath build/ExpoOrbit.xcarchive -exportPath build/Notarized",
     "lint": "eslint .",
     "macos": "react-native run-macos",
     "start": "react-native start",
