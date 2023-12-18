@@ -1,5 +1,5 @@
 build:
-  name: Run tests
+  name: Build and notarize Orbit
   steps:
     - eas/checkout
     - configure_macos_credentials:
@@ -34,7 +34,7 @@ build:
         name: Export archive menu-bar
         working_directory: ../../apps/menu-bar
         command: |
-          yarn export-archive
+          yarn export-upload-archive
     - run:
         name: Notarize menu-bar
         working_directory: ../../apps/menu-bar
