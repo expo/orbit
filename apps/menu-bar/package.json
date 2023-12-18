@@ -3,6 +3,11 @@
   "version": "1.0.1",
   "private": true,
   "scripts": {
+    "archive": "yarn update-cli && xcodebuild archive -workspace macos/ExpoMenuBar.xcworkspace -scheme ExpoMenuBar-macOS -destination 'generic/platform=macOS,name=Any Mac' -archivePath build/ExpoOrbit.xcarchive",
+    "export-archive": "xcodebuild -exportArchive -archivePath build/ExpoOrbit.xcarchive -exportPath build/Release",
+    "export-upload-archive": "yarn export-archive -exportOptionsPlist macos/ExportUploadOptions.plist",
+    "export-local-archive": "yarn export-archive -exportOptionsPlist macos/ExportLocalOptions.plist",
+    "notarize": "xcodebuild -exportNotarizedApp -archivePath build/ExpoOrbit.xcarchive -exportPath build/Notarized",
     "lint": "eslint .",
     "macos": "react-native run-macos",
     "start": "react-native start",

@@ -1,0 +1,27 @@
+{
+  "cli": {
+    "version": ">= 3.18.3",
+    "promptToConfigurePushNotifications": false
+  },
+  "build": {
+    "preview": {
+      "config": "build-preview.yml",
+      "credentialsSource": "remote",
+      "ios": {
+        "image": "latest",
+        "applicationArchivePath": "build/Release/*.app"
+      }
+    },
+    "production": {
+      "config": "build-release.yml",
+      "credentialsSource": "remote",
+      "ios": {
+        "image": "latest",
+        "applicationArchivePath": "build/Notarized/*.app"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

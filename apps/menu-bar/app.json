@@ -1,4 +1,17 @@
 {
   "name": "ExpoMenuBar",
-  "displayName": "ExpoMenuBar"
+  "expo": {
+    "name": "Orbit",
+    "slug": "orbit",
+    "description": "Accelerate your development workflow with one-click build launches and simulator management",
+    "owner": "expo",
+    "extra": {
+      "eas": {
+        "projectId": "6f773599-3109-410f-97c0-fd197cf47995"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "dev.expo.orbit"
+    }
+  }
 }
