@@ -433,7 +433,7 @@ PODS:
     - React-perflogger (= 0.72.1)
   - RNCAsyncStorage (1.19.0):
     - React-Core
-  - RNCClipboard (1.12.1):
+  - RNCClipboard (1.13.1):
     - React-Core
   - RNSVG (13.14.0):
     - React-Core
@@ -635,7 +635,7 @@ SPEC CHECKSUMS:
   React-utils: d3c1b229649baa9b4ef99a17a92f962a5664e466
   ReactCommon: 4fc7741bd50d6b1a5cc6e702e9f59e08e52206b5
   RNCAsyncStorage: 4b98ac3c64efa4e35c1197cb0c5ca5e9f5d4c666
-  RNCClipboard: d77213bfa269013bf4b857b7a9ca37ee062d8ef1
+  RNCClipboard: 90e241893de33a2f5962fc34d76ada4576033e49
   RNSVG: d00c8f91c3cbf6d476451313a18f04d220d4f396
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Sparkle: 913cef92f73e08d0ae47a36ee20e523913e5f9e2
