@@ -2,7 +2,6 @@ import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import path from 'path';
-import semver from 'semver';
 import { IosSimulator } from 'common-types/build/devices';
 
 import * as CoreSimulator from './CoreSimulator';
@@ -15,6 +14,7 @@ import { delayAsync } from '../../utils/delayAsync';
 import { sleepAsync } from '../../utils/promise';
 import * as Versions from '../../versions';
 import { EXPO_GO_BUNDLE_IDENTIFIER } from './constants';
+import { parseBinaryPlistAsync } from '../../utils/parseBinaryPlistAsync';
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
@@ -270,27 +270,26 @@ async function getClientForSDK(sdkVersionString?: string) {
   };
 }
 
-export async function expoVersionOnSimulatorAsync(udid: string): Promise<string | null> {
-  const localPath = await getContainerPathAsync({
-    udid,
-    bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
-  });
-  if (!localPath) {
+export async function expoSDKSupportedVersionsOnSimulatorAsync(
+  udid: string
+): Promise<string[] | null> {
+  try {
+    const localPath = await getContainerPathAsync({
+      udid,
+      bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
+    });
+    if (!localPath) {
+      return null;
+    }
+
+    const builtInfoPlistPath = path.join(localPath, 'EXSDKVersions.plist');
+    const { sdkVersions }: { sdkVersions: string[] } =
+      await parseBinaryPlistAsync(builtInfoPlistPath);
+
+    return sdkVersions;
+  } catch (error) {
     return null;
   }
-
-  const regex = /Exponent-([0-9.]+).*\.app$/;
-  const regexMatch = regex.exec(localPath);
-  if (!regexMatch) {
-    return null;
-  }
-
-  let matched = regexMatch[1];
-  // If the value is matched like 1.0.0. then remove the trailing dot.
-  if (matched.endsWith('.')) {
-    matched = matched.substr(0, matched.length - 1);
-  }
-  return matched;
 }
 
 function simulatorCacheDirectory() {
@@ -377,15 +376,12 @@ export async function doesExpoClientNeedUpdatedAsync(
   udid: string,
   sdkVersion?: string
 ): Promise<boolean> {
-  const versions = await Versions.versionsAsync();
-  const clientForSdk = await getClientForSDK(sdkVersion);
-  const latestVersionForSdk = clientForSdk?.version ?? versions.iosVersion;
-
-  const installedVersion = await expoVersionOnSimulatorAsync(udid);
-  if (installedVersion && semver.lt(installedVersion, latestVersionForSdk)) {
-    return true;
+  const supportedSDKs = await expoSDKSupportedVersionsOnSimulatorAsync(udid);
+  if (!sdkVersion || !supportedSDKs) {
+    return false;
   }
-  return false;
+
+  return !supportedSDKs?.includes(sdkVersion);
 }
 
 export async function waitForExpoClientInstalledOnSimulatorAsync(udid: string): Promise<boolean> {

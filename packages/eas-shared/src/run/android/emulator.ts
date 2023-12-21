@@ -124,6 +124,19 @@ export async function installAppAsync(
   Log.succeed('Successfully installed your app!');
 }
 
+export async function uninstallAppAsync(
+  emulator: AndroidConnectedDevice | AndroidEmulator,
+  bundleId: string
+): Promise<void> {
+  Log.newLine();
+  Log.log(`Uninstalling ${bundleId}...`);
+
+  assert(emulator.pid);
+  await adbAsync('-s', emulator.pid, 'uninstall', bundleId);
+
+  Log.succeed(`Successfully uninstalled ${bundleId}!`);
+}
+
 export async function startAppAsync(
   emulator: AndroidConnectedDevice | AndroidEmulator,
   packageName: string,
@@ -296,16 +309,34 @@ async function expoVersionOnEmulatorAsync(pid: string): Promise<string | null> {
   return regexMatch[1];
 }
 
-async function doesExpoClientNeedUpdatedAsync(pid: string, sdkVersion?: string): Promise<boolean> {
+/**
+ * Checks Expo Go compatibility with an SDK version by verifying
+ * the latest Expo Go version released for that SDK. On Android
+ * we can't directly check supported SDKs of the installed app
+ * like we do on iOS.
+ */
+async function checkExpoClientCompatibilityAsync(
+  pid: string,
+  sdkVersion?: string
+): Promise<{ compatible: boolean; requiresDowngrade?: boolean }> {
   const versions = await Versions.versionsAsync();
   const clientForSdk = await getClientForSDK(sdkVersion);
   const latestVersionForSdk = clientForSdk?.version ?? versions.androidClientVersion;
 
   const installedVersion = await expoVersionOnEmulatorAsync(pid);
-  if (installedVersion && semver.lt(installedVersion, latestVersionForSdk)) {
-    return true;
+  if (!installedVersion) {
+    return { compatible: true };
   }
-  return false;
+
+  const isCompatible = semver.satisfies(
+    installedVersion,
+    `${semver.major(latestVersionForSdk)}.${semver.minor(latestVersionForSdk)}.x`
+  );
+
+  return {
+    compatible: isCompatible,
+    requiresDowngrade: semver.gt(installedVersion, latestVersionForSdk),
+  };
 }
 
 export async function installExpoOnEmulatorAsync({
@@ -346,12 +377,21 @@ export async function installExpoOnEmulatorAsync({
 }
 
 export async function ensureExpoClientInstalledAsync(pid: string, sdkVersion?: string) {
-  let isInstalled = await isExpoClientInstalledOnEmulatorAsync(pid);
-  if (isInstalled && (await doesExpoClientNeedUpdatedAsync(pid, sdkVersion))) {
-    isInstalled = false;
+  let isCompatible = true;
+  let requiresDowngrade = false;
+
+  const isInstalled = await isExpoClientInstalledOnEmulatorAsync(pid);
+  if (isInstalled) {
+    const compatibility = await checkExpoClientCompatibilityAsync(pid, sdkVersion);
+    isCompatible = compatibility.compatible;
+    requiresDowngrade = compatibility.requiresDowngrade ?? false;
   }
 
-  if (!isInstalled) {
+  if (!isInstalled || !isCompatible) {
+    if (requiresDowngrade) {
+      await uninstallAppAsync({ pid } as AndroidEmulator, EXPO_GO_BUNDLE_IDENTIFIER);
+    }
+
     const androidClient = await getClientForSDK(sdkVersion);
     const versions = await Versions.versionsAsync();
     const url = androidClient?.url ?? versions.androidUrl;
