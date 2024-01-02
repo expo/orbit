@@ -1,7 +1,7 @@
 # Configure macOS credentials
 
 This is a custom EAS build function written in TypeScript that configures the credentials for a macOS build while EAS
-doesn't add official support. It can be used as a step in a [custom build](https://docs.expo.dev/preview/custom-build-config/).
+doesn't add official support. It can be used as a step in a [custom build](https://docs.expo.dev/custom-builds/schema/).
 
 ## How to use it
 
@@ -32,4 +32,4 @@ doesn't add official support. It can be used as a step in a [custom build](https
 
 ## Learn more
 
-Refer to the [custom builds documentation](https://docs.expo.dev/preview/custom-build-config/).
+Refer to the [custom builds documentation](https://docs.expo.dev/custom-builds/get-started/).
