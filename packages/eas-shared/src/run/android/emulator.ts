@@ -163,22 +163,16 @@ export async function startAppAsync(
   Log.succeed('Successfully started your app!');
 }
 
-// Expo installed
-async function isExpoClientInstalledOnEmulatorAsync(pid: string): Promise<boolean> {
-  const packages = await adbAsync(
-    '-s',
-    pid,
-    'shell',
-    'pm',
-    'list',
-    'packages',
-    EXPO_GO_BUNDLE_IDENTIFIER
-  );
+export async function isAppInstalledOnEmulatorAsync(
+  pid: string,
+  bundleId: string
+): Promise<boolean> {
+  const packages = await adbAsync('-s', pid, 'shell', 'pm', 'list', 'packages', bundleId);
 
   const lines = packages.stdout.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (line === `package:${EXPO_GO_BUNDLE_IDENTIFIER}`) {
+    if (line === `package:${bundleId}`) {
       return true;
     }
   }
@@ -325,7 +319,7 @@ async function checkExpoClientCompatibilityAsync(
 
   const installedVersion = await expoVersionOnEmulatorAsync(pid);
   if (!installedVersion) {
-    return { compatible: true };
+    return { compatible: false };
   }
 
   const isCompatible = semver.satisfies(
@@ -377,32 +371,29 @@ export async function installExpoOnEmulatorAsync({
 }
 
 export async function ensureExpoClientInstalledAsync(pid: string, sdkVersion?: string) {
-  let isCompatible = true;
-  let requiresDowngrade = false;
+  const { compatible, requiresDowngrade } = await checkExpoClientCompatibilityAsync(
+    pid,
+    sdkVersion
+  );
 
-  const isInstalled = await isExpoClientInstalledOnEmulatorAsync(pid);
-  if (isInstalled) {
-    const compatibility = await checkExpoClientCompatibilityAsync(pid, sdkVersion);
-    isCompatible = compatibility.compatible;
-    requiresDowngrade = compatibility.requiresDowngrade ?? false;
+  if (compatible) {
+    return;
   }
 
-  if (!isInstalled || !isCompatible) {
-    if (requiresDowngrade) {
-      await uninstallAppAsync({ pid } as AndroidEmulator, EXPO_GO_BUNDLE_IDENTIFIER);
-    }
-
-    const androidClient = await getClientForSDK(sdkVersion);
-    const versions = await Versions.versionsAsync();
-    const url = androidClient?.url ?? versions.androidUrl;
-    if (!url) {
-      throw new Error();
-    }
-
-    await installExpoOnEmulatorAsync({
-      pid,
-      url,
-      version: androidClient?.version,
-    });
+  if (requiresDowngrade) {
+    await uninstallAppAsync({ pid } as AndroidEmulator, EXPO_GO_BUNDLE_IDENTIFIER);
   }
+
+  const androidClient = await getClientForSDK(sdkVersion);
+  const versions = await Versions.versionsAsync();
+  const url = androidClient?.url ?? versions.androidUrl;
+  if (!url) {
+    throw new Error('Unable to determine Expo Go download URL');
+  }
+
+  await installExpoOnEmulatorAsync({
+    pid,
+    url,
+    version: androidClient?.version,
+  });
 }

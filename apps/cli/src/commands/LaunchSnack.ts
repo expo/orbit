@@ -73,10 +73,11 @@ export async function getSDKVersionForSnack(snackURL: string): Promise<string | 
         'Snack-Api-Version': '3.0.0',
       },
     });
-    const { sdkVersion } = await response.json();
+    const { sdkVersion }: { sdkVersion: string } = await response.json();
 
     return sdkVersion;
   } catch (err) {
     console.error(`Failed fetch snack with identifier: ${snackId}`, err);
+    throw err;
   }
 }
