@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Improve Snack support for older SDKs. ([#117](https://github.com/expo/orbit/pull/117) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Fix device selection logic when a simulator or device is no longer available. ([#114](https://github.com/expo/orbit/pull/114) by [@gabrieldonadel](https://github.com/gabrieldonadel))
