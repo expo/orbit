@@ -32,4 +32,4 @@ doesn't add official support. It can be used as a step in a [custom build](https
 
 ## Learn more
 
-Refer to the [custom builds documentation](https://docs.expo.dev/custom-builds/schema/).
+Refer to the [custom builds documentation](https://docs.expo.dev/custom-builds/get-started/).
