@@ -11,7 +11,11 @@
   if (self) {
     [self registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
 
-    NSImage *image = [NSImage imageNamed:@"menu-bar-icon"];
+    #if DEBUG
+        NSImage *image = [NSImage imageNamed:@"menu-bar-icon-debug"];
+    #else
+        NSImage *image = [NSImage imageNamed:@"menu-bar-icon"];
+    #endif
     [image setTemplate:YES];
 
     NSImageView *imageView = [[NSImageView alloc] initWithFrame:self.bounds];
@@ -45,10 +49,10 @@
   if (self.openPopoverAction) {
     self.openPopoverAction();
   }
-  
+
   NSPasteboard *pasteboard = [sender draggingPasteboard];
   NSArray<NSURL*> *files = [pasteboard readObjectsForClasses:@[[NSURL class]] options:@{}];
-  
+
   for (NSURL *url in files) {
     NSString *filePath = [url path];
     [[FileHandler shared] notifyFileOpened:filePath];
