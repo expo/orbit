@@ -2,17 +2,32 @@ import { spacing } from '@expo/styleguide-native';
 import { Linking, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 
 import Item from './Item';
-import SectionHeader from './SectionHeader';
+import SectionHeader, { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import { Row, Text, View } from '../components';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { AppForPinnedListFragment } from '../generated/graphql';
 import { PinnedApp, minNumberOfApps } from '../hooks/useGetPinnedApps';
 import MenuBarModule from '../modules/MenuBarModule';
 
-export const PROJECTS_SECTION_HEIGHT = 192;
+const PROJECTS_ITEM_HEIGHT = 50;
+const PROJECTS_ITEM_MARGIN_BOTTOM = spacing[1];
+const MAX_NUMBER_OF_VISIBLE_ITEMS = 3;
+
+export function getProjectSectionHeight(numberOfApps: number) {
+  if (numberOfApps === 0) {
+    return 0;
+  }
+
+  return (
+    SECTION_HEADER_HEIGHT +
+    PROJECTS_ITEM_HEIGHT * Math.min(numberOfApps, MAX_NUMBER_OF_VISIBLE_ITEMS) +
+    PROJECTS_ITEM_MARGIN_BOTTOM * Math.min(numberOfApps, MAX_NUMBER_OF_VISIBLE_ITEMS - 1) +
+    18
+  );
+}
 
 interface Props {
-  apps: PinnedApp[];
+  apps?: PinnedApp[];
 }
 
 export const ProjectsSection = ({ apps }: Props) => {
@@ -22,6 +37,10 @@ export const ProjectsSection = ({ apps }: Props) => {
     );
     MenuBarModule.closePopover();
   };
+
+  if (!apps?.length) {
+    return null;
+  }
 
   return (
     <View pt="2.5" pb="tiny" gap="1" style={styles.container}>
@@ -44,7 +63,7 @@ export const ProjectsSection = ({ apps }: Props) => {
         alwaysBounceVertical={apps.length > minNumberOfApps}
         renderItem={({ item: app, index }) => (
           <Item
-            style={apps.length - 1 !== index && styles.itemMargin}
+            style={[styles.item, apps.length - 1 !== index && styles.itemMargin]}
             key={app.id}
             onPress={() => openProjectURL(app)}>
             <Row gap="2" align="center">
@@ -69,7 +88,10 @@ export default ProjectsSection;
 
 const styles = StyleSheet.create({
   container: {
-    height: PROJECTS_SECTION_HEIGHT,
+    maxHeight: getProjectSectionHeight(MAX_NUMBER_OF_VISIBLE_ITEMS),
+  },
+  item: {
+    height: PROJECTS_ITEM_HEIGHT,
   },
   itemMargin: {
     marginBottom: spacing[1],
