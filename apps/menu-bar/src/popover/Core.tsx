@@ -7,7 +7,7 @@ import { SectionList } from 'react-native';
 import BuildsSection, { BUILDS_SECTION_HEIGHT } from './BuildsSection';
 import DeviceListSectionHeader from './DeviceListSectionHeader';
 import { FOOTER_HEIGHT } from './Footer';
-import ProjectsSection, { PROJECTS_SECTION_HEIGHT } from './ProjectsSection';
+import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
@@ -46,8 +46,6 @@ function Core(props: Props) {
   const { apps, refetch: refetchApps } = useGetPinnedApps();
   usePopoverFocusEffect(refetchApps);
 
-  const showProjectsSection = Boolean(apps?.length);
-
   const [status, setStatus] = useState(MenuBarStatus.LISTENING);
   const [progress, setProgress] = useState(0);
 
@@ -65,7 +63,7 @@ function Core(props: Props) {
     (displayDimensions.height || 0) -
     FOOTER_HEIGHT -
     BUILDS_SECTION_HEIGHT -
-    (showProjectsSection ? PROJECTS_SECTION_HEIGHT : 0) -
+    getProjectSectionHeight(apps?.length) -
     30;
   const heightOfAllDevices =
     DEVICE_ITEM_HEIGHT * numberOfDevices + SECTION_HEADER_HEIGHT * (sections?.length || 0);
@@ -299,7 +297,7 @@ function Core(props: Props) {
   return (
     <View shrink="1">
       <BuildsSection status={status} installAppFromURI={installAppFromURI} progress={progress} />
-      {apps?.length ? <ProjectsSection apps={apps} /> : null}
+      <ProjectsSection apps={apps} />
       <View shrink="1" pt="tiny">
         <SectionList
           sections={sections}

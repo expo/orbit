@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { StyleSheet } from 'react-native';
 
 import { Row, Text } from '../components';
 import { useTheme } from '../providers/ThemeProvider';
@@ -13,7 +14,7 @@ type Props = {
 const SectionHeader = ({ accessoryRight, label }: Props) => {
   const theme = useTheme();
   return (
-    <Row px="medium" justify="between">
+    <Row px="medium" justify="between" style={styles.row}>
       <Text
         weight="semibold"
         size="tiny"
@@ -27,3 +28,7 @@ const SectionHeader = ({ accessoryRight, label }: Props) => {
 };
 
 export default memo(SectionHeader);
+
+const styles = StyleSheet.create({
+  row: { height: SECTION_HEADER_HEIGHT },
+});
