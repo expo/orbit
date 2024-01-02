@@ -9,11 +9,7 @@ export async function launchSnackAsync(
   snackURL: string,
   { platform, deviceId }: launchSnackAsyncOptions
 ) {
-  // Attempts to extract sdk version from url. Match "sdk.", followed by one or more digits and dots, before a hyphen
-  // e.g. exp://exp.host/@snack/sdk.48.0.0-ChmcDz6VUr
-  const regex = /sdk\.([\d.]+)(?=-)/;
-  const match = snackURL.match(regex);
-  const version = match ? match[1] : undefined;
+  const version = await getSDKVersionForSnack(snackURL);
 
   if (platform === 'android') {
     await launchSnackOnAndroidAsync(snackURL, deviceId, version);
@@ -47,4 +43,41 @@ async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version
 
   await AppleDevice.ensureExpoClientInstalledAsync(deviceId);
   await AppleDevice.openSnackURLAsync(deviceId, snackURL);
+}
+
+export async function getSDKVersionForSnack(snackURL: string): Promise<string | undefined> {
+  // Attempts to extract sdk version from url. Match "sdk.", followed by one or more digits and dots, before a hyphen
+  // e.g. exp://exp.host/@snack/sdk.48.0.0-ChmcDz6VUr
+  const versionRegex = /sdk\.([\d.]+)(?=-)/;
+  const match = snackURL.match(versionRegex);
+  if (match?.[1]) {
+    return match[1];
+  }
+
+  // For snacks saved to accounts the ID can be `@snack/<hashId>` or `@<username>/<hashId>`.
+  const snackIdentifierRegex = /(@[^\/]+\/[^\/+]+)/;
+  const snackIdentifier = snackURL.match(snackIdentifierRegex)?.[0];
+  if (!snackIdentifier) {
+    return;
+  }
+
+  const snackId = snackIdentifier.startsWith('@snack/')
+    ? snackIdentifier.substring('@snack/'.length)
+    : snackIdentifier;
+
+  // Get the SDK version for a specific snack from the Snack API.
+  try {
+    const response = await fetch(`https://exp.host/--/api/v2/snack/${snackId}`, {
+      method: 'GET',
+      headers: {
+        'Snack-Api-Version': '3.0.0',
+      },
+    });
+    const { sdkVersion }: { sdkVersion: string } = await response.json();
+
+    return sdkVersion;
+  } catch (err) {
+    console.error(`Failed fetch snack with identifier: ${snackId}`, err);
+    throw err;
+  }
 }

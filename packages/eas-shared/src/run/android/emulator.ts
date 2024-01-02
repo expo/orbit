@@ -124,6 +124,19 @@ export async function installAppAsync(
   Log.succeed('Successfully installed your app!');
 }
 
+export async function uninstallAppAsync(
+  emulator: AndroidConnectedDevice | AndroidEmulator,
+  bundleId: string
+): Promise<void> {
+  Log.newLine();
+  Log.log(`Uninstalling ${bundleId}...`);
+
+  assert(emulator.pid);
+  await adbAsync('-s', emulator.pid, 'uninstall', bundleId);
+
+  Log.succeed(`Successfully uninstalled ${bundleId}!`);
+}
+
 export async function startAppAsync(
   emulator: AndroidConnectedDevice | AndroidEmulator,
   packageName: string,
@@ -150,22 +163,16 @@ export async function startAppAsync(
   Log.succeed('Successfully started your app!');
 }
 
-// Expo installed
-async function isExpoClientInstalledOnEmulatorAsync(pid: string): Promise<boolean> {
-  const packages = await adbAsync(
-    '-s',
-    pid,
-    'shell',
-    'pm',
-    'list',
-    'packages',
-    EXPO_GO_BUNDLE_IDENTIFIER
-  );
+export async function isAppInstalledOnEmulatorAsync(
+  pid: string,
+  bundleId: string
+): Promise<boolean> {
+  const packages = await adbAsync('-s', pid, 'shell', 'pm', 'list', 'packages', bundleId);
 
   const lines = packages.stdout.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (line === `package:${EXPO_GO_BUNDLE_IDENTIFIER}`) {
+    if (line === `package:${bundleId}`) {
       return true;
     }
   }
@@ -296,16 +303,34 @@ async function expoVersionOnEmulatorAsync(pid: string): Promise<string | null> {
   return regexMatch[1];
 }
 
-async function doesExpoClientNeedUpdatedAsync(pid: string, sdkVersion?: string): Promise<boolean> {
+/**
+ * Checks Expo Go compatibility with an SDK version by verifying
+ * the latest Expo Go version released for that SDK. On Android
+ * we can't directly check supported SDKs of the installed app
+ * like we do on iOS.
+ */
+async function checkExpoClientCompatibilityAsync(
+  pid: string,
+  sdkVersion?: string
+): Promise<{ compatible: boolean; requiresDowngrade?: boolean }> {
   const versions = await Versions.versionsAsync();
   const clientForSdk = await getClientForSDK(sdkVersion);
   const latestVersionForSdk = clientForSdk?.version ?? versions.androidClientVersion;
 
   const installedVersion = await expoVersionOnEmulatorAsync(pid);
-  if (installedVersion && semver.lt(installedVersion, latestVersionForSdk)) {
-    return true;
+  if (!installedVersion) {
+    return { compatible: false };
   }
-  return false;
+
+  const isCompatible = semver.satisfies(
+    installedVersion,
+    `${semver.major(latestVersionForSdk)}.${semver.minor(latestVersionForSdk)}.x`
+  );
+
+  return {
+    compatible: isCompatible,
+    requiresDowngrade: semver.gt(installedVersion, latestVersionForSdk),
+  };
 }
 
 export async function installExpoOnEmulatorAsync({
@@ -346,23 +371,29 @@ export async function installExpoOnEmulatorAsync({
 }
 
 export async function ensureExpoClientInstalledAsync(pid: string, sdkVersion?: string) {
-  let isInstalled = await isExpoClientInstalledOnEmulatorAsync(pid);
-  if (isInstalled && (await doesExpoClientNeedUpdatedAsync(pid, sdkVersion))) {
-    isInstalled = false;
+  const { compatible, requiresDowngrade } = await checkExpoClientCompatibilityAsync(
+    pid,
+    sdkVersion
+  );
+
+  if (compatible) {
+    return;
   }
 
-  if (!isInstalled) {
-    const androidClient = await getClientForSDK(sdkVersion);
-    const versions = await Versions.versionsAsync();
-    const url = androidClient?.url ?? versions.androidUrl;
-    if (!url) {
-      throw new Error();
-    }
-
-    await installExpoOnEmulatorAsync({
-      pid,
-      url,
-      version: androidClient?.version,
-    });
+  if (requiresDowngrade) {
+    await uninstallAppAsync({ pid } as AndroidEmulator, EXPO_GO_BUNDLE_IDENTIFIER);
   }
+
+  const androidClient = await getClientForSDK(sdkVersion);
+  const versions = await Versions.versionsAsync();
+  const url = androidClient?.url ?? versions.androidUrl;
+  if (!url) {
+    throw new Error('Unable to determine Expo Go download URL');
+  }
+
+  await installExpoOnEmulatorAsync({
+    pid,
+    url,
+    version: androidClient?.version,
+  });
 }
