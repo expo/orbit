@@ -12,6 +12,7 @@
 
 - Fix device selection logic when a simulator or device is no longer available. ([#114](https://github.com/expo/orbit/pull/114) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix projects section height when the user has less than 3 projects. ([#119](https://github.com/expo/orbit/pull/119) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix installing apps on Android real devices. ([#123](https://github.com/expo/orbit/pull/123) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🛠 Breaking changes
 
