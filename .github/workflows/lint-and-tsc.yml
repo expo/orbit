@@ -31,7 +31,6 @@ jobs:
       - name: 👀 Checkout
         uses: actions/checkout@v4
         with:
-          node-version: 18
           submodules: true
       - name: ⬢ Setup Node
         uses: actions/setup-node@v4
