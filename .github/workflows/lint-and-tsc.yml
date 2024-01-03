@@ -29,11 +29,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: 👀 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
       - name: ⬢ Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
       - name: 🧶 Install workspace node modules
@@ -62,7 +62,7 @@ jobs:
         working-directory: apps/cli
 
       - name: Check CHANGELOG entry
-        uses: dangoslen/changelog-enforcer@v3.2.0
+        uses: dangoslen/changelog-enforcer@v3
         with:
           skipLabels: "skip-changelog-check"
           missingUpdateErrorMessage: "Your changes should be noted in the changelog. Read [Updating Changelogs](https://github.com/expo/expo/blob/main/guides/contributing/Updating%20Changelogs.md) guide and consider adding an appropriate entry."
