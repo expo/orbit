@@ -34,7 +34,7 @@
     "node-fetch": "2.6.7",
     "ora": "5.1.0",
     "querystring": "0.2.0",
-    "semver": "7.3.2",
+    "semver": "7.5.2",
     "tar": "6.1.13",
     "uuid": "9.0.0"
   }
