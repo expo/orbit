@@ -48,7 +48,7 @@ export function getStylesForColor(color: Color, theme: ReturnType<typeof useCurr
           theme === 'light'
             ? addOpacity(lightTheme.background.default, 0.8)
             : addOpacity(darkTheme.background.default, 0.4),
-        borderColor: theme === 'light' ? addOpacity(lightTheme.border.default, 1) : 'transparent',
+        borderColor: theme === 'light' ? lightTheme.border.default : darkTheme.border.default,
         borderWidth: 1,
       };
 
@@ -73,7 +73,7 @@ export function getStylesForColor(color: Color, theme: ReturnType<typeof useCurr
 const styles = StyleSheet.create({
   base: {
     height: 32,
-    borderRadius: 8,
+    borderRadius: 6,
     paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',

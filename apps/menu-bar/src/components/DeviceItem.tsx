@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginLeft: 8,
+    borderWidth: 0,
   },
   indicator: {
     fontSize: 11,

@@ -75,7 +75,7 @@ const Checkbox = ({ onChange, onValueChange, label, ...props }: CheckboxProps) =
             onValueChange?.(!props.value);
             setNative({ value: !props.value });
           }}>
-          <Text>{label}</Text>
+          <Text size="small">{label}</Text>
         </Pressable>
       )}
     </Row>
