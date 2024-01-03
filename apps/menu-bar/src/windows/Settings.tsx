@@ -1,6 +1,6 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
 import React, { Fragment, useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { StyleSheet, TouchableOpacity, Switch, Platform } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import { withApolloProvider } from '../api/ApolloClient';
@@ -152,130 +152,161 @@ const Settings = () => {
     setUserPreferences(newPreferences);
   };
 
+  const groupWrapperStyle = {
+    backgroundColor:
+      theme === 'light'
+        ? addOpacity(lightTheme.background.default, 0.6)
+        : addOpacity(darkTheme.background.default, 0.2),
+  };
+
   return (
     <View flex="1" px="medium" pb="medium">
       <View flex="1">
-        <View mb="2">
-          <Text size="medium" weight="semibold">
+        <View mb="3">
+          <Text size="medium" weight="semibold" style={[headerStyle, styles.headerSpacing]}>
             Account
           </Text>
-          {hasSessionSecret ? (
-            <Row>
-              {currentUser ? (
-                <Row align="center" flex="1" mt="1">
-                  <Avatar
-                    name={getCurrentUserDisplayName(currentUser)}
-                    profilePhoto={currentUser.profilePhoto}
-                  />
-                  <View mx="2" flex="1">
-                    <Text weight="medium" numberOfLines={1}>
-                      {getCurrentUserDisplayName(currentUser)}
-                    </Text>
-                    <Text size="tiny">{currentUser.bestContactEmail}</Text>
-                  </View>
-                </Row>
-              ) : null}
-
-              <Button title="Log Out" onPress={handleLogout} style={styles.button} />
-              {__DEV__ ? (
-                <TouchableOpacity
-                  onPress={() => WindowsNavigator.open('DebugMenu')}
-                  style={[styles.debugButton, getStylesForColor('primary', theme)?.touchableStyle]}>
-                  <SystemIconView systemIconName="ladybug" />
-                </TouchableOpacity>
-              ) : null}
-            </Row>
-          ) : (
-            <Row gap="2">
-              <Text style={styles.flex} size="tiny">
-                Log in or create an account to access your projects, builds and more.
-              </Text>
-              <Button
-                title="Sign Up"
-                onPress={() => handleAuthentication('signup')}
-                color="primary"
-              />
-              <Button title="Log In" onPress={() => handleAuthentication('login')} />
-              {__DEV__ ? (
-                <TouchableOpacity
-                  onPress={() => WindowsNavigator.open('DebugMenu')}
-                  style={[styles.debugButton, getStylesForColor('primary', theme)?.touchableStyle]}>
-                  <SystemIconView systemIconName="ladybug" />
-                </TouchableOpacity>
-              ) : null}
-            </Row>
-          )}
-        </View>
-        <Text size="medium" weight="semibold">
-          Preferences
-        </Text>
-        <Row mb="2" align="center" justify="between">
-          <Checkbox
-            value={automaticallyChecksForUpdates}
-            onValueChange={onPressSetAutomaticallyChecksForUpdates}
-            label="Check for updates automatically"
-          />
-          <Button
-            color="primary"
-            title="Check for updates"
-            onPress={SparkleModule.checkForUpdates}
-          />
-        </Row>
-        <Row mb="3.5" align="center" gap="1">
-          <Checkbox
-            value={userPreferences.launchOnLogin}
-            onValueChange={onPressLaunchOnLogin}
-            label="Launch on login"
-          />
-        </Row>
-        <Row mb="3.5" align="center">
-          <Checkbox
-            value={userPreferences.emulatorWithoutAudio}
-            onValueChange={onPressEmulatorWithoutAudio}
-            label="Run Android emulator without audio"
-          />
-        </Row>
-        <View mb="3.5">
-          <Row mb="2" align="center">
-            <Checkbox
-              value={customSdkPathEnabled}
-              onValueChange={toggleCustomSdkPath}
-              label="Custom Android SDK root location"
-            />
-          </Row>
-          <PathInput
-            editable={customSdkPathEnabled}
-            onChangeText={(text) => {
-              setUserPreferences((prev) => {
-                const newPreferences = { ...prev, customSdkPath: text };
-                saveUserPreferences(newPreferences);
-                MenuBarModule.setEnvVars({
-                  ANDROID_HOME: text,
-                });
-                return newPreferences;
-              });
-            }}
-            value={userPreferences.customSdkPath}
-          />
-        </View>
-        <View>
-          <Text size="medium" weight="medium">
-            Platforms
-          </Text>
-          <Text size="tiny" color="secondary">
-            Only devices for the enabled platforms will be listed in the menu bar
-          </Text>
-          <View
+          <Row
+            align="center"
+            gap="2"
             mt="1.5"
             rounded="medium"
-            style={{
-              backgroundColor:
-                theme === 'light'
-                  ? addOpacity(lightTheme.background.default, 0.6)
-                  : addOpacity(darkTheme.background.default, 0.2),
-            }}
+            style={groupWrapperStyle}
             border="light"
-            px="2">
+            px="2.5"
+            pt="1"
+            pb="2">
+            {hasSessionSecret ? (
+              <Row align="center" mt="1" gap="2">
+                {currentUser ? (
+                  <Row align="center" flex="1">
+                    <Avatar
+                      name={getCurrentUserDisplayName(currentUser)}
+                      profilePhoto={currentUser.profilePhoto}
+                    />
+                    <View mx="2" flex="1">
+                      <Text weight="medium" numberOfLines={1}>
+                        {getCurrentUserDisplayName(currentUser)}
+                      </Text>
+                      <Text size="tiny">{currentUser.bestContactEmail}</Text>
+                    </View>
+                  </Row>
+                ) : null}
+                {__DEV__ ? (
+                  <TouchableOpacity
+                    onPress={() => WindowsNavigator.open('DebugMenu')}
+                    style={[
+                      styles.debugButton,
+                      getStylesForColor('primary', theme)?.touchableStyle,
+                    ]}>
+                    <SystemIconView systemIconName="ladybug" />
+                  </TouchableOpacity>
+                ) : null}
+                <Button title="Log Out" onPress={handleLogout} style={styles.button} />
+              </Row>
+            ) : (
+              <Row align="center" mt="2" mb="1" gap="2">
+                <Text style={[styles.flex, { lineHeight: 15 }]} numberOfLines={2} size="tiny">
+                  Log in or create an account to access your projects, builds and more.
+                </Text>
+                {__DEV__ ? (
+                  <TouchableOpacity
+                    onPress={() => WindowsNavigator.open('DebugMenu')}
+                    style={[
+                      styles.debugButton,
+                      getStylesForColor('primary', theme)?.touchableStyle,
+                    ]}>
+                    <SystemIconView systemIconName="ladybug" />
+                  </TouchableOpacity>
+                ) : null}
+                <Button
+                  title="Sign Up"
+                  onPress={() => handleAuthentication('signup')}
+                  style={styles.button}
+                  color="primary"
+                />
+                <Button
+                  title="Log In"
+                  onPress={() => handleAuthentication('login')}
+                  style={styles.button}
+                />
+              </Row>
+            )}
+          </Row>
+        </View>
+        <Text size="medium" weight="semibold" style={[headerStyle, styles.headerSpacing]}>
+          Preferences
+        </Text>
+        <View
+          mt="1.5"
+          mb="3"
+          rounded="medium"
+          style={groupWrapperStyle}
+          border="light"
+          px="2.5"
+          py="2.5">
+          <Row mb="2" align="center" justify="between">
+            <Checkbox
+              value={automaticallyChecksForUpdates}
+              onValueChange={onPressSetAutomaticallyChecksForUpdates}
+              label="Check for updates automatically"
+            />
+            <Button
+              style={{ height: 28 }}
+              color="primary"
+              title="Check for updates"
+              onPress={SparkleModule.checkForUpdates}
+            />
+          </Row>
+          <Divider />
+          <Row py="2" align="center" gap="1">
+            <Checkbox
+              value={userPreferences.launchOnLogin}
+              onValueChange={onPressLaunchOnLogin}
+              label="Launch on login"
+            />
+          </Row>
+          <Divider />
+          <Row py="2" align="center">
+            <Checkbox
+              value={userPreferences.emulatorWithoutAudio}
+              onValueChange={onPressEmulatorWithoutAudio}
+              label="Run Android emulator without audio"
+            />
+          </Row>
+          <Divider />
+          <View>
+            <Row py="2" align="center">
+              <Checkbox
+                value={customSdkPathEnabled}
+                onValueChange={toggleCustomSdkPath}
+                label="Custom Android SDK root location"
+              />
+            </Row>
+            <PathInput
+              editable={customSdkPathEnabled}
+              onChangeText={(text) => {
+                setUserPreferences((prev) => {
+                  const newPreferences = { ...prev, customSdkPath: text };
+                  saveUserPreferences(newPreferences);
+                  MenuBarModule.setEnvVars({
+                    ANDROID_HOME: text,
+                  });
+                  return newPreferences;
+                });
+              }}
+              value={userPreferences.customSdkPath}
+            />
+          </View>
+        </View>
+        <View>
+          <Text size="medium" weight="semibold" style={[headerStyle, styles.headerSpacing]}>
+            Platforms
+          </Text>
+          <Text size="tiny" color="secondary" style={[styles.headerSpacing, styles.subheader]}>
+            Only devices for the enabled platforms will be listed in the menu bar
+          </Text>
+          <View mt="2" rounded="medium" style={groupWrapperStyle} border="light" px="2.5">
             {osList.map(({ label, key }, index, list) => (
               <Fragment key={key}>
                 <Row align="center" justify="between">
@@ -294,13 +325,10 @@ const Settings = () => {
           </View>
         </View>
       </View>
-      <Divider mb="tiny" />
-      <View py="tiny">
-        <Text color="secondary" style={styles.about}>
-          {`Version: ${MenuBarModule.constants.appVersion} (${MenuBarModule.constants.buildVersion})`}
-        </Text>
-      </View>
-      <Text color="secondary" style={styles.about}>
+      <Text color="secondary" size="tiny" align="center">
+        {`Version: ${MenuBarModule.constants.appVersion} (${MenuBarModule.constants.buildVersion})`}
+      </Text>
+      <Text color="secondary" size="tiny" align="center">
         Copyright 650 Industries Inc, 2023
       </Text>
     </View>
@@ -309,26 +337,32 @@ const Settings = () => {
 
 export default withApolloProvider(Settings);
 
+const headerStyle = Platform.select({
+  macos: { fontFamily: 'SF Pro Rounded', letterSpacing: 0.33 },
+});
+
 const styles = StyleSheet.create({
-  about: {
-    fontSize: 13,
-  },
   button: {
-    marginLeft: 'auto',
+    height: 32,
   },
   flex: {
     flex: 1,
   },
+  headerSpacing: {
+    paddingLeft: 10,
+  },
+  subheader: {
+    marginTop: -3,
+  },
   debugButton: {
     height: 32,
-    borderRadius: 8,
+    borderRadius: 6,
     paddingHorizontal: 8,
-    marginLeft: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   switch: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
   },
 });

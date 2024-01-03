@@ -111,7 +111,7 @@ export const text = {
 
   size: {
     tiny: typography.fontSizes[12],
-    small: typography.fontSizes[14],
+    small: typography.fontSizes[13],
     medium: typography.fontSizes[16],
     large: typography.fontSizes[18],
   },
