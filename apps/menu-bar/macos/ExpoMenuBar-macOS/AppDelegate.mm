@@ -92,7 +92,13 @@
 
 - (void)settingsAction:(id)sender {
   WindowNavigator *windowNavigator = [WindowNavigator shared];
-  [windowNavigator openWindow:@"Settings" options:@{}];
+  [windowNavigator openWindow:@"Settings" options:@{
+    @"windowStyle": @{
+      @"titlebarAppearsTransparent": @YES,
+      @"height": @(580.0),
+      @"width": @(500.0)
+    }
+  }];
 }
 
 - (void)openPopover {
