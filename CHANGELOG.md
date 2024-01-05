@@ -23,6 +23,7 @@
 - Configure EAS build workflow. ([#115](https://github.com/expo/orbit/pull/115) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Refresh the Settings window UI. ([#121](https://github.com/expo/orbit/pull/121) by [@simek](https://github.com/simek))
 - Remove unused options from native main menu when the app is focused. ([#128](https://github.com/expo/orbit/pull/128) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade react-native to 0.73.1. ([#129](https://github.com/expo/orbit/pull/129) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.0.1 — 2023-12-01
 
