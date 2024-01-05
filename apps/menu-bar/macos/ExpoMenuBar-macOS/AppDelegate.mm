@@ -167,4 +167,8 @@
 #endif
 }
 
+- (IBAction)showHelp:(id)sender {
+  [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://docs.expo.dev/build/orbit/"]];
+}
+
 @end
