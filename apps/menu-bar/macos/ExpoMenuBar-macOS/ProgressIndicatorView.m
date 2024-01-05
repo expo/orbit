@@ -32,10 +32,10 @@
   _activityIndicatorViewStyle = activityIndicatorViewStyle;
 
   switch (activityIndicatorViewStyle) {
-    case UIActivityIndicatorViewStyleWhiteLarge:
+    case UIActivityIndicatorViewStyleLarge:
       self.controlSize = NSControlSizeRegular;
       break;
-    case UIActivityIndicatorViewStyleWhite:
+    case UIActivityIndicatorViewStyleMedium:
       self.controlSize = NSControlSizeSmall;
       break;
     default:
