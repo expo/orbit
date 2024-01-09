@@ -1,17 +1,17 @@
 PODS:
   - boost (1.83.0)
   - DoubleConversion (1.1.6)
-  - EXConstants (15.4.5):
+  - EXConstants (0.0.1-canary-20240109-93608d8):
     - ExpoModulesCore
-  - EXFont (11.10.2):
+  - EXFont (0.0.1-canary-20240109-93608d8):
     - ExpoModulesCore
-  - Expo (50.0.1):
+  - Expo (50.0.0-canary-20240109-93608d8):
     - ExpoModulesCore
-  - ExpoFileSystem (16.0.4):
+  - ExpoFileSystem (0.0.1-canary-20240109-93608d8):
     - ExpoModulesCore
-  - ExpoKeepAwake (12.8.2):
+  - ExpoKeepAwake (0.0.1-canary-20240109-93608d8):
     - ExpoModulesCore
-  - ExpoModulesCore (1.11.7):
+  - ExpoModulesCore (0.0.1-canary-20240109-93608d8):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1279,12 +1279,22 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 1401ba01f443d1a21a7994aa5f7233c101321909
   DoubleConversion: 56bb181dd9093360c7cd027b592155b7f33eeb61
+<<<<<<< HEAD
   EXConstants: 988aa430ca0f76b43cd46b66e7fae3287f9cc2fc
   EXFont: 21b9c760abd593ce8f0d5386b558ced76018506f
   Expo: 08cf73d1f27103bdcdfba181c81469ac4b15ac5a
   ExpoFileSystem: 39e454b8e7f2358ae2c8f8ec255fede4c3039493
   ExpoKeepAwake: 0f5cad99603a3268e50af9a6eb8b76d0d9ac956c
   ExpoModulesCore: f103ff1346136b2926e1654f32b3f45ab0b74830
+||||||| parent of 09444bf (Install the expo package and set up autolinking)
+=======
+  EXConstants: c4848a82811f5259811096b8276bec4963811849
+  EXFont: 2bf12f3525494f58c0c5df7ebe21cc0c29a5d366
+  Expo: 5092b336757a2030e5c25b74fd8c727c9b4dd52c
+  ExpoFileSystem: 7bd39e7e87ee232a784a82ab3763961161d1999d
+  ExpoKeepAwake: b84ea3a3f930dcd8f766c3d4840cb3cbe42f0a0d
+  ExpoModulesCore: c3cd0f3a60dae0dab7be862c1b96f2c4b40a7510
+>>>>>>> 09444bf (Install the expo package and set up autolinking)
   FBLazyVector: 14f62078163e7c4de6350da6b1bf5b9693ef3cf3
   FBReactNativeSpec: ece148d0cb5b013acbfdc290eefe0328be54b5d3
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
