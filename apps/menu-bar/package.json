@@ -22,6 +22,7 @@
     "@react-native-clipboard/clipboard": "^1.13.1",
     "apollo3-cache-persist": "^0.14.1",
     "common-types": "1.0.0",
+    "expo": "^50.0.0-canary-20240109-93608d8",
     "graphql": "^16.8.0",
     "react": "18.2.0",
     "react-native": "0.73.1",
