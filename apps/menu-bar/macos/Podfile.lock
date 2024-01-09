@@ -26,6 +26,8 @@ PODS:
     - React-Core (= 0.73.1)
     - React-jsi (= 0.73.1)
     - ReactCommon/turbomodule/core (= 0.73.1)
+  - FilePicker (1.0.0):
+    - ExpoModulesCore
   - fmt (6.2.1)
   - glog (0.3.5)
   - hermes-engine (0.73.1):
@@ -1098,6 +1100,7 @@ DEPENDENCIES:
   - ExpoModulesCore (from `../../../node_modules/expo-modules-core`)
   - FBLazyVector (from `../../../node_modules/react-native-macos/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../../../node_modules/react-native-macos/React/FBReactNativeSpec`)
+  - FilePicker (from `../modules/file-picker/ios`)
   - glog (from `../../../node_modules/react-native-macos/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../../../node_modules/react-native-macos/sdks/hermes-engine/hermes-engine.podspec`)
   - libevent (~> 2.1.12)
@@ -1183,6 +1186,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-macos/Libraries/FBLazyVector"
   FBReactNativeSpec:
     :path: "../../../node_modules/react-native-macos/React/FBReactNativeSpec"
+  FilePicker:
+    :path: "../modules/file-picker/ios"
   glog:
     :podspec: "../../../node_modules/react-native-macos/third-party-podspecs/glog.podspec"
   hermes-engine:
@@ -1292,6 +1297,7 @@ SPEC CHECKSUMS:
   ExpoModulesCore: f103ff1346136b2926e1654f32b3f45ab0b74830
   FBLazyVector: 14f62078163e7c4de6350da6b1bf5b9693ef3cf3
   FBReactNativeSpec: ece148d0cb5b013acbfdc290eefe0328be54b5d3
+  FilePicker: d9a9846a76942deee1e121a7d91f0938db0c8116
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 905b36b53c03b6e3afad8c8868237e84df8e17c4
   hermes-engine: 34df9d5034e90bd9bf1505e1ca198760373935af

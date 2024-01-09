@@ -4,8 +4,8 @@ import { StyleSheet, TouchableOpacity, TextInput as NativeTextInput } from 'reac
 
 import { TextInput } from './Text';
 import { Row } from './View';
+import * as FilePicker from '../../modules/file-picker';
 import FolderIcon from '../assets/icons/folder.svg';
-import FilePicker from '../modules/FilePickerModule';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme, useExpoTheme } from '../utils/useExpoTheme';
 
