@@ -326,7 +326,7 @@ const Settings = () => {
         </View>
       </View>
       <Text color="secondary" size="tiny" align="center">
-        {`Version: ${MenuBarModule.constants.appVersion} (${MenuBarModule.constants.buildVersion})`}
+        {`Version: ${MenuBarModule.appVersion} (${MenuBarModule.buildVersion})`}
       </Text>
       <Text color="secondary" size="tiny" align="center">
         Copyright 650 Industries Inc, 2023

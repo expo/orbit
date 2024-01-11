@@ -32,6 +32,8 @@ PODS:
     - hermes-engine/Pre-built (= 0.73.1)
   - hermes-engine/Pre-built (0.73.1)
   - libevent (2.1.12)
+  - MenuBar (1.0.0):
+    - ExpoModulesCore
   - MMKV (1.3.0):
     - MMKVCore (~> 1.3.0)
   - MMKVCore (1.3.0)
@@ -1099,6 +1101,7 @@ DEPENDENCIES:
   - glog (from `../../../node_modules/react-native-macos/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../../../node_modules/react-native-macos/sdks/hermes-engine/hermes-engine.podspec`)
   - libevent (~> 2.1.12)
+  - MenuBar (from `../modules/menu-bar/ios`)
   - RCT-Folly (from `../../../node_modules/react-native-macos/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../../../node_modules/react-native-macos/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../../../node_modules/react-native-macos/Libraries/RCTRequired`)
@@ -1185,6 +1188,8 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../../../node_modules/react-native-macos/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2023-11-17-RNv0.73.0-21043a3fc062be445e56a2c10ecd8be028dd9cc5
+  MenuBar:
+    :path: "../modules/menu-bar/ios"
   RCT-Folly:
     :podspec: "../../../node_modules/react-native-macos/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -1301,6 +1306,7 @@ SPEC CHECKSUMS:
   glog: 905b36b53c03b6e3afad8c8868237e84df8e17c4
   hermes-engine: 34df9d5034e90bd9bf1505e1ca198760373935af
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
+  MenuBar: d81681b6da1a7ab4bb05a9b3d08357754b908d34
   MMKV: 9c6c3fa4ddd849f28c7b9a5c9d23aab84f14ee35
   MMKVCore: 9bb7440b170181ac5b81f542ac258103542e693d
   RCT-Folly: 270f9eebb5a7d757382d0438ea993e4d7aa85932
@@ -1350,8 +1356,8 @@ SPEC CHECKSUMS:
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Sparkle: 913cef92f73e08d0ae47a36ee20e523913e5f9e2
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
-  Yoga: 5f6d85ca2ac7a018ea0ff4c3da3e5514a3f2149c
+  Yoga: 88f18d68738202d1be157e417a291ac59f86a77c
 
 PODFILE CHECKSUM: b99b8d2f5c2bf6a9433cff98783c664f2c1bbfb5
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.14.2
