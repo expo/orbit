@@ -1,6 +1,5 @@
 import type { ExpoConfig } from '@expo/config';
 import getenv from 'getenv';
-import pickBy from 'lodash/pickBy';
 import path from 'path';
 import semver from 'semver';
 
@@ -28,7 +27,6 @@ export type SDKVersion = {
 };
 
 export type SDKVersions = { [version: string]: SDKVersion };
-type TurtleSDKVersions = { android: string[]; ios: string[] };
 type TurtleSDKVersionsOld = { android: string; ios: string };
 
 type Versions = {
@@ -63,39 +61,6 @@ export async function sdkVersionsAsync(): Promise<SDKVersions> {
   return sdkVersions;
 }
 
-// NOTE(brentvatne): it is possible for an unreleased version to be published to
-// the versions endpoint, but in some cases we only want to list out released
-// versions
-export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
-  const sdkVersions = await sdkVersionsAsync();
-  return pickBy(
-    sdkVersions,
-    (data: SDKVersion) => !!data.releaseNoteUrl || (getenv.boolish('EXPO_BETA', false) && data.beta)
-  );
-}
-
-export function gteSdkVersion(
-  expJson: Pick<ExpoConfig, 'sdkVersion'>,
-  sdkVersion: string
-): boolean {
-  if (!expJson.sdkVersion) {
-    return false;
-  }
-
-  if (expJson.sdkVersion === 'UNVERSIONED') {
-    return true;
-  }
-
-  try {
-    return semver.gte(expJson.sdkVersion, sdkVersion);
-  } catch {
-    throw new InternalError(
-      'INVALID_VERSION',
-      `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
-    );
-  }
-}
-
 export function lteSdkVersion(
   expJson: Pick<ExpoConfig, 'sdkVersion'>,
   sdkVersion: string
@@ -116,75 +81,4 @@ export function lteSdkVersion(
       `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
-}
-
-export function parseSdkVersionFromTag(tag: string): string {
-  if (tag.startsWith('sdk-')) {
-    return tag.substring(4);
-  }
-
-  return tag;
-}
-
-// NOTE(brentvatne): it is possible for an unreleased version to be published to
-// the versions endpoint, but in some cases we need to get the latest *released*
-// version, not just the latest version.
-export async function newestReleasedSdkVersionAsync(): Promise<{
-  version: string;
-  data: SDKVersion | null;
-}> {
-  const betaOptInEnabled = getenv.boolish('EXPO_BETA', false);
-  const sdkVersions = await sdkVersionsAsync();
-
-  let result = null;
-  let highestMajorVersion = '0.0.0';
-
-  for (const [version, data] of Object.entries(sdkVersions)) {
-    const hasReleaseNotes = !!data.releaseNoteUrl;
-    const isBeta = !!data.beta;
-
-    if (
-      semver.major(version) > semver.major(highestMajorVersion) &&
-      (hasReleaseNotes || (isBeta && betaOptInEnabled))
-    ) {
-      highestMajorVersion = version;
-      result = data;
-    }
-  }
-  return {
-    version: highestMajorVersion,
-    data: result,
-  };
-}
-
-export async function oldestSupportedMajorVersionAsync(): Promise<number> {
-  const sdkVersions = await sdkVersionsAsync();
-  const supportedVersions = pickBy(sdkVersions, (v: SDKVersion) => !v.isDeprecated);
-  const versionNumbers = Object.keys(supportedVersions).map((version) => semver.major(version));
-  return Math.min(...versionNumbers);
-}
-
-export async function canTurtleBuildSdkVersion(
-  sdkVersion: string,
-  platform: keyof TurtleSDKVersions
-): Promise<boolean> {
-  if (sdkVersion === 'UNVERSIONED') {
-    return true;
-  }
-
-  if (semver.valid(sdkVersion) == null) {
-    throw new InternalError(
-      'INVALID_VERSION',
-      `"${sdkVersion}" is not a valid version. Must be in the form of x.y.z`
-    );
-  }
-
-  const supportedVersions = await getSdkVersionsSupportedByTurtle();
-  const supportedVersionsForPlatform: string[] = supportedVersions[platform] ?? [];
-  return supportedVersionsForPlatform.indexOf(sdkVersion) !== -1;
-}
-
-async function getSdkVersionsSupportedByTurtle(): Promise<TurtleSDKVersions> {
-  const api = new ApiV2Client();
-  return await api.getAsync('standalone-build/supportedSDKVersions');
 }
