@@ -10,6 +10,8 @@ import AppleDevice from './run/ios/device';
 import * as Simulator from './run/ios/simulator';
 import { validateSystemRequirementsAsync as validateIOSSystemRequirementsAsync } from './run/ios/systemRequirements';
 import * as Env from './env';
+import * as ManifestUtils from './manifest';
+import { Manifest } from './manifest';
 
 export {
   AppPlatform,
@@ -23,4 +25,6 @@ export {
   Simulator,
   AppleDevice,
   Env,
+  ManifestUtils,
+  Manifest,
 };
