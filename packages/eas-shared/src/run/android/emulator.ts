@@ -207,23 +207,6 @@ export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
   await activateEmulatorWindowAsync({ pid, deviceType: 'emulator' });
 
   try {
-    // NOTE(brentvatne): temporary workaround! launch Expo Go first, then
-    // launch the project!
-    // https://github.com/expo/expo/issues/7772
-    // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
-    // Note: this is not needed in Expo Development Client, it only applies to Expo Go
-    await adbAsync(
-      '-s',
-      pid,
-      'shell',
-      'monkey',
-      '-p',
-      EXPO_GO_BUNDLE_IDENTIFIER,
-      '-c',
-      'android.intent.category.LAUNCHER',
-      '1'
-    );
-
     const openProject = await adbAsync(
       '-s',
       pid,
