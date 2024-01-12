@@ -2,7 +2,7 @@ import ExpoModulesCore
 
 internal class CLIOutputError: GenericException<String> {
   override var reason: String {
-    "Output error: \(param)"
+    param
   }
 }
 
