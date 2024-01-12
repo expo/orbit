@@ -30,7 +30,6 @@ async function runCli(command: string, args: string[], callback?: (status: strin
 }
 
 export default {
-  ...MenuBarModule,
   appVersion: MenuBarModule.appVersion,
   buildVersion: MenuBarModule.buildVersion,
   exitApp: () => MenuBarModule.exitApp(),
@@ -46,6 +45,10 @@ export default {
     listener.remove();
     return result;
   },
+  setLoginItemEnabled: (enabled: boolean) => MenuBarModule.setLoginItemEnabled(enabled),
+  setEnvVars: (envVars: { [key: string]: string }) => MenuBarModule.setEnvVars(envVars),
+  showMultiOptionAlert: (title: string, message: string, options: string[]) =>
+    MenuBarModule.showMultiOptionAlert(title, message, options),
   openPopover: () => MenuBarModule.openPopover(),
   closePopover: () => MenuBarModule.closePopover(),
 };
