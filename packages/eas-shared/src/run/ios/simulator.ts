@@ -254,11 +254,21 @@ export async function installAsync(options: { udid: string; dir: string }): Prom
   return simctlAsync(['install', options.udid, options.dir]);
 }
 
-export async function isExpoClientInstalledOnSimulatorAsync(udid: string): Promise<boolean> {
+export async function checkIfAppIsInstalled({
+  udid,
+  bundleId,
+}: {
+  udid: string;
+  bundleId: string;
+}): Promise<boolean> {
   return !!(await getContainerPathAsync({
     udid,
-    bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
+    bundleIdentifier: bundleId,
   }));
+}
+
+export async function isExpoClientInstalledOnSimulatorAsync(udid: string): Promise<boolean> {
+  return checkIfAppIsInstalled({ udid, bundleId: EXPO_GO_BUNDLE_IDENTIFIER });
 }
 
 async function getClientForSDK(sdkVersionString?: string) {

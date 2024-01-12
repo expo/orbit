@@ -165,10 +165,13 @@ export async function startAppAsync(
   Log.succeed('Successfully started your app!');
 }
 
-export async function isAppInstalledOnEmulatorAsync(
-  pid: string,
-  bundleId: string
-): Promise<boolean> {
+export async function checkIfAppIsInstalled({
+  pid,
+  bundleId,
+}: {
+  pid: string;
+  bundleId: string;
+}): Promise<boolean> {
   const packages = await adbAsync('-s', pid, 'shell', 'pm', 'list', 'packages', bundleId);
 
   const lines = packages.stdout.split(/\r?\n/);
