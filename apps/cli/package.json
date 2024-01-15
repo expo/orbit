@@ -23,6 +23,7 @@
     "commander": "^10.0.1",
     "common-types": "1.0.0",
     "eas-shared": "*",
+    "nodejs-mmkv": "^0.1.1",
     "strip-ansi": "^6.0.0"
   },
   "devDependencies": {
