@@ -6,6 +6,14 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 1.0.2 — 2024-01-16
+
+### 🎉 New features
+
 - Improve Snack support for older SDKs. ([#117](https://github.com/expo/orbit/pull/117) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
@@ -16,8 +24,6 @@
 - Fix Settings window size when opening it from the context menu. ([#127](https://github.com/expo/orbit/pull/127) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix osascript error when launching apps on the Simulator. ([#139](https://github.com/expo/orbit/pull/139) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve popover height calculations when using multiple displays. ([#140](https://github.com/expo/orbit/pull/140) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 🛠 Breaking changes
 
 ### 💡 Others
 
