@@ -19,7 +19,6 @@
   "dependencies": {
     "@apollo/client": "^3.8.1",
     "@expo/styleguide-native": "^1.0.1",
-    "@react-native-async-storage/async-storage": "^1.19.0",
     "@react-native-clipboard/clipboard": "^1.13.1",
     "apollo3-cache-persist": "^0.14.1",
     "common-types": "1.0.0",

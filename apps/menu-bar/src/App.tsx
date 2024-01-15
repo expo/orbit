@@ -3,7 +3,6 @@ import { StyleSheet } from 'react-native';
 
 import AutoResizerRootView from './components/AutoResizerRootView';
 import { SAFE_AREA_FACTOR } from './hooks/useSafeDisplayDimensions';
-import { PersistGate } from './modules/PersistGate';
 import Popover from './popover';
 import { DevicesProvider } from './providers/DevicesProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
@@ -18,13 +17,11 @@ function App(props: Props) {
       style={styles.container}
       enabled={!props.isDevWindow}
       maxRelativeHeight={SAFE_AREA_FACTOR}>
-      <PersistGate>
-        <ThemeProvider themePreference="no-preference">
-          <DevicesProvider>
-            <Popover isDevWindow={props.isDevWindow} />
-          </DevicesProvider>
-        </ThemeProvider>
-      </PersistGate>
+      <ThemeProvider themePreference="no-preference">
+        <DevicesProvider>
+          <Popover isDevWindow={props.isDevWindow} />
+        </DevicesProvider>
+      </ThemeProvider>
     </AutoResizerRootView>
   );
 }
