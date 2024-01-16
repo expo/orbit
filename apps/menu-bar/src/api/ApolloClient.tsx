@@ -8,8 +8,8 @@ import {
   ApolloProvider,
 } from '@apollo/client';
 import { MMKVWrapper, persistCache } from 'apollo3-cache-persist';
+import { Config } from 'common-types';
 
-import Config from './Config';
 import possibleTypesData from '../generated/graphql.possibleTypes.json';
 import { storage } from '../modules/Storage';
 

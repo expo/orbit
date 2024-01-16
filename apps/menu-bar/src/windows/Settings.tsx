@@ -1,10 +1,10 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
+import { Config } from 'common-types';
 import React, { Fragment, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, Switch, Platform } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import { withApolloProvider } from '../api/ApolloClient';
-import Config from '../api/Config';
 import { Checkbox, View, Row, Text, Divider } from '../components';
 import { Avatar } from '../components/Avatar';
 import Button, { getStylesForColor } from '../components/Button';
