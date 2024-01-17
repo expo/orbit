@@ -6,26 +6,32 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 1.0.2 — 2024-01-17
+
+### 🎉 New features
+
 - Improve Snack support for older SDKs. ([#117](https://github.com/expo/orbit/pull/117) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
 - Fix device selection logic when a simulator or device is no longer available. ([#114](https://github.com/expo/orbit/pull/114) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Fix projects section height when the user has less than 3 projects. ([#119](https://github.com/expo/orbit/pull/119) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix projects section height when the user has less than three projects. ([#119](https://github.com/expo/orbit/pull/119) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix installing apps on Android real devices. ([#123](https://github.com/expo/orbit/pull/123) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix Settings window size when opening it from the context menu. ([#127](https://github.com/expo/orbit/pull/127) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Fix osascript error when launching apps on the Simulator. ([#139](https://github.com/expo/orbit/pull/139) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix `osascript` error when launching apps on the Simulator. ([#139](https://github.com/expo/orbit/pull/139) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve popover height calculations when using multiple displays. ([#140](https://github.com/expo/orbit/pull/140) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 🛠 Breaking changes
 
 ### 💡 Others
 
-- Upgrade @react-native-clipboard/clipboard to 1.13.1 and remove patch. ([#116](https://github.com/expo/orbit/pull/116) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade `@react-native-clipboard/clipboard` to 1.13.1 and remove patch. ([#116](https://github.com/expo/orbit/pull/116) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Configure EAS build workflow. ([#115](https://github.com/expo/orbit/pull/115) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Refresh the Settings window UI. ([#121](https://github.com/expo/orbit/pull/121) by [@simek](https://github.com/simek))
 - Remove unused options from native main menu when the app is focused. ([#128](https://github.com/expo/orbit/pull/128) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Upgrade react-native to 0.73.1. ([#129](https://github.com/expo/orbit/pull/129) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade `react-native` to 0.73.1. ([#129](https://github.com/expo/orbit/pull/129) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.0.1 — 2023-12-01
 
