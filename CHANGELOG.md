@@ -10,6 +10,8 @@
 
 ### 💡 Others
 
+- Remove AsyncStorage migrator and @react-native-async-storage/async-storage dependency. ([#135](https://github.com/expo/orbit/pull/135) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 1.0.2 — 2024-01-17
 
 ### 🎉 New features

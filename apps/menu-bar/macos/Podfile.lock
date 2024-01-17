@@ -1059,8 +1059,6 @@ PODS:
     - React-jsi (= 0.73.1)
     - React-logger (= 0.73.1)
     - React-perflogger (= 0.73.1)
-  - RNCAsyncStorage (1.19.0):
-    - React-Core
   - RNCClipboard (1.13.1):
     - React-Core
   - RNSVG (13.14.0):
@@ -1122,7 +1120,6 @@ DEPENDENCIES:
   - React-runtimescheduler (from `../../../node_modules/react-native-macos/ReactCommon/react/renderer/runtimescheduler`)
   - React-utils (from `../../../node_modules/react-native-macos/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native-macos/ReactCommon`)
-  - "RNCAsyncStorage (from `../../../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
   - RNSVG (from `../../../node_modules/react-native-svg`)
   - Sparkle (~> 2.5.0)
@@ -1237,8 +1234,6 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-macos/ReactCommon/react/utils"
   ReactCommon:
     :path: "../../../node_modules/react-native-macos/ReactCommon"
-  RNCAsyncStorage:
-    :path: "../../../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
     :path: "../../../node_modules/@react-native-clipboard/clipboard"
   RNSVG:
@@ -1299,14 +1294,13 @@ SPEC CHECKSUMS:
   React-runtimescheduler: b4ed0e5f08dd236185b3d719c484b1d07ed69c07
   React-utils: 9b1df4c7eb86a02607d61db23652559780031449
   ReactCommon: 608b12d4b6d2fa209101a960a202721d33cd35b6
-  RNCAsyncStorage: 4b98ac3c64efa4e35c1197cb0c5ca5e9f5d4c666
   RNCClipboard: 90e241893de33a2f5962fc34d76ada4576033e49
   RNSVG: d00c8f91c3cbf6d476451313a18f04d220d4f396
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Sparkle: 913cef92f73e08d0ae47a36ee20e523913e5f9e2
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
-  Yoga: 5f6d85ca2ac7a018ea0ff4c3da3e5514a3f2149c
+  Yoga: 88f18d68738202d1be157e417a291ac59f86a77c
 
 PODFILE CHECKSUM: a15655f397a85e92ecca3834288dddae790b0c5a
 
-COCOAPODS: 1.13.0
+COCOAPODS: 1.14.3
