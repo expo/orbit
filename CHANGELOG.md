@@ -14,6 +14,7 @@
 - Fix projects section height when the user has less than 3 projects. ([#119](https://github.com/expo/orbit/pull/119) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix installing apps on Android real devices. ([#123](https://github.com/expo/orbit/pull/123) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix Settings window size when opening it from the context menu. ([#127](https://github.com/expo/orbit/pull/127) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix osascript error when launching apps on the Simulator. ([#139](https://github.com/expo/orbit/pull/139) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🛠 Breaking changes
 

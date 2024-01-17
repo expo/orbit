@@ -130,7 +130,8 @@ async function waitForSimulatorAppToStartAsync(
 }
 
 export async function activateSimulatorWindowAsync(): Promise<void> {
-  await osascript.execAsync(`
+  try {
+    await osascript.execAsync(`
     tell application "System Events"
       set assistiveAccess to UI elements enabled
     end tell
@@ -145,6 +146,12 @@ export async function activateSimulatorWindowAsync(): Promise<void> {
       end tell
     end if
   `);
+  } catch (error: unknown) {
+    // This can fail if the user hasn't enabled accessibility access.
+    if (error instanceof Error) {
+      console.warn(error.message);
+    }
+  }
 }
 
 async function isSimulatorAppRunningAsync(): Promise<boolean> {
