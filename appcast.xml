@@ -6,6 +6,44 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
      <item>
+      <title>1.0.2</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Improve Snack support for older SDKs. (<a href="https://github.com/expo/orbit/pull/117">#117</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix device selection logic when a simulator or device is no longer available. (<a href="https://github.com/expo/orbit/pull/114">#114</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix projects section height when the user has less than three projects. (<a href="https://github.com/expo/orbit/pull/119">#119</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix installing apps on Android physical devices. (<a href="https://github.com/expo/orbit/pull/123">#123</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix Settings window size when opening it from the context menu. (<a href="https://github.com/expo/orbit/pull/127">#127</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix <code>osascript</code> error when launching apps on the Simulator. (<a href="https://github.com/expo/orbit/pull/139">#139</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>) </li>
+        <li>Improve popover height calculations when using multiple displays. (<a href="https://github.com/expo/orbit/pull/140">#140</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Upgrade <code>@react-native-clipboard/clipboard</code> to 1.13.1 and remove patch. (<a href="https://github.com/expo/orbit/pull/116">#116</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Configure EAS build workflow. (<a href="https://github.com/expo/orbit/pull/115">#115</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Refresh the Settings window UI. (<a href="https://github.com/expo/orbit/pull/121">#121</a> by <a href="https://github.com/simek">@simek</a>)</li>
+        <li>Remove unused options from native main menu when the app is focused. (<a href="https://github.com/expo/orbit/pull/128">#128</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native</code> to 0.73.1. (<a href="https://github.com/expo/orbit/pull/129">#129</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2024-01-17</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.0.2</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.0.2/expo-orbit.v1.0.2.zip"
+        sparkle:version="17"
+        sparkle:shortVersionString="1.0.2"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+     <item>
       <title>1.0.1</title>
       <description>
       <![CDATA[
