@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.1",
+    "@expo/metro-config": "~0.17.1",
     "@expo/styleguide-native": "^1.0.1",
     "@react-native-clipboard/clipboard": "^1.13.1",
     "apollo3-cache-persist": "^0.14.1",
@@ -25,12 +26,14 @@
     "expo": "^50.0.2",
     "graphql": "^16.8.0",
     "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-native": "0.73.2",
     "react-native-macos": "0.73.2",
     "react-native-mmkv": "^2.10.2",
     "react-native-svg": "14.1.0",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-vector-icons": "^9.2.0"
+    "react-native-vector-icons": "^9.2.0",
+    "react-native-web": "~0.19.6"
   },
   "devDependencies": {
     "@babel/core": "^7.22.11",

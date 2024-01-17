@@ -64,3 +64,4 @@ yarn-error.log
 .metro-health-check*
 
 !.eas/build/
+.expo/

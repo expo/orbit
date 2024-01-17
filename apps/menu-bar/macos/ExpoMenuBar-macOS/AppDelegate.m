@@ -39,7 +39,7 @@
   [statusItem.button setAction:@selector(onPressStatusItem:)];
 
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
-                                                moduleName:@"ExpoMenuBar"
+                                                moduleName:@"main"
                                         initialProperties:@{}];
 
   NSViewController *rootViewController = [[NSViewController alloc] init];
