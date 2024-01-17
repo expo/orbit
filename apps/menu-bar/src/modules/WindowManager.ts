@@ -9,7 +9,7 @@ type WindowsManagerType = NativeModule & {
 };
 const WindowsManager: WindowsManagerType = NativeModules.WindowsManager;
 
-const WindowsManagerConstants = NativeModules.WindowsManager.getConstants();
+const WindowsManagerConstants = NativeModules.WindowsManager?.getConstants() || {};
 
 export enum WindowStyleMask {
   Borderless = WindowsManagerConstants.STYLE_MASK_BORDERLESS,
@@ -52,10 +52,10 @@ export function createWindowsNavigator<T extends WindowsConfig>(config: T) {
   return {
     open: (window: keyof T) => {
       const options = config[window].options || {};
-      WindowsManager.openWindow(String(window), options);
+      WindowsManager?.openWindow(String(window), options);
     },
     close: (window: keyof T) => {
-      WindowsManager.closeWindow(String(window));
+      WindowsManager?.closeWindow(String(window));
     },
   };
 }

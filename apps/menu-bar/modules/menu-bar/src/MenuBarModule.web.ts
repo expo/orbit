@@ -1,0 +1,15 @@
+export default {
+  appVersion: '',
+  buildVersion: '',
+  initialScreenSize: { height: undefined, width: undefined },
+  homedir: '',
+  exitApp() {},
+  openSystemSettingsLoginItems() {},
+  runCli: (command: string, args: string[], listenerId: number) => {},
+  runCommand(command: string, args: string[]) {},
+  setLoginItemEnabled(enabled: boolean) {},
+  setEnvVars: (envVars: { [key: string]: string }) => {},
+  showMultiOptionAlert: (title: string, message: string, options: string[]) => {},
+  openPopover() {},
+  closePopover() {},
+};
