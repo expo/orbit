@@ -1,8 +1,8 @@
 import ExpoModulesCore
 import ServiceManagement
 
-let onNewCommandLine = "onNewCommandLine"
-let onCLIOutput = "onCLIOutput"
+private let onNewCommandLine = "onNewCommandLine"
+private let onCLIOutput = "onCLIOutput"
 
 public class MenuBarModule: Module {
   private var hasListeners = false
@@ -11,10 +11,10 @@ public class MenuBarModule: Module {
     Name("MenuBar")
     
     Events(onNewCommandLine, onCLIOutput)
-    
+
     Constants([
-      "appVersion": Bundle.main.infoDictionary?["CFBundleShortVersionString"],
-      "buildVersion": Bundle.main.infoDictionary?["CFBundleVersion"]
+      "appVersion": self.appContext?.constants?.constants()["nativeAppVersion"],
+      "buildVersion": self.appContext?.constants?.buildVersion()
     ])
     
     Function("exitApp") {
