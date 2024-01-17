@@ -44,7 +44,11 @@ function Core(props: Props) {
   );
 
   const { apps, refetch: refetchApps } = useGetPinnedApps();
-  usePopoverFocusEffect(refetchApps);
+  usePopoverFocusEffect(
+    useCallback(() => {
+      refetchApps();
+    }, [refetchApps])
+  );
 
   const [status, setStatus] = useState(MenuBarStatus.LISTENING);
   const [progress, setProgress] = useState(0);
@@ -64,7 +68,7 @@ function Core(props: Props) {
     FOOTER_HEIGHT -
     BUILDS_SECTION_HEIGHT -
     getProjectSectionHeight(apps?.length) -
-    30;
+    5;
   const heightOfAllDevices =
     DEVICE_ITEM_HEIGHT * numberOfDevices + SECTION_HEADER_HEIGHT * (sections?.length || 0);
   const estimatedListHeight =
@@ -298,7 +302,7 @@ function Core(props: Props) {
     <View shrink="1">
       <BuildsSection status={status} installAppFromURI={installAppFromURI} progress={progress} />
       <ProjectsSection apps={apps} />
-      <View shrink="1" pt="tiny">
+      <View shrink="1" pt="tiny" overflow="hidden">
         <SectionList
           sections={sections}
           style={{ minHeight: estimatedListHeight }}

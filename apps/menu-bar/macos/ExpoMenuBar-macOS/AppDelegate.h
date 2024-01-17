@@ -15,6 +15,7 @@
 @property(nonatomic, strong, readonly) NSPopover *popover;
 - (void)openPopover;
 - (void)closePopover;
+- (void)setPopoverContentSize:(NSSize)size;
 - (IBAction)showHelp:(id)sender;
 
 @end

@@ -17,6 +17,7 @@ type MenuBarModuleType = NativeModule & {
 type MenuBarModuleConstants = {
   appVersion: string;
   buildVersion: string;
+  initialScreenSize: { height: number; width: number };
 };
 const constants: MenuBarModuleConstants = NativeModules.MenuBarModule.getConstants();
 
