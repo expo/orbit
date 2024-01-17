@@ -37,8 +37,12 @@ RCT_EXPORT_MODULE();
 - (NSDictionary *)constantsToExport
 {
   return @{
-    @"appVersion"      : [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: [NSNull null],
-    @"buildVersion"    : [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] ?: [NSNull null],
+    @"appVersion"         : [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] ?: [NSNull null],
+    @"buildVersion"       : [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"] ?: [NSNull null],
+    @"initialScreenSize"  : @{
+      @"height":  @([[NSScreen mainScreen] frame].size.height),
+      @"width":  @([[NSScreen mainScreen] frame].size.width)
+    },
   };
 }
 

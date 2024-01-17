@@ -46,6 +46,7 @@
   rootViewController.view = rootView;
 
   popover = [[NSPopover alloc] init];
+  popover.contentSize = NSMakeSize(380, 450);
   popover.contentViewController = rootViewController;
   popover.behavior = NSPopoverBehaviorTransient;
 
@@ -102,16 +103,26 @@
 }
 
 - (void)openPopover {
-    [popover showRelativeToRect:statusItem.button.bounds
-                         ofView:statusItem.button
-                  preferredEdge:NSMinYEdge];
-    [popover.contentViewController.view.window makeKeyWindow];
-    [_bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
-                            args:@[@"popoverFocused"]];
+  [popover showRelativeToRect:statusItem.button.bounds
+                       ofView:statusItem.button
+                preferredEdge:NSMinYEdge];
+  [popover.contentViewController.view.window makeKeyWindow];
+  [_bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
+                    args:@[@"popoverFocused", @{
+                      @"screenSize": @{
+                        @"height":  @([[NSScreen mainScreen] frame].size.height),
+                        @"width":  @([[NSScreen mainScreen] frame].size.width)
+                      }
+                    }]];
 }
 
 - (void)closePopover {
     [popover close];
+}
+
+- (void)setPopoverContentSize:(NSSize)size {
+  [popover setContentSize:size];
+  [popover.contentViewController.view setFrameSize:size];
 }
 
 - (void)onPressStatusItem:(id)sender {
@@ -148,7 +159,7 @@
     if (!visibleWindows) {
       [self openPopover];
     }
-    
+
     return YES;
 }
 

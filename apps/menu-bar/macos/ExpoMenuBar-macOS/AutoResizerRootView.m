@@ -31,7 +31,7 @@ const CGFloat minimumViewSize = 40.0;
 
   dispatch_async(dispatch_get_main_queue(), ^{
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[appDelegate popover] setContentSize:CGSizeMake(self.frame.size.width, newHeight)];
+    [appDelegate setPopoverContentSize:CGSizeMake(self.frame.size.width, newHeight)];
   });
 }
 
