@@ -1,6 +1,7 @@
 import { shadows } from '@expo/styleguide-native';
-import { PlatformColor, Text as RNText, TextInput as RNTextInput } from 'react-native';
+import { Text as RNText, TextInput as RNTextInput } from 'react-native';
 
+import { PlatformColor } from '../modules/PlatformColor';
 import { create } from '../utils/create-component-primitive';
 import { text, textDark, padding, rounded } from '../utils/theme';
 

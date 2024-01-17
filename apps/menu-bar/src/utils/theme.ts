@@ -6,7 +6,9 @@ import {
   typography,
   palette,
 } from '@expo/styleguide-native';
-import { TextStyle, Platform, StyleSheet, PlatformColor } from 'react-native';
+import { TextStyle, Platform, StyleSheet } from 'react-native';
+
+import { PlatformColor } from '../modules/PlatformColor';
 
 type SpacingKey = `${keyof typeof spacing}`;
 type DescriptiveScale = 'micro' | 'tiny' | 'small' | 'medium' | 'large' | 'xl';

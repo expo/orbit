@@ -1,6 +1,8 @@
 import { useClipboard } from '@react-native-clipboard/clipboard';
 import { useState } from 'react';
-import { FlatList, PlatformColor, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { FlatList, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+
+import { PlatformColor } from '../modules/PlatformColor';
 
 const NativeColorPalette = () => {
   const [selectedColor, setSelectedColor] = useState<string>();

@@ -1,7 +1,7 @@
 import { palette } from '@expo/styleguide-native';
 import { Device } from 'common-types/build/devices';
 import { useState } from 'react';
-import { StyleSheet, Pressable, PlatformColor } from 'react-native';
+import { StyleSheet, Pressable } from 'react-native';
 
 import Button from './Button';
 import { Text } from './Text';
@@ -9,6 +9,7 @@ import { Row, View } from './View';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
+import { PlatformColor } from '../modules/PlatformColor';
 import { useTheme } from '../providers/ThemeProvider';
 import { isVirtualDevice } from '../utils/device';
 import { capitalize } from '../utils/helpers';
