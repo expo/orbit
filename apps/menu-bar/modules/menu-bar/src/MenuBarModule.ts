@@ -4,6 +4,8 @@ import { NativeModule } from 'react-native';
 interface NativeMenuBarModule extends NativeModule {
   readonly appVersion: string;
   readonly buildVersion: string;
+  readonly initialScreenSize: { height: number; width: number };
+  readonly homedir: string;
   exitApp(): void;
   openSystemSettingsLoginItems(): void;
   runCli: (command: string, args: string[], listenerId: number) => Promise<string>;

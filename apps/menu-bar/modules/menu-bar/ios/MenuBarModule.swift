@@ -14,7 +14,12 @@ public class MenuBarModule: Module {
 
     Constants([
       "appVersion": self.appContext?.constants?.constants()["nativeAppVersion"],
-      "buildVersion": self.appContext?.constants?.buildVersion()
+      "buildVersion": self.appContext?.constants?.buildVersion(),
+      "initialScreenSize": [
+        "width": NSScreen.main?.frame.width,
+        "height": NSScreen.main?.frame.height
+      ],
+      "homedir": NSHomeDirectory(),
     ])
     
     Function("exitApp") {

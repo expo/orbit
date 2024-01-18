@@ -32,6 +32,8 @@ async function runCli(command: string, args: string[], callback?: (status: strin
 export default {
   appVersion: MenuBarModule.appVersion,
   buildVersion: MenuBarModule.buildVersion,
+  initialScreenSize: MenuBarModule.initialScreenSize,
+  homedir: MenuBarModule.homedir,
   exitApp: () => MenuBarModule.exitApp(),
   openSystemSettingsLoginItems: () => MenuBarModule.openSystemSettingsLoginItems(),
   runCli,
