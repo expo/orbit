@@ -5,7 +5,7 @@ import MenuBarModule from '../modules/MenuBarModule';
 
 export const SAFE_AREA_FACTOR = 0.85;
 
-const { initialScreenSize } = MenuBarModule.constants;
+const { initialScreenSize } = MenuBarModule;
 
 export const useSafeDisplayDimensions = () => {
   const [dimensions, setDimensions] = useState(initialScreenSize);

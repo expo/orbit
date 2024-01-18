@@ -49,6 +49,7 @@
   popover.contentSize = NSMakeSize(380, 450);
   popover.contentViewController = rootViewController;
   popover.behavior = NSPopoverBehaviorTransient;
+  [self addPopoverObservers];
 
 #ifdef SHOW_DEV_WINDOW
   #if RCT_DEV
@@ -123,6 +124,18 @@
 - (void)setPopoverContentSize:(NSSize)size {
   [popover setContentSize:size];
   [popover.contentViewController.view setFrameSize:size];
+}
+
+- (void)addPopoverObservers {
+  NSNotificationCenter *notificationCenter = NSNotificationCenter.defaultCenter;
+  __weak typeof(self) weakSelf = self;
+  
+  [notificationCenter addObserverForName:@"ExpoOrbit_OpenPopover" object:nil queue:nil usingBlock:^(NSNotification * _Nonnull notification) {
+    [weakSelf openPopover];
+  }];
+  [notificationCenter addObserverForName:@"ExpoOrbit_ClosePopover" object:nil queue:nil usingBlock:^(NSNotification * _Nonnull notification) {
+    [weakSelf closePopover];
+  }];
 }
 
 - (void)onPressStatusItem:(id)sender {

@@ -12,6 +12,7 @@
 
 - Install the expo package and set up autolinking for macOS. ([#130](https://github.com/expo/orbit/pull/130) by [@tsapeta](https://github.com/tsapeta))
 - Remove AsyncStorage migrator and @react-native-async-storage/async-storage dependency. ([#135](https://github.com/expo/orbit/pull/135) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Migrate Menubar to expo modules.([#133](https://github.com/expo/orbit/pull/133) by [@alanhughes](https://github.com/alanjhughes))
 
 ## 1.0.2 — 2024-01-17
 

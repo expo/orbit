@@ -16,10 +16,10 @@ const DebugMenu = () => {
       </TouchableOpacity>
       <NativeColorPalette />
       <Text color="secondary" style={styles.about}>
-        {`App version: ${MenuBarModule.constants.appVersion}`}
+        {`App version: ${MenuBarModule.appVersion}`}
       </Text>
       <Text color="secondary" style={styles.about}>
-        {`Build version: ${MenuBarModule.constants.buildVersion}`}
+        {`Build version: ${MenuBarModule.buildVersion}`}
       </Text>
     </View>
   );
