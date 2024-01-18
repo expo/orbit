@@ -69,6 +69,11 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
   return iosSimulators;
 }
 
+export async function isSimulatorAsync(udid: string) {
+  const availableIosSimulators = await getAvailableIosSimulatorsListAsync();
+  return availableIosSimulators.some((sim) => sim.udid === udid);
+}
+
 function parseSimControlJsonResults(input: string): any {
   try {
     return JSON.parse(input);

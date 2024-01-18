@@ -1,5 +1,4 @@
 import { Emulator, Simulator, AppleDevice } from 'eas-shared';
-import { getRunningAndroidDevice } from '../utils';
 
 type launchSnackAsyncOptions = {
   platform: 'android' | 'ios';
@@ -27,9 +26,7 @@ async function launchSnackOnAndroidAsync(snackURL: string, deviceId: string, ver
 }
 
 async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version?: string) {
-  if (
-    (await Simulator.getAvailableIosSimulatorsListAsync()).find(({ udid }) => udid === deviceId)
-  ) {
+  if (await Simulator.isSimulatorAsync(deviceId)) {
     await Simulator.ensureExpoClientInstalledAsync(deviceId, version);
     await Simulator.openURLAsync({
       url: snackURL,
