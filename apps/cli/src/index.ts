@@ -60,4 +60,4 @@ program
 if (process.argv.length < 3) {
   program.help();
 }
-program.parse();
+program.parse(process.argv);
