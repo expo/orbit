@@ -1,7 +1,7 @@
 import { Emulator, Simulator, extractAppFromLocalArchiveAsync, AppleDevice } from 'eas-shared';
 import { Platform } from 'common-types/build/cli-commands';
 
-import { getPlatformFromURI } from '../utils';
+import { getPlatformFromURI, getRunningAndroidDevice } from '../utils';
 
 type InstallAndLaunchAppAsyncOptions = {
   appPath: string;
@@ -40,11 +40,7 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
 }
 
 async function installAndLaunchAndroidAppAsync(appPath: string, deviceId: string) {
-  const runningDevices = await Emulator.getRunningDevicesAsync();
-  const device = runningDevices.find(({ name }) => name === deviceId);
-  if (!device) {
-    throw new Error(`Device or Emulator ${deviceId} is not running`);
-  }
+  const device = await Emulator.getRunningDeviceAsync(deviceId);
 
   await Emulator.installAppAsync(device, appPath);
   const { packageName, activityName } = await Emulator.getAptParametersAsync(appPath);

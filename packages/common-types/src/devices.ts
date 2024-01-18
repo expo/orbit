@@ -36,7 +36,7 @@ export interface AndroidEmulator {
 }
 
 export interface AndroidConnectedDevice {
-  pid?: string;
+  pid: string;
   model: string;
   name: string;
   osType: 'Android';

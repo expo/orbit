@@ -18,7 +18,7 @@ const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.exponent';
 export const EMULATOR_MAX_WAIT_TIMEOUT_MS = 60 * 1000 * 3;
-export { getRunningDevicesAsync } from './adb';
+export { getRunningDevicesAsync, getRunningDeviceAsync } from './adb';
 export { getAptParametersAsync } from './aapt';
 
 export async function getEmulatorExecutableAsync(): Promise<string> {

@@ -1,6 +1,6 @@
 import { InternalError } from 'common-types';
 import { Platform } from 'common-types/build/cli-commands';
-import { Env } from 'eas-shared';
+import { Emulator, Env } from 'eas-shared';
 import util from 'util';
 
 export function returnLoggerMiddleware(fn: (...args: any[]) => any | Promise<any>) {
