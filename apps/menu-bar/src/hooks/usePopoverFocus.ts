@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { DeviceEventEmitter } from 'react-native';
+
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 
 type PopoverFocusedEvent = {
   screenSize: { height: number; width: number };
