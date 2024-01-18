@@ -43,6 +43,7 @@ RCT_EXPORT_MODULE();
       @"height":  @([[NSScreen mainScreen] frame].size.height),
       @"width":  @([[NSScreen mainScreen] frame].size.width)
     },
+    @"homedir": NSHomeDirectory(),
   };
 }
 

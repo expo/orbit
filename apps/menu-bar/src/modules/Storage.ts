@@ -1,5 +1,7 @@
+import { StorageUtils } from 'common-types';
 import { MMKV } from 'react-native-mmkv';
 
+import MenuBarModule from './MenuBarModule';
 import { apolloClient } from '../api/ApolloClient';
 
 export const userPreferencesStorageKey = 'user-preferences';
@@ -59,7 +61,34 @@ export const resetStorage = () => {
   storage.clearAll();
 };
 
-export const storage = new MMKV();
+const oldStorage = new MMKV();
+export const storage = new MMKV({
+  id: StorageUtils.MMKVInstanceId,
+  path: StorageUtils.getExpoOrbitDirectory(MenuBarModule.constants.homedir),
+});
+
+const migratedStorageKey = 'migratedFromOldPath';
+// Migrate MMKV storage to new path so that it's accessible from the CLI
+function migrateMMKVFromOldStoragePath() {
+  const keys = oldStorage.getAllKeys();
+
+  for (const key of keys) {
+    const value =
+      oldStorage.getString(key) ??
+      oldStorage.getBoolean(key) ??
+      oldStorage.getNumber(key) ??
+      oldStorage.getBuffer(key);
+
+    if (value != null) {
+      storage.set(key, value);
+    }
+  }
+
+  storage.set(migratedStorageKey, true);
+}
+if (!storage.getBoolean(migratedStorageKey)) {
+  migrateMMKVFromOldStoragePath();
+}
 
 export function saveSessionSecret(sessionSecret: string) {
   storage.set(sessionSecretStorageKey, sessionSecret);
