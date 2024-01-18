@@ -1,10 +1,10 @@
 import Item from './Item';
 import SectionHeader from './SectionHeader';
+import * as FilePicker from '../../modules/file-picker';
 import Earth02Icon from '../assets/icons/earth-02.svg';
 import File05Icon from '../assets/icons/file-05.svg';
 import { Text, View } from '../components';
 import ProgressIndicator from '../components/ProgressIndicator';
-import FilePicker from '../modules/FilePickerModule';
 import MenuBarModule from '../modules/MenuBarModule';
 import { openProjectsSelectorURL } from '../utils/constants';
 import { MenuBarStatus } from '../utils/helpers';

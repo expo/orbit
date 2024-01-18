@@ -19,7 +19,6 @@
 		C051E6B62A83577800C6D615 /* orbit-cli-x64 in Resources */ = {isa = PBXBuildFile; fileRef = C051E6B52A83577800C6D615 /* orbit-cli-x64 */; };
 		C051E6BB2A991C4200C6D615 /* WebAuthenticationSession.m in Sources */ = {isa = PBXBuildFile; fileRef = C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */; };
 		C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */; };
-		C0523ECA2A545730003371AF /* FilePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523EC92A545730003371AF /* FilePicker.m */; };
 		C0523ECC2A550983003371AF /* WindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowManager.m */; };
 		C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */; };
 		C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C79D2A251E0C00A53D8D /* DevViewController.m */; };
@@ -82,8 +81,6 @@
 		C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WebAuthenticationSession.m; sourceTree = "<group>"; };
 		C051EC0C2AA227C600C6D615 /* ExpoMenuBar-macOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ExpoMenuBar-macOS-Bridging-Header.h"; sourceTree = "<group>"; };
 		C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwifterWrapper.swift; sourceTree = "<group>"; };
-		C0523EC82A54571F003371AF /* FilePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePicker.h; sourceTree = "<group>"; };
-		C0523EC92A545730003371AF /* FilePicker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePicker.m; sourceTree = "<group>"; };
 		C0523ECB2A550983003371AF /* WindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowManager.m; sourceTree = "<group>"; };
 		C0523ECD2A550A04003371AF /* WindowManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowManager.h; sourceTree = "<group>"; };
 		C0523ECE2A5597FF003371AF /* WindowWithDeallocCallback.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowWithDeallocCallback.h; sourceTree = "<group>"; };
@@ -202,8 +199,6 @@
 				C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */,
 				C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */,
 				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
-				C0523EC82A54571F003371AF /* FilePicker.h */,
-				C0523EC92A545730003371AF /* FilePicker.m */,
 				C0523ECB2A550983003371AF /* WindowManager.m */,
 				C0523ECD2A550A04003371AF /* WindowManager.h */,
 				C0523ECE2A5597FF003371AF /* WindowWithDeallocCallback.h */,
@@ -528,7 +523,6 @@
 				514201582437B4B40078DB4F /* main.m in Sources */,
 				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
 				C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */,
-				C0523ECA2A545730003371AF /* FilePicker.m in Sources */,
 				C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */,
 				C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */,
 				C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */,
@@ -578,10 +572,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -619,10 +610,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

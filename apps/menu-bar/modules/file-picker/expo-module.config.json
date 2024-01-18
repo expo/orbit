@@ -1,0 +1,6 @@
+{
+  "platforms": ["macos"],
+  "ios": {
+    "modules": ["FilePickerModule"]
+  }
+}
