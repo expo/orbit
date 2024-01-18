@@ -1,0 +1,30 @@
+query getAppBuildForUpdate(
+  $appId: String!
+  $platform: AppPlatform!
+  $distribution: DistributionType!
+) {
+  app {
+    byId(appId: $appId) {
+      id
+      name
+      buildsPaginated(
+        first: 1
+        filter: { platforms: [$platform], distributions: [$distribution] }
+      ) {
+        edges {
+          node {
+            __typename
+            id
+            ... on Build {
+              runtimeVersion
+              expirationDate
+              artifacts {
+                buildUrl
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

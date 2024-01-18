@@ -7,6 +7,6 @@ const storage = new MMKVModule({
   id: StorageUtils.MMKVInstanceId,
 });
 
-export function getSessionSecret() {
+export function getSessionSecret(): string | undefined {
   return storage.getString('sessionSecret');
 }
