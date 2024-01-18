@@ -8,10 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		045175BE45C09A78501F3277 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D5B57287467FCE0C3AD2F77 /* libPods-ExpoMenuBar-macOS.a */; };
-		5142014D2437B4B30078DB4F /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5142014C2437B4B30078DB4F /* AppDelegate.mm */; };
+		5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 5142014C2437B4B30078DB4F /* AppDelegate.m */; };
 		514201522437B4B40078DB4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 514201512437B4B40078DB4F /* Assets.xcassets */; };
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
+		77818F2A6E488E8B68D317B2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */; };
 		C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */; };
 		C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */; };
 		C032EDB72A1FE6F300FBC597 /* orbit-cli-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */; };
@@ -61,7 +62,7 @@
 		4D47B0298808748D37D9C46D /* Pods-ExpoMenuBar-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.debug.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.debug.xcconfig"; sourceTree = "<group>"; };
 		514201492437B4B30078DB4F /* Expo Orbit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Expo Orbit.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5142014B2437B4B30078DB4F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		5142014C2437B4B30078DB4F /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
+		5142014C2437B4B30078DB4F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		514201512437B4B40078DB4F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		514201542437B4B40078DB4F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		514201562437B4B40078DB4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -69,6 +70,7 @@
 		514201592437B4B40078DB4F /* ExpoMenuBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ExpoMenuBar.entitlements; sourceTree = "<group>"; };
 		9D32DFD059D5DB6DDEF38881 /* Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		A82DFB63B157C65E5D698CA2 /* Pods-Shared-ExpoMenuBar-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ExpoMenuBar-macOS/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		C0271C562A602CCB0065AB11 /* ProgressIndicatorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorManager.h; sourceTree = "<group>"; };
 		C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorManager.m; sourceTree = "<group>"; };
 		C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorView.h; sourceTree = "<group>"; };
@@ -167,6 +169,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		4CA987380902AA6F7F8816F6 /* ExpoMenuBar-macOS */ = {
+			isa = PBXGroup;
+			children = (
+				B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */,
+			);
+			name = "ExpoMenuBar-macOS";
+			sourceTree = "<group>";
+		};
 		5142014A2437B4B30078DB4F /* ExpoMenuBar-macOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -176,7 +186,7 @@
 				C051E6B52A83577800C6D615 /* orbit-cli-x64 */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
 				5142014B2437B4B30078DB4F /* AppDelegate.h */,
-				5142014C2437B4B30078DB4F /* AppDelegate.mm */,
+				5142014C2437B4B30078DB4F /* AppDelegate.m */,
 				514201512437B4B40078DB4F /* Assets.xcassets */,
 				514201532437B4B40078DB4F /* Main.storyboard */,
 				514201562437B4B40078DB4F /* Info.plist */,
@@ -241,6 +251,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				1986A43FA6A91CFACDF0A798 /* Pods */,
+				B13BA18B717621FFDC28EE6E /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -254,6 +265,14 @@
 				C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B13BA18B717621FFDC28EE6E /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				4CA987380902AA6F7F8816F6 /* ExpoMenuBar-macOS */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		C081507C2A610E2F00E8890F /* Resources */ = {
@@ -284,6 +303,7 @@
 			buildPhases = (
 				1A938104A937498D81B3BD3B /* [CP] Check Pods Manifest.lock */,
 				381D8A6F24576A6C00465D17 /* Start Packager */,
+				63FA8EA00DD165DC6FA0B487 /* [Expo] Configure project */,
 				514201452437B4B30078DB4F /* Sources */,
 				514201462437B4B30078DB4F /* Frameworks */,
 				514201472437B4B30078DB4F /* Resources */,
@@ -454,6 +474,25 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		63FA8EA00DD165DC6FA0B487 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ExpoMenuBar-macOS/expo-configure-project.sh\"\n";
+		};
 		DF76CD60CADE3DD346ABE802 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -493,12 +532,13 @@
 				C051E6BB2A991C4200C6D615 /* WebAuthenticationSession.m in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
 				514201582437B4B40078DB4F /* main.m in Sources */,
-				5142014D2437B4B30078DB4F /* AppDelegate.mm in Sources */,
+				5142014D2437B4B30078DB4F /* AppDelegate.m in Sources */,
 				C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */,
 				C0523ECA2A545730003371AF /* FilePicker.m in Sources */,
 				C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */,
 				C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */,
 				C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */,
+				77818F2A6E488E8B68D317B2 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -553,6 +593,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.orbit;
 				PRODUCT_NAME = "Expo Orbit";
 				SDKROOT = macosx;
@@ -593,6 +634,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.orbit;
 				PRODUCT_NAME = "Expo Orbit";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -775,6 +817,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.AutoLauncher;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -823,6 +866,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 13.4;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.AutoLauncher;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
