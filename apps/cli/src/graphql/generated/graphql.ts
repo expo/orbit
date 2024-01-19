@@ -6002,6 +6002,13 @@ export type GetAppBuildForUpdateQueryVariables = Exact<{
 
 export type GetAppBuildForUpdateQuery = { __typename?: 'RootQuery', app: { __typename?: 'AppQuery', byId: { __typename?: 'App', id: string, name: string, buildsPaginated: { __typename?: 'AppBuildsConnection', edges: Array<{ __typename?: 'AppBuildEdge', node: { __typename: 'Build', runtimeVersion?: string | null, expirationDate?: any | null, id: string, artifacts?: { __typename?: 'BuildArtifacts', buildUrl?: string | null } | null } | { __typename: 'BuildJob', id: string } }> } } } };
 
+export type GetAppHasDevClientBuildsQueryVariables = Exact<{
+  appId: Scalars['String']['input'];
+}>;
+
+
+export type GetAppHasDevClientBuildsQuery = { __typename?: 'RootQuery', app: { __typename?: 'AppQuery', byId: { __typename?: 'App', id: string, name: string, hasDevClientBuilds: { __typename?: 'AppBuildsConnection', edges: Array<{ __typename?: 'AppBuildEdge', node: { __typename?: 'Build', id: string } | { __typename?: 'BuildJob', id: string } }> } } } };
+
 
 export const GetAppBuildForUpdateDocument = gql`
     query getAppBuildForUpdate($appId: String!, $platform: AppPlatform!, $distribution: DistributionType!) {
@@ -6011,12 +6018,12 @@ export const GetAppBuildForUpdateDocument = gql`
       name
       buildsPaginated(
         first: 1
-        filter: {platforms: [$platform], distributions: [$distribution]}
+        filter: {platforms: [$platform], distributions: [$distribution], developmentClient: true}
       ) {
         edges {
           node {
-            id
             __typename
+            id
             ... on Build {
               runtimeVersion
               expirationDate
@@ -6024,6 +6031,23 @@ export const GetAppBuildForUpdateDocument = gql`
                 buildUrl
               }
             }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
+export const GetAppHasDevClientBuildsDocument = gql`
+    query getAppHasDevClientBuilds($appId: String!) {
+  app {
+    byId(appId: $appId) {
+      id
+      name
+      hasDevClientBuilds: buildsPaginated(first: 1, filter: {developmentClient: true}) {
+        edges {
+          node {
+            id
           }
         }
       }
@@ -6041,6 +6065,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
   return {
     getAppBuildForUpdate(variables: GetAppBuildForUpdateQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAppBuildForUpdateQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetAppBuildForUpdateQuery>(GetAppBuildForUpdateDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAppBuildForUpdate', 'query', variables);
+    },
+    getAppHasDevClientBuilds(variables: GetAppHasDevClientBuildsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAppHasDevClientBuildsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GetAppHasDevClientBuildsQuery>(GetAppHasDevClientBuildsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'getAppHasDevClientBuilds', 'query', variables);
     }
   };
 }

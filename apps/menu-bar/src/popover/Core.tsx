@@ -162,6 +162,36 @@ function Core(props: Props) {
     [devicesPerPlatform, selectedDevicesIds]
   );
 
+  const handleSnackUrl = useCallback(
+    async (url: string) => {
+      const device = getAvailableDeviceForSnack();
+      if (!device) {
+        return;
+      }
+
+      try {
+        setStatus(MenuBarStatus.BOOTING_DEVICE);
+        await ensureDeviceIsRunning(device);
+        setStatus(MenuBarStatus.OPENING_SNACK_PROJECT);
+        await launchSnackAsync({
+          url,
+          deviceId: getDeviceId(device),
+          platform: getDeviceOS(device),
+        });
+      } catch (error) {
+        if (error instanceof InternalError) {
+          Alert.alert('Something went wrong', error.message);
+        }
+        console.log(`error: ${JSON.stringify(error)}`);
+      } finally {
+        setTimeout(() => {
+          setStatus(MenuBarStatus.LISTENING);
+        }, 2000);
+      }
+    },
+    [ensureDeviceIsRunning, getAvailableDeviceForSnack]
+  );
+
   const handleUpdateUrl = useCallback(
     async (url: string) => {
       /**
@@ -205,36 +235,6 @@ function Core(props: Props) {
       }
     },
     [ensureDeviceIsRunning, getDeviceByPlatform]
-  );
-
-  const handleSnackUrl = useCallback(
-    async (url: string) => {
-      const device = getAvailableDeviceForSnack();
-      if (!device) {
-        return;
-      }
-
-      try {
-        setStatus(MenuBarStatus.BOOTING_DEVICE);
-        await ensureDeviceIsRunning(device);
-        setStatus(MenuBarStatus.OPENING_SNACK_PROJECT);
-        await launchSnackAsync({
-          url,
-          deviceId: getDeviceId(device),
-          platform: getDeviceOS(device),
-        });
-      } catch (error) {
-        if (error instanceof InternalError) {
-          Alert.alert('Something went wrong', error.message);
-        }
-        console.log(`error: ${JSON.stringify(error)}`);
-      } finally {
-        setTimeout(() => {
-          setStatus(MenuBarStatus.LISTENING);
-        }, 2000);
-      }
-    },
-    [ensureDeviceIsRunning, getAvailableDeviceForSnack]
   );
 
   const installAppFromURI = useCallback(

@@ -53,7 +53,6 @@ export async function getManifestAsync(url: string): Promise<{
     method: 'GET',
     headers: {
       accept: 'multipart/mixed,application/expo+json,application/json',
-      'expo-platform': 'ios',
     },
   });
   return await getManifestBodyAsync(response);

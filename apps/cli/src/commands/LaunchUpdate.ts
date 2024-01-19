@@ -1,9 +1,8 @@
-import { Emulator, Simulator, AppleDevice } from 'eas-shared';
-import { ManifestUtils, Manifest } from 'eas-shared';
+import { Emulator, Simulator, ManifestUtils, Manifest } from 'eas-shared';
+
 import { graphqlSdk } from '../api/GraphqlClient';
 import { AppPlatform, DistributionType } from '../graphql/generated/graphql';
 import { downloadBuildAsync } from './DownloadBuild';
-import { installAndLaunchAppAsync } from './InstallAndLaunchApp';
 
 type launchUpdateAsyncOptions = {
   platform: 'android' | 'ios';
@@ -15,6 +14,29 @@ export async function launchUpdateAsync(
   { platform, deviceId }: launchUpdateAsyncOptions
 ) {
   const { manifest } = await ManifestUtils.getManifestAsync(updateURL);
+  const appId = manifest.extra?.eas?.projectId;
+  if (!appId) {
+    throw new Error("Couldn't find EAS projectId in manifest");
+  }
+
+  /**
+   * Fetch EAS to check if the app uses expo-dev-client
+   * or if we should launch the update using Expo Go
+   */
+  const { app } = await graphqlSdk.getAppHasDevClientBuilds({ appId });
+  const hasDevClientBuilds = Boolean(app.byId.hasDevClientBuilds.edges.length);
+  const isRuntimeCompatibleWithExpoGo = manifest.runtimeVersion.startsWith('exposdk:');
+
+  if (!hasDevClientBuilds && isRuntimeCompatibleWithExpoGo) {
+    const sdkVersion = manifest.runtimeVersion.match(/exposdk:(\d+\.\d+\.\d+)/)?.[1] || '';
+    const launchOnExpoGo =
+      platform === 'android' ? launchUpdateOnExpoGoAndroidAsync : launchUpdateOnExpoGoIosAsync;
+    return await launchOnExpoGo({
+      sdkVersion,
+      url: getExpoGoUpdateDeeplink(updateURL, manifest),
+      deviceId,
+    });
+  }
 
   if (platform === 'android') {
     await launchUpdateOnAndroidAsync(updateURL, manifest, deviceId);
@@ -23,91 +45,76 @@ export async function launchUpdateAsync(
   }
 }
 
-async function launchUpdateOnAndroidAsync(updateURL: string, manifest: Manifest, deviceId: string) {
-  const runningEmulators = await Emulator.getRunningDevicesAsync();
-  const emulator = runningEmulators.find(({ name }) => name === deviceId);
-  if (!emulator?.pid) {
-    throw new Error(`No running emulator with name ${deviceId}`);
-  }
+type LaunchUpdateOnExpoGoOptions = {
+  deviceId: string;
+  url: string;
+  sdkVersion: string;
+};
 
-  const bundleId = manifest.extra?.expoClient?.android?.package;
+async function launchUpdateOnExpoGoAndroidAsync({
+  sdkVersion,
+  deviceId,
+  url,
+}: LaunchUpdateOnExpoGoOptions) {
+  const device = await Emulator.getRunningDeviceAsync(deviceId);
 
-  if (bundleId) {
-    const isAppInstalled = await Emulator.checkIfAppIsInstalled({ pid: emulator.pid, bundleId });
-    if (!isAppInstalled) {
-      // check if runtimeVersion is compatible with Expo Go: e.g. "runtimeVersion":"exposdk:50.0.0"
-      // else Find latest dev build on EAS
-    }
-  } else {
-    const version = manifest.extra?.expoClient?.sdkVersion;
-    await Emulator.ensureExpoClientInstalledAsync(emulator.pid, version);
-  }
-  await Emulator.openURLAsync({ url: updateURL, pid: emulator.pid });
+  await Emulator.ensureExpoClientInstalledAsync(device.pid, sdkVersion);
+  await Emulator.openURLAsync({ url, pid: device.pid });
 }
 
-async function launchUpdateOnIOSAsync(updateURL: string, manifest: Manifest, deviceId: string) {
-  const isSimulator = (await Simulator.getAvailableIosSimulatorsListAsync()).find(
-    ({ udid }) => udid === deviceId
-  );
-
-  if (isSimulator) {
-    await launchUpdateOnIOSSimulatorAsync(updateURL, manifest, deviceId);
-  } else {
-    await launchUpdateOnIOSDeviceAsync(updateURL, manifest, deviceId);
-  }
-}
-
-async function launchUpdateOnIOSSimulatorAsync(
-  updateURL: string,
-  manifest: Manifest,
-  deviceId: string
-) {
-  const bundleId = manifest.extra?.expoClient?.ios?.bundleIdentifier;
-  if (bundleId) {
-    const isAppInstalled = await Simulator.checkIfAppIsInstalled({ udid: deviceId, bundleId });
-    if (!isAppInstalled) {
-      // Find latest dev build on EAS
-      const buildArtifactsURL = await getBuildArtifactsURLForUpdateAsync({
-        manifest,
-        platform: AppPlatform.Ios,
-        distribution: DistributionType.Simulator,
-      });
-      if (buildArtifactsURL) {
-        const buildLocalPath = await downloadBuildAsync(buildArtifactsURL);
-        await installAndLaunchAppAsync({ appPath: buildLocalPath, deviceId });
-      } else {
-        throw new Error(`No build artifacts found for ${manifest.id}`);
-      }
-    }
-  } else {
-    const version = manifest.extra?.expoClient?.sdkVersion;
-    await Simulator.ensureExpoClientInstalledAsync(deviceId, version);
+async function launchUpdateOnExpoGoIosAsync({
+  sdkVersion,
+  deviceId,
+  url,
+}: LaunchUpdateOnExpoGoOptions) {
+  const isSimulator = await Simulator.isSimulatorAsync(deviceId);
+  if (!isSimulator) {
+    throw new Error('Launching updates on iOS physical devices is not supported yet');
   }
 
-  const url = getUpdateDeeplink(updateURL, manifest);
+  await Simulator.ensureExpoClientInstalledAsync(deviceId, sdkVersion);
   await Simulator.openURLAsync({
     url,
     udid: deviceId,
   });
 }
 
-async function launchUpdateOnIOSDeviceAsync(
-  updateURL: string,
-  manifest: Manifest,
-  deviceId: string
-) {
-  const bundleId = manifest.extra?.expoClient?.ios?.bundleIdentifier;
-  if (bundleId) {
-    const isAppInstalled = await AppleDevice.checkIfAppIsInstalled({ udid: deviceId, bundleId });
-    if (!isAppInstalled) {
-      // Find latest dev build on EAS
-    }
+async function launchUpdateOnAndroidAsync(updateURL: string, manifest: Manifest, deviceId: string) {
+  const device = await Emulator.getRunningDeviceAsync(deviceId);
 
-    await AppleDevice.openURLAsync({ udid: deviceId, bundleId, url: updateURL });
-  } else {
-    await AppleDevice.ensureExpoClientInstalledAsync(deviceId);
-    await AppleDevice.openSnackURLAsync(deviceId, updateURL);
+  await downloadAndInstallLatestDevBuildAsync({
+    deviceId,
+    manifest,
+    platform: AppPlatform.Android,
+    distribution: DistributionType.Internal,
+  });
+  await Emulator.openURLAsync({ url: getUpdateDeeplink(updateURL, manifest), pid: device.pid });
+}
+
+async function launchUpdateOnIOSAsync(updateURL: string, manifest: Manifest, deviceId: string) {
+  const isSimulator = await Simulator.isSimulatorAsync(deviceId);
+  if (!isSimulator) {
+    throw new Error('Launching updates on iOS physical is not supported yet');
   }
+
+  await downloadAndInstallLatestDevBuildAsync({
+    deviceId,
+    manifest,
+    platform: AppPlatform.Ios,
+    distribution: DistributionType.Simulator,
+  });
+
+  await Simulator.openURLAsync({
+    url: getUpdateDeeplink(updateURL, manifest),
+    udid: deviceId,
+  });
+}
+
+function getExpoGoUpdateDeeplink(updateURL: string, manifest: Manifest) {
+  if (updateURL.startsWith('https://u.expo.dev')) {
+    return `exp://u.expo.dev/update/${manifest.id}`;
+  }
+  return updateURL.replace('https://', 'exp://');
 }
 
 function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
@@ -119,12 +126,39 @@ function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
     ? manifest?.extra?.expoClient?.scheme[0]
     : manifest?.extra?.expoClient?.scheme;
   scheme;
+  const slug = manifest?.extra?.expoClient?.slug;
 
-  if (scheme) {
-    return `${scheme}://expo-development-client/?url=${updateIdURL}`;
+  if (!scheme && !slug) {
+    throw new Error('Unable to resolve schema from manifest');
   }
 
-  return updateIdURL.replace('https://', 'exp://');
+  return `${scheme || `exp+${slug}`}://expo-development-client/?url=${updateIdURL}`;
+}
+
+async function downloadAndInstallLatestDevBuildAsync({
+  deviceId,
+  manifest,
+  platform,
+  distribution,
+}: {
+  deviceId: string;
+  manifest: Manifest;
+  platform: AppPlatform;
+  distribution: DistributionType;
+}) {
+  const buildArtifactsURL = await getBuildArtifactsURLForUpdateAsync({
+    manifest,
+    platform,
+    distribution,
+  });
+  const buildLocalPath = await downloadBuildAsync(buildArtifactsURL);
+
+  if (platform === AppPlatform.Ios) {
+    await Simulator.installAppAsync(deviceId, buildLocalPath);
+  } else {
+    const device = await Emulator.getRunningDeviceAsync(deviceId);
+    await Emulator.installAppAsync(device, buildLocalPath);
+  }
 }
 
 async function getBuildArtifactsURLForUpdateAsync({
@@ -135,10 +169,10 @@ async function getBuildArtifactsURLForUpdateAsync({
   manifest: Manifest;
   platform: AppPlatform;
   distribution: DistributionType;
-}): Promise<string | null> {
+}): Promise<string> {
   const { app } = await graphqlSdk.getAppBuildForUpdate({
+    // TODO(gabrieldonadel): Add runtimeVersion filter
     appId: manifest.extra?.eas?.projectId ?? '',
-    // runtimeVersion: manifest.runtimeVersion,
     platform,
     distribution,
   });
@@ -153,5 +187,7 @@ async function getBuildArtifactsURLForUpdateAsync({
     return build.artifacts.buildUrl;
   }
 
-  return null;
+  throw new Error(
+    `No Development Builds available for ${manifest.extra?.expoClient?.name}. Please generate a new build`
+  );
 }
