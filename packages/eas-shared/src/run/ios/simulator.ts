@@ -224,6 +224,7 @@ export async function getAppBundleIdentifierAsync(appPath: string): Promise<stri
 
 export async function openURLAsync(options: { udid: string; url: string }): Promise<void> {
   await activateSimulatorWindowAsync();
+  console.log(`Opening url ${options.url}...`);
   await xcrunAsync(['simctl', 'openurl', options.udid, options.url]);
 }
 

@@ -38,3 +38,17 @@ export enum MenuBarStatus {
   OPENING_SNACK_PROJECT,
   OPENING_UPDATE,
 }
+
+export function extractDownloadProgress(string: string) {
+  const regex = /(\d+(?:\.\d+)?) MB \/ (\d+(?:\.\d+)?) MB/;
+  const matches = string.match(regex);
+
+  if (matches && matches.length === 3) {
+    const currentSize = parseFloat(matches[1]);
+    const totalSize = parseFloat(matches[2]);
+    const progress = (currentSize / totalSize) * 100;
+    return progress;
+  }
+
+  return 0;
+}

@@ -206,6 +206,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
   await activateEmulatorWindowAsync({ pid, deviceType: 'emulator' });
 
+  console.log(`Opening url ${url}...`);
   try {
     const openProject = await adbAsync(
       '-s',

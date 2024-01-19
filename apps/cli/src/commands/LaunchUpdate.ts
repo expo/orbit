@@ -180,7 +180,7 @@ async function getBuildArtifactsURLForUpdateAsync({
   if (
     build.__typename === 'Build' &&
     build.expirationDate &&
-    new Date(build.expirationDate) > Date.now() &&
+    Date.parse(build.expirationDate) > Date.now() &&
     build.artifacts?.buildUrl
   ) {
     return build.artifacts.buildUrl;

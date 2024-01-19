@@ -137,13 +137,13 @@ function Core(props: Props) {
 
   const getDeviceByPlatform = useCallback(
     (platform: 'android' | 'ios') => {
-      const devices = devicesPerPlatform[platform]
+      const devices = devicesPerPlatform[platform].devices;
       const selectedDevicesId = selectedDevicesIds[platform];
       if (selectedDevicesId && devices.has(selectedDevicesId)) {
         return devices.get(selectedDevicesId);
       }
 
-      for (const device of devices) {
+      for (const device of devices.values()) {
         if (isVirtualDevice(device) && device.state === 'Booted') {
           setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(device) }));
           return device;
@@ -216,12 +216,19 @@ function Core(props: Props) {
       try {
         setStatus(MenuBarStatus.BOOTING_DEVICE);
         await ensureDeviceIsRunning(device);
-        setStatus(MenuBarStatus.OPENING_UPDATE);
-        await launchUpdateAsync({
-          url,
-          deviceId: getDeviceId(device),
-          platform: getDeviceOS(device),
-        });
+        await launchUpdateAsync(
+          {
+            url,
+            deviceId: getDeviceId(device),
+            platform: getDeviceOS(device),
+          },
+          (status, progress) => {
+            setStatus(status);
+            if (status === MenuBarStatus.DOWNLOADING) {
+              setProgress(progress);
+            }
+          }
+        );
       } catch (error) {
         if (error instanceof InternalError) {
           Alert.alert('Something went wrong', error.message);
