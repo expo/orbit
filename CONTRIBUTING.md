@@ -11,8 +11,6 @@
 5. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`
 6. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local cli file
 
-> In step (5), if you are running Node 20, or another version of Node not supported by `pkg`, you can run `yarn archive:node18` instead
-
 ## 🏎️ Start the Development environment
 
 1. From the `apps/cli` directory run `yarn start` to start Metro Bundler
