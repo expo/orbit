@@ -1,6 +1,6 @@
 {
-  "platforms": ["macos"],
-  "ios": {
+  "platforms": ["apple"],
+  "apple": {
     "modules": ["MenuBarModule"]
   }
 }
