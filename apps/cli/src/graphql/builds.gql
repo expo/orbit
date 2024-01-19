@@ -9,7 +9,7 @@ query getAppBuildForUpdate(
       name
       buildsPaginated(
         first: 1
-        filter: { platforms: [$platform], distributions: [$distribution] }
+        filter: { platforms: [$platform], distributions: [$distribution], developmentClient: true }
       ) {
         edges {
           node {
@@ -22,6 +22,22 @@ query getAppBuildForUpdate(
                 buildUrl
               }
             }
+          }
+        }
+      }
+    }
+  }
+}
+
+query getAppHasDevClientBuilds($appId: String!) {
+  app {
+    byId(appId: $appId) {
+      id
+      name
+      hasDevClientBuilds: buildsPaginated(first: 1, filter: { developmentClient: true }) {
+        edges {
+          node {
+            id
           }
         }
       }

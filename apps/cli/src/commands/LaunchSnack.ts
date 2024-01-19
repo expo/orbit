@@ -19,20 +19,14 @@ export async function launchSnackAsync(
 }
 
 async function launchSnackOnAndroidAsync(snackURL: string, deviceId: string, version?: string) {
-  const runningEmulators = await Emulator.getRunningDevicesAsync();
-  const emulator = runningEmulators.find(({ name }) => name === deviceId);
-  if (!emulator?.pid) {
-    throw new Error(`No running emulator with name ${deviceId}`);
-  }
+  const device = await Emulator.getRunningDeviceAsync(deviceId);
 
-  await Emulator.ensureExpoClientInstalledAsync(emulator.pid, version);
-  await Emulator.openURLAsync({ url: snackURL, pid: emulator.pid });
+  await Emulator.ensureExpoClientInstalledAsync(device.pid, version);
+  await Emulator.openURLAsync({ url: snackURL, pid: device.pid });
 }
 
 async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version?: string) {
-  if (
-    (await Simulator.getAvailableIosSimulatorsListAsync()).find(({ udid }) => udid === deviceId)
-  ) {
+  if (await Simulator.isSimulatorAsync(deviceId)) {
     await Simulator.ensureExpoClientInstalledAsync(deviceId, version);
     await Simulator.openURLAsync({
       url: snackURL,

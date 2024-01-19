@@ -311,6 +311,7 @@ export async function openURLAsync(options: {
   url: string;
   bundleId: string;
 }): Promise<void> {
+  console.log(`Opening url ${options.url}...`);
   await xcrunAsync([
     'devicectl',
     'device',

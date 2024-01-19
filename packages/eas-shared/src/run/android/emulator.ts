@@ -18,7 +18,7 @@ const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 const EXPO_GO_BUNDLE_IDENTIFIER = 'host.exp.exponent';
 export const EMULATOR_MAX_WAIT_TIMEOUT_MS = 60 * 1000 * 3;
-export { getRunningDevicesAsync } from './adb';
+export { getRunningDevicesAsync, getRunningDeviceAsync } from './adb';
 export { getAptParametersAsync } from './aapt';
 
 export async function getEmulatorExecutableAsync(): Promise<string> {
@@ -165,10 +165,13 @@ export async function startAppAsync(
   Log.succeed('Successfully started your app!');
 }
 
-export async function isAppInstalledOnEmulatorAsync(
-  pid: string,
-  bundleId: string
-): Promise<boolean> {
+export async function checkIfAppIsInstalled({
+  pid,
+  bundleId,
+}: {
+  pid: string;
+  bundleId: string;
+}): Promise<boolean> {
   const packages = await adbAsync('-s', pid, 'shell', 'pm', 'list', 'packages', bundleId);
 
   const lines = packages.stdout.split(/\r?\n/);
@@ -203,24 +206,8 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
   await activateEmulatorWindowAsync({ pid, deviceType: 'emulator' });
 
+  console.log(`Opening url ${url}...`);
   try {
-    // NOTE(brentvatne): temporary workaround! launch Expo Go first, then
-    // launch the project!
-    // https://github.com/expo/expo/issues/7772
-    // adb shell monkey -p host.exp.exponent -c android.intent.category.LAUNCHER 1
-    // Note: this is not needed in Expo Development Client, it only applies to Expo Go
-    await adbAsync(
-      '-s',
-      pid,
-      'shell',
-      'monkey',
-      '-p',
-      EXPO_GO_BUNDLE_IDENTIFIER,
-      '-c',
-      'android.intent.category.LAUNCHER',
-      '1'
-    );
-
     const openProject = await adbAsync(
       '-s',
       pid,

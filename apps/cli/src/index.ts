@@ -6,6 +6,7 @@ import { bootDeviceAsync } from './commands/BootDevice';
 import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
 import { launchSnackAsync } from './commands/LaunchSnack';
 import { checkToolsAsync } from './commands/CheckTools';
+import { launchUpdateAsync } from './commands/LaunchUpdate';
 import { returnLoggerMiddleware } from './utils';
 
 const program = new Command();
@@ -48,6 +49,13 @@ program
   .command('check-tools')
   .option('-p, --platform <string>', 'Selected platform')
   .action(returnLoggerMiddleware(checkToolsAsync));
+
+program
+  .command('launch-update')
+  .argument('<string>', 'Update URL')
+  .requiredOption('-p, --platform <string>', 'Selected platform')
+  .requiredOption('--device-id  <string>', 'UDID or name of the device')
+  .action(returnLoggerMiddleware(launchUpdateAsync));
 
 if (process.argv.length < 3) {
   program.help();

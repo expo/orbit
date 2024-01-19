@@ -69,6 +69,11 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
   return iosSimulators;
 }
 
+export async function isSimulatorAsync(udid: string) {
+  const availableIosSimulators = await getAvailableIosSimulatorsListAsync();
+  return availableIosSimulators.some((sim) => sim.udid === udid);
+}
+
 function parseSimControlJsonResults(input: string): any {
   try {
     return JSON.parse(input);
@@ -219,6 +224,7 @@ export async function getAppBundleIdentifierAsync(appPath: string): Promise<stri
 
 export async function openURLAsync(options: { udid: string; url: string }): Promise<void> {
   await activateSimulatorWindowAsync();
+  console.log(`Opening url ${options.url}...`);
   await xcrunAsync(['simctl', 'openurl', options.udid, options.url]);
 }
 
@@ -254,11 +260,21 @@ export async function installAsync(options: { udid: string; dir: string }): Prom
   return simctlAsync(['install', options.udid, options.dir]);
 }
 
-export async function isExpoClientInstalledOnSimulatorAsync(udid: string): Promise<boolean> {
+export async function checkIfAppIsInstalled({
+  udid,
+  bundleId,
+}: {
+  udid: string;
+  bundleId: string;
+}): Promise<boolean> {
   return !!(await getContainerPathAsync({
     udid,
-    bundleIdentifier: EXPO_GO_BUNDLE_IDENTIFIER,
+    bundleIdentifier: bundleId,
   }));
+}
+
+export async function isExpoClientInstalledOnSimulatorAsync(udid: string): Promise<boolean> {
+  return checkIfAppIsInstalled({ udid, bundleId: EXPO_GO_BUNDLE_IDENTIFIER });
 }
 
 async function getClientForSDK(sdkVersionString?: string) {

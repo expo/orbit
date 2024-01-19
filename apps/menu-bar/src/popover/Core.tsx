@@ -14,6 +14,7 @@ import { bootDeviceAsync } from '../commands/bootDeviceAsync';
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchSnackAsync } from '../commands/launchSnackAsync';
+import { launchUpdateAsync } from '../commands/launchUpdateAsync';
 import { Spacer, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import { useDeepLinking } from '../hooks/useDeepLinking';
@@ -32,7 +33,12 @@ import {
 import { useListDevices } from '../providers/DevicesProvider';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
 import { MenuBarStatus } from '../utils/helpers';
-import { getPlatformFromURI, handleAuthUrl } from '../utils/parseUrl';
+import {
+  URLType,
+  getPlatformFromURI,
+  handleAuthUrl,
+  identifyAndParseDeeplinkURL,
+} from '../utils/parseUrl';
 
 type Props = {
   isDevWindow: boolean;
@@ -129,7 +135,32 @@ function Core(props: Props) {
     [emulatorWithoutAudio]
   );
 
-  // @TODO: create another hook
+  const getDeviceByPlatform = useCallback(
+    (platform: 'android' | 'ios') => {
+      const devices = devicesPerPlatform[platform].devices;
+      const selectedDevicesId = selectedDevicesIds[platform];
+      if (selectedDevicesId && devices.has(selectedDevicesId)) {
+        return devices.get(selectedDevicesId);
+      }
+
+      for (const device of devices.values()) {
+        if (isVirtualDevice(device) && device.state === 'Booted') {
+          setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(device) }));
+          return device;
+        }
+      }
+
+      const [firstDevice] = devices.values();
+      if (!firstDevice) {
+        return;
+      }
+
+      setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
+      return firstDevice;
+    },
+    [devicesPerPlatform, selectedDevicesIds]
+  );
+
   const handleSnackUrl = useCallback(
     async (url: string) => {
       const device = getAvailableDeviceForSnack();
@@ -160,31 +191,56 @@ function Core(props: Props) {
     [ensureDeviceIsRunning, getAvailableDeviceForSnack]
   );
 
-  const getDeviceByPlatform = useCallback(
-    (platform: 'android' | 'ios') => {
-      const selectedDevicesId = selectedDevicesIds[platform];
-      if (selectedDevicesId && devicesPerPlatform[platform].devices.has(selectedDevicesId)) {
-        return devicesPerPlatform[platform].devices.get(selectedDevicesId);
-      }
-
-      const devices = devicesPerPlatform[platform].devices.values();
-
-      for (const device of devices) {
-        if (isVirtualDevice(device) && device.state === 'Booted') {
-          setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(device) }));
-          return device;
-        }
-      }
-
-      const [firstDevice] = devicesPerPlatform[platform].devices.values();
-      if (!firstDevice) {
+  const handleUpdateUrl = useCallback(
+    async (url: string) => {
+      /**
+       * Supports any update manifest url as long as the
+       * platform is specified in the query params.
+       */
+      const platform = new URL(url).searchParams.get('platform');
+      if (platform !== 'android' && platform !== 'ios') {
+        Alert.alert(
+          `Update URLs must include the "platform" query parameter with a value of either 'android' or 'ios'.`
+        );
         return;
       }
 
-      setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
-      return firstDevice;
+      const device = getDeviceByPlatform(platform);
+      if (!device) {
+        Alert.alert(
+          `You don't have any ${platform} devices available to open this update, please make your environment is configured correctly and try again.`
+        );
+        return;
+      }
+
+      try {
+        setStatus(MenuBarStatus.BOOTING_DEVICE);
+        await ensureDeviceIsRunning(device);
+        await launchUpdateAsync(
+          {
+            url,
+            deviceId: getDeviceId(device),
+            platform: getDeviceOS(device),
+          },
+          (status, progress) => {
+            setStatus(status);
+            if (status === MenuBarStatus.DOWNLOADING) {
+              setProgress(progress);
+            }
+          }
+        );
+      } catch (error) {
+        if (error instanceof InternalError) {
+          Alert.alert('Something went wrong', error.message);
+        }
+        console.log(`error: ${JSON.stringify(error)}`);
+      } finally {
+        setTimeout(() => {
+          setStatus(MenuBarStatus.LISTENING);
+        }, 2000);
+      }
     },
-    [devicesPerPlatform, selectedDevicesIds]
+    [ensureDeviceIsRunning, getDeviceByPlatform]
   );
 
   const installAppFromURI = useCallback(
@@ -264,22 +320,29 @@ function Core(props: Props) {
 
   useDeepLinking(
     useCallback(
-      ({ url }) => {
+      ({ url: deeplinkUrl }) => {
         if (!props.isDevWindow) {
-          const urlWithoutProtocol = url.substring(url.indexOf('://') + 3);
-          const isSnackUrl = url.includes('exp.host/');
-          const isAuthUrl = urlWithoutProtocol.startsWith('auth?');
+          const { urlType, url } = identifyAndParseDeeplinkURL(deeplinkUrl);
 
-          if (isAuthUrl) {
-            handleAuthUrl(url);
-          } else if (isSnackUrl) {
-            handleSnackUrl(`exp://${urlWithoutProtocol}`);
-          } else {
-            installAppFromURI(`https://${urlWithoutProtocol}`);
+          switch (urlType) {
+            case URLType.AUTH:
+              handleAuthUrl(url);
+              break;
+            case URLType.SNACK:
+              handleSnackUrl(url);
+              break;
+            case URLType.EXPO_UPDATE:
+              handleUpdateUrl(url);
+              break;
+            case URLType.EXPO_BUILD:
+            case URLType.UNKNOWN:
+            default:
+              installAppFromURI(url);
+              break;
           }
         }
       },
-      [props.isDevWindow, installAppFromURI, handleSnackUrl]
+      [props.isDevWindow, handleSnackUrl, handleUpdateUrl, installAppFromURI]
     )
   );
 
