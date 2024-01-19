@@ -125,7 +125,6 @@ function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
   const scheme = Array.isArray(manifest?.extra?.expoClient?.scheme)
     ? manifest?.extra?.expoClient?.scheme[0]
     : manifest?.extra?.expoClient?.scheme;
-  scheme;
   const slug = manifest?.extra?.expoClient?.slug;
 
   if (!scheme && !slug) {
@@ -181,7 +180,7 @@ async function getBuildArtifactsURLForUpdateAsync({
   if (
     build.__typename === 'Build' &&
     build.expirationDate &&
-    new Date(build.expirationDate) > new Date() &&
+    new Date(build.expirationDate) > Date.now() &&
     build.artifacts?.buildUrl
   ) {
     return build.artifacts.buildUrl;
