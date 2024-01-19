@@ -16,6 +16,8 @@
 - Remove AsyncStorage migrator and @react-native-async-storage/async-storage dependency. ([#135](https://github.com/expo/orbit/pull/135) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Migrate Menubar to expo modules.([#133](https://github.com/expo/orbit/pull/133) by [@alanhughes](https://github.com/alanjhughes))
 - Migrate FilePicker to Expo Modules. ([#132](https://github.com/expo/orbit/pull/132) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade `react-native` to 0.73.2. ([#143](https://github.com/expo/orbit/pull/143) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade `react-native-svg` to 14.1.0. ([#143](https://github.com/expo/orbit/pull/143) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.0.2 — 2024-01-17
 
