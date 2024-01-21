@@ -1,5 +1,3 @@
-import { View } from 'react-native';
-
 const Checkbox = () => {
   return <input type="checkbox" />;
 };
