@@ -11,9 +11,9 @@ import Xcode from '../assets/images/xcode.png';
 import { Text, View } from '../components';
 import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
-import { useWindowFocusEffect } from '../hooks/useWindowFocus';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
+import { useWindowFocusEffect } from '../modules/WindowManager/useWindowFocus';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
