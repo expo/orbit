@@ -1,6 +1,6 @@
 const { fork } = require('child_process');
 
-function spawnCliAsync(cliPath, command, args = []) {
+function spawnCliAsync(cliPath, command, args = [], listenerId) {
   let child;
   let hasReachedReturnOutput = false;
   let hasReachedError = false;
@@ -29,7 +29,7 @@ function spawnCliAsync(cliPath, command, args = []) {
           hasReachedError = true;
         } else if (output.length > 0 && !output === '\n') {
           const eventData = {
-            listenerId: 'listenerId',
+            listenerId,
             output,
           };
           console.log('sendEventWithName', eventData);

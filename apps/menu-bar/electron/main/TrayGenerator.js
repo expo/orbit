@@ -18,10 +18,12 @@ class TrayGenerator {
     return { x, y };
   };
   showWindow = () => {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { height, width } = primaryDisplay.size;
+    this.mainWindow.webContents.send('popoverFocused', { screenSize: { height, width } });
     const position = this.getWindowPosition();
     this.mainWindow.setPosition(position.x, position.y, false);
     this.mainWindow.show();
-    this.mainWindow.webContents.send('popoverFocused');
   };
   toggleWindow = () => {
     if (this.mainWindow.isVisible()) {

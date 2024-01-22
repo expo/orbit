@@ -33,11 +33,11 @@ const createMainWindow = () => {
 };
 
 app.on('ready', () => {
-  ipcMain.handle('runCli', async (event, command, args) => {
+  ipcMain.handle('runCli', async (event, command, args, listenerId) => {
     // eslint-disable-next-line no-undef
     const cliPath = path.join(__dirname, '../../../cli/build/index.js');
 
-    const commandOutput = await spawnCliAsync(cliPath, command, args);
+    const commandOutput = await spawnCliAsync(cliPath, command, args, listenerId);
     return commandOutput;
   });
 

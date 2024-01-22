@@ -3,6 +3,12 @@ import { NativeMenuBarModule } from './types';
 declare global {
   // eslint-disable-next-line no-var
   var screen: { height: number; width: number } | null | undefined;
+  // eslint-disable-next-line no-var
+  var electron:
+    | {
+        MenuBarModule: NativeMenuBarModule;
+      }
+    | undefined;
 }
 
 const MenuBarModule: NativeMenuBarModule = {
@@ -15,8 +21,11 @@ const MenuBarModule: NativeMenuBarModule = {
   homedir: '',
   exitApp() {},
   openSystemSettingsLoginItems() {},
-  runCli: (command: string, args: string[], listenerId: number) => {
-    return Promise.resolve('');
+  runCli: async (command: string, args: string[], listenerId: number) => {
+    if (!globalThis?.electron) {
+      return 'Unable to access electron global variable';
+    }
+    return await globalThis.electron.MenuBarModule.runCli(command, args, listenerId);
   },
   runCommand(command: string, args: string[]) {
     return Promise.resolve();
