@@ -322,23 +322,29 @@ function Core(props: Props) {
     useCallback(
       ({ url: deeplinkUrl }) => {
         if (!props.isDevWindow) {
-          const { urlType, url } = identifyAndParseDeeplinkURL(deeplinkUrl);
+          try {
+            const { urlType, url } = identifyAndParseDeeplinkURL(deeplinkUrl);
 
-          switch (urlType) {
-            case URLType.AUTH:
-              handleAuthUrl(url);
-              break;
-            case URLType.SNACK:
-              handleSnackUrl(url);
-              break;
-            case URLType.EXPO_UPDATE:
-              handleUpdateUrl(url);
-              break;
-            case URLType.EXPO_BUILD:
-            case URLType.UNKNOWN:
-            default:
-              installAppFromURI(url);
-              break;
+            switch (urlType) {
+              case URLType.AUTH:
+                handleAuthUrl(url);
+                break;
+              case URLType.SNACK:
+                handleSnackUrl(url);
+                break;
+              case URLType.EXPO_UPDATE:
+                handleUpdateUrl(url);
+                break;
+              case URLType.EXPO_BUILD:
+              case URLType.UNKNOWN:
+              default:
+                installAppFromURI(url);
+                break;
+            }
+          } catch (error) {
+            if (error instanceof Error) {
+              Alert.alert('Unsupported URL', error.message);
+            }
           }
         }
       },
