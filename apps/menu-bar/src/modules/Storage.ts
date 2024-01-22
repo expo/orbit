@@ -1,4 +1,5 @@
 import { StorageUtils } from 'common-types';
+import { Platform } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 
 import { apolloClient } from '../api/ApolloClient';
@@ -61,15 +62,16 @@ export const resetStorage = () => {
   storage.clearAll();
 };
 
-const oldStorage = new MMKV();
 export const storage = new MMKV({
   id: StorageUtils.MMKVInstanceId,
-  path: StorageUtils.getExpoOrbitDirectory(MenuBarModule.homedir),
+  path:
+    Platform.OS !== 'web' ? StorageUtils.getExpoOrbitDirectory(MenuBarModule.homedir) : undefined,
 });
 
 const migratedStorageKey = 'migratedFromOldPath';
 // Migrate MMKV storage to new path so that it's accessible from the CLI
 function migrateMMKVFromOldStoragePath() {
+  const oldStorage = new MMKV();
   const keys = oldStorage.getAllKeys();
 
   for (const key of keys) {
@@ -86,7 +88,7 @@ function migrateMMKVFromOldStoragePath() {
 
   storage.set(migratedStorageKey, true);
 }
-if (!storage.getBoolean(migratedStorageKey)) {
+if (!storage.getBoolean(migratedStorageKey) && Platform.OS !== 'web') {
   migrateMMKVFromOldStoragePath();
 }
 

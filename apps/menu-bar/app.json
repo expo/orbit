@@ -12,6 +12,9 @@
     },
     "ios": {
       "bundleIdentifier": "dev.expo.orbit"
+    },
+    "web": {
+      "bundler": "metro"
     }
   }
 }

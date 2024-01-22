@@ -1,6 +1,5 @@
 import { darkTheme, lightTheme, palette } from '@expo/styleguide-native';
 import {
-  PlatformColor,
   StyleProp,
   StyleSheet,
   TextStyle,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 
 import { Text } from './Text';
+import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 

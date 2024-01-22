@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
 
-import { Text } from './Text';
-import { Row } from './View';
+import { Text } from '../Text';
+import { Row } from '../View';
 
 interface CheckboxChangeEventData extends TargetedEvent {
   value: boolean;
@@ -22,13 +22,13 @@ type NativeCheckboxProps = ViewProps & {
   disabled?: boolean;
   onChange?: (event: CheckboxChangeEvent) => void;
   value?: boolean;
-  label?: string;
 };
 
 const NativeCheckbox = requireNativeComponent<NativeCheckboxProps>('Checkbox');
 
 type CheckboxProps = NativeCheckboxProps & {
   onValueChange?: (value: boolean) => void;
+  label?: string;
 };
 
 interface NativeCommands {

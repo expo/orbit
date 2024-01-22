@@ -90,7 +90,7 @@ function stylesForVariants(props: any, variants: any = {}) {
 
       const styleValue = variants[key][value];
       if (styleValue) {
-        styles = StyleSheet.flatten(StyleSheet.compose(styles, styleValue));
+        styles = StyleSheet.flatten([styles, styleValue]);
       }
     }
   }
