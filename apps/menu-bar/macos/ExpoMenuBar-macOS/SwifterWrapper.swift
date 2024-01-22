@@ -79,8 +79,13 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
 
   private func extractRootDomain(from urlString: String) -> String {
     guard let originUrl = URL(string: urlString.removingPercentEncoding ?? ""),
-          let hostName = originUrl.host else {
+          var hostName = originUrl.host else {
       return ""
+    }
+
+    // Orbit deeplink may include specific routes in the URL e.g. /update, /snack, /download, etc.
+    if !hostName.contains(".") {
+      hostName = originUrl.pathComponents[1]
     }
 
     let components = hostName.components(separatedBy: ".")

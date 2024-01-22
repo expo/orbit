@@ -30,11 +30,25 @@ export function identifyAndParseDeeplinkURL(deeplinkURL: string): {
       url: `https://${urlWithoutProtocol.replace('update/', '')}`,
     };
   }
-  if (urlWithoutProtocol.startsWith('expo.dev/artifacts')) {
-    return { urlType: URLType.EXPO_BUILD, url: `https://${urlWithoutProtocol}` };
+  if (
+    urlWithoutProtocol.startsWith('expo.dev/artifacts') ||
+    urlWithoutProtocol.startsWith('download/')
+  ) {
+    return {
+      urlType: URLType.EXPO_BUILD,
+      url: `https://${urlWithoutProtocol.replace('download/', '')}`,
+    };
   }
-  if (urlWithoutProtocol.includes('exp.host/')) {
-    return { urlType: URLType.SNACK, url: `exp://${urlWithoutProtocol}` };
+  if (urlWithoutProtocol.includes('exp.host/') || urlWithoutProtocol.startsWith('snack/')) {
+    return { urlType: URLType.SNACK, url: `exp://${urlWithoutProtocol.replace('snack/', '')}` };
+  }
+
+  // For future usage when we add support for other URL formats
+  if (
+    urlWithoutProtocol.indexOf('/') < urlWithoutProtocol.indexOf('.') ||
+    !urlWithoutProtocol.includes('.')
+  ) {
+    throw new Error('Please make sure you are using the latest version of Expo Orbit.');
   }
 
   return { urlType: URLType.UNKNOWN, url: `https://${urlWithoutProtocol}` };
