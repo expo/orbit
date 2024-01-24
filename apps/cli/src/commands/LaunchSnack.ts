@@ -1,4 +1,5 @@
 import { Emulator, Simulator, AppleDevice } from 'eas-shared';
+import { parseRuntimeUrl } from 'snack-content';
 
 type launchSnackAsyncOptions = {
   platform: 'android' | 'ios';
@@ -9,7 +10,7 @@ export async function launchSnackAsync(
   snackURL: string,
   { platform, deviceId }: launchSnackAsyncOptions
 ) {
-  const version = await getSDKVersionForSnack(snackURL);
+  const version = await getSDKVersionForSnackUrl(snackURL);
 
   if (platform === 'android') {
     await launchSnackOnAndroidAsync(snackURL, deviceId, version);
@@ -39,7 +40,18 @@ async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version
   await AppleDevice.openSnackURLAsync(deviceId, snackURL);
 }
 
-export async function getSDKVersionForSnack(snackURL: string): Promise<string | undefined> {
+/** Get SDK version from an EAS Update, or classic updates Snack URL */
+function getSDKVersionForSnackUrl(snackURL: string) {
+  const snack = parseRuntimeUrl(snackURL);
+  if (snack?.sdkVersion) {
+    return `${snack.sdkVersion}.0.0`;
+  }
+
+  return getSDKVersionForLegacySnackUrl(snackURL);
+}
+
+/** Get SDK version from a classic updates Snack url */
+async function getSDKVersionForLegacySnackUrl(snackURL: string): Promise<string | undefined> {
   // Attempts to extract sdk version from url. Match "sdk.", followed by one or more digits and dots, before a hyphen
   // e.g. exp://exp.host/@snack/sdk.48.0.0-ChmcDz6VUr
   const versionRegex = /sdk\.([\d.]+)(?=-)/;
