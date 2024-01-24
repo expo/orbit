@@ -2495,6 +2495,14 @@
     resolve-from "^5.0.0"
     sucrase "3.34.0"
 
+"@expo/metro-runtime@^2.2.16":
+  version "2.2.16"
+  resolved "https://registry.yarnpkg.com/@expo/metro-runtime/-/metro-runtime-2.2.16.tgz#dad958d74ad4a432a1f729d7a7313ec44083c656"
+  integrity sha512-WOUe7ByZsQpFRifyh9WgsjMYrCGHirWA8VvtR5fs+vi0za3yFIaC89wYMvEZILyvn+RIe7Ysln8nzF4xgtnKFg==
+  dependencies:
+    "@bacons/react-views" "^1.1.3"
+    qs "^6.10.3"
+
 "@expo/multipart-body-parser@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@expo/multipart-body-parser/-/multipart-body-parser-1.1.0.tgz#ba402b3047cf14ef17b4d785ec030dd6474ae6e4"
@@ -2503,14 +2511,6 @@
     dicer "^0.3.1"
     nullthrows "^1.1.1"
     structured-headers "^0.4.1"
-
-"@expo/metro-runtime@^2.2.16":
-  version "2.2.16"
-  resolved "https://registry.yarnpkg.com/@expo/metro-runtime/-/metro-runtime-2.2.16.tgz#dad958d74ad4a432a1f729d7a7313ec44083c656"
-  integrity sha512-WOUe7ByZsQpFRifyh9WgsjMYrCGHirWA8VvtR5fs+vi0za3yFIaC89wYMvEZILyvn+RIe7Ysln8nzF4xgtnKFg==
-  dependencies:
-    "@bacons/react-views" "^1.1.3"
-    qs "^6.10.3"
 
 "@expo/osascript@2.0.33", "@expo/osascript@^2.0.31":
   version "2.0.33"
@@ -13528,6 +13528,13 @@ smart-buffer@^4.2.0:
   resolved "https://registry.yarnpkg.com/smart-buffer/-/smart-buffer-4.2.0.tgz#6e1d71fa4f18c05f7d0ff216dd16a481d0e8d9ae"
   integrity sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==
 
+snack-content@2.0.0-preview.1:
+  version "2.0.0-preview.1"
+  resolved "https://registry.yarnpkg.com/snack-content/-/snack-content-2.0.0-preview.1.tgz#fec83a7ea6e41bf89cc38f194bbe75b499b6966f"
+  integrity sha512-T+19Q0G+roVRQ17ydILLnCiAs7JiterBgEJupePgCErSpqZQNhLTthCXZhdz/eigyiI0Qlk8ZPkv7peoWQOjcA==
+  dependencies:
+    semver "^7.3.4"
+
 snake-case@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/snake-case/-/snake-case-3.0.4.tgz#4f2bbd568e9935abdfd593f34c691dadb49c452c"
@@ -13892,14 +13899,6 @@ sucrase@3.34.0:
   version "3.34.0"
   resolved "https://registry.yarnpkg.com/sucrase/-/sucrase-3.34.0.tgz#1e0e2d8fcf07f8b9c3569067d92fbd8690fb576f"
   integrity sha512-70/LQEZ07TEcxiU2dz51FKaE6hCTWC6vr7FOk3Gr0U60C3shtAN+H+BFr9XlYe5xqf3RA8nrc+VIwzCfnxuXJw==
-  dependencies:
-    "@jridgewell/gen-mapping" "^0.3.2"
-    commander "^4.0.0"
-    glob "7.1.6"
-    lines-and-columns "^1.1.6"
-    mz "^2.7.0"
-    pirates "^4.0.1"
-    ts-interface-checker "^0.1.9"
 
 sucrase@^3.20.0:
   version "3.33.0"
