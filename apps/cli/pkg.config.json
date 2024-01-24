@@ -1,6 +1,6 @@
 {
   "pkg": {
-    "assets": ["../../node_modules/nodejs-mmkv/**"],
+    "assets": ["../../node_modules/nodejs-mmkv/**/*.node"],
     "targets": ["node18-macos-arm64", "node18-macos-x64"]
   }
 }
