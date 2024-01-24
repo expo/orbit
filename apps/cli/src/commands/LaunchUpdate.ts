@@ -3,6 +3,7 @@ import { Emulator, Simulator, ManifestUtils, Manifest } from 'eas-shared';
 import { graphqlSdk } from '../api/GraphqlClient';
 import { AppPlatform, DistributionType } from '../graphql/generated/graphql';
 import { downloadBuildAsync } from './DownloadBuild';
+import { InternalError } from 'common-types';
 
 type launchUpdateAsyncOptions = {
   platform: 'android' | 'ios';
@@ -178,15 +179,16 @@ async function getBuildArtifactsURLForUpdateAsync({
 
   const build = app?.byId?.buildsPaginated?.edges?.[0]?.node;
   if (
-    build.__typename === 'Build' &&
-    build.expirationDate &&
+    build?.__typename === 'Build' &&
+    build?.expirationDate &&
     Date.parse(build.expirationDate) > Date.now() &&
     build.artifacts?.buildUrl
   ) {
     return build.artifacts.buildUrl;
   }
 
-  throw new Error(
-    `No Development Builds available for ${manifest.extra?.expoClient?.name}. Please generate a new build`
+  throw new InternalError(
+    'NO_DEVELOPMENT_BUILDS_AVAILABLE',
+    `No Development Builds available for ${manifest.extra?.expoClient?.name} on EAS. Please generate a new Development Build`
   );
 }
