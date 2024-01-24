@@ -7,6 +7,7 @@
 ### 🎉 New features
 
 - Add support for launching Expo updates. ([#134](https://github.com/expo/orbit/pull/134), [#137](https://github.com/expo/orbit/pull/137), [#138](https://github.com/expo/orbit/pull/138), [#144](https://github.com/expo/orbit/pull/144) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add support for launching Expo updates. ([#134](https://github.com/expo/orbit/pull/134), [#137](https://github.com/expo/orbit/pull/137), [#138](https://github.com/expo/orbit/pull/138), [#144](https://github.com/expo/orbit/pull/144), [#148](https://github.com/expo/orbit/pull/148) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for Snack EAS Update URLs to support SDK 50. ([#147](https://github.com/expo/orbit/pull/147) by [@bycedric](https://github.com/byCedric))
 
 ### 🐛 Bug fixes

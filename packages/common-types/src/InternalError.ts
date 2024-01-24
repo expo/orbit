@@ -31,7 +31,8 @@ export type InternalErrorCode =
   | 'XCODE_COMMAND_LINE_TOOLS_NOT_INSTALLED'
   | 'XCODE_LICENSE_NOT_ACCEPTED'
   | 'XCODE_NOT_INSTALLED'
-  | 'SIMCTL_NOT_AVAILABLE';
+  | 'SIMCTL_NOT_AVAILABLE'
+  | 'NO_DEVELOPMENT_BUILDS_AVAILABLE';
 
 export type MultipleAppsInTarballErrorDetails = {
   apps: Array<{
