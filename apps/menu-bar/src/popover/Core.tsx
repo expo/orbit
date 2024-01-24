@@ -230,7 +230,7 @@ function Core(props: Props) {
           }
         );
       } catch (error) {
-        if (error instanceof InternalError) {
+        if (error instanceof InternalError || error instanceof Error) {
           Alert.alert('Something went wrong', error.message);
         }
         console.log(`error: ${JSON.stringify(error)}`);
