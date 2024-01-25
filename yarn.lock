@@ -11473,10 +11473,10 @@ node-stream-zip@^1.9.1:
   resolved "https://registry.yarnpkg.com/node-stream-zip/-/node-stream-zip-1.15.0.tgz#158adb88ed8004c6c49a396b50a6a5de3bca33ea"
   integrity sha512-LN4fydt9TqhZhThkZIVQnF9cwjU3qmUH9h78Mx/K7d3VvfRqqwthLwJEUOEL0QPZ0XQmNN7be5Ggit5+4dq3Bw==
 
-nodejs-mmkv@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/nodejs-mmkv/-/nodejs-mmkv-0.1.1.tgz#3804fe41e21804e66baa94fbabf24a040500561e"
-  integrity sha512-P8AXlfpe9IHeGUvRt5W0auahbjvTbj+DcqmlRZKXpstfWTZf2KyJqvLishyX1vKzJzk4M7H71LXmM9ld5C/MXA==
+nodejs-mmkv@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/nodejs-mmkv/-/nodejs-mmkv-0.2.0.tgz#4285fa40a9aab4bd6b39d00391fe5dbb47f6625e"
+  integrity sha512-Ch/79gxaf0laGjskzPA1wgdVr5DBb2TUDegEZeFDvSuPDa+Icejo7CW+qv4CEnrA3CLRUUCpazcK/elp0USuGA==
   dependencies:
     bindings "^1.5.0"
     node-addon-api "^5.0.0"
