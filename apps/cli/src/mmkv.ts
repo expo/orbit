@@ -1,10 +1,12 @@
 import { StorageUtils } from 'common-types';
+import { Env } from 'eas-shared';
+import MMKVModule from 'nodejs-mmkv';
 import os from 'os';
 
-const MMKVModule = require('nodejs-mmkv');
 const storage = new MMKVModule({
   rootDir: StorageUtils.getExpoOrbitDirectory(os.homedir()),
   id: StorageUtils.MMKVInstanceId,
+  logLevel: Env.isMenuBar() ? 'warning' : 'info',
 });
 
 export function getSessionSecret(): string | undefined {
