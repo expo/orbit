@@ -1,8 +1,8 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
 
-const TrayGenerator = require('./TrayGenerator');
-const spawnCliAsync = require('./spawnCliAsync');
+import TrayGenerator from './TrayGenerator';
+import { registerMainModules } from '../modules/registerElectronModules';
 
 const createMainWindow = () => {
   const mainWindow = new BrowserWindow({
@@ -15,7 +15,7 @@ const createMainWindow = () => {
     webPreferences: {
       devTools: true,
       // eslint-disable-next-line no-undef
-      preload: path.join(__dirname, '../preload.js'),
+      preload: path.join(__dirname, './preload.js'),
     },
     skipTaskbar: true,
   });
@@ -33,13 +33,7 @@ const createMainWindow = () => {
 };
 
 app.on('ready', () => {
-  ipcMain.handle('runCli', async (event, command, args, listenerId) => {
-    // eslint-disable-next-line no-undef
-    const cliPath = path.join(__dirname, '../../../cli/build/index.js');
-
-    const commandOutput = await spawnCliAsync(cliPath, command, args, listenerId);
-    return commandOutput;
-  });
+  registerMainModules(ipcMain);
 
   const mainWindow = createMainWindow();
   const Tray = new TrayGenerator(mainWindow);

@@ -1,12 +1,18 @@
-const { Tray, Menu, screen } = require('electron');
-const path = require('path');
+import { Tray, Menu, screen, BrowserWindow, MenuItemConstructorOptions } from 'electron';
+import path from 'path';
 
-class TrayGenerator {
-  constructor(mainWindow) {
+export default class TrayGenerator {
+  mainWindow: BrowserWindow;
+  tray: Tray | null;
+
+  constructor(mainWindow: BrowserWindow) {
     this.tray = null;
     this.mainWindow = mainWindow;
   }
   getWindowPosition = () => {
+    if (this.tray === null) {
+      return;
+    }
     const windowBounds = this.mainWindow.getBounds();
     const trayBounds = this.tray.getBounds();
 
@@ -22,6 +28,10 @@ class TrayGenerator {
     const { height, width } = primaryDisplay.size;
     this.mainWindow.webContents.send('popoverFocused', { screenSize: { height, width } });
     const position = this.getWindowPosition();
+
+    if (!position) {
+      return;
+    }
     this.mainWindow.setPosition(position.x, position.y, false);
     this.mainWindow.show();
   };
@@ -33,17 +43,17 @@ class TrayGenerator {
     }
   };
   rightClickMenu = () => {
-    const menu = [
+    const menu: MenuItemConstructorOptions[] = [
       {
         role: 'quit',
         accelerator: 'Command+Q',
       },
     ];
-    this.tray.popUpContextMenu(Menu.buildFromTemplate(menu));
+    this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));
   };
   createTray = () => {
     // eslint-disable-next-line no-undef
-    this.tray = new Tray(path.join(__dirname, '../assets/images/icon.png'));
+    this.tray = new Tray(path.join(__dirname, '../../assets/images/icon.png'));
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);

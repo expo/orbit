@@ -1,18 +1,18 @@
-const { fork } = require('child_process');
+import { fork, ChildProcess } from 'child_process';
 
-function spawnCliAsync(cliPath, command, args = [], listenerId) {
-  let child;
+function spawnCliAsync(cliPath: string, command: string, args: string[] = [], listenerId: number) {
+  let child: ChildProcess;
   let hasReachedReturnOutput = false;
   let hasReachedError = false;
   let returnOutput = '';
 
   let promise = new Promise((resolve, reject) => {
     child = fork(cliPath, [command, ...args], {
-      env: { ...process.env, EXPO_MENU_BAR: true },
+      env: { ...process.env, EXPO_MENU_BAR: true } as any,
       stdio: 'pipe',
     });
 
-    function dataHandler(data) {
+    function dataHandler(data: any) {
       const wholeOutput = data.toString();
       const outputs = wholeOutput.split('\n');
 
@@ -27,7 +27,7 @@ function spawnCliAsync(cliPath, command, args = [], listenerId) {
           hasReachedReturnOutput = true;
         } else if (output === '---- thrown error ----') {
           hasReachedError = true;
-        } else if (output.length > 0 && !output === '\n') {
+        } else if (output.length > 0 && output !== '\n') {
           const eventData = {
             listenerId,
             output,
@@ -45,7 +45,7 @@ function spawnCliAsync(cliPath, command, args = [], listenerId) {
       child.stderr.on('data', dataHandler);
     }
 
-    const completionListener = (code, signal) => {
+    const completionListener = () => {
       child.removeListener('error', errorListener);
 
       if (hasReachedError) {
@@ -55,7 +55,7 @@ function spawnCliAsync(cliPath, command, args = [], listenerId) {
       }
     };
 
-    let errorListener = (error) => {
+    let errorListener = (error: Error) => {
       child.removeListener('close', completionListener);
       reject(error);
     };
@@ -63,8 +63,10 @@ function spawnCliAsync(cliPath, command, args = [], listenerId) {
     child.once('close', completionListener);
     child.once('error', errorListener);
   });
+  // @ts-ignore: TypeScript isn't aware the Promise constructor argument runs synchronously and
+  // thinks `child` is not yet defined.
   promise.child = child;
   return promise;
 }
 
-module.exports = spawnCliAsync;
+export default spawnCliAsync;
