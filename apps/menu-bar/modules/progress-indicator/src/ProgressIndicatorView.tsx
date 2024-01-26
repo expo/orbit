@@ -28,7 +28,7 @@ export default function ProgressIndicatorView(props: ProgressIndicatorViewProps)
 }
 
 function getSizeStyle(size: ProgressIndicatorViewProps['size']) {
-  return size === 'small' ? styles.Small : styles.sizeLarge;
+  return size === 'small' ? styles.sizeSmall : styles.sizeLarge;
 }
 
 const styles = StyleSheet.create({
