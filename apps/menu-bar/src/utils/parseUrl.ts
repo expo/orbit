@@ -15,32 +15,52 @@ export function handleAuthUrl(url: string) {
   saveSessionSecret(sessionSecret);
 }
 
-export function identifyAndParseDeeplinkURL(deeplinkURL: string): {
+export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
   urlType: URLType;
   url: string;
 } {
-  const urlWithoutProtocol = deeplinkURL.replace(/^[^:]+:\/\//, '');
+  /**
+   * The URL implementation when running Jest does not support
+   * custom schemes and URLs without domains. That's why we
+   * default to http://expo.dev when creating a new URL instance.
+   */
+  const urlWithoutProtocol = deeplinkURLString.replace(/^[^:]+:\/\//, '');
+  const deeplinkURL = new URL(urlWithoutProtocol, 'http://expo.dev');
 
-  if (urlWithoutProtocol.startsWith('auth?')) {
-    return { urlType: URLType.AUTH, url: deeplinkURL };
+  if (deeplinkURL.pathname.startsWith('/auth')) {
+    return { urlType: URLType.AUTH, url: deeplinkURLString };
   }
-  if (urlWithoutProtocol.startsWith('update/')) {
+  if (deeplinkURL.pathname.startsWith('/update')) {
     return {
       urlType: URLType.EXPO_UPDATE,
-      url: `https://${urlWithoutProtocol.replace('update/', '')}`,
+      url: getUrlFromSearchParams(deeplinkURL.searchParams),
     };
   }
-  if (
-    urlWithoutProtocol.startsWith('expo.dev/artifacts') ||
-    urlWithoutProtocol.startsWith('download/')
-  ) {
+  if (deeplinkURL.pathname.startsWith('/download')) {
     return {
       urlType: URLType.EXPO_BUILD,
-      url: `https://${urlWithoutProtocol.replace('download/', '')}`,
+      url: getUrlFromSearchParams(deeplinkURL.searchParams),
     };
   }
-  if (urlWithoutProtocol.includes('exp.host/') || urlWithoutProtocol.startsWith('snack/')) {
-    return { urlType: URLType.SNACK, url: `exp://${urlWithoutProtocol.replace('snack/', '')}` };
+  if (deeplinkURL.pathname.startsWith('/snack')) {
+    return {
+      urlType: URLType.SNACK,
+      url: getUrlFromSearchParams(deeplinkURL.searchParams),
+    };
+  }
+
+  // Deprecated formats
+  if (urlWithoutProtocol.startsWith('expo.dev/artifacts')) {
+    return {
+      urlType: URLType.EXPO_BUILD,
+      url: `https://${urlWithoutProtocol}`,
+    };
+  }
+  if (urlWithoutProtocol.includes('exp.host/')) {
+    return {
+      urlType: URLType.SNACK,
+      url: `exp://${urlWithoutProtocol}`,
+    };
   }
 
   // For future usage when we add support for other URL formats
@@ -54,10 +74,18 @@ export function identifyAndParseDeeplinkURL(deeplinkURL: string): {
   return { urlType: URLType.UNKNOWN, url: `https://${urlWithoutProtocol}` };
 }
 
+function getUrlFromSearchParams(searchParams: URLSearchParams): string {
+  const url = searchParams.get('url');
+  if (!url) {
+    throw new Error('Missing url parameter in query');
+  }
+  return url;
+}
+
 export enum URLType {
-  AUTH,
-  EXPO_UPDATE,
-  EXPO_BUILD,
-  SNACK,
-  UNKNOWN,
+  AUTH = 'AUTH',
+  EXPO_UPDATE = 'EXPO_UPDATE',
+  EXPO_BUILD = 'EXPO_BUILD',
+  SNACK = 'SNACK',
+  UNKNOWN = 'UNKNOWN',
 }

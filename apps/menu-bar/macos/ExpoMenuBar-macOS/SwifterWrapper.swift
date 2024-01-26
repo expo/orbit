@@ -85,7 +85,15 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
 
     // Orbit deeplink may include specific routes in the URL e.g. /update, /snack, /download, etc.
     if !hostName.contains(".") {
-      hostName = originUrl.pathComponents[1]
+      let components = NSURLComponents(url: originUrl, resolvingAgainstBaseURL: true)
+      let urlStringFromParams = components?.queryItems?.first(where: { $0.name == "url" })?.value
+
+      if urlStringFromParams != nil {
+        let urlFromParams = URL(string: urlStringFromParams ?? "")
+        hostName = urlFromParams?.host ?? ""
+      } else {
+        hostName = originUrl.pathComponents[1]
+      }
     }
 
     let components = hostName.components(separatedBy: ".")
