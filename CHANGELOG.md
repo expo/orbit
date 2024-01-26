@@ -20,6 +20,7 @@
 - Upgrade `react-native` to 0.73.2. ([#143](https://github.com/expo/orbit/pull/143) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade `react-native-svg` to 14.1.0. ([#143](https://github.com/expo/orbit/pull/143) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Migrate ProgressIndicator to Expo Modules. ([#150](https://github.com/expo/orbit/pull/150) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Refactor deep-link routes to comply with the URL specification. ([#151](https://github.com/expo/orbit/pull/151) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.0.2 — 2024-01-17
 
