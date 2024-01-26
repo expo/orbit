@@ -6,7 +6,6 @@
 
 ### 🎉 New features
 
-- Add support for launching Expo updates. ([#134](https://github.com/expo/orbit/pull/134), [#137](https://github.com/expo/orbit/pull/137), [#138](https://github.com/expo/orbit/pull/138), [#144](https://github.com/expo/orbit/pull/144) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for launching Expo updates. ([#134](https://github.com/expo/orbit/pull/134), [#137](https://github.com/expo/orbit/pull/137), [#138](https://github.com/expo/orbit/pull/138), [#144](https://github.com/expo/orbit/pull/144), [#148](https://github.com/expo/orbit/pull/148) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for Snack EAS Update URLs to support SDK 50. ([#147](https://github.com/expo/orbit/pull/147) by [@bycedric](https://github.com/byCedric))
 
@@ -20,6 +19,7 @@
 - Migrate FilePicker to Expo Modules. ([#132](https://github.com/expo/orbit/pull/132) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade `react-native` to 0.73.2. ([#143](https://github.com/expo/orbit/pull/143) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade `react-native-svg` to 14.1.0. ([#143](https://github.com/expo/orbit/pull/143) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Migrate ProgressIndicator to Expo Modules. ([#150](https://github.com/expo/orbit/pull/150) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.0.2 — 2024-01-17
 
