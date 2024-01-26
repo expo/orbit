@@ -1,12 +1,11 @@
 import { IpcMain } from 'electron';
 
-import { ElectronModule, IpcMainModulesFunctions } from './RegistryTypes';
-import { MainModules } from './mainRegistry';
+import { ElectronModule, IpcMainModulesFunctions, Registry } from './types';
 
 const ipcMainModuleFunctions: IpcMainModulesFunctions = {};
 
-export function registerMainModules(ipcMain: IpcMain) {
-  MainModules.forEach((module) => {
+export function registerMainModules(modules: Registry, ipcMain: IpcMain) {
+  modules.forEach((module) => {
     registerMainModule(module, ipcMain);
   });
 

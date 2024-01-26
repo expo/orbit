@@ -1,9 +1,8 @@
 import { IpcRenderer } from 'electron';
 
-import { ElectronModule, IpcMainModulesFunctions } from './RegistryTypes';
-import { PreloadModules } from './preloadRegistry';
+import { ElectronModule, IpcMainModulesFunctions, Registry } from './types';
 
-export function requirePreloadModules(ipcRenderer: IpcRenderer) {
+export function exposeElectronModules(preloadModules: Registry, ipcRenderer: IpcRenderer) {
   const registeredModules: {
     [key: string]: ElectronModule;
   } = {};
@@ -12,7 +11,8 @@ export function requirePreloadModules(ipcRenderer: IpcRenderer) {
     'get-all-ipc-main-functions'
   );
 
-  for (const module of PreloadModules) {
+  // Merge preload modules with ipcMain modules
+  for (const module of preloadModules) {
     registeredModules[module.name] = mergeModule(
       module,
       ipcMainModulesFunctions[module.name],

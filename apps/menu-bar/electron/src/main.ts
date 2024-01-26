@@ -1,8 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
+import { registerMainModules } from 'react-native-electron-modules';
 import path from 'path';
 
 import TrayGenerator from './TrayGenerator';
-import { registerMainModules } from '../modules/registerElectronModules';
+import { MainModules } from '../modules/mainRegistry';
 
 const createMainWindow = () => {
   const mainWindow = new BrowserWindow({
@@ -33,7 +34,7 @@ const createMainWindow = () => {
 };
 
 app.on('ready', () => {
-  registerMainModules(ipcMain);
+  registerMainModules(MainModules, ipcMain);
 
   const mainWindow = createMainWindow();
   const Tray = new TrayGenerator(mainWindow);

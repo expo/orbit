@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { exposeElectronModules } from 'react-native-electron-modules';
 
-import { requirePreloadModules } from '../modules/requirePreloadModules';
+import { PreloadModules } from '../modules/preloadRegistry';
 
-contextBridge.exposeInMainWorld('electron', requirePreloadModules(ipcRenderer));
+contextBridge.exposeInMainWorld('electron', exposeElectronModules(PreloadModules, ipcRenderer));
