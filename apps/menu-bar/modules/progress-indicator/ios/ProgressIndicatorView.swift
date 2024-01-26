@@ -8,7 +8,7 @@ class ProgressIndicatorView: ExpoView {
     clipsToBounds = true
 
     progressIndicatorView.style = .bar
-    progressIndicatorView.maxValue = 0.0
+    progressIndicatorView.minValue = 0.0
     progressIndicatorView.maxValue = 100.0
     addSubview(progressIndicatorView)
   }

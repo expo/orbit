@@ -5,8 +5,12 @@ public class ProgressIndicatorModule: Module {
     Name("ProgressIndicator")
 
     View(ProgressIndicatorView.self) {
-      Prop("indeterminate") { (view, isIndeterminate: Bool) in
-        view.setIndeterminate(isIndeterminate)
+      Prop("indeterminate") { (view, isIndeterminate: Bool?) in
+        if let isIndeterminate {
+          view.setIndeterminate(isIndeterminate)
+        } else {
+          view.setIndeterminate(false)
+        }
       }
 
       Prop("progress") { (view, progress: Double) in

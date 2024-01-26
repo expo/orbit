@@ -28,13 +28,7 @@ export default function ProgressIndicatorView(props: ProgressIndicatorViewProps)
 }
 
 function getSizeStyle(size: ProgressIndicatorViewProps['size']) {
-  switch (size) {
-    case 'small':
-      return styles.sizeSmall;
-    case 'large':
-    default:
-      return styles.sizeLarge;
-  }
+  return size === 'small' ? styles.Small : styles.sizeLarge;
 }
 
 const styles = StyleSheet.create({
