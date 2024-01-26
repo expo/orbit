@@ -13,8 +13,6 @@
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
 		514201582437B4B40078DB4F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 514201572437B4B40078DB4F /* main.m */; };
 		77818F2A6E488E8B68D317B2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */; };
-		C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */; };
-		C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */; };
 		C032EDB72A1FE6F300FBC597 /* orbit-cli-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */; };
 		C051E6B62A83577800C6D615 /* orbit-cli-x64 in Resources */ = {isa = PBXBuildFile; fileRef = C051E6B52A83577800C6D615 /* orbit-cli-x64 */; };
 		C051E6BB2A991C4200C6D615 /* WebAuthenticationSession.m in Sources */ = {isa = PBXBuildFile; fileRef = C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */; };
@@ -69,10 +67,6 @@
 		9D32DFD059D5DB6DDEF38881 /* Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		A82DFB63B157C65E5D698CA2 /* Pods-Shared-ExpoMenuBar-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-iOS/Pods-Shared-ExpoMenuBar-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ExpoMenuBar-macOS/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		C0271C562A602CCB0065AB11 /* ProgressIndicatorManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorManager.h; sourceTree = "<group>"; };
-		C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorManager.m; sourceTree = "<group>"; };
-		C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgressIndicatorView.h; sourceTree = "<group>"; };
-		C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgressIndicatorView.m; sourceTree = "<group>"; };
 		C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "orbit-cli-arm64"; path = "../../cli/orbit-cli-arm64"; sourceTree = "<group>"; };
 		C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ExpoMenuBar-macOSRelease.entitlements"; sourceTree = "<group>"; };
 		C051E6B42A8340AF00C6D615 /* AutoLauncherRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncherRelease.entitlements; sourceTree = "<group>"; };
@@ -205,10 +199,6 @@
 				C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */,
 				C08E65332A5D04910079E3A9 /* WindowNavigator.m */,
 				C08E65352A5D0A580079E3A9 /* WindowNavigator.h */,
-				C0271C562A602CCB0065AB11 /* ProgressIndicatorManager.h */,
-				C0271C572A602CDE0065AB11 /* ProgressIndicatorManager.m */,
-				C0271C592A602FEC0065AB11 /* ProgressIndicatorView.h */,
-				C0271C5A2A602FF60065AB11 /* ProgressIndicatorView.m */,
 				C051E6B92A991C0A00C6D615 /* WebAuthenticationSession.h */,
 				C051E6BA2A991C4200C6D615 /* WebAuthenticationSession.m */,
 				C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */,
@@ -512,11 +502,9 @@
 				C06B8F8A2AAA9024009F2BB5 /* FileHandler.m in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C06B8F902AAB77D0009F2BB5 /* DragDropStatusItemView.m in Sources */,
-				C0271C582A602CDE0065AB11 /* ProgressIndicatorManager.m in Sources */,
 				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
 				C0C820022AB8E5EE003D75AF /* SparkleModule.m in Sources */,
 				C06B8F8D2AAA9058009F2BB5 /* FileHandlerManager.m in Sources */,
-				C0271C5B2A602FF60065AB11 /* ProgressIndicatorView.m in Sources */,
 				C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */,
 				C051E6BB2A991C4200C6D615 /* WebAuthenticationSession.m in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
