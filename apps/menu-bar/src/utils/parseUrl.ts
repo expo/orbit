@@ -21,11 +21,11 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
 } {
   /**
    * The URL implementation when running Jest does not support
-   * custom schemes and URLs without domains. That's why we
+   * custom schemes + URLs without domains. That's why we
    * default to http://expo.dev when creating a new URL instance.
    */
   const urlWithoutProtocol = deeplinkURLString.replace(/^[^:]+:\/\//, '');
-  const deeplinkURL = new URL(urlWithoutProtocol, 'http://expo.dev');
+  const deeplinkURL = new URL(deeplinkURLString, 'http://expo.dev');
 
   if (deeplinkURL.pathname.startsWith('/auth')) {
     return { urlType: URLType.AUTH, url: deeplinkURLString };

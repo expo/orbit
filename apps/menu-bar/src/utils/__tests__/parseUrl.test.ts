@@ -8,7 +8,7 @@ describe('identifyAndParseDeeplinkURL', () => {
   describe('Auth URLs', () => {
     it('should support Auth callback URL from expo.dev', () => {
       const authCallbackURL =
-        'expo-orbit://auth?username_or_email=gabrieldonadel&session_secret=%7B%22id%22%3A%22XXXXXXXX-XXXX-XXXX-XXXXX-XXXXXXXXXXXX%22%2C%22version%22%3A1%2C%22expires_at%22%3A0000000000000%7D';
+        'expo-orbit:///auth?username_or_email=gabrieldonadel&session_secret=%7B%22id%22%3A%22XXXXXXXX-XXXX-XXXX-XXXXX-XXXXXXXXXXXX%22%2C%22version%22%3A1%2C%22expires_at%22%3A0000000000000%7D';
 
       expect(identifyAndParseDeeplinkURL(authCallbackURL)).toEqual({
         urlType: URLType.AUTH,
@@ -30,7 +30,7 @@ describe('identifyAndParseDeeplinkURL', () => {
 
     it('Should parse url parameter from /download route', () => {
       const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
-      const artifactDeeplinkURL = `expo-orbit://download/?url=${encodeURIComponent(artifactURL)}`;
+      const artifactDeeplinkURL = `expo-orbit:///download/?url=${encodeURIComponent(artifactURL)}`;
 
       expect(identifyAndParseDeeplinkURL(artifactDeeplinkURL)).toEqual({
         urlType: URLType.EXPO_BUILD,
@@ -42,7 +42,7 @@ describe('identifyAndParseDeeplinkURL', () => {
   describe('Update URLs', () => {
     it('Should parse url parameter from /update route', () => {
       const updateURL = 'https://u.expo.dev/update/addecbed-f477-4a75-bd88-0732dc928fe9';
-      const updateDeeplinkURL = `expo-orbit://update?url=${encodeURIComponent(updateURL)}`;
+      const updateDeeplinkURL = `expo-orbit:///update?url=${encodeURIComponent(updateURL)}`;
 
       expect(identifyAndParseDeeplinkURL(updateDeeplinkURL)).toEqual({
         urlType: URLType.EXPO_UPDATE,
@@ -51,7 +51,7 @@ describe('identifyAndParseDeeplinkURL', () => {
     });
 
     it('Should throw if url parameter is not present', () => {
-      const updateDeeplinkURL = `expo-orbit://update`;
+      const updateDeeplinkURL = `expo-orbit:///update`;
 
       expect(() => identifyAndParseDeeplinkURL(updateDeeplinkURL)).toThrowError();
     });
@@ -70,7 +70,7 @@ describe('identifyAndParseDeeplinkURL', () => {
     it('Should parse url parameter from /snack route', () => {
       const snackURL =
         'exp://staging-u.expo.dev/2dce2748-c51f-4865-bae0-392af794d60a?runtime-version=exposdk%3A50.0.0&channel-name=production&snack-channel=Hhhqw6NhFw';
-      const snackDeeplinkURL = `expo-orbit://snack?url=${encodeURIComponent(snackURL)}`;
+      const snackDeeplinkURL = `expo-orbit:///snack?url=${encodeURIComponent(snackURL)}`;
 
       expect(identifyAndParseDeeplinkURL(snackDeeplinkURL)).toEqual({
         urlType: URLType.SNACK,
@@ -81,7 +81,7 @@ describe('identifyAndParseDeeplinkURL', () => {
 
   describe('Unsuported URLs', () => {
     it('Should throw an error when the URL route is not supported', () => {
-      const unsuportedURL = 'expo-orbit://some-future-route';
+      const unsuportedURL = 'expo-orbit:///some-future-route';
 
       expect(() => identifyAndParseDeeplinkURL(unsuportedURL)).toThrowError();
     });
