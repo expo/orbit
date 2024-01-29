@@ -30,12 +30,6 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
   if (deeplinkURL.pathname.startsWith('/auth')) {
     return { urlType: URLType.AUTH, url: deeplinkURLString };
   }
-  if (deeplinkURL.pathname.startsWith('/update')) {
-    return {
-      urlType: URLType.EXPO_UPDATE,
-      url: getUrlFromSearchParams(deeplinkURL.searchParams),
-    };
-  }
   if (deeplinkURL.pathname.startsWith('/download')) {
     return {
       urlType: URLType.EXPO_BUILD,
