@@ -78,13 +78,15 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
   }
 
   private func extractRootDomain(from urlString: String) -> String {
-    guard let originUrl = URL(string: urlString.removingPercentEncoding ?? ""),
-          var hostName = originUrl.host else {
+    guard let originUrl = URL(string: urlString.removingPercentEncoding ?? "") else {
       return ""
     }
 
-    // Orbit deeplink may include specific routes in the URL e.g. /update, /snack, /download, etc.
-    if !hostName.contains(".") {
+    var hostName: String
+    if let originalHostName = originUrl.host {
+      hostName = originalHostName
+    } else {
+      // Orbit deeplink may include specific routes in the URL e.g. /update, /snack, /download, etc.
       let components = NSURLComponents(url: originUrl, resolvingAgainstBaseURL: true)
       let urlStringFromParams = components?.queryItems?.first(where: { $0.name == "url" })?.value
 
@@ -92,8 +94,12 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
         let urlFromParams = URL(string: urlStringFromParams ?? "")
         hostName = urlFromParams?.host ?? ""
       } else {
-        hostName = originUrl.pathComponents[1]
+        hostName = ""
       }
+    }
+
+    if !hostName.contains(".") {
+      hostName = originUrl.pathComponents[1]
     }
 
     let components = hostName.components(separatedBy: ".")
