@@ -120,7 +120,7 @@ const Settings = () => {
   };
 
   const handleAuthentication = async (type: 'signup' | 'login') => {
-    const redirectBase = 'expo-orbit://auth';
+    const redirectBase = 'expo-orbit:///auth';
     const authSessionURL = `${
       Config.website.origin
     }/${type}?confirm_account=1&app_redirect_uri=${encodeURIComponent(redirectBase)}`;
