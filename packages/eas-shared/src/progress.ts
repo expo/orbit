@@ -1,6 +1,3 @@
-import chalk from 'chalk';
-
-import { Ora, ora } from './ora';
 import { endTimer, formatMilliseconds, startTimer } from './timer';
 
 export type Progress = {
@@ -24,7 +21,6 @@ export function createProgressTracker({
   message: string | ((ratio: number, total: number) => string);
   completedMessage: string | ((duration: string) => string);
 }): ProgressHandler {
-  let bar: Ora | null = null;
   let calcTotal: number = total ?? 0;
   let transferredSoFar = 0;
   let current = 0;
@@ -41,42 +37,37 @@ export function createProgressTracker({
 
   return ({ progress, isComplete, error }) => {
     if (progress) {
-      if (!bar && (progress.total !== undefined || total !== undefined)) {
+      if (progress.total !== undefined || total !== undefined) {
         calcTotal = (total ?? progress.total) as number;
-        bar = ora(getMessage(0, calcTotal)).start();
         startTimer(timerLabel);
       }
       if (progress.total) {
         calcTotal = progress.total;
       }
-      if (bar) {
-        let percentage = 0;
-        if (progress.percent) {
-          percentage = progress.percent;
-        } else {
-          current += progress.transferred - transferredSoFar;
-          percentage = current / calcTotal;
-        }
 
-        bar.text = getMessage(percentage, calcTotal);
+      let percentage = 0;
+      if (progress.percent) {
+        percentage = progress.percent;
+      } else {
+        current += progress.transferred - transferredSoFar;
+        percentage = current / calcTotal;
       }
-      transferredSoFar = progress.transferred;
-    }
 
-    if (!bar) {
-      return;
+      console.log(getMessage(percentage, calcTotal));
+
+      transferredSoFar = progress.transferred;
     }
 
     if (isComplete) {
       const duration = endTimer(timerLabel);
       const prettyTime = formatMilliseconds(duration);
       if (error) {
-        bar.fail();
-      } else if (isComplete) {
+        console.log(error.message);
+      } else {
         if (typeof completedMessage === 'string') {
-          bar.succeed(`${completedMessage} ${chalk.dim(prettyTime)}`);
+          console.log(completedMessage);
         } else {
-          bar.succeed(completedMessage(prettyTime));
+          console.log(completedMessage(prettyTime));
         }
       }
     }

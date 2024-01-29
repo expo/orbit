@@ -28,6 +28,7 @@ function wrapFetchWithProgress(): (
   progressHandler: ProgressHandler
 ) => Promise<Response> {
   let didProgressBarFinish = false;
+  let lastProgressCallTime = 0;
   return async (url: string, init: RequestInit, progressHandler: ProgressHandler) => {
     const response = await fetch(url, init);
 
@@ -49,13 +50,19 @@ function wrapFetchWithProgress(): (
           length += chunkLength;
         }
 
+        const currentTime = Date.now();
+        // Throttle progressHandler in 250ms intervals
         const progress = length / total;
-
-        if (!didProgressBarFinish) {
+        if (
+          !didProgressBarFinish &&
+          (currentTime - lastProgressCallTime >= 250 || length === total)
+        ) {
           progressHandler({
             progress: { total, percent: progress, transferred: length },
             isComplete: total === length,
           });
+
+          lastProgressCallTime = currentTime;
           if (total === length) {
             didProgressBarFinish = true;
           }
