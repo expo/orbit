@@ -5,6 +5,42 @@
     <link>https://raw.githubusercontent.com/expo/orbit/main/appcast.xml</link>
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
+    <item>
+      <title>1.0.3</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add support for Snack EAS Update URLs to support SDK 50. (<a href="https://github.com/expo/orbit/pull/147">#147</a> by <a href="https://github.com/byCedric">@bycedric</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix download progress bar not updating correctly. (<a href="https://github.com/expo/orbit/pull/150">#150</a>, <a href="https://github.com/expo/orbit/pull/153">#153</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Install the expo package and set up autolinking for macOS. (<a href="https://github.com/expo/orbit/pull/130">#130</a> by <a href="https://github.com/tsapeta">@tsapeta</a>)</li>
+        <li>Remove AsyncStorage migrator and @react-native-async-storage/async-storage dependency. (<a href="https://github.com/expo/orbit/pull/135">#135</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Migrate Menubar to expo modules.(<a href="https://github.com/expo/orbit/pull/133">#133</a> by <a href="https://github.com/alanjhughes">@alanhughes</a>)</li>
+        <li>Migrate FilePicker to Expo Modules. (<a href="https://github.com/expo/orbit/pull/132">#132</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native</code> to 0.73.2. (<a href="https://github.com/expo/orbit/pull/143">#143</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native-svg</code> to 14.1.0. (<a href="https://github.com/expo/orbit/pull/143">#143</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Migrate ProgressIndicator to Expo Modules. (<a href="https://github.com/expo/orbit/pull/150">#150</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Refactor deep-link routes to comply with the URL specification. (<a href="https://github.com/expo/orbit/pull/151">#151</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2024-01-29</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.0.3</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.0.3/expo-orbit.v1.0.3.zip"
+        sparkle:version="20"
+        sparkle:shortVersionString="1.0.3"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
      <item>
       <title>1.0.2</title>
       <description>
