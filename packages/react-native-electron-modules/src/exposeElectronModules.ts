@@ -1,23 +1,21 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { ElectronModule, IpcMainModulesFunctions, Registry } from './types';
+import { ElectronModule, IpcMainModules, Registry } from './types';
 
 export function exposeElectronModules(preloadModules: Registry) {
   const registeredModules: {
     [key: string]: ElectronModule;
   } = {};
 
-  const ipcMainModulesFunctions: IpcMainModulesFunctions = ipcRenderer.sendSync(
-    'get-all-ipc-main-functions'
-  );
+  const ipcMainModules: IpcMainModules = ipcRenderer.sendSync('get-all-ipc-main-modules');
 
   // Merge preload modules with ipcMain modules
   for (const module of preloadModules) {
-    registeredModules[module.name] = mergeModule(module, ipcMainModulesFunctions[module.name]);
+    registeredModules[module.name] = mergeModule(module, ipcMainModules[module.name]);
   }
 
   // Register ipcMain only modules
-  for (const [moduleName, ipcMainModule] of Object.entries(ipcMainModulesFunctions)) {
+  for (const [moduleName, ipcMainModule] of Object.entries(ipcMainModules)) {
     if (!registeredModules[moduleName]) {
       registeredModules[moduleName] = mergeModule({ name: moduleName }, ipcMainModule);
     }

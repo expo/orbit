@@ -10,6 +10,6 @@ export type ElectronModule = {
 
 export type Registry = ElectronModule[];
 
-export type IpcMainModulesFunctions = {
+export type IpcMainModules = {
   [moduleName: string]: { functions: string[]; values: string[] };
 };
