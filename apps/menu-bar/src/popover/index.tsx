@@ -32,6 +32,10 @@ function Popover(props: Props) {
     }
   }, [hasInitialized]);
 
+  if (!hasInitialized) {
+    return null;
+  }
+
   return (
     <View
       style={{

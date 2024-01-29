@@ -86,7 +86,7 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    updateDevicesList().then(() => setHasInitialized(true));
+    updateDevicesList().finally(() => setHasInitialized(true));
   }, [updateDevicesList]);
 
   return (
