@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { registerMainModules } from 'react-native-electron-modules';
 import path from 'path';
 
@@ -15,13 +15,12 @@ const createMainWindow = () => {
     resizable: false,
     webPreferences: {
       devTools: true,
-      // eslint-disable-next-line no-undef
       preload: path.join(__dirname, './preload.js'),
     },
     skipTaskbar: true,
   });
 
-  const development = true;
+  const development = !app.isPackaged;
   if (development) {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
     mainWindow.loadURL('http://localhost:8081');
@@ -34,7 +33,7 @@ const createMainWindow = () => {
 };
 
 app.on('ready', () => {
-  registerMainModules(MainModules, ipcMain);
+  registerMainModules(MainModules);
 
   const mainWindow = createMainWindow();
   const Tray = new TrayGenerator(mainWindow);
