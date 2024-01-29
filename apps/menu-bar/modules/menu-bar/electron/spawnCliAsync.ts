@@ -6,7 +6,7 @@ function spawnCliAsync(cliPath: string, command: string, args: string[] = [], li
   let hasReachedError = false;
   let returnOutput = '';
 
-  let promise = new Promise((resolve, reject) => {
+  let promise = new Promise<string>((resolve, reject) => {
     child = fork(cliPath, [command, ...args], {
       env: { ...process.env, EXPO_MENU_BAR: true } as any,
       stdio: 'pipe',
@@ -51,7 +51,7 @@ function spawnCliAsync(cliPath: string, command: string, args: string[] = [], li
       if (hasReachedError) {
         reject(new Error(returnOutput));
       } else {
-        resolve(hasReachedReturnOutput ? returnOutput : null);
+        resolve(returnOutput);
       }
     };
 
