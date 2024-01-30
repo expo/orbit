@@ -115,20 +115,27 @@ async function downloadFileWithProgressTrackerAsync(
   }
 }
 
-async function maybeCacheAppAsync(appPath: string, cachedAppPath?: string): Promise<string> {
-  if (cachedAppPath) {
-    await fs.ensureDir(path.dirname(cachedAppPath));
-    await fs.move(appPath, cachedAppPath);
-    return cachedAppPath;
-  }
-  return appPath;
+function _downloadsCacheDirectory() {
+  const dir = path.join(getTmpDirectory(), 'downloads-cache');
+  fs.mkdirpSync(dir);
+  return dir;
 }
 
-export async function downloadAndMaybeExtractAppAsync(
-  url: string,
-  cachedAppPath?: string
-): Promise<string> {
-  const outputDir = path.join(getTmpDirectory(), uuidv4());
+export async function downloadAndMaybeExtractAppAsync(url: string): Promise<string> {
+  const name = encodeURIComponent(url.replace(/^[^:]+:\/\//, ''));
+
+  const outputDir = path.join(_downloadsCacheDirectory(), `${name}`);
+  if (await fs.pathExists(outputDir)) {
+    try {
+      const appPath = await getAppPathAsync(outputDir, '(apk|app|ipa)');
+      return appPath;
+    } catch (error) {
+      if (error instanceof InternalError) {
+        throw error;
+      }
+    }
+  }
+
   await fs.promises.mkdir(outputDir, { recursive: true });
 
   if (url.endsWith('apk')) {
@@ -139,7 +146,7 @@ export async function downloadAndMaybeExtractAppAsync(
       (ratio, total) => `Downloading app (${formatBytes(total * ratio)} / ${formatBytes(total)})`,
       'Successfully downloaded app'
     );
-    return maybeCacheAppAsync(apkFilePath, cachedAppPath);
+    return apkFilePath;
   } else {
     const tmpArchivePathDir = path.join(getTmpDirectory(), uuidv4());
     await fs.mkdir(tmpArchivePathDir, { recursive: true });
@@ -157,7 +164,7 @@ export async function downloadAndMaybeExtractAppAsync(
 
     const appPath = await getAppPathAsync(outputDir, '(apk|app|ipa)');
 
-    return maybeCacheAppAsync(appPath, cachedAppPath);
+    return appPath;
   }
 }
 
