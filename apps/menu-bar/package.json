@@ -10,7 +10,7 @@
     "notarize": "xcodebuild -exportNotarizedApp -archivePath build/ExpoOrbit.xcarchive -exportPath build/Notarized",
     "lint": "eslint .",
     "macos": "react-native run-macos",
-    "start": "react-native start",
+    "start": "expo start",
     "test": "jest",
     "update-cli": "mkdir -p cli && cp -R ../cli/dist/ cli/",
     "gql": "graphql-codegen --config codegen.ts",

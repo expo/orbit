@@ -12,6 +12,8 @@
 
 ### 💡 Others
 
+- Use Expo CLI instead of react-native community CLI. ([#155](https://github.com/expo/orbit/pull/155) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 1.0.3 — 2024-01-29
 
 ### 🎉 New features
