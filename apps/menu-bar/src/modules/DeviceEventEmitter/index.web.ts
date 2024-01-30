@@ -1,11 +1,5 @@
-const DeviceEventEmitter = {
-  addListener(eventType: string, listener: (event: any) => void) {
-    (globalThis as any)?.electron?.addListener(eventType, listener);
+import { DeviceEventEmitter as NativeDeviceEventEmitter } from 'react-native';
+import { requireElectronModule } from 'react-native-electron-modules/build/requireElectronModule';
 
-    return {
-      remove: () => {},
-    };
-  },
-};
-
-export { DeviceEventEmitter };
+export const DeviceEventEmitter =
+  requireElectronModule<typeof NativeDeviceEventEmitter>('DeviceEventEmitter');

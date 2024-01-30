@@ -24,10 +24,11 @@ export function exposeElectronModules(preloadModules: Registry) {
   contextBridge.exposeInMainWorld('electron', { modules: registeredModules });
 }
 
-function mergeModule(
-  module: ElectronModule,
-  ipcMainModule: IpcMainModulesFunctions[0]
-): ElectronModule {
+function mergeModule(module: ElectronModule, ipcMainModule?: IpcMainModules[0]): ElectronModule {
+  if (!ipcMainModule) {
+    return module;
+  }
+
   for (const moduleFunction of ipcMainModule.functions) {
     module[moduleFunction] = (...args: any[]) =>
       ipcRenderer.invoke(`${module.name}:${moduleFunction}`, ...args);

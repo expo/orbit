@@ -5,6 +5,11 @@ import path from 'path';
 import TrayGenerator from './TrayGenerator';
 import { MainModules } from '../modules/mainRegistry';
 
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require('electron-squirrel-startup')) {
+  app.quit();
+}
+
 const createMainWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 380,

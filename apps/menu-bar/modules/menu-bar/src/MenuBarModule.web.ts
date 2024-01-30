@@ -1,4 +1,4 @@
-import { requireElectronModule } from 'react-native-electron-modules';
+import { requireElectronModule } from 'react-native-electron-modules/build/requireElectronModule';
 
 import { NativeMenuBarModule } from './types';
 
