@@ -1,5 +1,4 @@
-import { Linking } from 'react-native';
-
+import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 
 export const openProjectsSelectorURL = () => {

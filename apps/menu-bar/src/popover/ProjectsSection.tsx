@@ -1,5 +1,5 @@
 import { spacing } from '@expo/styleguide-native';
-import { Linking, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 
 import Item from './Item';
 import SectionHeader, { SECTION_HEADER_HEIGHT } from './SectionHeader';
@@ -7,6 +7,7 @@ import { Row, Text, View } from '../components';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { AppForPinnedListFragment } from '../generated/graphql';
 import { PinnedApp, minNumberOfApps } from '../hooks/useGetPinnedApps';
+import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 
 const PROJECTS_ITEM_HEIGHT = 50;
