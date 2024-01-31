@@ -50,6 +50,13 @@ jobs:
         run: yarn build
         working-directory: packages/eas-shared
 
+      - name: 🏗️ TSC "react-native-electron-modules" package files
+        run: yarn tsc --noEmit
+        working-directory: packages/react-native-electron-modules
+      - name: 📦️ Build "react-native-electron-modules" package
+        run: yarn build
+        working-directory: packages/react-native-electron-modules
+
       - name: 🚨 Lint "Orbit" app files
         run: yarn lint --max-warnings 0
         working-directory: apps/menu-bar
@@ -64,5 +71,5 @@ jobs:
       - name: Check CHANGELOG entry
         uses: dangoslen/changelog-enforcer@v3
         with:
-          skipLabels: "skip-changelog-check"
-          missingUpdateErrorMessage: "Your changes should be noted in the changelog. Read [Updating Changelogs](https://github.com/expo/expo/blob/main/guides/contributing/Updating%20Changelogs.md) guide and consider adding an appropriate entry."
+          skipLabels: 'skip-changelog-check'
+          missingUpdateErrorMessage: 'Your changes should be noted in the changelog. Read [Updating Changelogs](https://github.com/expo/expo/blob/main/guides/contributing/Updating%20Changelogs.md) guide and consider adding an appropriate entry.'
