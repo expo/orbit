@@ -21,7 +21,7 @@ export function exposeElectronModules(preloadModules: Registry) {
     }
   }
 
-  contextBridge.exposeInMainWorld('electron', { modules: registeredModules });
+  contextBridge.exposeInMainWorld('__reactNativeElectronModules', { modules: registeredModules });
 }
 
 function mergeModule(module: ElectronModule, ipcMainModule?: IpcMainModules[0]): ElectronModule {

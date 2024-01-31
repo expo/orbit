@@ -23,8 +23,8 @@ app.on('open-url', (_, url) => {
 });
 
 app.on('second-instance', (_, argv) => {
-  if (typeof argv[1] === 'string') {
-    sendOpenURL(argv[1]);
+  if (typeof argv[argv.length - 1] === 'string') {
+    sendOpenURL(argv[argv.length - 1]);
   }
 });
 

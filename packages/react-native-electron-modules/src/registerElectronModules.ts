@@ -20,14 +20,14 @@ function registerMainModule(module: ElectronModule) {
   Object.entries(module).forEach(([key, value]) => {
     const moduleFunctionKey = `${module.name}:${key}`;
     if (typeof value === 'function') {
-      // Adds a handler for an invokeable IPC
-      ipcMain.handle(moduleFunctionKey, (_, ...args) => value(...args));
+      // Adds a handler for an invokeable IPC and send IpcMainInvokeEvent as the last argument
+      ipcMain.handle(moduleFunctionKey, (event, ...args) => value(...args, event));
       ipcMainModules[module.name].functions.push(key);
     } else {
       // No need to add a handler for the module name
       if (key === 'name') return;
 
-      ipcMain.once(moduleFunctionKey, (event) => {
+      ipcMain.on(moduleFunctionKey, (event) => {
         event.returnValue = value;
       });
       ipcMainModules[module.name].values.push(key);
