@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "apps/menu-bar/electron"
   ],
   "scripts": {
     "build": "lerna run build",

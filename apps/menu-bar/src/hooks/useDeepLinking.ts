@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Linking } from 'react-native';
+
+import { Linking } from '../modules/Linking';
 
 export type DeepLinkingCallback = (event: { url: string }) => void;
 
