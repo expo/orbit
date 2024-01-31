@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
-import { registerMainModules } from 'react-native-electron-modules';
-import path from 'path';
 import os from 'os';
+import path from 'path';
+import { registerMainModules } from 'react-native-electron-modules';
 
 import TrayGenerator from './TrayGenerator';
 import { MainModules } from '../modules/mainRegistry';
