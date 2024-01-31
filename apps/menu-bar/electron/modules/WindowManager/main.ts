@@ -14,16 +14,18 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
     const windowStyle = options?.windowStyle || {};
 
     window = new BrowserWindow({
-      width: windowStyle?.width ?? 300,
-      height: windowStyle?.height ?? 400,
+      width: windowStyle.width ?? 300,
+      height: windowStyle.height ?? 400,
       title: options?.title ?? moduleName,
-      resizable: windowStyle?.mask?.includes(WindowStyleMask.Resizable) ?? false,
+      frame: !windowStyle.mask?.includes(WindowStyleMask.FullSizeContentView),
+      resizable: windowStyle.mask?.includes(WindowStyleMask.Resizable) ?? false,
       webPreferences: {
         devTools: true,
         webSecurity: false,
         preload: path.join(__dirname, '../../.vite/build/preload.js'),
       },
     });
+    window.menuBarVisible = false;
 
     window.on('page-title-updated', function (e) {
       e.preventDefault();
