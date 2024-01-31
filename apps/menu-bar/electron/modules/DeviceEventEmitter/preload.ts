@@ -1,7 +1,10 @@
 import { IpcRendererEvent, ipcRenderer } from 'electron';
 import type { DeviceEventEmitterStatic, EmitterSubscription } from 'react-native';
 
-const DeviceEventEmitter: Partial<DeviceEventEmitterStatic> & { name: string } = {
+const DeviceEventEmitter: {
+  name: string;
+  addListener: DeviceEventEmitterStatic['addListener'];
+} = {
   name: 'DeviceEventEmitter',
   addListener: (event: string, callback: (...args: string[]) => void, context) => {
     const listener = (event: IpcRendererEvent, ...args: any[]) => {
