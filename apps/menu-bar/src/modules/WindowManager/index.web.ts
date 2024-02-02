@@ -20,6 +20,8 @@ export function createWindowsNavigator<T extends WindowsConfig>(config: T) {
     open: (windowName: keyof T) => {
       WindowManager.openWindow(String(windowName), config[windowName].options || {});
     },
-    close: (window: keyof T) => {},
+    close: (window: keyof T) => {
+      WindowManager.closeWindow(String(window));
+    },
   };
 }

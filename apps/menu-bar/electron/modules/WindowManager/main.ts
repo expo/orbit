@@ -1,7 +1,11 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 
-import { WindowOptions, WindowStyleMask } from '../../../src/modules/WindowManager/types';
+import {
+  WindowOptions,
+  WindowsManagerType,
+  WindowStyleMask,
+} from '../../../src/modules/WindowManager/types';
 
 const _windowsMap: { [key: string]: BrowserWindow } = {};
 
@@ -30,7 +34,7 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
     window.on('page-title-updated', function (e) {
       e.preventDefault();
     });
-    window.on('close', function (e) {
+    window.on('close', function (_) {
       delete _windowsMap[moduleName];
     });
     _windowsMap[moduleName] = window;
@@ -49,9 +53,16 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
   window.show();
 };
 
-const WindowManager = {
+const WindowManager: WindowsManagerType & { name: string } = {
   name: 'WindowManager',
   openWindow,
+  closeWindow: (moduleName: string) => {
+    const window = _windowsMap[moduleName];
+    if (window) {
+      window.close();
+      delete _windowsMap[moduleName];
+    }
+  },
 };
 
 export default WindowManager;
