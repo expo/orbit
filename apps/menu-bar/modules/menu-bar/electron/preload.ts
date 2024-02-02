@@ -1,8 +1,3 @@
-declare global {
-  // eslint-disable-next-line no-var
-  var screen: { height: number; width: number } | null | undefined;
-}
-
 const MenuBarModule = {
   name: 'MenuBar',
   initialScreenSize: {
