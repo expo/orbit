@@ -1,4 +1,4 @@
-const host = 'exp.host';
+const host = 'api.expo.dev';
 const origin = `https://${host}`;
 const websiteOrigin = 'https://expo.dev';
 
