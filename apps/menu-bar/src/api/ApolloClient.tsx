@@ -14,7 +14,7 @@ import possibleTypesData from '../generated/graphql.possibleTypes.json';
 import { storage } from '../modules/Storage';
 
 const httpLink = new HttpLink({
-  uri: `${Config.api.origin}/--/graphql`,
+  uri: `${Config.api.origin}/graphql`,
 });
 
 const mergeBasedOnOffset = (existing: any[], incoming: any[], { args }: FieldFunctionOptions) => {

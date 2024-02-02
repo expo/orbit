@@ -4,7 +4,7 @@ import { Config } from 'common-types';
 import { getSdk } from '../graphql/generated/graphql';
 import { getSessionSecret } from '../mmkv';
 
-const endpoint = `${Config.api.origin}/--/graphql`;
+const endpoint = `${Config.api.origin}/graphql`;
 const sessionSecret = getSessionSecret();
 
 const client = new GraphQLClient(endpoint, {

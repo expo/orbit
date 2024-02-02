@@ -1,8 +1,9 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
+import { Config } from 'common-types';
 
 const config: CodegenConfig = {
   overwrite: true,
-  schema: 'https://exp.host/--/graphql',
+  schema: `${Config.api.origin}/graphql`,
   documents: './src/graphql/**/*.gql',
   generates: {
     './src/generated/graphql.tsx': {
