@@ -13,6 +13,8 @@
 
 ### 🐛 Bug fixes
 
+- Fixed listing devices on x64 machines. ([#164](https://github.com/expo/orbit/pull/164) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 - Use Expo CLI instead of react-native community CLI. ([#155](https://github.com/expo/orbit/pull/155) by [@gabrieldonadel](https://github.com/gabrieldonadel))
