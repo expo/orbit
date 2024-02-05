@@ -1,6 +1,6 @@
 import { StorageUtils } from 'common-types';
 import { Env } from 'eas-shared';
-import MMKVModule from 'nodejs-mmkv';
+import MMKVModule from 'mmkv-node-bindings';
 import os from 'os';
 
 const storage = new MMKVModule({

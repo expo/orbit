@@ -12799,6 +12799,14 @@ mkdirp@^1.0.3, mkdirp@^1.0.4:
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
 
+mmkv-node-bindings@0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/mmkv-node-bindings/-/mmkv-node-bindings-0.2.1.tgz#a1d8d7698936a5f6afd8dd8092d372d2d2e2b46c"
+  integrity sha512-cpGEcqN0tEdajxD+4R5Hp/XDh5skCyD1MnkNtQOtnM0Y3ye5EWkJclCBP2vBBvA5lTyJ6lFfJJX5JdWj7/5mEQ==
+  dependencies:
+    bindings "^1.5.0"
+    node-addon-api "^5.0.0"
+
 modify-values@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/modify-values/-/modify-values-1.0.1.tgz#b3939fa605546474e3e3e3c63d64bd43b4ee6022"
@@ -13039,14 +13047,6 @@ node-stream-zip@^1.9.1:
   version "1.15.0"
   resolved "https://registry.yarnpkg.com/node-stream-zip/-/node-stream-zip-1.15.0.tgz#158adb88ed8004c6c49a396b50a6a5de3bca33ea"
   integrity sha512-LN4fydt9TqhZhThkZIVQnF9cwjU3qmUH9h78Mx/K7d3VvfRqqwthLwJEUOEL0QPZ0XQmNN7be5Ggit5+4dq3Bw==
-
-nodejs-mmkv@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/nodejs-mmkv/-/nodejs-mmkv-0.2.0.tgz#4285fa40a9aab4bd6b39d00391fe5dbb47f6625e"
-  integrity sha512-Ch/79gxaf0laGjskzPA1wgdVr5DBb2TUDegEZeFDvSuPDa+Icejo7CW+qv4CEnrA3CLRUUCpazcK/elp0USuGA==
-  dependencies:
-    bindings "^1.5.0"
-    node-addon-api "^5.0.0"
 
 nopt@^6.0.0:
   version "6.0.0"
