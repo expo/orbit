@@ -1,4 +1,4 @@
-import { Tray, Menu, screen, BrowserWindow, MenuItemConstructorOptions } from 'electron';
+import { Tray, Menu, screen, BrowserWindow, MenuItemConstructorOptions, ipcMain } from 'electron';
 import path from 'path';
 
 export default class TrayGenerator {
@@ -35,9 +35,12 @@ export default class TrayGenerator {
     this.mainWindow.setPosition(position.x, position.y, false);
     this.mainWindow.show();
   };
+  hideWindow = () => {
+    this.mainWindow.hide();
+  };
   toggleWindow = () => {
     if (this.mainWindow.isVisible()) {
-      this.mainWindow.hide();
+      this.hideWindow();
     } else {
       this.showWindow();
     }
@@ -58,6 +61,9 @@ export default class TrayGenerator {
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
     this.tray.on('right-click', this.rightClickMenu);
+
+    ipcMain.handle('open-popover', this.showWindow);
+    ipcMain.handle('close-popover', this.hideWindow);
   };
 }
 module.exports = TrayGenerator;
