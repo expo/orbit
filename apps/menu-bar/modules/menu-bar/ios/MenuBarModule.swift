@@ -102,6 +102,7 @@ public class MenuBarModule: Module {
       task.standardError = pipe
       
       let file = pipe.fileHandleForReading
+      var fullOutput = ""
       var returnOutput = ""
       var hasReachedReturnOutput = false
       var hasReachedError = false
@@ -121,7 +122,8 @@ public class MenuBarModule: Module {
           if output.isEmpty {
             continue
           }
-          
+          fullOutput.append(output)
+
           if hasReachedReturnOutput || hasReachedError {
             returnOutput.append(output)
           } else if output == "---- return output ----" {
