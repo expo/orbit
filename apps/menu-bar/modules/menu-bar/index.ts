@@ -1,10 +1,12 @@
-import { EventEmitter } from 'expo-modules-core';
+import { EventEmitter, CodedError } from 'expo-modules-core';
 
 import MenuBarModule from './src/MenuBarModule';
+import Alert from '../../src/modules/Alert';
 import { convertCliErrorObjectToError } from '../../src/utils/helpers';
 
 const emitter = new EventEmitter(MenuBarModule);
 
+let hasShownCliErrorAlert = false;
 let listenerCounter = 0;
 async function runCli(command: string, args: string[], callback?: (status: string) => void) {
   const id = listenerCounter++;
@@ -19,7 +21,17 @@ async function runCli(command: string, args: string[], callback?: (status: strin
     const result = await MenuBarModule.runCli(command, args, id);
     return result;
   } catch (error) {
-    if (error instanceof Error) {
+    if (error instanceof CodedError) {
+      if (error.code === 'ERR_INTERNAL_CLI') {
+        if (!hasShownCliErrorAlert) {
+          Alert.alert(
+            'Something went wrong',
+            'Unable to invoke internal CLI, please reinstall Orbit.'
+          );
+          hasShownCliErrorAlert = true;
+        }
+      }
+    } else if (error instanceof Error) {
       // Original error from CLI is a stringified JSON object
       throw convertCliErrorObjectToError(JSON.parse(error.message));
     }

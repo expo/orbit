@@ -9,6 +9,7 @@
 - Add support for launching Expo updates. ([#134](https://github.com/expo/orbit/pull/134), [#137](https://github.com/expo/orbit/pull/137), [#138](https://github.com/expo/orbit/pull/138), [#144](https://github.com/expo/orbit/pull/144), [#148](https://github.com/expo/orbit/pull/148) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Cache builds by default. ([#156](https://github.com/expo/orbit/pull/156) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add experimental support for Windows and Linux. ([#152](https://github.com/expo/orbit/pull/152), [#157](https://github.com/expo/orbit/pull/157) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Improve fatal CLI error handling. ([#163](https://github.com/expo/orbit/pull/163) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
