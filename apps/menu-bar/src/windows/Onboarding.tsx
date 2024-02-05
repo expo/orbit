@@ -46,12 +46,22 @@ const Onboarding = () => {
 
       setPlatformToolsCheck({});
       checkStatus.current = Status.RUNNING;
-      const output = await MenuBarModule.runCli('check-tools', []);
-      // eslint-disable-next-line no-eval
-      const result: CliCommands.CheckTools.PlatformToolsCheck = eval(`(${output})`);
-      checkStatus.current =
-        result?.android?.success && result?.ios?.success ? Status.SUCCESS : Status.FAILED;
-      setPlatformToolsCheck(result);
+      try {
+        const output = await MenuBarModule.runCli('check-tools', []);
+        // eslint-disable-next-line no-eval
+        const result: CliCommands.CheckTools.PlatformToolsCheck = eval(`(${output})`);
+        checkStatus.current =
+          result?.android?.success && result?.ios?.success ? Status.SUCCESS : Status.FAILED;
+        setPlatformToolsCheck(result);
+      } catch (err) {
+        checkStatus.current = Status.FAILED;
+        if (err instanceof Error) {
+          setPlatformToolsCheck({
+            android: { success: false, reason: { message: err.message } },
+            ios: { success: false, reason: { message: err.message } },
+          });
+        }
+      }
     }, [])
   );
 

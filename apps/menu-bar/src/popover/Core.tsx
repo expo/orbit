@@ -6,6 +6,7 @@ import { SectionList } from 'react-native';
 
 import BuildsSection, { BUILDS_SECTION_HEIGHT } from './BuildsSection';
 import DeviceListSectionHeader from './DeviceListSectionHeader';
+import DevicesListError from './DevicesListError';
 import { FOOTER_HEIGHT } from './Footer';
 import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
@@ -59,7 +60,13 @@ function Core(props: Props) {
   const [status, setStatus] = useState(MenuBarStatus.LISTENING);
   const [progress, setProgress] = useState(0);
 
-  const { devicesPerPlatform, numberOfDevices, sections, refetch } = useListDevices();
+  const {
+    devicesPerPlatform,
+    numberOfDevices,
+    sections,
+    refetch,
+    error: devicesError,
+  } = useListDevices();
   usePopoverFocusEffect(
     useCallback(() => {
       refetch();
@@ -372,30 +379,34 @@ function Core(props: Props) {
       <BuildsSection status={status} installAppFromURI={installAppFromURI} progress={progress} />
       <ProjectsSection apps={apps} />
       <View shrink="1" pt="tiny" overflow="hidden">
-        <SectionList
-          sections={sections}
-          style={{ minHeight: estimatedListHeight }}
-          SectionSeparatorComponent={Separator}
-          renderSectionHeader={({ section: { label, error } }) => (
-            <DeviceListSectionHeader label={label} errorMessage={error?.message} />
-          )}
-          renderItem={({ item: device }: { item: Device }) => {
-            const platform = getDeviceOS(device);
-            const id = getDeviceId(device);
-            return (
-              <DeviceItem
-                device={device}
-                key={device.name}
-                onPress={() => onSelectDevice(device)}
-                onPressLaunch={async () => {
-                  await bootDeviceAsync({ platform, id });
-                  refetch();
-                }}
-                selected={selectedDevicesIds[platform] === id}
-              />
-            );
-          }}
-        />
+        {devicesError ? (
+          <DevicesListError error={devicesError} />
+        ) : (
+          <SectionList
+            sections={sections}
+            style={{ minHeight: estimatedListHeight }}
+            SectionSeparatorComponent={Separator}
+            renderSectionHeader={({ section: { label, error } }) => (
+              <DeviceListSectionHeader label={label} errorMessage={error?.message} />
+            )}
+            renderItem={({ item: device }: { item: Device }) => {
+              const platform = getDeviceOS(device);
+              const id = getDeviceId(device);
+              return (
+                <DeviceItem
+                  device={device}
+                  key={device.name}
+                  onPress={() => onSelectDevice(device)}
+                  onPressLaunch={async () => {
+                    await bootDeviceAsync({ platform, id });
+                    refetch();
+                  }}
+                  selected={selectedDevicesIds[platform] === id}
+                />
+              );
+            }}
+          />
+        )}
       </View>
     </View>
   );

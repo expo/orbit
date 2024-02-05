@@ -141,7 +141,11 @@ public class MenuBarModule: Module {
         if hasReachedError {
           promise.reject(CLIOutputError(returnOutput))
         } else {
-          promise.resolve(hasReachedReturnOutput ? returnOutput : nil)
+          if task.terminationStatus == 0 {
+            promise.resolve(hasReachedReturnOutput ? returnOutput : nil)
+          } else {
+            promise.reject(IntenalCLIError(fullOutput))
+          }
         }
       }
       
