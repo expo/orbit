@@ -90,7 +90,7 @@ const colorsArray = [
   'unemphasizedSelectedTextBackgroundColor',
   'linkColor',
   'separatorColor',
-  'selectedContentBackgroundColor',
+  'selectedContentBackground',
   'unemphasizedSelectedContentBackgroundColor',
   'selectedMenuItemTextColor',
   'gridColor',
