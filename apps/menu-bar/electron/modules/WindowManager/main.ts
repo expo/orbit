@@ -19,7 +19,7 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
 
     window = new BrowserWindow({
       width: windowStyle.width ?? 300,
-      height: windowStyle.height ?? 400,
+      height: (windowStyle.height ?? 400) + (windowStyle.titlebarAppearsTransparent ? 30 : 0),
       title: options?.title ?? moduleName,
       frame: !windowStyle.mask?.includes(WindowStyleMask.FullSizeContentView),
       resizable: windowStyle.mask?.includes(WindowStyleMask.Resizable) ?? false,
