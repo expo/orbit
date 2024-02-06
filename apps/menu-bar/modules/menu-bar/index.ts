@@ -21,15 +21,13 @@ async function runCli(command: string, args: string[], callback?: (status: strin
     const result = await MenuBarModule.runCli(command, args, id);
     return result;
   } catch (error) {
-    if (error instanceof CodedError) {
-      if (error.code === 'ERR_INTERNAL_CLI') {
-        if (!hasShownCliErrorAlert) {
-          Alert.alert(
-            'Something went wrong',
-            'Unable to invoke internal CLI, please reinstall Orbit.'
-          );
-          hasShownCliErrorAlert = true;
-        }
+    if (error instanceof CodedError && error.code === 'ERR_INTERNAL_CLI') {
+      if (!hasShownCliErrorAlert) {
+        Alert.alert(
+          'Something went wrong',
+          'Unable to invoke internal CLI, please reinstall Orbit.'
+        );
+        hasShownCliErrorAlert = true;
       }
     } else if (error instanceof Error) {
       // Original error from CLI is a stringified JSON object
