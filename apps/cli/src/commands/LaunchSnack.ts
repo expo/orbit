@@ -44,7 +44,7 @@ async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version
 function getSDKVersionForSnackUrl(snackURL: string) {
   const snack = parseRuntimeUrl(snackURL);
   if (snack?.sdkVersion) {
-    return `${snack.sdkVersion}.0.0`;
+    return snack.sdkVersion;
   }
 
   return getSDKVersionForLegacySnackUrl(snackURL);
