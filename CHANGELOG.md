@@ -7,7 +7,7 @@
 ### 🎉 New features
 
 - Add support for launching Expo updates. ([#134](https://github.com/expo/orbit/pull/134), [#137](https://github.com/expo/orbit/pull/137), [#138](https://github.com/expo/orbit/pull/138), [#144](https://github.com/expo/orbit/pull/144), [#148](https://github.com/expo/orbit/pull/148) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Add experimental support for Windows and Linux. ([#152](https://github.com/expo/orbit/pull/152), [#157](https://github.com/expo/orbit/pull/157), [#158](https://github.com/expo/orbit/pull/158), [#160](https://github.com/expo/orbit/pull/160), [#161](https://github.com/expo/orbit/pull/161), [#165](https://github.com/expo/orbit/pull/165), [#170](https://github.com/expo/orbit/pull/170), [#171](https://github.com/expo/orbit/pull/171) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add experimental support for Windows and Linux. ([#152](https://github.com/expo/orbit/pull/152), [#157](https://github.com/expo/orbit/pull/157), [#158](https://github.com/expo/orbit/pull/158), [#160](https://github.com/expo/orbit/pull/160), [#161](https://github.com/expo/orbit/pull/161), [#165](https://github.com/expo/orbit/pull/165), [#170](https://github.com/expo/orbit/pull/170), [#171](https://github.com/expo/orbit/pull/171), [#172](https://github.com/expo/orbit/pull/172) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
