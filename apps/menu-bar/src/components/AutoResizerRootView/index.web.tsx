@@ -45,7 +45,13 @@ const AutoResizerRootView = ({
   }, [enabled, maxRelativeHeight]);
 
   return (
-    <div ref={divRef} style={{ height: 'fit-content', ...style }}>
+    <div
+      ref={divRef}
+      style={{
+        height: 'fit-content',
+        backgroundColor: 'var(--popover-background)',
+        ...style,
+      }}>
       {children}
     </div>
   );

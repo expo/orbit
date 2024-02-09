@@ -6,6 +6,7 @@ import { TextInput } from './Text';
 import { Row } from './View';
 import * as FilePicker from '../../modules/file-picker';
 import FolderIcon from '../assets/icons/folder.svg';
+import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme, useExpoTheme } from '../utils/useExpoTheme';
 
@@ -36,6 +37,7 @@ const PathInput = React.forwardRef<NativeTextInput, React.ComponentProps<typeof 
           shadow="input"
           {...props}
           style={styles.input}
+          placeholderTextColor={PlatformColor('placeholderTextColor')}
           ref={forwardedRef as any}
           editable={editable}
           onChangeText={onChangeText}

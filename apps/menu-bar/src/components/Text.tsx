@@ -1,5 +1,5 @@
 import { shadows } from '@expo/styleguide-native';
-import { Text as RNText, TextInput as RNTextInput } from 'react-native';
+import { Platform, Text as RNText, TextInput as RNTextInput } from 'react-native';
 
 import { PlatformColor } from '../modules/PlatformColor';
 import { create } from '../utils/create-component-primitive';
@@ -9,6 +9,11 @@ export const Text = create(RNText, {
   base: {
     fontSize: 14,
     lineHeight: 18,
+    ...Platform.select({
+      web: {
+        color: 'var(--text-color)',
+      },
+    }),
   },
 
   props: {

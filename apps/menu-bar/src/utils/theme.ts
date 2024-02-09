@@ -188,7 +188,16 @@ export const text = {
   },
 
   color: {
-    default: { color: PlatformColor('labelColor') },
+    default: {
+      ...Platform.select({
+        native: {
+          color: PlatformColor('labelColor'),
+        },
+        web: {
+          color: 'var(--label-color)',
+        },
+      }),
+    },
     error: { color: lightTheme.text.error },
     warning: { color: lightTheme.text.warning },
     success: { color: lightTheme.text.success },
@@ -200,7 +209,16 @@ export const text = {
 
 export const textDark = {
   color: {
-    default: { color: PlatformColor('labelColor') },
+    default: {
+      ...Platform.select({
+        native: {
+          color: PlatformColor('labelColor'),
+        },
+        web: {
+          color: 'var(--label-color)',
+        },
+      }),
+    },
     error: { color: darkTheme.text.error },
     warning: { color: darkTheme.text.warning },
     success: { color: darkTheme.text.success },
@@ -231,7 +249,14 @@ export const bgDark = {
 
 export const border = {
   default: {
-    borderColor: PlatformColor('gridColor'),
+    ...Platform.select({
+      native: {
+        borderColor: PlatformColor('gridColor'),
+      },
+      web: {
+        borderColor: 'var(--grid-color)',
+      },
+    }),
     borderWidth: 1,
   },
   light: { borderColor: addOpacity(lightTheme.border.default, 0.2), borderWidth: 1 },
@@ -244,7 +269,14 @@ export const border = {
 
 export const borderDark = {
   default: {
-    borderColor: PlatformColor('controlColor'),
+    ...Platform.select({
+      native: {
+        borderColor: PlatformColor('controlColor'),
+      },
+      web: {
+        borderColor: 'var(--control-color)',
+      },
+    }),
     borderWidth: 1,
   },
   warning: { borderColor: darkTheme.border.warning, borderWidth: 1 },
