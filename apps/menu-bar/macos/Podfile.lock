@@ -5,13 +5,13 @@ PODS:
     - ExpoModulesCore
   - EXFont (11.10.2):
     - ExpoModulesCore
-  - Expo (50.0.2):
+  - Expo (50.0.4):
     - ExpoModulesCore
-  - ExpoFileSystem (16.0.4):
+  - ExpoFileSystem (16.0.5):
     - ExpoModulesCore
   - ExpoKeepAwake (12.8.2):
     - ExpoModulesCore
-  - ExpoModulesCore (1.11.7):
+  - ExpoModulesCore (1.11.8):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1084,8 +1084,12 @@ PODS:
     - React-perflogger (= 0.73.2)
   - RNCClipboard (1.13.1):
     - React-Core
+  - RNRudder (1.0.0):
+    - ExpoModulesCore
+    - Rudder (~> 2.4.3)
   - RNSVG (14.1.0):
     - React-Core
+  - Rudder (2.4.3)
   - SocketRocket (0.7.0)
   - Sparkle (2.5.0)
   - Swifter (1.5.0)
@@ -1153,6 +1157,7 @@ DEPENDENCIES:
   - React-utils (from `../../../node_modules/react-native-macos/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native-macos/ReactCommon`)
   - "RNCClipboard (from `../../../node_modules/@react-native-clipboard/clipboard`)"
+  - RNRudder (from `../modules/rudder/ios`)
   - RNSVG (from `../../../node_modules/react-native-svg`)
   - Sparkle (~> 2.5.0)
   - Swifter (~> 1.5.0)
@@ -1164,6 +1169,7 @@ SPEC REPOS:
     - libevent
     - MMKV
     - MMKVCore
+    - Rudder
     - SocketRocket
     - Sparkle
     - Swifter
@@ -1286,6 +1292,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-macos/ReactCommon"
   RNCClipboard:
     :path: "../../../node_modules/@react-native-clipboard/clipboard"
+  RNRudder:
+    :path: "../modules/rudder/ios"
   RNSVG:
     :path: "../../../node_modules/react-native-svg"
   Yoga:
@@ -1296,10 +1304,10 @@ SPEC CHECKSUMS:
   DoubleConversion: 56bb181dd9093360c7cd027b592155b7f33eeb61
   EXConstants: 988aa430ca0f76b43cd46b66e7fae3287f9cc2fc
   EXFont: 21b9c760abd593ce8f0d5386b558ced76018506f
-  Expo: 6c6526e76864e140363431722b22d0fa3cdeafd2
-  ExpoFileSystem: 39e454b8e7f2358ae2c8f8ec255fede4c3039493
+  Expo: 1e3bcf9dd99de57a636127057f6b488f0609681a
+  ExpoFileSystem: 04795dd4d47e76eaf12e38c92091f77d794f9e7f
   ExpoKeepAwake: 0f5cad99603a3268e50af9a6eb8b76d0d9ac956c
-  ExpoModulesCore: f103ff1346136b2926e1654f32b3f45ab0b74830
+  ExpoModulesCore: 96d1751929ad10622773bb729ab28a8423f0dd0c
   FBLazyVector: 6120861222df54e12758f3761dd3ea4bba1e5c0f
   FBReactNativeSpec: fe26c3f6ec5ffcbb4773d28229ad9bc85a587f5b
   FilePicker: d9a9846a76942deee1e121a7d91f0938db0c8116
@@ -1354,7 +1362,9 @@ SPEC CHECKSUMS:
   React-utils: a59446d0f4d3dc0f0c231211236dbfc9584207fe
   ReactCommon: b4825eb48ba07b962836ad482e0bb026f5b5bcbc
   RNCClipboard: 90e241893de33a2f5962fc34d76ada4576033e49
+  RNRudder: 888282c1222d8abb07f70365c8b05851b1738e8b
   RNSVG: ba3e7232f45e34b7b47e74472386cf4e1a676d0a
+  Rudder: 6d2c0775d5b606e05e00670615ee7f9c0c6d2813
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Sparkle: 913cef92f73e08d0ae47a36ee20e523913e5f9e2
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
