@@ -2,6 +2,7 @@ import Item from './Item';
 import SectionHeader from './SectionHeader';
 import * as FilePicker from '../../modules/file-picker';
 import { ProgressIndicator } from '../../modules/progress-indicator';
+import { Analytics, Event } from '../analytics';
 import Earth02Icon from '../assets/icons/earth-02.svg';
 import File05Icon from '../assets/icons/file-05.svg';
 import { Text, View } from '../components';
@@ -24,6 +25,7 @@ const BuildsSection = ({ status, installAppFromURI, progress }: Props) => {
   async function openFilePicker() {
     const appPath = await FilePicker.getAppAsync();
     MenuBarModule.openPopover();
+    Analytics.track(Event.LAUNCH_BUILD_FROM_LOCAL_FILE);
     await installAppFromURI(appPath);
   }
 
