@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 
+import { Analytics, Event } from './analytics';
 import AutoResizerRootView from './components/AutoResizerRootView';
 import { SAFE_AREA_FACTOR } from './hooks/useSafeDisplayDimensions';
 import Popover from './popover';
@@ -12,6 +13,10 @@ type Props = {
 };
 
 function App(props: Props) {
+  useEffect(() => {
+    Analytics.track(Event.APP_OPENED);
+  }, []);
+
   return (
     <AutoResizerRootView
       style={styles.container}

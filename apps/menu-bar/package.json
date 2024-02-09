@@ -34,7 +34,8 @@
     "react-native-svg": "14.1.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-vector-icons": "^9.2.0",
-    "react-native-web": "~0.19.6"
+    "react-native-web": "~0.19.6",
+    "rudder-sdk-js": "^2.48.1"
   },
   "devDependencies": {
     "@babel/core": "^7.22.11",

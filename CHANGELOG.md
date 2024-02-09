@@ -18,6 +18,7 @@
 ### 💡 Others
 
 - Use Expo CLI instead of react-native community CLI. ([#155](https://github.com/expo/orbit/pull/155) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add basic telemetry. ([#168](https://github.com/expo/orbit/pull/168) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Bump `snack-content@2.0.0` to preview 2. ([#167](https://github.com/expo/orbit/pull/167) by [@byCedric](https://github.com/byCedric))
 
 ## 1.0.3 — 2024-01-29

@@ -10,6 +10,7 @@ import DevicesListError from './DevicesListError';
 import { FOOTER_HEIGHT } from './Footer';
 import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
+import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
@@ -337,14 +338,17 @@ function Core(props: Props) {
                 handleAuthUrl(url);
                 break;
               case URLType.SNACK:
+                Analytics.track(Event.LAUNCH_SNACK);
                 handleSnackUrl(url);
                 break;
               case URLType.EXPO_UPDATE:
+                Analytics.track(Event.LAUNCH_EXPO_UPDATE);
                 handleUpdateUrl(url);
                 break;
               case URLType.EXPO_BUILD:
               case URLType.UNKNOWN:
               default:
+                Analytics.track(Event.LAUNCH_BUILD);
                 installAppFromURI(url);
                 break;
             }
