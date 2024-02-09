@@ -6,6 +6,38 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>1.0.4</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Cache builds by default. (<a href="https://github.com/expo/orbit/pull/156">#156</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve fatal CLI error handling. (<a href="https://github.com/expo/orbit/pull/163">#163</a>,<a href="https://github.com/expo/orbit/pull/166">#166</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fixed listing devices on x64 machines. (<a href="https://github.com/expo/orbit/pull/164">#164</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Use Expo CLI instead of react-native community CLI. (<a href="https://github.com/expo/orbit/pull/155">#155</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add basic telemetry. (<a href="https://github.com/expo/orbit/pull/168">#168</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Bump <code>snack-content@2.0.0</code> to preview 2. (<a href="https://github.com/expo/orbit/pull/167">#167</a> by <a href="https://github.com/byCedric">@byCedric</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2024-02-09</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.0.4</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.0.4/expo-orbit.v1.0.4.zip"
+        sparkle:version="22"
+        sparkle:shortVersionString="1.0.4"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>1.0.3</title>
       <description>
       <![CDATA[
