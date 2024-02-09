@@ -26,7 +26,7 @@
     "graphql": "^16.8.0",
     "graphql-request": "^6.1.0",
     "mmkv-node-bindings": "0.2.1",
-    "snack-content": "2.0.0-preview.1",
+    "snack-content": "2.0.0-preview.2",
     "strip-ansi": "^6.0.0"
   },
   "devDependencies": {

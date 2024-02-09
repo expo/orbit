@@ -15335,10 +15335,10 @@ smart-buffer@^4.2.0:
   resolved "https://registry.yarnpkg.com/smart-buffer/-/smart-buffer-4.2.0.tgz#6e1d71fa4f18c05f7d0ff216dd16a481d0e8d9ae"
   integrity sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==
 
-snack-content@2.0.0-preview.1:
-  version "2.0.0-preview.1"
-  resolved "https://registry.yarnpkg.com/snack-content/-/snack-content-2.0.0-preview.1.tgz#fec83a7ea6e41bf89cc38f194bbe75b499b6966f"
-  integrity sha512-T+19Q0G+roVRQ17ydILLnCiAs7JiterBgEJupePgCErSpqZQNhLTthCXZhdz/eigyiI0Qlk8ZPkv7peoWQOjcA==
+snack-content@2.0.0-preview.2:
+  version "2.0.0-preview.2"
+  resolved "https://registry.yarnpkg.com/snack-content/-/snack-content-2.0.0-preview.2.tgz#3ca84e49265b8c327bcfdec475a600dcd88a6850"
+  integrity sha512-JIfnYIpSL7NTjAJdjmhrt9Q0j43VlTC4+/VMY/H/bIVjiOQ5nJOfj9+kmxuJHPi+tY7J7Taw+cug+qOdLeWClg==
   dependencies:
     semver "^7.3.4"
 
@@ -15755,14 +15755,6 @@ sucrase@3.34.0:
   version "3.34.0"
   resolved "https://registry.yarnpkg.com/sucrase/-/sucrase-3.34.0.tgz#1e0e2d8fcf07f8b9c3569067d92fbd8690fb576f"
   integrity sha512-70/LQEZ07TEcxiU2dz51FKaE6hCTWC6vr7FOk3Gr0U60C3shtAN+H+BFr9XlYe5xqf3RA8nrc+VIwzCfnxuXJw==
-  dependencies:
-    "@jridgewell/gen-mapping" "^0.3.2"
-    commander "^4.0.0"
-    glob "7.1.6"
-    lines-and-columns "^1.1.6"
-    mz "^2.7.0"
-    pirates "^4.0.1"
-    ts-interface-checker "^0.1.9"
 
 sucrase@^3.20.0:
   version "3.33.0"
