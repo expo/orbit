@@ -253,7 +253,7 @@ function Core(props: Props) {
 
   const installAppFromURI = useCallback(
     async (appURI: string) => {
-      let localFilePath = appURI.startsWith('/') ? appURI : undefined;
+      let localFilePath = appURI.startsWith('https://') ? undefined : appURI;
       try {
         if (!localFilePath) {
           setStatus(MenuBarStatus.DOWNLOADING);
