@@ -286,7 +286,7 @@ function Core(props: Props) {
             } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
               Alert.alert(
                 error.message,
-                'A valid provisioning profile for this executable was not found. Is this an internal distribution build?'
+                'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
               );
             }
           } else {
