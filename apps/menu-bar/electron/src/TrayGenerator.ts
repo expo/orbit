@@ -77,6 +77,10 @@ export default class TrayGenerator {
     app.on('second-instance', this.showWindow);
 
     this.mainWindow.on('blur', () => {
+      if (!this.tray) {
+        return;
+      }
+
       const cursor = screen.getCursorScreenPoint();
       const trayBounds = this.tray.getBounds();
       if (
