@@ -36,6 +36,7 @@ const createMainWindow = () => {
     resizable: false,
     webPreferences: {
       devTools: true,
+      webSecurity: false,
       preload: path.join(__dirname, './preload.js'),
     },
     skipTaskbar: true,

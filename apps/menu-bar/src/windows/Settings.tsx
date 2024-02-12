@@ -1,7 +1,7 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
 import { Config } from 'common-types';
 import React, { Fragment, useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, Switch, Platform } from 'react-native';
+import { StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import { withApolloProvider } from '../api/ApolloClient';
@@ -9,6 +9,7 @@ import { Checkbox, View, Row, Text, Divider } from '../components';
 import { Avatar } from '../components/Avatar';
 import Button, { getStylesForColor } from '../components/Button';
 import PathInput from '../components/PathInput';
+import { Switch } from '../components/Switch';
 import SystemIconView from '../components/SystemIconView';
 import { useGetCurrentUserQuery } from '../generated/graphql';
 import Alert from '../modules/Alert';
@@ -30,10 +31,26 @@ import { getCurrentUserDisplayName } from '../utils/helpers';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
-const osList: { label: string; key: keyof UserPreferences }[] = [
-  { label: 'Android', key: 'showAndroidEmulators' },
-  { label: 'iOS', key: 'showIosSimulators' },
-  { label: 'tvOS (experimental)', key: 'showTvosSimulators' },
+type OsListItem = {
+  label: string;
+  key: keyof UserPreferences;
+  supported: boolean;
+  unsupportedMessage?: string;
+};
+const osList: OsListItem[] = [
+  { label: 'Android', key: 'showAndroidEmulators', supported: true },
+  {
+    label: 'iOS',
+    key: 'showIosSimulators',
+    supported: Platform.OS === 'macos',
+    unsupportedMessage: 'macOS only',
+  },
+  {
+    label: 'tvOS (experimental)',
+    key: 'showTvosSimulators',
+    supported: Platform.OS === 'macos',
+    unsupportedMessage: 'macOS only',
+  },
 ];
 
 const Settings = () => {
@@ -177,7 +194,7 @@ const Settings = () => {
             pt="1"
             pb="2">
             {hasSessionSecret ? (
-              <Row align="center" mt="1" gap="2">
+              <Row align="center" mt="1" gap="2" flex="1">
                 {currentUser ? (
                   <Row align="center" flex="1">
                     <Avatar
@@ -205,7 +222,7 @@ const Settings = () => {
                 <Button title="Log Out" onPress={handleLogout} style={styles.button} />
               </Row>
             ) : (
-              <Row align="center" mt="2" mb="1" gap="2">
+              <Row align="center" mt="2" mb="1" gap="2" flex="1">
                 <Text style={[styles.flex, { lineHeight: 15 }]} numberOfLines={2} size="tiny">
                   Log in or create an account to access your projects, builds and more.
                 </Text>
@@ -244,8 +261,9 @@ const Settings = () => {
           style={groupWrapperStyle}
           border="light"
           px="2.5"
-          py="2.5">
-          <Row mb="2" align="center" justify="between">
+          pt="1"
+          pb="2.5">
+          <Row mb="1" align="center" justify="between" style={styles.preferencesRow}>
             <Checkbox
               value={automaticallyChecksForUpdates}
               onValueChange={onPressSetAutomaticallyChecksForUpdates}
@@ -259,7 +277,7 @@ const Settings = () => {
             />
           </Row>
           <Divider />
-          <Row py="2" align="center" gap="1">
+          <Row align="center" gap="1" style={styles.preferencesRow}>
             <Checkbox
               value={userPreferences.launchOnLogin}
               onValueChange={onPressLaunchOnLogin}
@@ -267,7 +285,7 @@ const Settings = () => {
             />
           </Row>
           <Divider />
-          <Row py="2" align="center">
+          <Row align="center" style={styles.preferencesRow}>
             <Checkbox
               value={userPreferences.emulatorWithoutAudio}
               onValueChange={onPressEmulatorWithoutAudio}
@@ -276,7 +294,7 @@ const Settings = () => {
           </Row>
           <Divider />
           <View>
-            <Row py="2" align="center">
+            <Row pb="1" align="center" style={styles.preferencesRow}>
               <Checkbox
                 value={customSdkPathEnabled}
                 onValueChange={toggleCustomSdkPath}
@@ -307,16 +325,20 @@ const Settings = () => {
             Only devices for the enabled platforms will be listed in the menu bar
           </Text>
           <View mt="2" rounded="medium" style={groupWrapperStyle} border="light" px="2.5">
-            {osList.map(({ label, key }, index, list) => (
+            {osList.map(({ label, key, supported }, index, list) => (
               <Fragment key={key}>
-                <Row align="center" justify="between">
+                <Row
+                  pb="0"
+                  align="center"
+                  justify="between"
+                  style={[styles.osRow, !supported && styles.disabledRow]}>
                   <Text size="small" weight="normal">
-                    {label}
+                    {label} {supported ? '' : `- ${osList[index].unsupportedMessage}`}
                   </Text>
                   <Switch
                     value={Boolean(userPreferences[key])}
                     onValueChange={(value) => toggleOS(key, value)}
-                    style={styles.switch}
+                    disabled={!supported}
                   />
                 </Row>
                 {list.length - 1 !== index ? <Divider /> : null}
@@ -326,7 +348,9 @@ const Settings = () => {
         </View>
       </View>
       <Text color="secondary" size="tiny" align="center">
-        {`Version: ${MenuBarModule.appVersion} (${MenuBarModule.buildVersion})`}
+        {`Version: ${MenuBarModule.appVersion} ${
+          MenuBarModule.buildVersion ? `(${MenuBarModule.buildVersion})` : ''
+        }`}
       </Text>
       <Text color="secondary" size="tiny" align="center">
         Copyright 650 Industries Inc, 2023
@@ -361,8 +385,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  switch: {
-    width: 36,
-    height: 36,
+  osRow: {
+    minHeight: 36,
+  },
+  disabledRow: {
+    opacity: 0.5,
+  },
+  preferencesRow: {
+    minHeight: 38,
   },
 });
