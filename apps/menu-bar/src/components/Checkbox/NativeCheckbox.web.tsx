@@ -9,6 +9,7 @@ const Checkbox = React.forwardRef(({ value, onChange }: NativeCheckboxProps, ref
       type="checkbox"
       checked={Boolean(value)}
       size="medium"
+      style={{ marginLeft: -6 }}
       onChange={(event) =>
         onChange?.({
           nativeEvent: { value: event.target.checked },
