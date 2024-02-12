@@ -1,5 +1,10 @@
-import { FluentProvider, webLightTheme, webDarkTheme, Theme } from '@fluentui/react-components';
-import React from 'react';
+import {
+  FluentProvider as ReactFluentProvider,
+  webLightTheme,
+  webDarkTheme,
+  Theme,
+} from '@fluentui/react-components';
+import { CSSProperties, ComponentType, ReactElement } from 'react';
 import { useColorScheme } from 'react-native';
 
 const lightTheme: Theme = {
@@ -12,13 +17,27 @@ const darkTheme: Theme = {
   colorNeutralBackground1: 'var(--orbit-window-background)',
 };
 
-export const withFluentProvider = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
-  const WithFluentProvider = (props: P) => {
-    const scheme = useColorScheme();
-    const theme = scheme === 'dark' ? darkTheme : lightTheme;
+export const FluentProvider = ({
+  children,
+  style,
+}: {
+  children: ReactElement;
+  style?: CSSProperties;
+}) => {
+  const scheme = useColorScheme();
+  const theme = scheme === 'dark' ? darkTheme : lightTheme;
 
+  return (
+    <ReactFluentProvider theme={theme} style={style}>
+      {children}
+    </ReactFluentProvider>
+  );
+};
+
+export const withFluentProvider = <P extends object>(WrappedComponent: ComponentType<P>) => {
+  const WithFluentProvider = (props: P) => {
     return (
-      <FluentProvider theme={theme} style={{ display: 'flex' }}>
+      <FluentProvider style={{ display: 'flex' }}>
         <WrappedComponent {...props} />
       </FluentProvider>
     );

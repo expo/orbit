@@ -6,6 +6,7 @@ import AutoResizerRootView from './components/AutoResizerRootView';
 import { SAFE_AREA_FACTOR } from './hooks/useSafeDisplayDimensions';
 import Popover from './popover';
 import { DevicesProvider } from './providers/DevicesProvider';
+import { FluentProvider } from './providers/FluentProvider';
 import { ThemeProvider } from './providers/ThemeProvider';
 
 type Props = {
@@ -23,9 +24,11 @@ function App(props: Props) {
       enabled={!props.isDevWindow}
       maxRelativeHeight={SAFE_AREA_FACTOR}>
       <ThemeProvider themePreference="no-preference">
-        <DevicesProvider>
-          <Popover isDevWindow={props.isDevWindow} />
-        </DevicesProvider>
+        <FluentProvider>
+          <DevicesProvider>
+            <Popover isDevWindow={props.isDevWindow} />
+          </DevicesProvider>
+        </FluentProvider>
       </ThemeProvider>
     </AutoResizerRootView>
   );
