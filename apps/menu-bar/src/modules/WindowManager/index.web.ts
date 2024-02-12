@@ -3,6 +3,7 @@ import { requireElectronModule } from 'react-native-electron-modules/build/requi
 
 import { withWindowProvider } from './WindowProvider';
 import { WindowsConfig, WindowsManagerType } from './types';
+import { withFluentProvider } from '../../providers/FluentProvider';
 import { withThemeProvider } from '../../utils/useExpoTheme';
 
 export { WindowStyleMask } from './types';
@@ -12,7 +13,7 @@ export const WindowManager = requireElectronModule<WindowsManagerType>('WindowMa
 export function createWindowsNavigator<T extends WindowsConfig>(config: T) {
   Object.entries(config).forEach(([key, value]) => {
     AppRegistry.registerComponent(key, () =>
-      withWindowProvider(withThemeProvider(value.component), key)
+      withWindowProvider(withFluentProvider(withThemeProvider(value.component)), key)
     );
   });
 
