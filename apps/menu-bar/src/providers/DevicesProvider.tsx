@@ -45,16 +45,22 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
       showAndroidEmulators: showAndroid,
     } = getUserPreferences();
 
+    const iosDevices = new Map<string, CliCommands.ListDevices.Device<CliCommands.Platform.Ios>>();
+    const androidDevices = new Map<
+      string,
+      CliCommands.ListDevices.Device<CliCommands.Platform.Android>
+    >();
+
+    if (!showIos && !showTvos && !showAndroid) {
+      setDevicesPerPlatform({
+        android: { error: undefined, devices: androidDevices },
+        ios: { error: undefined, devices: iosDevices },
+      });
+    }
+
+    const platform = showAndroid && (showIos || showTvos) ? 'all' : showAndroid ? 'android' : 'ios';
     try {
-      const devicesList = await listDevicesAsync({ platform: 'all' });
-      const iosDevices = new Map<
-        string,
-        CliCommands.ListDevices.Device<CliCommands.Platform.Ios>
-      >();
-      const androidDevices = new Map<
-        string,
-        CliCommands.ListDevices.Device<CliCommands.Platform.Android>
-      >();
+      const devicesList = await listDevicesAsync({ platform });
 
       if (showIos || showTvos) {
         devicesList.ios.devices.forEach((device) => {

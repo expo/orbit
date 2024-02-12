@@ -20,7 +20,7 @@ export type UserPreferences = {
 export const defaultUserPreferences: UserPreferences = {
   launchOnLogin: false,
   emulatorWithoutAudio: false,
-  showIosSimulators: true,
+  showIosSimulators: Platform.OS === 'macos',
   showTvosSimulators: false,
   showAndroidEmulators: true,
 };
