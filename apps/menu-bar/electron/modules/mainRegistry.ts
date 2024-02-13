@@ -6,6 +6,7 @@ import WindowManager from './WindowManager/main';
 import FilePickerModule from '../../modules/file-picker/electron/main';
 import MenuBarModule from '../../modules/menu-bar/electron/main';
 import RudderModule from '../../modules/rudder/electron/main';
+import AlertModule from './Alert/main';
 
 export const MainModules: Registry = [
   MenuBarModule,
@@ -14,4 +15,5 @@ export const MainModules: Registry = [
   WindowManager,
   RudderModule,
   FilePickerModule,
+  AlertModule,
 ];
