@@ -113,18 +113,18 @@ input {
 
 /* Fonts */
 @font-face {
-  src: url('src/assets/fonts/Inter/Inter-Regular.otf');
+  src: url('./fonts/Inter/Inter-Regular.otf');
   font-family: 'Inter-Regular';
 }
 @font-face {
-  src: url('src/assets/fonts/Inter/Inter-Medium.otf');
+  src: url('./fonts/Inter/Inter-Medium.otf');
   font-family: 'Inter-Medium';
 }
 @font-face {
-  src: url('src/assets/fonts/Inter/Inter-SemiBold.otf');
+  src: url('./fonts/Inter/Inter-SemiBold.otf');
   font-family: 'Inter-SemiBold';
 }
 @font-face {
-  src: url('src/assets/fonts/Inter/Inter-Bold.otf');
+  src: url('./fonts/Inter/Inter-Bold.otf');
   font-family: 'Inter-Bold';
 }

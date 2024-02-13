@@ -3,7 +3,6 @@ import { AppRegistry } from 'react-native';
 
 import App from './src/App';
 import './src/windows';
-import './global.css';
 
 const params = new URL(document.location).searchParams;
 const module = params.get('moduleName');
