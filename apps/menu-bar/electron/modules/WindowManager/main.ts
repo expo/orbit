@@ -44,7 +44,7 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
       await window.loadURL(`http://localhost:8081?moduleName=${moduleName}`);
     } else {
       await window.loadURL(
-        `file://${path.join(__dirname, `../../build/index.html?moduleName=${moduleName}`)}`
+        `file://${path.join(__dirname, `../../../app/dist/index.html?moduleName=${moduleName}`)}`
       );
     }
   }

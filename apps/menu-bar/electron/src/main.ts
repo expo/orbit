@@ -8,7 +8,7 @@ import TrayGenerator from './TrayGenerator';
 import { MainModules } from '../modules/mainRegistry';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
+if (process.platform === 'win32' && require('electron-squirrel-startup')) {
   app.quit();
 }
 
@@ -48,8 +48,7 @@ const createMainWindow = () => {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
     mainWindow.loadURL('http://localhost:8081');
   } else {
-    // eslint-disable-next-line no-undef
-    mainWindow.loadURL(`file://${path.join(__dirname, '../../build/index.html')}`);
+    mainWindow.loadURL(`file://${path.join(__dirname, '../../../app/dist/index.html')}`);
   }
 
   return mainWindow;
