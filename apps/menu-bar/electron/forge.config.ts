@@ -6,9 +6,20 @@ import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 
 const config: ForgeConfig = {
-  packagerConfig: {},
+  packagerConfig: {
+    extraResource: ['.vite/build/cli/'],
+  },
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({})],
+  makers: [
+    new MakerSquirrel({
+      authors: 'Expo',
+      description:
+        'Accelerate your development workflow with one-click build launches and simulator management from your menu bar',
+    }),
+    new MakerZIP({}, ['darwin']),
+    new MakerRpm({}),
+    new MakerDeb({}),
+  ],
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
@@ -22,6 +33,11 @@ const config: ForgeConfig = {
         {
           entry: './src/preload.ts',
           config: 'vite.preload.config.ts',
+        },
+        {
+          // compile CLI and inject it into the electron internal files
+          entry: '../../cli/src/index.ts',
+          config: 'vite.cli.config.ts',
         },
       ],
       renderer: [
