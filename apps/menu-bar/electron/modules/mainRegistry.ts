@@ -1,5 +1,6 @@
 import { Registry } from 'react-native-electron-modules';
 
+import AlertModule from './Alert/main';
 import AutoResizerRootViewManager from './AutoResizerRootViewManager/main';
 import Linking from './Linking/main';
 import WindowManager from './WindowManager/main';
@@ -14,4 +15,5 @@ export const MainModules: Registry = [
   WindowManager,
   RudderModule,
   FilePickerModule,
+  AlertModule,
 ];
