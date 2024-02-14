@@ -26,23 +26,25 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
    */
   const urlWithoutProtocol = deeplinkURLString.replace(/^[^:]+:\/\//, '');
   const deeplinkURL = new URL(deeplinkURLString, 'http://expo.dev');
+  // On web the pathname starts with '///' instead of '/'
+  const pathname = deeplinkURL.pathname.replace('///', '/');
 
-  if (deeplinkURL.pathname.startsWith('/auth')) {
+  if (pathname.startsWith('/auth')) {
     return { urlType: URLType.AUTH, url: deeplinkURLString };
   }
-  if (deeplinkURL.pathname.startsWith('/update')) {
+  if (pathname.startsWith('/update')) {
     return {
       urlType: URLType.EXPO_UPDATE,
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
     };
   }
-  if (deeplinkURL.pathname.startsWith('/download')) {
+  if (pathname.startsWith('/download')) {
     return {
       urlType: URLType.EXPO_BUILD,
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
     };
   }
-  if (deeplinkURL.pathname.startsWith('/snack')) {
+  if (pathname.startsWith('/snack')) {
     return {
       urlType: URLType.SNACK,
       url: getUrlFromSearchParams(deeplinkURL.searchParams),

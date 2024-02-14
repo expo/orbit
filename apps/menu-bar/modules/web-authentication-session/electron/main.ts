@@ -8,24 +8,31 @@ import {
 
 async function openAuthSessionAsync(urlString: string): Promise<WebBrowserResult> {
   const url = new URL(urlString);
+  const window = new BrowserWindow({
+    width: 860,
+    height: 740,
+  });
+  window.menuBarVisible = false;
+  window.loadURL(urlString);
+
   return new Promise((resolve, reject) => {
-    const window = new BrowserWindow({
-      width: 860,
-      height: 740,
-    });
-
-    window.loadURL(urlString);
-
-    window.webContents.on('will-redirect', (details) => {
-      if (url.origin === new URL(details.url).origin) {
+    function handleRedirect(
+      event: Electron.Event<
+        Electron.WebContentsWillRedirectEventParams | Electron.WebContentsWillNavigateEventParams
+      >
+    ) {
+      if (event.isSameDocument || url.origin === new URL(event.url).origin) {
         return;
       }
 
-      details.preventDefault();
+      event.preventDefault();
       window.close();
 
-      resolve({ type: WebBrowserResultType.SUCCESS, url: details.url });
-    });
+      resolve({ type: WebBrowserResultType.SUCCESS, url: event.url });
+    }
+
+    window.webContents.on('will-redirect', handleRedirect);
+    window.webContents.on('will-navigate', handleRedirect);
 
     window.on('closed', () => {
       resolve({ type: WebBrowserResultType.CANCEL });
