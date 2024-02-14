@@ -1,23 +1,10 @@
 import { BrowserWindow } from 'electron';
 
-export enum WebBrowserResultType {
-  CANCEL = 'cancel',
-  SUCCESS = 'success',
-}
-
-export type WebBrowserResult =
-  | {
-      type: WebBrowserResultType.CANCEL;
-    }
-  | {
-      type: WebBrowserResultType.SUCCESS;
-      url: string;
-    };
-
-type WebAuthenticationSessionModuleType = {
-  name: string;
-  openAuthSessionAsync: (url: string) => Promise<WebBrowserResult>;
-};
+import {
+  WebBrowserResult,
+  WebBrowserResultType,
+  WebAuthenticationSessionModuleType,
+} from '../src/WebAuthenticationSession.types';
 
 async function openAuthSessionAsync(urlString: string): Promise<WebBrowserResult> {
   const url = new URL(urlString);
@@ -50,7 +37,7 @@ async function openAuthSessionAsync(urlString: string): Promise<WebBrowserResult
   });
 }
 
-const WebAuthenticationSession: WebAuthenticationSessionModuleType = {
+const WebAuthenticationSession: WebAuthenticationSessionModuleType & { name: string } = {
   name: 'WebAuthenticationSession',
   openAuthSessionAsync,
 };

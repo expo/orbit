@@ -4,6 +4,10 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
 import { WindowsNavigator } from './index';
+import {
+  openAuthSessionAsync,
+  WebBrowserResultType,
+} from '../../modules/web-authentication-session';
 import { withApolloProvider } from '../api/ApolloClient';
 import { Checkbox, View, Row, Text, Divider } from '../components';
 import { Avatar } from '../components/Avatar';
@@ -24,9 +28,6 @@ import {
   sessionSecretStorageKey,
   resetApolloStore,
 } from '../modules/Storage';
-import WebAuthenticationSessionModule, {
-  WebBrowserResultType,
-} from '../modules/WebAuthenticationSessionModule';
 import { getCurrentUserDisplayName } from '../utils/helpers';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
@@ -141,7 +142,7 @@ const Settings = () => {
     const authSessionURL = `${
       Config.website.origin
     }/${type}?confirm_account=1&app_redirect_uri=${encodeURIComponent(redirectBase)}`;
-    const result = await WebAuthenticationSessionModule.openAuthSessionAsync(authSessionURL);
+    const result = await openAuthSessionAsync(authSessionURL);
 
     if (result.type === WebBrowserResultType.SUCCESS) {
       const resultURL = new URL(result.url);
