@@ -21,6 +21,8 @@ export class LocalServer {
         res.sendStatus(403);
         return;
       }
+
+      res.set('Access-Control-Allow-Origin', origin);
       next();
     });
   }
