@@ -4,6 +4,7 @@ import path from 'path';
 import { registerMainModules } from 'react-native-electron-modules';
 
 import TrayGenerator from './TrayGenerator';
+import { LocalServer } from './localServer';
 import { MainModules } from '../modules/mainRegistry';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -60,4 +61,7 @@ app.on('ready', () => {
   const mainWindow = createMainWindow();
   const Tray = new TrayGenerator(mainWindow);
   Tray.createTray();
+
+  const server = new LocalServer();
+  server.start();
 });
