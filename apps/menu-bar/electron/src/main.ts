@@ -3,8 +3,8 @@ import os from 'os';
 import path from 'path';
 import { registerMainModules } from 'react-native-electron-modules';
 
+import { LocalServer } from './LocalServer';
 import TrayGenerator from './TrayGenerator';
-import { LocalServer } from './localServer';
 import { MainModules } from '../modules/mainRegistry';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
