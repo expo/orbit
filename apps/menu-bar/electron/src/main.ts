@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 import { registerMainModules } from 'react-native-electron-modules';
 
+import { LocalServer } from './LocalServer';
 import TrayGenerator from './TrayGenerator';
 import { MainModules } from '../modules/mainRegistry';
 
@@ -60,4 +61,7 @@ app.on('ready', () => {
   const mainWindow = createMainWindow();
   const Tray = new TrayGenerator(mainWindow);
   Tray.createTray();
+
+  const server = new LocalServer();
+  server.start();
 });

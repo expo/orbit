@@ -64,6 +64,10 @@ jobs:
         run: yarn tsc --noEmit
         working-directory: apps/menu-bar
 
+      - name: 🏗️ TSC "Orbit" electron files
+        run: yarn tsc --noEmit
+        working-directory: apps/menu-bar/electron
+
       - name: 🏗️ TSC "CLI" app files
         run: yarn tsc --noEmit
         working-directory: apps/cli
