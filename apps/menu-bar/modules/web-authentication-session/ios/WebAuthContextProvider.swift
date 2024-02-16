@@ -5,9 +5,9 @@ public class WebAuthContextProvider: NSObject, ObservableObject, ASWebAuthentica
     var anchor: ASPresentationAnchor?
 
     DispatchQueue.main.sync {
-      anchor = NSApp.mainWindow!
+      anchor = NSApp.mainWindow
     }
 
-    return anchor!
+    return anchor ?? ASPresentationAnchor()
   }
 }

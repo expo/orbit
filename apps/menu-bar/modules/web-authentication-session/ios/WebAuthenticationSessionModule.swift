@@ -15,10 +15,10 @@ public class WebAuthenticationSessionModule: Module {
       }
 
       authSession = ASWebAuthenticationSession(url: url, callbackURLScheme: "expo-orbit") { callbackURL, error in
-        if let error = error {
+        if let error {
           promise.reject("AUTH_SESSION_ERROR", error.localizedDescription)
         } else {
-          if let callbackURL = callbackURL {
+          if let callbackURL {
             promise.resolve(["type": "success", "url": callbackURL.absoluteString])
           } else {
             promise.resolve(["type": "cancel"])
