@@ -6,7 +6,7 @@ import { bootDeviceAsync } from './commands/BootDevice';
 import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
 import { launchSnackAsync } from './commands/LaunchSnack';
 import { checkToolsAsync } from './commands/CheckTools';
-import { launchUpdateAsync } from './commands/LaunchUpdate';
+import { setSessionAsync } from './commands/SetSession';
 import { returnLoggerMiddleware } from './utils';
 
 const program = new Command();
@@ -55,7 +55,15 @@ program
   .argument('<string>', 'Update URL')
   .requiredOption('-p, --platform <string>', 'Selected platform')
   .requiredOption('--device-id  <string>', 'UDID or name of the device')
-  .action(returnLoggerMiddleware(launchUpdateAsync));
+  .action(async (...args) => {
+    const { launchUpdateAsync } = await import('./commands/LaunchUpdate');
+    returnLoggerMiddleware(launchUpdateAsync)(...args);
+  });
+
+program
+  .command('set-session')
+  .argument('<string>', 'Session secret')
+  .action(returnLoggerMiddleware(setSessionAsync));
 
 if (process.argv.length < 3) {
   program.help();
