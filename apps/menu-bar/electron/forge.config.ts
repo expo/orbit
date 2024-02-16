@@ -8,6 +8,7 @@ import type { ForgeConfig } from '@electron-forge/shared-types';
 const config: ForgeConfig = {
   packagerConfig: {
     extraResource: ['.vite/build/cli/'],
+    icon: './assets/images/icon-windows',
   },
   rebuildConfig: {},
   makers: [
@@ -18,7 +19,7 @@ const config: ForgeConfig = {
     }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerDeb({ options: { icon: './assets/images/icon-linux.png' } }),
   ],
   plugins: [
     new VitePlugin({
