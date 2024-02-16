@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 
 import { apolloClient } from '../api/ApolloClient';
+import { setSessionAsync } from '../commands/setSessionAsync';
 import MenuBarModule from '../modules/MenuBarModule';
 
 export const userPreferencesStorageKey = 'user-preferences';
@@ -92,8 +93,19 @@ if (!storage.getBoolean(migratedStorageKey) && Platform.OS !== 'web') {
   migrateMMKVFromOldStoragePath();
 }
 
-export function saveSessionSecret(sessionSecret: string) {
-  storage.set(sessionSecretStorageKey, sessionSecret);
+const hasSetSessionFile = 'hasSetSessionFile';
+if (!storage.getBoolean(hasSetSessionFile) && Platform.OS !== 'web') {
+  setSessionAsync(storage.getString(sessionSecretStorageKey) ?? '');
+  storage.set(hasSetSessionFile, true);
+}
+
+export function saveSessionSecret(sessionSecret: string | undefined) {
+  if (sessionSecret === undefined) {
+    storage.delete(sessionSecretStorageKey);
+  } else {
+    storage.set(sessionSecretStorageKey, sessionSecret);
+  }
+  setSessionAsync(sessionSecret ?? '');
 }
 
 export function resetApolloStore() {

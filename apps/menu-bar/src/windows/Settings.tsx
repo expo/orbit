@@ -157,7 +157,7 @@ const Settings = () => {
   };
 
   const handleLogout = () => {
-    storage.delete(sessionSecretStorageKey);
+    saveSessionSecret(undefined);
     resetApolloStore();
   };
 

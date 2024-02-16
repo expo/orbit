@@ -1,6 +1,5 @@
 {
   "pkg": {
-    "assets": ["../../node_modules/mmkv-node-bindings/**/*.node"],
     "targets": ["node18-macos-arm64", "node18-macos-x64"]
   }
 }
