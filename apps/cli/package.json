@@ -25,7 +25,6 @@
     "eas-shared": "*",
     "graphql": "^16.8.0",
     "graphql-request": "^6.1.0",
-    "mmkv-node-bindings": "0.2.1",
     "snack-content": "2.0.0-preview.2",
     "strip-ansi": "^6.0.0"
   },
@@ -35,11 +34,5 @@
     "@graphql-codegen/typescript-operations": "^4.0.1",
     "pkg": "^5.8.1",
     "typescript": "4.9.4"
-  },
-  "mmkv-node-bindings": {
-    "arch": [
-      "arm64",
-      "x64"
-    ]
   }
 }
