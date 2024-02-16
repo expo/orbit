@@ -1,6 +1,12 @@
 import { fork, ChildProcess } from 'child_process';
 
-function spawnCliAsync(cliPath: string, command: string, args: string[] = [], listenerId: number) {
+function spawnCliAsync(
+  cliPath: string,
+  command: string,
+  args: string[] = [],
+  listenerId: number,
+  envVars: Record<string, string> = {}
+) {
   let child: ChildProcess;
   let hasReachedReturnOutput = false;
   let hasReachedError = false;
@@ -8,7 +14,7 @@ function spawnCliAsync(cliPath: string, command: string, args: string[] = [], li
 
   const promise = new Promise<string>((resolve, reject) => {
     child = fork(cliPath, [command, ...args], {
-      env: { ...process.env, EXPO_MENU_BAR: true } as any,
+      env: { ...process.env, EXPO_MENU_BAR: true, ...envVars } as any,
       stdio: 'pipe',
     });
 

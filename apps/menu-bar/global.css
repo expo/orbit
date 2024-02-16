@@ -2,6 +2,10 @@ body {
   background-color: var(--orbit-window-background);
 }
 
+input {
+  color: var(--text-color);
+}
+
 :not(input):not(textarea),
 :not(input):not(textarea)::after,
 :not(input):not(textarea)::before {

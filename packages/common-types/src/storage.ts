@@ -8,3 +8,8 @@ export function getExpoOrbitDirectory(homedir: string) {
 export function userSettingsFile(homedir: string): string {
   return `${getExpoOrbitDirectory(homedir)}/${AUTH_FILE_NAME}`;
 }
+
+export type UserSettingsData = {
+  sessionSecret?: string;
+  envVars?: Record<string, string>;
+};
