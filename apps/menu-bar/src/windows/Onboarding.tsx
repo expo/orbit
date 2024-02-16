@@ -1,6 +1,6 @@
 import { CliCommands } from 'common-types';
 import { useCallback, useRef, useState } from 'react';
-import { Image, ScrollView, StyleSheet } from 'react-native';
+import { Image, Platform, ScrollView, StyleSheet } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import AndroidStudio from '../assets/images/android-studio.png';
@@ -25,7 +25,7 @@ enum Status {
   FAILED,
 }
 
-const WINDOW_TITLE_HEIGHT = 28;
+const WINDOW_TITLE_HEIGHT = Platform.OS === 'macos' ? 28 : 0;
 
 const Onboarding = () => {
   const theme = useExpoTheme();
@@ -94,14 +94,16 @@ const Onboarding = () => {
               reason={platformToolsCheck?.android?.reason}
               loading={platformToolsCheck?.android?.success === undefined}
             />
-            <CommandCheckItem
-              title="Xcode"
-              description="Install Xcode to manage devices and install apps on iOS"
-              icon={Xcode}
-              success={platformToolsCheck?.ios?.success ?? false}
-              reason={platformToolsCheck?.ios?.reason}
-              loading={platformToolsCheck?.ios?.success === undefined}
-            />
+            {Platform.OS === 'macos' && (
+              <CommandCheckItem
+                title="Xcode"
+                description="Install Xcode to manage devices and install apps on iOS"
+                icon={Xcode}
+                success={platformToolsCheck?.ios?.success ?? false}
+                reason={platformToolsCheck?.ios?.reason}
+                loading={platformToolsCheck?.ios?.success === undefined}
+              />
+            )}
           </View>
         </View>
       </ScrollView>
