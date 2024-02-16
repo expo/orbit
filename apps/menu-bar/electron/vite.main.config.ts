@@ -7,4 +7,12 @@ export default defineConfig({
     browserField: false,
     mainFields: ['module', 'jsnext:main', 'jsnext'],
   },
+  optimizeDeps: {
+    include: ['common-types'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/common-types/, /node_modules/],
+    },
+  },
 });
