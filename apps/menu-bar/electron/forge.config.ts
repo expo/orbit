@@ -12,7 +12,7 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
-      name: 'Expo Orbit',
+      name: 'ExpoOrbit',
       authors: 'Expo',
       description:
         'Accelerate your development workflow with one-click build launches and simulator management from your menu bar',
