@@ -2,7 +2,6 @@
   "compilerOptions": {
     "declaration": true,
     "importHelpers": true,
-    "module": "commonjs",
     "esModuleInterop": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -10,9 +9,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
-    "target": "ES2019",
-    "outDir": "build",
+    "outDir": "build/esm",
     "rootDir": "src",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2022"],
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "target": "ES2022",
     "typeRoots": ["../../ts-declarations", "src/ts-declarations", "./node_modules/@types"]
   },
   "include": ["src/**/*"]

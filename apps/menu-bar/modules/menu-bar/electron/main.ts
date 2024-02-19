@@ -15,7 +15,7 @@ function getUserSettingsJsonFile() {
 }
 
 const runCli = async (command: string, args: string[], listenerId: number) => {
-  const cliPath = path.join(__dirname, '../../../../cli/build/index.js');
+  const cliPath = path.join(__dirname, './cli/index.js');
 
   const userSettingsJsonFile = getUserSettingsJsonFile();
   const { envVars } = await userSettingsJsonFile.readAsync();

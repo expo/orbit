@@ -15,6 +15,9 @@
     },
     "web": {
       "bundler": "metro"
+    },
+    "experiments": {
+      "baseUrl": "./"
     }
   }
 }

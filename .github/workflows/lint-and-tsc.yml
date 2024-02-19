@@ -39,6 +39,10 @@ jobs:
       - name: 🧶 Install workspace node modules
         run: yarn install --frozen-lockfile
 
+      - name: 🧶 Install electron node modules
+        run: yarn install --frozen-lockfile
+        working-directory: apps/menu-bar/electron
+
       - name: 📦️ Build "common-types" package
         run: yarn build
         working-directory: packages/common-types

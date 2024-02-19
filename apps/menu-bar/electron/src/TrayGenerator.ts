@@ -64,7 +64,7 @@ export default class TrayGenerator {
   };
   createTray = () => {
     // eslint-disable-next-line no-undef
-    this.tray = new Tray(path.join(__dirname, '../../assets/images/icon.png'));
+    this.tray = new Tray(path.join(__dirname, '../../assets/images/tray/icon.png'));
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);

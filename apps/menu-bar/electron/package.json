@@ -1,5 +1,6 @@
 {
   "name": "orbit-electron",
+  "productName": "Expo Orbit",
   "version": "1.1.0",
   "private": true,
   "main": ".vite/build/main.js",
@@ -29,9 +30,9 @@
   },
   "dependencies": {
     "@expo/json-file": "^8.2.37",
-    "common-types": "1.0.0",
+    "common-types": "../../../packages/common-types",
     "electron-squirrel-startup": "^1.0.0",
     "express": "^4.18.2",
-    "react-native-electron-modules": "1.0.0"
+    "react-native-electron-modules": "../../../packages/react-native-electron-modules"
   }
 }
