@@ -10,4 +10,10 @@ module.exports = {
   rules: {
     'react-hooks/exhaustive-deps': 'error',
   },
+  ignorePatterns: [
+    'electron/.vite/**',
+    'electron/dist/**',
+    'electron/node_modules/**',
+    'electron/out/**',
+  ],
 };
