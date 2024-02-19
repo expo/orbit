@@ -23,8 +23,9 @@ app.on('open-url', (_, url) => {
 });
 
 app.on('second-instance', (_, argv) => {
-  if (typeof argv[argv.length - 1] === 'string') {
-    sendOpenURL(argv[argv.length - 1]);
+  const lastArg = argv[argv.length - 1];
+  if (typeof lastArg === 'string' && lastArg.includes('://')) {
+    sendOpenURL(lastArg);
   }
 });
 
