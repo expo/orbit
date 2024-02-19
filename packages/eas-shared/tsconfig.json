@@ -9,7 +9,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
-    "outDir": "build",
+    "outDir": "build/esm",
     "rootDir": "src",
     "allowSyntheticDefaultImports": true,
     "lib": ["ES2022"],

@@ -1,12 +1,20 @@
 {
   "name": "eas-shared",
   "version": "1.0.0",
-  "main": "build/index.js",
+  "main": "build/cjs/index.js",
+  "module": "build/mjs/index.js",
   "scripts": {
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.json & tsc --project tsconfig.cjs.json",
     "watch": "yarn build --watch --preserveWatchOutput",
     "lint": "eslint .",
     "typecheck": "tsc"
+  },
+  "exports": {
+    ".": {
+    "import": "./build/esm/index.js",
+    "require": "./build/cjs/index.js",
+    "default": "./build/esm/index.js"
+    }
   },
   "devDependencies": {
     "@types/debug": "^4.1.7",

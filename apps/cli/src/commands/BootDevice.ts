@@ -1,6 +1,5 @@
 import { AndroidEmulator, IosSimulator } from 'common-types/build/devices';
 import { Emulator, Simulator } from 'eas-shared';
-import { getRunningDevicesAsync } from 'eas-shared/build/run/android/adb';
 
 type BootDeviceAsyncOptions = {
   platform: 'android' | 'ios';
@@ -28,7 +27,7 @@ export async function bootDeviceAsync({ platform, id, noAudio }: BootDeviceAsync
     return await Simulator.ensureSimulatorAppOpenedAsync(id);
   }
 
-  const runningEmulators = await getRunningDevicesAsync();
+  const runningEmulators = await Emulator.getRunningDevicesAsync();
   if (runningEmulators.some(({ name }) => name === id)) {
     return;
   }
