@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "importHelpers": true,
-    "module": "ESNext",
+    "module": "commonjs",
     "esModuleInterop": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -10,8 +10,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strict": true,
-    "target": "ESNext",
-    "moduleResolution": "Node",
+    "target": "ES2019",
     "outDir": "build",
     "rootDir": "src",
     "typeRoots": ["../../ts-declarations", "src/ts-declarations", "./node_modules/@types"]

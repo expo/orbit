@@ -7,7 +7,6 @@ import type { ForgeConfig } from '@electron-forge/shared-types';
 
 const config: ForgeConfig = {
   packagerConfig: {
-    extraResource: ['.vite/build/cli/'],
     icon: './assets/images/icon-windows',
   },
   rebuildConfig: {},
