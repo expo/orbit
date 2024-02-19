@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
 import path from 'path';
 
 import {
@@ -26,7 +26,7 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
       webPreferences: {
         devTools: true,
         webSecurity: false,
-        preload: path.join(__dirname, '../../.vite/build/preload.js'),
+        preload: path.join(__dirname, './preload.js'),
       },
     });
     window.menuBarVisible = false;
@@ -44,7 +44,7 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
       await window.loadURL(`http://localhost:8081?moduleName=${moduleName}`);
     } else {
       await window.loadURL(
-        `file://${path.join(__dirname, `../../../app/dist/index.html?moduleName=${moduleName}`)}`
+        `file://${path.join(__dirname, `../../dist/index.html?moduleName=${moduleName}`)}`
       );
     }
   }
