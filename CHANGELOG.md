@@ -13,6 +13,8 @@
 
 ### 💡 Others
 
+- Fix typo in error alert message. ([#183](https://github.com/expo/orbit/pull/183) by [@prettyClouds](https://github.com/prettyClouds))
+
 ## 1.0.4 — 2024-02-09
 
 ### 🎉 New features
