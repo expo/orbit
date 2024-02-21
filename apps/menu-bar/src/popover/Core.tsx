@@ -216,7 +216,7 @@ function Core(props: Props) {
       const device = getDeviceByPlatform(platform);
       if (!device) {
         Alert.alert(
-          `You don't have any ${platform} devices available to open this update, please make your environment is configured correctly and try again.`
+          `You don't have any ${platform} devices available to open this update, please make sure your environment is configured correctly and try again.`
         );
         return;
       }
@@ -265,7 +265,7 @@ function Core(props: Props) {
         const device = getDeviceByPlatform(platform);
         if (!device) {
           Alert.alert(
-            `You don't have any ${platform} device available to run this build, please make your environment is configured correctly and try again.`
+            `You don't have any ${platform} device available to run this build, please make sure your environment is configured correctly and try again.`
           );
           return;
         }
