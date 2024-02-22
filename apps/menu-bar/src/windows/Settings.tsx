@@ -4,6 +4,7 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
 import { WindowsNavigator } from './index';
+import AutoUpdater from '../../modules/auto-updater';
 import {
   openAuthSessionAsync,
   WebBrowserResultType,
@@ -18,7 +19,6 @@ import SystemIconView from '../components/SystemIconView';
 import { useGetCurrentUserQuery } from '../generated/graphql';
 import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
-import SparkleModule from '../modules/SparkleModule';
 import {
   UserPreferences,
   getUserPreferences,
@@ -84,7 +84,7 @@ const Settings = () => {
   const currentUser = data?.meUserActor;
 
   useEffect(() => {
-    SparkleModule.getAutomaticallyChecksForUpdates().then(setAutomaticallyChecksForUpdates);
+    AutoUpdater.getAutomaticallyChecksForUpdates().then(setAutomaticallyChecksForUpdates);
   }, []);
 
   const onPressLaunchOnLogin = async (value: boolean) => {
@@ -114,7 +114,7 @@ const Settings = () => {
 
   const onPressSetAutomaticallyChecksForUpdates = async (value: boolean) => {
     setAutomaticallyChecksForUpdates(value);
-    SparkleModule.setAutomaticallyChecksForUpdates(value);
+    AutoUpdater.setAutomaticallyChecksForUpdates(value);
   };
 
   const onPressEmulatorWithoutAudio = async (value: boolean) => {
@@ -274,7 +274,7 @@ const Settings = () => {
               style={{ height: 28 }}
               color="primary"
               title="Check for updates"
-              onPress={SparkleModule.checkForUpdates}
+              onPress={AutoUpdater.checkForUpdates}
             />
           </Row>
           <Divider />

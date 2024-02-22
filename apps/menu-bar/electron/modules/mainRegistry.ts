@@ -4,6 +4,7 @@ import AlertModule from './Alert/main';
 import AutoResizerRootViewManager from './AutoResizerRootViewManager/main';
 import Linking from './Linking/main';
 import WindowManager from './WindowManager/main';
+import AutoUpdater from '../../modules/auto-updater/electron/main';
 import FilePickerModule from '../../modules/file-picker/electron/main';
 import MenuBarModule from '../../modules/menu-bar/electron/main';
 import RudderModule from '../../modules/rudder/electron/main';
@@ -18,4 +19,5 @@ export const MainModules: Registry = [
   FilePickerModule,
   AlertModule,
   WebAuthenticationSession,
+  AutoUpdater,
 ];
