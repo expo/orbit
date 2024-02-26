@@ -3,7 +3,7 @@ import { AutoUpdaterType } from '../src/AutoUpdater.types';
 
 const updater = new Updater();
 updater.init({
-  url: 'http://localhost:3000/updates.json',
+  url: 'http://localhost:3000/electron-updates.json',
 });
 
 const AutoUpdaterModule: AutoUpdaterType & { name: string } = {

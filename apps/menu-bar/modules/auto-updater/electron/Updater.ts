@@ -155,8 +155,14 @@ export default class Updater extends EventEmitter {
       width: 400,
       height: 100,
     });
+    this.window.menuBarVisible = false;
     this.window
-      .loadFile('../modules/auto-updater/electron/screens/downloading-update/index.html')
+      .loadFile(
+        path.join(
+          __dirname,
+          './react-native-electron-modules/modules/auto-updater/electron/screens/downloading-update/index.html'
+        )
+      )
       .then(async () => {
         this.window?.show();
       });
@@ -257,12 +263,18 @@ export default class Updater extends EventEmitter {
       webPreferences: {
         preload: path.join(
           __dirname,
-          '../../../modules/auto-updater/electron/screens/update-available/preload.js'
+          './react-native-electron-modules/modules/auto-updater/electron/screens/update-available/preload.js'
         ),
       },
     });
+    this.window.menuBarVisible = false;
     this.window
-      .loadFile('../modules/auto-updater/electron/screens/update-available/index.html')
+      .loadFile(
+        path.join(
+          __dirname,
+          './react-native-electron-modules/modules/auto-updater/electron/screens/update-available/index.html'
+        )
+      )
       .then(async () => {
         this.window?.webContents.send('autoUpdater:sendInfo', {
           appName: app.getName(),
