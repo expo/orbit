@@ -41,6 +41,7 @@ export default class Linux extends Platform {
       return;
     }
 
+    // @ts-ignore
     app.off('will-quit', this.quitAndInstall);
 
     const updateScript = `
@@ -92,6 +93,7 @@ export default class Linux extends Platform {
       }
     }
 
+    // @ts-ignore
     app.on('will-quit', this.quitAndInstall);
 
     return this.lastUpdatePath;
@@ -128,7 +130,11 @@ async function setExecFlag(filePath: string) {
       }
 
       fs.chmod(filePath, '0755', (e) => {
-        e ? reject(`Cannot chmod of ${filePath}`) : resolve(filePath);
+        if (e) {
+          reject(new Error(`Cannot chmod of ${filePath}`));
+        } else {
+          resolve(filePath);
+        }
       });
     });
   });

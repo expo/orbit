@@ -21,6 +21,7 @@ export function readPackageJson(appPath: string | undefined) {
     const content = fs.readFileSync(packageFile, 'utf-8');
     return JSON.parse(content);
   } catch (e) {
+    console.log('Error reading package.json', e);
     return {};
   }
 }

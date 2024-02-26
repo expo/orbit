@@ -187,7 +187,9 @@ export default class Updater extends EventEmitter {
   }
 
   get build() {
-    if (!this.checkIsInitialized()) return;
+    if (!this.checkIsInitialized()) {
+      return null;
+    }
     return this.options.build;
   }
 
@@ -201,7 +203,9 @@ export default class Updater extends EventEmitter {
   }
 
   get version() {
-    if (!this.checkIsInitialized()) return;
+    if (!this.checkIsInitialized()) {
+      return null;
+    }
     return this.options.version;
   }
 
