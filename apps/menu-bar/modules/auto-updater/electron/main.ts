@@ -1,16 +1,22 @@
-import { autoUpdater } from 'electron';
-
+import Updater from './Updater';
 import { AutoUpdaterType } from '../src/AutoUpdater.types';
+
+const updater = new Updater();
+updater.init({
+  url: 'http://localhost:3000/updates.json',
+});
 
 const AutoUpdaterModule: AutoUpdaterType & { name: string } = {
   name: 'AutoUpdater',
   checkForUpdates: () => {
-    autoUpdater.checkForUpdates();
+    updater.checkForUpdates();
   },
   getAutomaticallyChecksForUpdates: async () => {
-    return true;
+    return updater.getAutomaticallyChecksForUpdates();
   },
-  setAutomaticallyChecksForUpdates(value: boolean) {},
+  setAutomaticallyChecksForUpdates(value: boolean) {
+    updater.setAutomaticallyChecksForUpdates(value);
+  },
 };
 
 export default AutoUpdaterModule;

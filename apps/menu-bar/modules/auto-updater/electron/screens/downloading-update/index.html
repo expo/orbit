@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Updating Expo Orbit</title>
+  <style id="expo-reset">
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 5px;
+      border-radius: 2px;
+      background-color: rgba(5, 114, 206, 0.2);
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .progress-bar-value {
+      width: 100%;
+      height: 100%;
+      background-color: rgb(5, 114, 206);
+      animation: indeterminateAnimation 1s infinite linear;
+      transform-origin: 0% 50%;
+    }
+
+    @keyframes indeterminateAnimation {
+      0% {
+        transform: translateX(0) scaleX(0);
+      }
+
+      40% {
+        transform: translateX(0) scaleX(0.4);
+      }
+
+      100% {
+        transform: translateX(100%) scaleX(0.5);
+      }
+    }
+  </style>
+  <link rel="preload" href="../global.css" as="style">
+  <link rel="stylesheet" href="../global.css">
+</head>
+
+<body>
+  <div id="root">
+    <h3 id="title">Downloading update</h3>
+    <div class="progress-bar">
+      <div class="progress-bar-value"></div>
+    </div>
+  </div>
+</body>
+
+</html>

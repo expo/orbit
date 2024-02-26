@@ -1,0 +1,196 @@
+body {
+  background-color: var(--orbit-window-background);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  margin: 0;
+}
+
+#root {
+  margin: 12px;
+  height: calc(100vh - 24px);
+  flex-direction: column;
+  display: flex;
+  flex: 1;
+}
+
+#release-notes h3 {
+  font-size: 1rem;
+  margin-top: 0.1rem;
+}
+
+#release-notes a {
+  color: var(--link-color);
+}
+
+#release-notes li {
+  font-size: 0.8rem;
+}
+
+button {
+  background-color: var(--control-color);
+  color: var(--text-color);
+  border: none;
+  padding: 0.2rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  box-shadow: 0 0 0px 1px #8d8d8d17;
+}
+
+.primary-button {
+  background-color: var(--control-accent-color);
+  color: var(--selected-menu-item-text-color);
+}
+
+#release-notes {
+  overflow: scroll;
+  flex: 1;
+  border: 1px solid #000;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+#title {
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+
+#description {
+  margin-bottom: 0.7rem;
+}
+
+p,
+b {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+input,
+h1,
+h2,
+h3,
+p,
+b,
+ul {
+  color: var(--text-color);
+}
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (prefers-color-scheme: light) {
+  /* Platform Color based on macOS Semantic Colors*/
+  :root {
+    --label-color: #242424;
+    --secondary-label-color: #000000;
+    --tertiary-label-color: #000000;
+    --quaternary-label-color: #000000;
+    --link-color: #084fd1;
+    --placeholder-text-color: #000000;
+    --window-frame-text-color: #000000;
+    --selected-menu-item-text-color: #fffefe;
+    --alternate-selected-control-text-color: #fffefe;
+    --header-text-color: #000000;
+    --separator-color: #000000;
+    --grid-color: #e6e6e6;
+    --window-background-color: #e7e7e7;
+    --under-page-background-color: #838383;
+    --control-background-color: #fffefe;
+    --selected-content-background: #064ad9;
+    --unemphasized-selected-content-background-color: #d3d3d3;
+    --find-highlight-color: #ffff0a;
+    --alternating-content-background-color: #f1f2f2;
+    --text-color: #000000;
+    --text-background-color: #fffefe;
+    --selected-text-color: #000000;
+    --selected-text-background-color: #b3d6ff;
+    --unemphasized-selected-text-background-color: #d3d3d3;
+    --unemphasized-selected-text-color: #000000;
+    --control-color: #ffffff;
+    --control-text-color: #000000;
+    --selected-control-color: #b3d6ff;
+    --selected-control-text-color: #000000;
+    --disabled-control-text-color: #000000;
+    --keyboard-focus-indicator-color: #83a9f1;
+    --control-accent-color: #007bff;
+    --highlight-color: #fffefe;
+    --shadow-color: #000000;
+
+    --popover-background: #e6e7e7;
+    --orbit-window-background: #eaecec;
+  }
+
+  #release-notes {
+    background-color: var(--highlight-color);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Platform Color based on macOS Semantic Colors*/
+  :root {
+    --label-color: #dedfdf;
+    --secondary-label-color: #9d9e9e;
+    --tertiary-label-color: #5c5d5d;
+    --quaternary-label-color: #3b3d3e;
+    --link-color: #3486fe;
+    --placeholder-text-color: #5c5d5e;
+    --window-frame-text-color: #fffefe;
+    --selected-menu-item-text-color: #fffefe;
+    --alternate-selected-control-text-color: #fffefe;
+    --header-text-color: #fffefe;
+    --separator-color: #3b3d3e;
+    --grid-color: #1a1a1a;
+    --window-background-color: #252525;
+    --under-page-background-color: #1d1d1d;
+    --control-background-color: #161616;
+    --selected-content-background: #064ad9;
+    --unemphasized-selected-content-background-color: #363636;
+    --find-highlight-color: #ffff0a;
+    --alternating-content-background-color: #fffefe;
+    --text-color: #ffffff;
+    --text-background-color: #1e1e1e;
+    --selected-text-color: #ffffff;
+    --selected-text-background-color: #3f638a;
+    --unemphasized-selected-text-background-color: #363636;
+    --unemphasized-selected-text-color: #ffffff;
+    --control-color: #5c5d5e;
+    --control-text-color: #fffefe;
+    --selected-control-color: #3f638a;
+    --selected-control-text-color: #fffefe;
+    --disabled-control-text-color: #fffefe;
+    --keyboard-focus-indicator-color: #286994;
+    --control-accent-color: #007aff;
+    --highlight-color: #a4a4a4;
+    --shadow-color: #000000;
+
+    --popover-background: #212121;
+    --orbit-window-background: #252928;
+  }
+
+  #release-notes {
+    background-color: var(--popover-background);
+  }
+}
+
+:root {
+  --system-red-color: #fb2b2c;
+  --system-green-color: #30d33a;
+  --system-blue-color: #106afe;
+  --system-orange-color: #fc8d0d;
+  --system-yellow-color: #fecf0e;
+  --system-brown-color: #9b7b55;
+  --system-pink-color: #fb194c;
+  --system-purple-color: #4e45d8;
+  --system-gray-color: #85858b;
+}
