@@ -97,6 +97,11 @@ export default class Updater extends EventEmitter {
     this.platform.init();
     this.setupWindowFunctions();
 
+    if (process.argv.some((arg) => arg === '--squirrel-firstrun')) {
+      this.logger.info('auto update is disabled because this is the first launch');
+      return this;
+    }
+
     if (this.getAutomaticallyChecksForUpdates()) {
       this.checkForUpdates({ silent: true });
     }
