@@ -32,6 +32,7 @@ export default class Updater extends EventEmitter {
   httpClient: HttpClient;
   platform: Platform;
   window?: BrowserWindow;
+  silent?: boolean;
 
   constructor() {
     super();
@@ -60,6 +61,8 @@ export default class Updater extends EventEmitter {
       const version = this.meta?.version;
       this.logger.info(`New version ${version} has been downloaded`);
       this.emit('update-downloaded', this.meta);
+
+      this.quitAndInstall();
     });
 
     this.on('error', this.logger.warn);
@@ -113,6 +116,7 @@ export default class Updater extends EventEmitter {
    * Asks the server whether there is an update. url must be set before
    */
   checkForUpdates({ silent }: { silent?: boolean } = {}): this {
+    this.silent = silent;
     const opt = this.options;
     if (!opt.url) {
       this.emit('error', 'You must set url before calling checkForUpdates()');
