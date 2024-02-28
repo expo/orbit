@@ -30,7 +30,12 @@ app.on('second-instance', (_, argv) => {
 });
 
 async function getInitialURL() {
-  return app.isPackaged ? process.argv[1] : process.argv[2];
+  const lastArg = process.argv[process.argv.length - 1];
+  if (typeof lastArg === 'string' && lastArg.includes('://')) {
+    return lastArg;
+  }
+
+  return undefined;
 }
 
 async function openURL(url: string) {

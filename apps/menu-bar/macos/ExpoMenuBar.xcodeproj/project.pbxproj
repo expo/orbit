@@ -33,7 +33,6 @@
 		C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */ = {isa = PBXBuildFile; fileRef = C08E65332A5D04910079E3A9 /* WindowNavigator.m */; };
 		C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36E9F2A65E25A004F2D8C /* Checkbox.m */; };
 		C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */; };
-		C0C820022AB8E5EE003D75AF /* SparkleModule.m in Sources */ = {isa = PBXBuildFile; fileRef = C0C820012AB8E5EE003D75AF /* SparkleModule.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -103,8 +102,6 @@
 		C0B36E9F2A65E25A004F2D8C /* Checkbox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Checkbox.m; sourceTree = "<group>"; };
 		C0B36EA02A65E25A004F2D8C /* CheckboxManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CheckboxManager.h; sourceTree = "<group>"; };
 		C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckboxManager.m; sourceTree = "<group>"; };
-		C0C820012AB8E5EE003D75AF /* SparkleModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparkleModule.m; sourceTree = "<group>"; };
-		C0C820032AB8E600003D75AF /* SparkleModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparkleModule.h; sourceTree = "<group>"; };
 		CE0E74F571E1F48FF00A8324 /* Pods-Shared-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-macOS/Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
@@ -204,8 +201,6 @@
 				C06B8F8E2AAA906A009F2BB5 /* FileHandlerManager.h */,
 				C06B8F8F2AAB77D0009F2BB5 /* DragDropStatusItemView.m */,
 				C06B8F912AAB77EC009F2BB5 /* DragDropStatusItemView.h */,
-				C0C820012AB8E5EE003D75AF /* SparkleModule.m */,
-				C0C820032AB8E600003D75AF /* SparkleModule.h */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -498,7 +493,6 @@
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C06B8F902AAB77D0009F2BB5 /* DragDropStatusItemView.m in Sources */,
 				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
-				C0C820022AB8E5EE003D75AF /* SparkleModule.m in Sources */,
 				C06B8F8D2AAA9058009F2BB5 /* FileHandlerManager.m in Sources */,
 				C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,

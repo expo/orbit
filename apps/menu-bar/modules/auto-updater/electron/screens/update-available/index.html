@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Software Update</title>
+  <style id="expo-reset">
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+  <link rel="preload" href="../global.css" as="style">
+  <link rel="stylesheet" href="../global.css">
+</head>
+
+<body>
+  <div id="root">
+    <h3 id="title">A new version of <span class="app-name">app</span> is available!</h3>
+    <p id="description"><span class="app-name">app</span> <span id="new-version">1.0.0</span> is now available!--you
+      have
+      <span id="current-version">1.0.0</span>. Would you like to
+      download it now?
+    </p>
+    <b>Release Notes:</b>
+    <div id="release-notes">
+    </div>
+    <div style="display: flex; gap:10px">
+      <button onclick="handleSkip()">Skip This Version</button>
+      <button style="margin-left: auto;" onclick="handleRemindLater()">Remind Me Later</button>
+      <button class="primary-button" onclick="handleInstall()">Install Update</button>
+    </div>
+  </div>
+  <script>
+    function handleInstall() {
+      window.autoUpdater.installUpdate()
+    }
+    function handleSkip() {
+      window.autoUpdater.skipVersion()
+    }
+    function handleRemindLater() {
+      window.autoUpdater.rememberLater()
+    }
+
+    window.autoUpdater.receiveInfo((event, info) => {
+      const { appName, newVersion, currentVersion, releaseNotes } = info;
+      console.log(info);
+      document.querySelectorAll('.app-name').forEach(function (element) {
+        element.textContent = appName;
+      });
+
+      document.querySelector('#current-version').textContent = currentVersion;
+      document.querySelector('#new-version').textContent = newVersion;
+
+
+      document.querySelector('#release-notes').innerHTML = info.releaseNotes;
+    });
+  </script>
+</body>
+
+</html>
