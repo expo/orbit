@@ -16,6 +16,8 @@ const config: ForgeConfig = {
       authors: 'Expo',
       description:
         'Accelerate your development workflow with one-click build launches and simulator management from your menu bar',
+      iconUrl:
+        'https://raw.githubusercontent.com/expo/orbit/main/apps/menu-bar/electron/assets/images/icon-windows.ico',
     }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
