@@ -6,6 +6,7 @@ import {
   MenuItemConstructorOptions,
   ipcMain,
   app,
+  nativeTheme,
 } from 'electron';
 import path from 'path';
 
@@ -63,8 +64,10 @@ export default class TrayGenerator {
     this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));
   };
   createTray = () => {
-    // eslint-disable-next-line no-undef
-    this.tray = new Tray(path.join(__dirname, '../../assets/images/tray/icon.png'));
+    this.tray = new Tray(getIconPath());
+    nativeTheme.addListener('updated', () => {
+      this.tray?.setImage(getIconPath());
+    });
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
@@ -98,3 +101,18 @@ export default class TrayGenerator {
   };
 }
 module.exports = TrayGenerator;
+
+const getIconPath = () => {
+  const iconName = getIconName();
+  return path.join(__dirname, `../../assets/images/tray/${iconName}`);
+};
+
+const getIconName = () => {
+  if (process.platform === 'darwin') {
+    return 'icon.png';
+  }
+
+  return `icon-${nativeTheme.shouldUseDarkColors ? 'dark' : 'light'}.${
+    process.platform === 'win32' ? 'ico' : 'png'
+  }`;
+};
