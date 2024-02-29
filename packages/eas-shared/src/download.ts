@@ -138,19 +138,21 @@ export async function downloadAndMaybeExtractAppAsync(url: string): Promise<stri
 
   await fs.promises.mkdir(outputDir, { recursive: true });
 
+  const tmpArchivePathDir = path.join(getTmpDirectory(), uuidv4());
+  await fs.mkdir(tmpArchivePathDir, { recursive: true });
   if (url.endsWith('apk')) {
-    const apkFilePath = path.join(outputDir, `${uuidv4()}.apk`);
+    const tmpApkFilePath = path.join(tmpArchivePathDir, `${uuidv4()}.tar.gz`);
     await downloadFileWithProgressTrackerAsync(
       url,
-      apkFilePath,
+      tmpApkFilePath,
       (ratio, total) => `Downloading app (${formatBytes(total * ratio)} / ${formatBytes(total)})`,
       'Successfully downloaded app'
     );
+    // Only move the file to correct location after the download is complete to avoid corrupted files
+    const apkFilePath = path.join(outputDir, `${uuidv4()}.apk`);
+    await fs.move(tmpApkFilePath, apkFilePath);
     return apkFilePath;
   } else {
-    const tmpArchivePathDir = path.join(getTmpDirectory(), uuidv4());
-    await fs.mkdir(tmpArchivePathDir, { recursive: true });
-
     const tmpArchivePath = path.join(tmpArchivePathDir, `${uuidv4()}.tar.gz`);
 
     await downloadFileWithProgressTrackerAsync(
