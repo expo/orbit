@@ -64,8 +64,10 @@ export default class TrayGenerator {
     this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));
   };
   createTray = () => {
-    const iconName = getIconName();
-    this.tray = new Tray(path.join(__dirname, `../../assets/images/tray/${iconName}`));
+    this.tray = new Tray(getIconPath());
+    nativeTheme.addListener('updated', () => {
+      this.tray?.setImage(getIconPath());
+    });
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
@@ -99,6 +101,11 @@ export default class TrayGenerator {
   };
 }
 module.exports = TrayGenerator;
+
+const getIconPath = () => {
+  const iconName = getIconName();
+  return path.join(__dirname, `../../assets/images/tray/${iconName}`);
+};
 
 const getIconName = () => {
   if (process.platform === 'darwin') {
