@@ -12,6 +12,8 @@
 
 ### 🐛 Bug fixes
 
+- Prevent CLI from returning invalid cached APKs when the download of the build fails. ([#156](https://github.com/expo/orbit/pull/156) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 - Fix typo in error alert message. ([#183](https://github.com/expo/orbit/pull/183) by [@prettyClouds](https://github.com/prettyClouds))
