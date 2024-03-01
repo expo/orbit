@@ -40,7 +40,17 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
 async function installAndLaunchAndroidAppAsync(appPath: string, deviceId: string) {
   const device = await Emulator.getRunningDeviceAsync(deviceId);
 
-  await Emulator.installAppAsync(device, appPath);
   const { packageName, activityName } = await Emulator.getAptParametersAsync(appPath);
+  try {
+    await Emulator.installAppAsync(device, appPath);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('INSTALL_FAILED_UPDATE_INCOMPATIBLE')) {
+      await Emulator.uninstallAppAsync(device, packageName);
+      await Emulator.installAppAsync(device, appPath);
+    } else {
+      throw error;
+    }
+  }
+
   await Emulator.startAppAsync(device, packageName, activityName);
 }
