@@ -270,6 +270,9 @@ function Core(props: Props) {
                         setStatus(status);
                       }
                     );
+                    setTimeout(() => {
+                      setStatus(MenuBarStatus.LISTENING);
+                    }, 2000);
                   },
                 },
               ]
