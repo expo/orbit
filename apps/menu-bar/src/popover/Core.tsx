@@ -31,6 +31,8 @@ import {
   SelectedDevicesIds,
   getSelectedDevicesIds,
   saveSelectedDevicesIds,
+  sessionSecretStorageKey,
+  storage,
 } from '../modules/Storage';
 import { useListDevices } from '../providers/DevicesProvider';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
@@ -201,6 +203,13 @@ function Core(props: Props) {
 
   const handleUpdateUrl = useCallback(
     async (url: string) => {
+      if (!storage.getString(sessionSecretStorageKey)) {
+        Alert.alert(
+          'You need to be logged in to launch updates.',
+          'Please log in through the Settings window and try again.'
+        );
+        return;
+      }
       /**
        * Supports any update manifest url as long as the
        * platform is specified in the query params.

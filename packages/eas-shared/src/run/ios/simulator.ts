@@ -293,6 +293,39 @@ async function getClientForSDK(sdkVersionString?: string) {
   };
 }
 
+export async function checkIfAppSupportsLaunchingUpdate({
+  udid,
+  bundleIdentifier,
+  runtimeVersion,
+}: {
+  udid: string;
+  bundleIdentifier: string;
+  runtimeVersion: string;
+}): Promise<boolean> {
+  try {
+    const localPath = await getContainerPathAsync({
+      udid,
+      bundleIdentifier,
+    });
+    if (!localPath) {
+      return false;
+    }
+
+    const devLauncherPath = path.join(localPath, 'EXDevLauncher.bundle');
+    if (!(await fs.pathExists(devLauncherPath))) {
+      return false;
+    }
+
+    const expoInfoPlistPath = path.join(localPath, 'Expo.plist');
+    const { EXUpdatesRuntimeVersion }: { EXUpdatesRuntimeVersion: string } =
+      await parseBinaryPlistAsync(expoInfoPlistPath);
+
+    return EXUpdatesRuntimeVersion === runtimeVersion;
+  } catch (error) {
+    return false;
+  }
+}
+
 export async function expoSDKSupportedVersionsOnSimulatorAsync(
   udid: string
 ): Promise<string[] | null> {

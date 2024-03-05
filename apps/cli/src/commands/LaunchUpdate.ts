@@ -4,6 +4,7 @@ import { graphqlSdk } from '../api/GraphqlClient';
 import { AppPlatform, DistributionType } from '../graphql/generated/graphql';
 import { downloadBuildAsync } from './DownloadBuild';
 import { InternalError } from 'common-types';
+import { ClientError } from 'graphql-request';
 
 type launchUpdateAsyncOptions = {
   platform: 'android' | 'ios';
@@ -19,30 +20,50 @@ export async function launchUpdateAsync(
   if (!appId) {
     throw new Error("Couldn't find EAS projectId in manifest");
   }
+  let appIdentifier: string | undefined;
 
-  /**
-   * Fetch EAS to check if the app uses expo-dev-client
-   * or if we should launch the update using Expo Go
-   */
-  const { app } = await graphqlSdk.getAppHasDevClientBuilds({ appId });
-  const hasDevClientBuilds = Boolean(app.byId.hasDevClientBuilds.edges.length);
-  const isRuntimeCompatibleWithExpoGo = manifest.runtimeVersion.startsWith('exposdk:');
+  try {
+    /**
+     * Fetch EAS to check if the app uses expo-dev-client
+     * or if we should launch the update using Expo Go
+     */
+    const { app } = await graphqlSdk.getAppHasDevClientBuilds({ appId });
+    const hasDevClientBuilds = Boolean(app.byId.hasDevClientBuilds.edges.length);
+    const isRuntimeCompatibleWithExpoGo = manifest.runtimeVersion.startsWith('exposdk:');
 
-  if (!hasDevClientBuilds && isRuntimeCompatibleWithExpoGo) {
-    const sdkVersion = manifest.runtimeVersion.match(/exposdk:(\d+\.\d+\.\d+)/)?.[1] || '';
-    const launchOnExpoGo =
-      platform === 'android' ? launchUpdateOnExpoGoAndroidAsync : launchUpdateOnExpoGoIosAsync;
-    return await launchOnExpoGo({
-      sdkVersion,
-      url: getExpoGoUpdateDeeplink(updateURL, manifest),
-      deviceId,
-    });
+    if (!hasDevClientBuilds && isRuntimeCompatibleWithExpoGo) {
+      const sdkVersion = manifest.runtimeVersion.match(/exposdk:(\d+\.\d+\.\d+)/)?.[1] || '';
+      const launchOnExpoGo =
+        platform === 'android' ? launchUpdateOnExpoGoAndroidAsync : launchUpdateOnExpoGoIosAsync;
+      return await launchOnExpoGo({
+        sdkVersion,
+        url: getExpoGoUpdateDeeplink(updateURL, manifest),
+        deviceId,
+      });
+    }
+
+    if (
+      app.byId.hasDevClientBuilds.edges[0]?.node.__typename === 'Build' &&
+      app.byId.hasDevClientBuilds.edges[0]?.node?.appIdentifier
+    ) {
+      appIdentifier = app.byId.hasDevClientBuilds.edges[0]?.node?.appIdentifier;
+    }
+  } catch (error) {
+    if (error instanceof ClientError) {
+      if (error.message.includes('Entity not authorized')) {
+        throw new InternalError(
+          'UNAUTHORIZED_ACCOUNT',
+          `Make sure the logged in account has access to project ${appId}`
+        );
+      }
+    }
+    throw error;
   }
 
   if (platform === 'android') {
-    await launchUpdateOnAndroidAsync(updateURL, manifest, deviceId);
+    await launchUpdateOnAndroidAsync(updateURL, manifest, deviceId, appIdentifier);
   } else {
-    await launchUpdateOnIOSAsync(updateURL, manifest, deviceId);
+    await launchUpdateOnIOSAsync(updateURL, manifest, deviceId, appIdentifier);
   }
 }
 
@@ -80,7 +101,12 @@ async function launchUpdateOnExpoGoIosAsync({
   });
 }
 
-async function launchUpdateOnAndroidAsync(updateURL: string, manifest: Manifest, deviceId: string) {
+async function launchUpdateOnAndroidAsync(
+  updateURL: string,
+  manifest: Manifest,
+  deviceId: string,
+  appIdentifier?: string
+) {
   const device = await Emulator.getRunningDeviceAsync(deviceId);
 
   await downloadAndInstallLatestDevBuildAsync({
@@ -88,11 +114,17 @@ async function launchUpdateOnAndroidAsync(updateURL: string, manifest: Manifest,
     manifest,
     platform: AppPlatform.Android,
     distribution: DistributionType.Internal,
+    appIdentifier,
   });
   await Emulator.openURLAsync({ url: getUpdateDeeplink(updateURL, manifest), pid: device.pid });
 }
 
-async function launchUpdateOnIOSAsync(updateURL: string, manifest: Manifest, deviceId: string) {
+async function launchUpdateOnIOSAsync(
+  updateURL: string,
+  manifest: Manifest,
+  deviceId: string,
+  appIdentifier?: string
+) {
   const isSimulator = await Simulator.isSimulatorAsync(deviceId);
   if (!isSimulator) {
     throw new Error('Launching updates on iOS physical is not supported yet');
@@ -103,6 +135,7 @@ async function launchUpdateOnIOSAsync(updateURL: string, manifest: Manifest, dev
     manifest,
     platform: AppPlatform.Ios,
     distribution: DistributionType.Simulator,
+    appIdentifier,
   });
 
   await Simulator.openURLAsync({
@@ -140,28 +173,84 @@ async function downloadAndInstallLatestDevBuildAsync({
   manifest,
   platform,
   distribution,
+  appIdentifier,
 }: {
   deviceId: string;
   manifest: Manifest;
   platform: AppPlatform;
   distribution: DistributionType;
+  appIdentifier?: string;
 }) {
-  const buildArtifactsURL = await getBuildArtifactsURLForUpdateAsync({
+  const build = await getBuildArtifactsForUpdateAsync({
     manifest,
     platform,
     distribution,
   });
-  const buildLocalPath = await downloadBuildAsync(buildArtifactsURL);
+
+  if (build && build.url && !build.expired) {
+    const buildLocalPath = await downloadBuildAsync(build.url);
+
+    if (platform === AppPlatform.Ios) {
+      await Simulator.installAppAsync(deviceId, buildLocalPath);
+    } else {
+      const device = await Emulator.getRunningDeviceAsync(deviceId);
+      await Emulator.installAppAsync(device, buildLocalPath);
+    }
+    return;
+  }
+
+  // EAS Build not available, check if the app is installed locally
+  const bundleId = build?.appIdentifier ?? appIdentifier;
+  if (!bundleId) {
+    throw new NoDevBuildsError(manifest.extra?.expoClient?.name);
+  }
 
   if (platform === AppPlatform.Ios) {
-    await Simulator.installAppAsync(deviceId, buildLocalPath);
+    const isInstalled = await Simulator.checkIfAppIsInstalled({
+      udid: deviceId,
+      bundleId,
+    });
+
+    // check if app is compatible with the current runtime
+    if (isInstalled) {
+      const supportsUpdate = await Simulator.checkIfAppSupportsLaunchingUpdate({
+        udid: deviceId,
+        bundleIdentifier: bundleId,
+        runtimeVersion: manifest.runtimeVersion,
+      });
+
+      if (supportsUpdate) {
+        // App is already installed and compatible with the update runtime
+        return;
+      }
+    }
+
+    throw new NoDevBuildsError(manifest.extra?.expoClient?.name);
   } else {
     const device = await Emulator.getRunningDeviceAsync(deviceId);
-    await Emulator.installAppAsync(device, buildLocalPath);
+    const isInstalled = await Emulator.checkIfAppIsInstalled({
+      pid: device.pid,
+      bundleId,
+    });
+
+    if (isInstalled) {
+      const supportsUpdate = await Emulator.checkIfAppSupportsLaunchingUpdate({
+        pid: device.pid,
+        bundleId,
+        runtimeVersion: manifest.runtimeVersion,
+      });
+
+      if (supportsUpdate) {
+        // App is already installed and compatible with the update runtime
+        return;
+      }
+    }
+
+    throw new NoDevBuildsError(manifest.extra?.expoClient?.name);
   }
 }
 
-async function getBuildArtifactsURLForUpdateAsync({
+async function getBuildArtifactsForUpdateAsync({
   manifest,
   platform,
   distribution,
@@ -169,26 +258,33 @@ async function getBuildArtifactsURLForUpdateAsync({
   manifest: Manifest;
   platform: AppPlatform;
   distribution: DistributionType;
-}): Promise<string> {
+}) {
   const { app } = await graphqlSdk.getAppBuildForUpdate({
-    // TODO(gabrieldonadel): Add runtimeVersion filter
+    runtimeVersion: manifest.runtimeVersion,
     appId: manifest.extra?.eas?.projectId ?? '',
     platform,
     distribution,
   });
 
   const build = app?.byId?.buildsPaginated?.edges?.[0]?.node;
-  if (
-    build?.__typename === 'Build' &&
-    build?.expirationDate &&
-    Date.parse(build.expirationDate) > Date.now() &&
-    build.artifacts?.buildUrl
-  ) {
-    return build.artifacts.buildUrl;
+  if (build?.__typename === 'Build' && build.artifacts?.buildUrl) {
+    return {
+      url: build.artifacts.buildUrl,
+      appIdentifier: build.appIdentifier,
+      expired: Date.now() > Date.parse(build.expirationDate),
+    };
   }
 
-  throw new InternalError(
-    'NO_DEVELOPMENT_BUILDS_AVAILABLE',
-    `No Development Builds available for ${manifest.extra?.expoClient?.name} on EAS. Please generate a new Development Build`
-  );
+  return null;
+}
+
+class NoDevBuildsError extends InternalError {
+  constructor(projectName?: string) {
+    super(
+      'NO_DEVELOPMENT_BUILDS_AVAILABLE',
+      `No Development Builds available for ${
+        projectName ?? 'your project '
+      } on EAS. Please generate a new Development Build`
+    );
+  }
 }

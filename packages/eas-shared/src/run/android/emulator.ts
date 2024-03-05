@@ -7,12 +7,15 @@ import path from 'path';
 import { execFileSync } from 'child_process';
 import semver from 'semver';
 import { AndroidConnectedDevice, AndroidEmulator } from 'common-types/build/devices';
+import fs from 'fs-extra';
 
 import * as Versions from '../../versions';
 import Log from '../../log';
 import { adbAsync, isEmulatorBootedAsync, waitForEmulatorToBeBootedAsync } from './adb';
 import { getAndroidSdkRootAsync } from './sdk';
 import { downloadApkAsync } from '../../downloadApkAsync';
+import { getTmpDirectory } from '../../paths';
+import { tarExtractAsync } from '../../download';
 
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
@@ -182,6 +185,66 @@ export async function checkIfAppIsInstalled({
     }
   }
   return false;
+}
+
+export async function checkIfAppSupportsLaunchingUpdate({
+  pid,
+  bundleId,
+  runtimeVersion,
+}: {
+  pid: string;
+  bundleId: string;
+  runtimeVersion: string;
+}): Promise<boolean> {
+  try {
+    const noBackupContent = await getAdbOutputAsync([
+      '-s',
+      pid,
+      'shell',
+      `run-as ${bundleId} ls no_backup`,
+    ]);
+
+    // Check if app includes dev-launcher
+    if (!noBackupContent.includes('expo-dev-launcher-installation-id.txt')) {
+      return false;
+    }
+
+    const apkPathOutput = await getAdbOutputAsync(['-s', pid, 'shell', 'pm', 'path', bundleId]);
+    // copy the base apk
+    const baseApkPath = path.join(_apksCacheDirectory(), `${bundleId}.apk`);
+    await adbAsync(
+      '-s',
+      pid,
+      'pull',
+      apkPathOutput.substring('package:'.length).trim(),
+      baseApkPath
+    );
+
+    const extractedApkFolder = path.join(_apksCacheDirectory(), `${bundleId}-${runtimeVersion}`);
+    fs.mkdirpSync(extractedApkFolder);
+    await tarExtractAsync(baseApkPath, extractedApkFolder);
+
+    const config = JSON.parse(
+      await fs.readFile(path.join(extractedApkFolder, 'assets', 'app.config'), 'utf8')
+    );
+
+    if (
+      typeof config.runtimeVersion === 'object' &&
+      config.runtimeVersion.policy === 'sdkVersion'
+    ) {
+      return `exposdk:${config.sdkVersion}` === runtimeVersion;
+    }
+    return config.runtimeVersion === runtimeVersion;
+  } catch (error) {
+    console.log('error', error);
+    return false;
+  }
+}
+
+function _apksCacheDirectory() {
+  const dir = path.join(getTmpDirectory(), 'apks');
+  fs.mkdirpSync(dir);
+  return dir;
 }
 
 export async function getAdbOutputAsync(args: string[]): Promise<string> {
