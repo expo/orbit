@@ -55,6 +55,7 @@ program
   .argument('<string>', 'Update URL')
   .requiredOption('-p, --platform <string>', 'Selected platform')
   .requiredOption('--device-id  <string>', 'UDID or name of the device')
+  .option('--skip-install', 'Skip app installation')
   .action(async (...args) => {
     const { launchUpdateAsync } = await import('./commands/LaunchUpdate');
     returnLoggerMiddleware(launchUpdateAsync)(...args);

@@ -9,11 +9,12 @@ import { ClientError } from 'graphql-request';
 type launchUpdateAsyncOptions = {
   platform: 'android' | 'ios';
   deviceId: string;
+  skipInstall: boolean;
 };
 
 export async function launchUpdateAsync(
   updateURL: string,
-  { platform, deviceId }: launchUpdateAsyncOptions
+  { platform, deviceId, skipInstall }: launchUpdateAsyncOptions
 ) {
   const { manifest } = await ManifestUtils.getManifestAsync(updateURL);
   const appId = manifest.extra?.eas?.projectId;
@@ -21,6 +22,19 @@ export async function launchUpdateAsync(
     throw new Error("Couldn't find EAS projectId in manifest");
   }
   let appIdentifier: string | undefined;
+
+  if (skipInstall) {
+    if (platform === 'android') {
+      const device = await Emulator.getRunningDeviceAsync(deviceId);
+      await Emulator.openURLAsync({ url: getUpdateDeeplink(updateURL, manifest), pid: device.pid });
+    } else {
+      await Simulator.openURLAsync({
+        url: getUpdateDeeplink(updateURL, manifest),
+        udid: deviceId,
+      });
+    }
+    return;
+  }
 
   try {
     /**
@@ -202,7 +216,7 @@ async function downloadAndInstallLatestDevBuildAsync({
   // EAS Build not available, check if the app is installed locally
   const bundleId = build?.appIdentifier ?? appIdentifier;
   if (!bundleId) {
-    throw new NoDevBuildsError(manifest.extra?.expoClient?.name);
+    throw new NoDevBuildsError(manifest.extra?.expoClient?.name, manifest.runtimeVersion);
   }
 
   if (platform === AppPlatform.Ios) {
@@ -225,7 +239,7 @@ async function downloadAndInstallLatestDevBuildAsync({
       }
     }
 
-    throw new NoDevBuildsError(manifest.extra?.expoClient?.name);
+    throw new NoDevBuildsError(manifest.extra?.expoClient?.name, manifest.runtimeVersion);
   } else {
     const device = await Emulator.getRunningDeviceAsync(deviceId);
     const isInstalled = await Emulator.checkIfAppIsInstalled({
@@ -246,7 +260,7 @@ async function downloadAndInstallLatestDevBuildAsync({
       }
     }
 
-    throw new NoDevBuildsError(manifest.extra?.expoClient?.name);
+    throw new NoDevBuildsError(manifest.extra?.expoClient?.name, manifest.runtimeVersion);
   }
 }
 
@@ -279,12 +293,12 @@ async function getBuildArtifactsForUpdateAsync({
 }
 
 class NoDevBuildsError extends InternalError {
-  constructor(projectName?: string) {
+  constructor(projectName?: string, runtimeVersion?: string) {
     super(
       'NO_DEVELOPMENT_BUILDS_AVAILABLE',
       `No Development Builds available for ${
         projectName ?? 'your project '
-      } on EAS. Please generate a new Development Build`
+      } (Runtime version ${runtimeVersion}) on EAS.`
     );
   }
 }

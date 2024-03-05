@@ -233,6 +233,7 @@ function Core(props: Props) {
       try {
         setStatus(MenuBarStatus.BOOTING_DEVICE);
         await ensureDeviceIsRunning(device);
+        setStatus(MenuBarStatus.OPENING_UPDATE);
         await launchUpdateAsync(
           {
             url,
@@ -247,8 +248,35 @@ function Core(props: Props) {
           }
         );
       } catch (error) {
-        if (error instanceof InternalError || error instanceof Error) {
-          Alert.alert('Something went wrong', error.message);
+        if (error instanceof Error) {
+          if (error instanceof InternalError && error.code === 'NO_DEVELOPMENT_BUILDS_AVAILABLE') {
+            Alert.alert(
+              'Unable to find Development Build',
+              `${error.message} Please generate a new Development Build or, if the app is already installed on the device and uses the correct runtime version, you can attempt to launch the update using a deep link.`,
+              [
+                { text: 'OK', onPress: () => {} },
+                {
+                  text: 'Launch with deep link',
+                  onPress: async () => {
+                    setStatus(MenuBarStatus.OPENING_UPDATE);
+                    await launchUpdateAsync(
+                      {
+                        url,
+                        deviceId: getDeviceId(device),
+                        platform: getDeviceOS(device),
+                        noInstall: true,
+                      },
+                      (status) => {
+                        setStatus(status);
+                      }
+                    );
+                  },
+                },
+              ]
+            );
+          } else {
+            Alert.alert('Something went wrong', error.message);
+          }
         }
         console.log(`error: ${JSON.stringify(error)}`);
       } finally {
