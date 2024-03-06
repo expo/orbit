@@ -5,6 +5,37 @@
     <link>https://raw.githubusercontent.com/expo/orbit/main/appcast.xml</link>
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
+     <item>
+      <title>1.1.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add support for launching Expo updates. (<a href="https://github.com/expo/orbit/pull/134">#134</a>, <a href="https://github.com/expo/orbit/pull/137">#137</a>, <a href="https://github.com/expo/orbit/pull/138">#138</a>, <a href="https://github.com/expo/orbit/pull/144">#144</a>, <a href="https://github.com/expo/orbit/pull/148">#148</a>, <a href="https://github.com/expo/orbit/pull/188">#188</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Migrate Sparkle to Expo Modules. (<a href="https://github.com/expo/orbit/pull/184">#184</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Automatically handle installing incompatible Android app updates. (<a href="https://github.com/expo/orbit/pull/187">#187</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Prevent CLI from returning invalid cached APKs when the download of the build fails. (<a href="https://github.com/expo/orbit/pull/156">#156</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Fix typo in error alert message. (<a href="https://github.com/expo/orbit/pull/183">#183</a> by <a href="https://github.com/prettyClouds">@prettyClouds</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2024-03-06</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.1.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.1.0/expo-orbit.v1.1.0.zip"
+        sparkle:version="25"
+        sparkle:shortVersionString="1.1.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
     <item>
       <title>1.0.4</title>
       <description>
