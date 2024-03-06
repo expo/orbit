@@ -206,7 +206,7 @@ function Core(props: Props) {
       if (!storage.getString(sessionSecretStorageKey)) {
         Alert.alert(
           'You need to be logged in to launch updates.',
-          'Please log in through the Settings window and try again.'
+          'Log in through the Settings window and try again.'
         );
         return;
       }
@@ -251,8 +251,8 @@ function Core(props: Props) {
         if (error instanceof Error) {
           if (error instanceof InternalError && error.code === 'NO_DEVELOPMENT_BUILDS_AVAILABLE') {
             Alert.alert(
-              'Unable to find Development Build',
-              `${error.message} Please generate a new Development Build or, if the app is already installed on the device and uses the correct runtime version, you can attempt to launch the update using a deep link.`,
+              'Unable to find a compatible development build',
+              `${error.message} Either create a new development build with EAS Build or, if the app is already installed on the target device and uses the correct runtime version, you can launch the update using a deep link.`,
               [
                 { text: 'OK', onPress: () => {} },
                 {
