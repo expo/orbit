@@ -2,6 +2,7 @@ query getAppBuildForUpdate(
   $appId: String!
   $platform: AppPlatform!
   $distribution: DistributionType!
+  $runtimeVersion: String
 ) {
   app {
     byId(appId: $appId) {
@@ -9,13 +10,19 @@ query getAppBuildForUpdate(
       name
       buildsPaginated(
         first: 1
-        filter: { platforms: [$platform], distributions: [$distribution], developmentClient: true }
+        filter: {
+          platforms: [$platform]
+          distributions: [$distribution]
+          developmentClient: true
+          runtimeVersion: $runtimeVersion
+        }
       ) {
         edges {
           node {
             __typename
             id
             ... on Build {
+              appIdentifier
               runtimeVersion
               expirationDate
               artifacts {
@@ -37,7 +44,11 @@ query getAppHasDevClientBuilds($appId: String!) {
       hasDevClientBuilds: buildsPaginated(first: 1, filter: { developmentClient: true }) {
         edges {
           node {
+            __typename
             id
+            ... on Build {
+              appIdentifier
+            }
           }
         }
       }
