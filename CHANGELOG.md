@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix extra avd info being displayed as a bootable android emulator. ([#190](https://github.com/expo/orbit/pull/190) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 ## 1.1.0 — 2024-03-06
