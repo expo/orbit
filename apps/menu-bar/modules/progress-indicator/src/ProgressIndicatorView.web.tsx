@@ -15,6 +15,8 @@ export default function ProgressIndicatorView({
       style={{
         width: 'auto',
         height: 6,
+        marginTop: 8,
+        marginBottom: 8,
       }}
     />
   );
