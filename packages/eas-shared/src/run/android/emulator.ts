@@ -97,7 +97,8 @@ export async function bootEmulatorAsync(
   // Start a process to open an emulator
   const emulatorProcess = spawnAsync(emulatorExecutable, spawnArgs, {
     stdio: 'ignore',
-    detached: true,
+    // Running detached on Windows causes a CMD window to popup. windowsHide:true does not work. Check https://github.com/nodejs/node/issues/21825
+    detached: process.platform != 'win32',
   });
 
   // we don't want to wait for the emulator process to exit before we can finish `eas build:run` command
