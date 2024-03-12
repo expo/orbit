@@ -5,7 +5,8 @@ function spawnCliAsync(
   command: string,
   args: string[] = [],
   listenerId: number,
-  envVars: Record<string, string> = {}
+  envVars: Record<string, string> = {},
+  callback?: (event: { listenerId: number; output: any }) => void
 ) {
   let child: ChildProcess;
   let hasReachedReturnOutput = false;
@@ -38,7 +39,7 @@ function spawnCliAsync(
             listenerId,
             output,
           };
-          console.log('sendEventWithName', eventData);
+          callback?.(eventData);
         }
       }
     }

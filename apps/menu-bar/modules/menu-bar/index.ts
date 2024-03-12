@@ -1,10 +1,8 @@
-import { EventEmitter, CodedError } from 'expo-modules-core';
+import { CodedError } from 'expo-modules-core';
 
-import MenuBarModule from './src/MenuBarModule';
+import MenuBarModule, { emitter } from './src/MenuBarModule';
 import Alert from '../../src/modules/Alert';
 import { convertCliErrorObjectToError } from '../../src/utils/helpers';
-
-const emitter = new EventEmitter(MenuBarModule);
 
 let hasShownCliErrorAlert = false;
 let listenerCounter = 0;
