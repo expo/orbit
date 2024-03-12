@@ -1,7 +1,7 @@
 {
   "name": "orbit-electron",
   "productName": "Expo Orbit",
-  "version": "1.1.0",
+  "version": "2.0.0-preview.1",
   "private": true,
   "main": ".vite/build/main.js",
   "scripts": {
