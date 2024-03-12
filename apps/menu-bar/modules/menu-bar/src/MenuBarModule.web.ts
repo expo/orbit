@@ -1,8 +1,18 @@
 import { requireElectronModule } from 'react-native-electron-modules/build/requireElectronModule';
 
-import { NativeMenuBarModule } from './types';
+import { ElectronMainMenuBarModule, ElectronPreloadMenuBarModule } from './types';
 
-const MenuBar = requireElectronModule<NativeMenuBarModule>('MenuBar');
+const MenuBar = requireElectronModule<ElectronMainMenuBarModule & ElectronPreloadMenuBarModule>(
+  'MenuBar'
+);
+
+class EventEmitter {
+  addListener<T>(eventName: string, listener: (event: T) => void) {
+    return MenuBar.addListener(eventName, listener);
+  }
+}
+export const emitter = new EventEmitter();
+
 export default {
   ...MenuBar,
   async runCli(...args) {
