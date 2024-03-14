@@ -127,7 +127,7 @@ export async function downloadAndMaybeExtractAppAsync(url: string): Promise<stri
   const outputDir = path.join(_downloadsCacheDirectory(), `${name}`);
   if (await fs.pathExists(outputDir)) {
     try {
-      const appPath = await getAppPathAsync(outputDir, '(apk|app|ipa)');
+      const appPath = await getAppPathAsync(outputDir);
       return appPath;
     } catch (error) {
       if (error instanceof InternalError) {
@@ -164,7 +164,7 @@ export async function downloadAndMaybeExtractAppAsync(url: string): Promise<stri
     );
     await tarExtractAsync(tmpArchivePath, outputDir);
 
-    const appPath = await getAppPathAsync(outputDir, '(apk|app|ipa)');
+    const appPath = await getAppPathAsync(outputDir);
 
     return appPath;
   }
@@ -176,16 +176,24 @@ export async function extractAppFromLocalArchiveAsync(appArchivePath: string): P
 
   await tarExtractAsync(appArchivePath, outputDir);
 
-  return await getAppPathAsync(outputDir, '(apk|app|ipa)');
+  return await getAppPathAsync(outputDir);
 }
 
-async function getAppPathAsync(outputDir: string, applicationExtension: string): Promise<string> {
-  const appFilePaths = await glob(`./**/*.${applicationExtension}`, {
+async function getAppPathAsync(outputDir: string): Promise<string> {
+  const applicationExtensionGlob = '(apk|app|ipa)';
+  const appFilePaths = await glob(`./**/*.${applicationExtensionGlob}`, {
     cwd: outputDir,
     onlyFiles: false,
   });
 
   if (appFilePaths.length === 0) {
+    // Check if outputDir is an .app but was extracted as folder
+    if (fs.existsSync(path.join(outputDir, 'Info.plist'))) {
+      const appPath = `${outputDir}.app`;
+      await fs.promises.cp(outputDir, appPath, { recursive: true });
+      return appPath;
+    }
+
     throw Error('Did not find any installable apps inside tarball.');
   }
 
