@@ -1,4 +1,10 @@
-import { Emulator, Simulator, extractAppFromLocalArchiveAsync, AppleDevice } from 'eas-shared';
+import {
+  Emulator,
+  Simulator,
+  extractAppFromLocalArchiveAsync,
+  AppleDevice,
+  detectIOSAppType,
+} from 'eas-shared';
 import { Platform } from 'common-types/build/cli-commands';
 
 import { getPlatformFromURI } from '../utils';
@@ -21,13 +27,26 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
 }
 
 async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
+  const appType = await detectIOSAppType(appPath);
+
   if (await Simulator.isSimulatorAsync(deviceId)) {
+    if (appType === 'device') {
+      throw new Error(
+        "iOS device builds can't be installed on simulators. Either use a physical device or generate a new simulator build."
+      );
+    }
+
     const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
     await Simulator.installAppAsync(deviceId, appPath);
     await Simulator.launchAppAsync(deviceId, bundleIdentifier);
     return;
   }
 
+  if (appType === 'simulator') {
+    throw new Error(
+      "iOS simulator builds can't be installed on real devices. Either use a simulator or generate an internal distribution build."
+    );
+  }
   const appId = await AppleDevice.getBundleIdentifierForBinaryAsync(appPath);
   await AppleDevice.installOnDeviceAsync({
     bundleIdentifier: appId,
