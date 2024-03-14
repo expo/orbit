@@ -11,6 +11,7 @@
 ### 🐛 Bug fixes
 
 - Fix extra avd info being displayed as a bootable android emulator. ([#190](https://github.com/expo/orbit/pull/190) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix installing iOS apps from tarballs that don't contain an `.app` or `.ipa` file. ([#193](https://github.com/expo/orbit/pull/193) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
