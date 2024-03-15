@@ -32,7 +32,7 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
   if (await Simulator.isSimulatorAsync(deviceId)) {
     if (appType === 'device') {
       throw new Error(
-        "iOS device builds can't be installed on simulators. Either use a physical device or generate a new simulator build."
+        "iOS apps built to target physical devices can't be installed on simulators. Either use a physical device or generate a new simulator build."
       );
     }
 
@@ -44,7 +44,7 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
 
   if (appType === 'simulator') {
     throw new Error(
-      "iOS simulator builds can't be installed on real devices. Either use a simulator or generate an internal distribution build."
+      "iOS simulator builds can't be installed on physical devices. Either use a simulator or generate an internal distribution build."
     );
   }
   const appId = await AppleDevice.getBundleIdentifierForBinaryAsync(appPath);
