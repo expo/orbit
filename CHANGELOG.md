@@ -6,6 +6,14 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 1.1.1 — 2024-03-15
+
+### 🎉 New features
+
 - Add experimental support for Windows and Linux. ([#152](https://github.com/expo/orbit/pull/152), [#157](https://github.com/expo/orbit/pull/157), [#158](https://github.com/expo/orbit/pull/158), [#160](https://github.com/expo/orbit/pull/160), [#161](https://github.com/expo/orbit/pull/161), [#165](https://github.com/expo/orbit/pull/165), [#170](https://github.com/expo/orbit/pull/170), [#171](https://github.com/expo/orbit/pull/171), [#172](https://github.com/expo/orbit/pull/172), [#173](https://github.com/expo/orbit/pull/173), [#174](https://github.com/expo/orbit/pull/174), [#175](https://github.com/expo/orbit/pull/175), [#177](https://github.com/expo/orbit/pull/177), [#178](https://github.com/expo/orbit/pull/178), [#180](https://github.com/expo/orbit/pull/180), [#181](https://github.com/expo/orbit/pull/181), [#182](https://github.com/expo/orbit/pull/182), [#185](https://github.com/expo/orbit/pull/185), [#191](https://github.com/expo/orbit/pull/191) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
