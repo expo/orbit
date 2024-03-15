@@ -5,7 +5,33 @@
     <link>https://raw.githubusercontent.com/expo/orbit/main/appcast.xml</link>
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
-     <item>
+    <item>
+      <title>1.1.1</title>
+      <description>
+      <![CDATA[
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix extra avd info being displayed as a bootable android emulator. (<a href="https://github.com/expo/orbit/pull/190">#190</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix installing iOS apps from tarballs that don&#39;t contain an <code>.app</code> or <code>.ipa</code> file. (<a href="https://github.com/expo/orbit/pull/193">#193</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Add warning when trying to an iOS app in a incompatible device. (<a href="https://github.com/expo/orbit/pull/194">#194</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2024-03-15</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.1.1</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.1.1/expo-orbit.v1.1.1.zip"
+        sparkle:version="26"
+        sparkle:shortVersionString="1.1.1"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>1.1.0</title>
       <description>
       <![CDATA[
