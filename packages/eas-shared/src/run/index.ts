@@ -5,6 +5,7 @@ import * as Simulator from './ios/simulator';
 import { validateSystemRequirementsAsync } from './ios/systemRequirements';
 import { assertExecutablesExistAsync } from './android/systemRequirements';
 import { getAptParametersAsync } from './android/aapt';
+export { detectIOSAppType } from './ios/inspectApp';
 
 export async function runAppOnIosSimulatorAsync(
   appPath: string,

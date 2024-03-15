@@ -3,7 +3,7 @@ import {
   AppPlatform,
   extractAppFromLocalArchiveAsync,
 } from './download';
-import { runAppOnIosSimulatorAsync, runAppOnAndroidEmulatorAsync } from './run';
+import { runAppOnIosSimulatorAsync, runAppOnAndroidEmulatorAsync, detectIOSAppType } from './run';
 import * as Emulator from './run/android/emulator';
 import { assertExecutablesExistAsync as validateAndroidSystemRequirementsAsync } from './run/android/systemRequirements';
 import AppleDevice from './run/ios/device';
@@ -21,6 +21,7 @@ export {
   runAppOnAndroidEmulatorAsync,
   validateAndroidSystemRequirementsAsync,
   validateIOSSystemRequirementsAsync,
+  detectIOSAppType,
   Emulator,
   Simulator,
   AppleDevice,
