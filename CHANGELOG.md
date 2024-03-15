@@ -15,6 +15,8 @@
 
 ### 💡 Others
 
+- Add warning when trying to an iOS app in a incompatible device. ([#194](https://github.com/expo/orbit/pull/194) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 1.1.0 — 2024-03-06
 
 ### 🎉 New features
