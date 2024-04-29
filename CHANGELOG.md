@@ -12,6 +12,8 @@
 
 ### 💡 Others
 
+- Update devices order to show physical devices first. ([#197](https://github.com/expo/orbit/pull/197) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 1.1.1 — 2024-03-15
 
 ### 🐛 Bug fixes

@@ -1,6 +1,6 @@
 import { AppleDevice, Emulator, Simulator } from 'eas-shared';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
-import { InternalError, Platform } from 'common-types';
+import { InternalError, Platform, Devices } from 'common-types';
 
 export async function listDevicesAsync<P extends Platform>({
   platform,
@@ -14,16 +14,16 @@ export async function listDevicesAsync<P extends Platform>({
 
   if (platform === Platform.Ios || platform === Platform.All) {
     try {
-      result.ios.devices = result.ios.devices.concat(
-        await Simulator.getAvailableIosSimulatorsListAsync()
-      );
-
       const connectedDevices = await AppleDevice.getConnectedDevicesAsync();
-      for (let connectedDevice of connectedDevices) {
+      for (const connectedDevice of connectedDevices) {
         if (!result.ios.devices.some(({ udid }) => udid === connectedDevice.udid)) {
           result.ios.devices.push(connectedDevice);
         }
       }
+
+      result.ios.devices = result.ios.devices.concat(
+        await Simulator.getAvailableIosSimulatorsListAsync()
+      );
     } catch (error) {
       console.warn('Unable to get iOS devices', error);
       if (error instanceof Error) {
@@ -39,7 +39,11 @@ export async function listDevicesAsync<P extends Platform>({
     try {
       const runningDevices = await Emulator.getRunningDevicesAsync();
 
-      result.android.devices = (await Emulator.getAvailableAndroidEmulatorsAsync())?.map(
+      result.android.devices = result.android.devices.concat(
+        runningDevices.filter((r) => r.deviceType === 'device')
+      );
+
+      const androidEmulators = ((await Emulator.getAvailableAndroidEmulatorsAsync()) || [])?.map(
         (emulator) => {
           const runningEmulator = runningDevices.find(
             (r) => r.deviceType === 'emulator' && r.name === emulator.name
@@ -48,12 +52,11 @@ export async function listDevicesAsync<P extends Platform>({
             ...emulator,
             state: runningEmulator ? 'Booted' : 'Shutdown',
             pid: runningEmulator?.pid,
-          };
+          } as Devices.AndroidEmulator;
         }
       );
-      result.android.devices = result.android.devices.concat(
-        runningDevices.filter((r) => r.deviceType === 'device')
-      );
+
+      result.android.devices = result.android.devices.concat(androidEmulators);
     } catch (error) {
       console.warn('Unable to get Android devices', error);
       if (error instanceof Error) {
