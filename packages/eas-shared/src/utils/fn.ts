@@ -28,3 +28,15 @@ export function guardAsync<V, T extends (...args: any[]) => Promise<V>>(fn: T): 
 
   return guard;
 }
+
+export function uniqBy<T>(array: T[], key: (item: T) => string): T[] {
+  const seen: { [key: string]: boolean } = {};
+  return array.filter((item) => {
+    const k = key(item);
+    if (seen[k]) {
+      return false;
+    }
+    seen[k] = true;
+    return true;
+  });
+}

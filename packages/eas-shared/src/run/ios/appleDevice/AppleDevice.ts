@@ -20,9 +20,51 @@ import {
   EXPO_GO_BUNDLE_IDENTIFIER,
 } from '../constants';
 import { InternalError } from 'common-types';
+import * as devicectl from '../devicectl';
+import { uniqBy } from '../../../utils/fn';
 
 /** @returns a list of connected Apple devices. */
 export async function getConnectedDevicesAsync(): Promise<AppleConnectedDevice[]> {
+  const devices = await Promise.all([
+    // Prioritize native tools since they can provide more accurate information.
+    // NOTE: xcrun is substantially slower than custom tooling. +1.5s vs 9ms.
+    getConnectedDevicesUsingNativeToolsAsync(),
+    getConnectedDevicesUsingCustomToolingAsync(),
+  ]);
+
+  return uniqBy(devices.flat(), (device) => device.udid);
+}
+
+async function getConnectedDevicesUsingNativeToolsAsync(): Promise<AppleConnectedDevice[]> {
+  return (
+    (await devicectl.getConnectedAppleDevicesAsync())
+      // Filter out unpaired devices.
+      // TODO: We could improve this logic in the future to attempt pairing if specified.
+      .filter((device) => {
+        return (
+          device.connectionProperties.pairingState === 'paired' &&
+          device.connectionProperties.tunnelState != 'unavailable'
+        );
+      })
+      .map((device) => {
+        return {
+          udid: device.hardwareProperties.udid,
+          name: device.deviceProperties.name,
+          model: device.hardwareProperties.productType,
+          deviceType: 'device',
+          connectionType:
+            device.connectionProperties.transportType === 'localNetwork' ? 'Network' : 'USB',
+          osVersion: device.deviceProperties.osVersionNumber,
+          osType: device.hardwareProperties.platform as 'iOS',
+        };
+      })
+  );
+}
+
+/** @returns a list of connected Apple devices. */
+export async function getConnectedDevicesUsingCustomToolingAsync(): Promise<
+  AppleConnectedDevice[]
+> {
   const client = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
   try {
     const devices = await client.getDevices();
