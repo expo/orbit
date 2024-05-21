@@ -13,6 +13,7 @@ import { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
+import { detectIOSAppTypeAsync } from "../commands/detectIOSAppTypeAsync'";
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchSnackAsync } from '../commands/launchSnackAsync';
@@ -146,21 +147,29 @@ function Core(props: Props) {
   );
 
   const getDeviceByPlatform = useCallback(
-    (platform: 'android' | 'ios') => {
+    (platform: 'android' | 'ios', deviceType?: Device['deviceType']) => {
       const devices = devicesPerPlatform[platform].devices;
       const selectedDevicesId = selectedDevicesIds[platform];
       if (selectedDevicesId && devices.has(selectedDevicesId)) {
-        return devices.get(selectedDevicesId);
+        const device = devices.get(selectedDevicesId);
+        if (!deviceType || device?.deviceType === deviceType) {
+          return devices.get(selectedDevicesId);
+        }
       }
 
       for (const device of devices.values()) {
-        if (isVirtualDevice(device) && device.state === 'Booted') {
+        if (
+          (deviceType === 'device' && device.deviceType === deviceType) ||
+          (deviceType !== 'device' && isVirtualDevice(device) && device.state === 'Booted')
+        ) {
           setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(device) }));
           return device;
         }
       }
 
-      const [firstDevice] = devices.values();
+      const firstDevice = [...devices.values()].find(
+        (d) => !deviceType || d.deviceType === deviceType
+      );
       if (!firstDevice) {
         return;
       }
@@ -302,7 +311,13 @@ function Core(props: Props) {
         }
 
         const platform = getPlatformFromURI(appURI);
-        const device = getDeviceByPlatform(platform);
+
+        let appType: Device['deviceType'] | undefined;
+        if (platform === 'ios') {
+          appType = await detectIOSAppTypeAsync(localFilePath);
+        }
+
+        const device = getDeviceByPlatform(platform, appType);
         if (!device) {
           Alert.alert(
             `You don't have any ${platform} device available to run this build, please make sure your environment is configured correctly and try again.`

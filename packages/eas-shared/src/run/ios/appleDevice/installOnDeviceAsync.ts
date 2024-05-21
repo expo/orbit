@@ -2,6 +2,7 @@ import os from 'os';
 import path from 'path';
 
 import * as AppleDevice from './AppleDevice';
+import * as devicectl from '../devicectl';
 import { ensureDirectory } from '../../../utils/dir';
 import { InternalError } from 'common-types';
 
@@ -39,6 +40,13 @@ export async function installOnDeviceAsync(props: {
       },
     });
   } catch (error: any) {
+    if (error.code === 'APPLE_DEVICE_USBMUXD') {
+      // Usbmux can only find wireless devices if they are unlocked. Fallback on much slower devicectl.
+      if (devicectl.hasDevicectlEverBeenInstalled()) {
+        return await devicectl.installAndLaunchAppAsync({ bundle, bundleIdentifier, udid });
+      }
+    }
+
     if (error.code === 'APPLE_DEVICE_LOCKED') {
       // Get the app name from the binary path.
       const appName = path.basename(bundle).split('.')[0] ?? 'app';
