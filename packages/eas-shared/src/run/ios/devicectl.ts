@@ -239,3 +239,44 @@ function isDevicectlInstalled() {
     return false;
   }
 }
+
+/**
+ * Wraps the apple device method for installing and running an app
+ */
+export async function installAndLaunchAppAsync(props: {
+  bundle: string;
+  bundleIdentifier: string;
+  udid: string;
+}): Promise<void> {
+  const { bundle, bundleIdentifier, udid } = props;
+
+  await installAppWithDeviceCtlAsync(udid, bundle);
+
+  async function launchAppOptionally() {
+    try {
+      await launchAppWithDeviceCtl(udid, bundleIdentifier);
+    } catch (error: any) {
+      if (error.code === 'APPLE_DEVICE_LOCKED') {
+        // Get the app name from the binary path.
+        const appName = path.basename(bundle).split('.')[0] ?? 'app';
+        throw new CommandError(`Cannot launch ${appName} because the device is locked.`);
+      }
+      if (error.message.includes('BSErrorCodeDescription = fairplay')) {
+        throw new CommandError(
+          `Unable to launch app due to a FairPlay failure. Ensure this device is included in your provisioning profile`
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  await launchAppOptionally();
+}
+
+async function installAppWithDeviceCtlAsync(
+  uuid: string,
+  bundleIdOrAppPath: string
+): Promise<void> {
+  await xcrunAsync(['devicectl', 'device', 'install', 'app', '--device', uuid, bundleIdOrAppPath]);
+}

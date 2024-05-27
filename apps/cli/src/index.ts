@@ -7,6 +7,7 @@ import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
 import { launchSnackAsync } from './commands/LaunchSnack';
 import { checkToolsAsync } from './commands/CheckTools';
 import { setSessionAsync } from './commands/SetSession';
+import { detectIOSAppTypeAsync } from './commands/DetectIOSAppType';
 import { returnLoggerMiddleware } from './utils';
 
 const program = new Command();
@@ -65,6 +66,11 @@ program
   .command('set-session')
   .argument('<string>', 'Session secret')
   .action(returnLoggerMiddleware(setSessionAsync));
+
+program
+  .command('detect-ios-app-type')
+  .argument('<string>', 'Local path of the app')
+  .action(returnLoggerMiddleware(detectIOSAppTypeAsync));
 
 if (process.argv.length < 3) {
   program.help();
