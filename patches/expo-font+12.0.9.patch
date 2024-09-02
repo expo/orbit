@@ -1,0 +1,56 @@
+diff --git a/node_modules/expo-font/ios/FontFamilyAliasManager.swift b/node_modules/expo-font/ios/FontFamilyAliasManager.swift
+index 1825116..12ff261 100644
+--- a/node_modules/expo-font/ios/FontFamilyAliasManager.swift
++++ b/node_modules/expo-font/ios/FontFamilyAliasManager.swift
+@@ -44,6 +44,8 @@ internal struct FontFamilyAliasManager {
+  however the font usually has a different name encoded in the binary, thus the system may use a different name.
+  */
+ private func maybeSwizzleUIFont() {
++  #if !os(macOS)
++  
+   if hasSwizzled {
+     return
+   }
+@@ -55,5 +57,6 @@ private func maybeSwizzleUIFont() {
+   } else {
+     log.error("expo-font is unable to swizzle `UIFont.fontNames(forFamilyName:)`")
+   }
++  #endif
+   hasSwizzled = true
+ }
+diff --git a/node_modules/expo-font/ios/FontUtils.swift b/node_modules/expo-font/ios/FontUtils.swift
+index a3f5291..6acee83 100644
+--- a/node_modules/expo-font/ios/FontUtils.swift
++++ b/node_modules/expo-font/ios/FontUtils.swift
+@@ -21,13 +21,16 @@ internal func queryCustomNativeFonts() -> [String] {
+       return CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute) as? String
+     }
+   }
+-
++  #if os(macOS)
++    return []
++  #else
+   // [2] Retrieve font names by family names
+   return fontFamilies.flatMap { fontFamilyNames in
+     return fontFamilyNames.flatMap { fontFamilyName in
+       return UIFont.fontNames(forFamilyName: fontFamilyName)
+     }
+   }
++  #endif
+ }
+ 
+ /**
+diff --git a/node_modules/expo-font/ios/UIFont+FontFamilyAlias.swift b/node_modules/expo-font/ios/UIFont+FontFamilyAlias.swift
+index 1fede0b..a5e3bf1 100644
+--- a/node_modules/expo-font/ios/UIFont+FontFamilyAlias.swift
++++ b/node_modules/expo-font/ios/UIFont+FontFamilyAlias.swift
+@@ -1,3 +1,4 @@
++#if !os(macOS)
+ /**
+  An extension to ``UIFont`` that adds a custom implementation of `fontNames(forFamilyName:)` that supports aliasing font families.
+  */
+@@ -25,3 +26,4 @@ public extension UIFont {
+     return fontNames
+   }
+ }
++#endif
