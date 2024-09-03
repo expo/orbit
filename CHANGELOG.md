@@ -16,6 +16,8 @@
 - Update devices order to show physical devices first. ([#197](https://github.com/expo/orbit/pull/197) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve listing connected Apple devices over Wi-Fi. ([#199](https://github.com/expo/orbit/pull/199) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade `react-native` to 0.75.2. ([#203](https://github.com/expo/orbit/pull/203) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade to `expo` SDK 51. ([#204](https://github.com/expo/orbit/pull/204) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade `react-native-svg` to 15.2.0. ([#204](https://github.com/expo/orbit/pull/204) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.1.1 — 2024-03-15
 
