@@ -6,15 +6,15 @@ PODS:
   - DoubleConversion (1.1.6)
   - EXConstants (16.0.2):
     - ExpoModulesCore
-  - Expo (51.0.31):
+  - Expo (51.0.32):
     - ExpoModulesCore
   - ExpoFileSystem (17.0.1):
     - ExpoModulesCore
-  - ExpoFont (12.0.9):
+  - ExpoFont (12.0.10):
     - ExpoModulesCore
   - ExpoKeepAwake (13.0.2):
     - ExpoModulesCore
-  - ExpoModulesCore (1.12.23):
+  - ExpoModulesCore (1.12.24):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1506,7 +1506,7 @@ PODS:
   - RNRudder (1.0.0):
     - ExpoModulesCore
     - Rudder (~> 2.4.3)
-  - RNSVG (14.1.0):
+  - RNSVG (15.2.0):
     - React-Core
   - Rudder (2.4.3)
   - SocketRocket (0.7.0)
@@ -1764,11 +1764,11 @@ SPEC CHECKSUMS:
   boost: 78c06792d4bc8e05ba232b20737af9883a947a51
   DoubleConversion: e9fd6969c78f190642ac8adbd3a5ac37995620dc
   EXConstants: 409690fbfd5afea964e5e9d6c4eb2c2b59222c59
-  Expo: 4773e11951abd0f666f67023f0cb1d48c3e8a32b
+  Expo: 33132a667698a3259a4e6c0af1b4936388e5fa33
   ExpoFileSystem: 80bfe850b1f9922c16905822ecbf97acd711dc51
-  ExpoFont: e7f2275c10ca8573c991e007329ad6bf98086485
+  ExpoFont: 00756e6c796d8f7ee8d211e29c8b619e75cbf238
   ExpoKeepAwake: 3b8815d9dd1d419ee474df004021c69fdd316d08
-  ExpoModulesCore: f4ea286ee136389673ae294036094ed3838d7e7a
+  ExpoModulesCore: dd5bae0baedea8419f02083529268e3bdc3f0c1e
   FBLazyVector: fbb708cf72e32fd5fab46ef3dd357d2169ae8b11
   FilePicker: d9a9846a76942deee1e121a7d91f0938db0c8116
   fmt: c32f09ca7679bf28db6ba79e474dab38daa634a1
@@ -1834,7 +1834,7 @@ SPEC CHECKSUMS:
   ReactCommon: 4d523033c6d27e1b1c36814a3864e1e15969e2e4
   RNCClipboard: 90e241893de33a2f5962fc34d76ada4576033e49
   RNRudder: 888282c1222d8abb07f70365c8b05851b1738e8b
-  RNSVG: ba3e7232f45e34b7b47e74472386cf4e1a676d0a
+  RNSVG: 43b64ed39c14ce830d840903774154ca0c1f27ec
   Rudder: 6d2c0775d5b606e05e00670615ee7f9c0c6d2813
   SocketRocket: 9ee265c4b5ae2382d18e4ee1d2dd2d7af0ff1ab5
   Sparkle: 0e335e5c704ac28dbea18cc0383e15a3927c28dc
