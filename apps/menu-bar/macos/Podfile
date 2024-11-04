@@ -26,7 +26,7 @@ target 'ExpoMenuBar-macOS' do
   use_react_native!(
     :path => relative_rn_macos_path,
     # to enable hermes on macOS, change `false` to `true` and then install pods
-    :hermes_enabled => false
+    :hermes_enabled => true
   )
 
   # Pods specifically for macOS target
