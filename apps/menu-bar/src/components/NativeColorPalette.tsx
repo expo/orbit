@@ -4,11 +4,34 @@ import { FlatList, TouchableOpacity, Text, View, StyleSheet } from 'react-native
 
 import { PlatformColor } from '../modules/PlatformColor';
 
+const SMALL_SQUARE_SIZE = 25;
+const NUMBER_OF_COLUMNS = 9;
+
 const NativeColorPalette = () => {
   const [selectedColor, setSelectedColor] = useState<string>();
   const [, setClipboardString] = useClipboard();
   return (
     <View style={styles.container}>
+      <View style={{ alignItems: 'flex-start' }}>
+        <FlatList
+          data={colorsArray}
+          renderItem={({ item }) => {
+            return (
+              <TouchableOpacity
+                style={[
+                  styles.smallSquare,
+                  {
+                    backgroundColor: PlatformColor(item),
+                  },
+                ]}
+                onPress={() => setSelectedColor((prev) => (prev !== item ? item : undefined))}
+              />
+            );
+          }}
+          keyExtractor={(item) => item}
+          numColumns={NUMBER_OF_COLUMNS}
+        />
+      </View>
       {selectedColor ? (
         <View style={styles.selectedContainer}>
           <View
@@ -26,24 +49,6 @@ const NativeColorPalette = () => {
           </TouchableOpacity>
         </View>
       ) : null}
-      <FlatList
-        data={colorsArray}
-        renderItem={({ item }) => {
-          return (
-            <TouchableOpacity
-              style={[
-                styles.smallSquare,
-                {
-                  backgroundColor: PlatformColor(item),
-                },
-              ]}
-              onPress={() => setSelectedColor((prev) => (prev !== item ? item : undefined))}
-            />
-          );
-        }}
-        keyExtractor={(item) => item}
-        numColumns={9}
-      />
     </View>
   );
 };
@@ -52,12 +57,13 @@ export default NativeColorPalette;
 
 const styles = StyleSheet.create({
   container: {
+    flexDirection: 'row',
     borderWidth: 2,
     borderColor: PlatformColor('tertiaryLabelColor'),
   },
   smallSquare: {
-    height: 25,
-    width: 25,
+    height: SMALL_SQUARE_SIZE,
+    width: SMALL_SQUARE_SIZE,
   },
   bigSquare: {
     height: 40,
@@ -71,7 +77,6 @@ const styles = StyleSheet.create({
   },
   selectedColorText: {
     margin: 10,
-    flex: 1,
   },
 });
 

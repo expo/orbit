@@ -36,7 +36,7 @@ export const ObjectInspector = ({ obj, name }: { obj: any; name?: string }) => {
       {isObject && isOpen ? (
         <View style={{ marginLeft: 10 }}>
           {Object.keys(obj).map((key) => (
-            <ObjectInspector obj={obj[key]} name={isArray ? `[${key}]` : key} />
+            <ObjectInspector key={key} obj={obj[key]} name={isArray ? `[${key}]` : key} />
           ))}
         </View>
       ) : null}
