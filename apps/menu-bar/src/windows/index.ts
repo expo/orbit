@@ -33,8 +33,8 @@ export const WindowsNavigator = createWindowsNavigator({
     options: {
       title: 'Debug Menu',
       windowStyle: {
-        height: 300,
-        width: 400,
+        height: 600,
+        width: 800,
       },
     },
   },
