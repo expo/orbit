@@ -227,16 +227,11 @@ const Settings = () => {
                 <Text style={[styles.flex, { lineHeight: 15 }]} numberOfLines={2} size="tiny">
                   Log in or create an account to access your projects, builds and more.
                 </Text>
-                {__DEV__ ? (
-                  <TouchableOpacity
-                    onPress={() => WindowsNavigator.open('DebugMenu')}
-                    style={[
-                      styles.debugButton,
-                      getStylesForColor('primary', theme)?.touchableStyle,
-                    ]}>
-                    <SystemIconView systemIconName="ladybug" />
-                  </TouchableOpacity>
-                ) : null}
+                <TouchableOpacity
+                  onPress={() => WindowsNavigator.open('DebugMenu')}
+                  style={[styles.debugButton, getStylesForColor('primary', theme)?.touchableStyle]}>
+                  <SystemIconView systemIconName="ladybug" />
+                </TouchableOpacity>
                 <Button
                   title="Sign Up"
                   onPress={() => handleAuthentication('signup')}
