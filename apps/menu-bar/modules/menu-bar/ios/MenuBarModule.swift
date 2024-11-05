@@ -13,7 +13,7 @@ public class MenuBarModule: Module {
     Events(onNewCommandLine, onCLIOutput)
 
     Constants([
-      "appVersion": self.appContext?.constants?.constants()["nativeAppVersion"],
+      "appVersion": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
       "buildVersion": self.appContext?.constants?.buildVersion(),
       "initialScreenSize": [
         "width": NSScreen.main?.frame.width,

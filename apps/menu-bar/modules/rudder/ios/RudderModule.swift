@@ -5,9 +5,9 @@ public class RudderModule: Module {
 
   public func definition() -> ModuleDefinition {
     Name("Rudder")
-    
+
     Constants([
-      "appVersion": self.appContext?.constants?.constants()["nativeAppVersion"],
+      "appVersion": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
     ])
 
     AsyncFunction("load") { (writeKey: String, dataPlaneUrl:String) in
@@ -20,13 +20,13 @@ public class RudderModule: Module {
 
     AsyncFunction("track") { (event: String, properties: [String: Any], context: [String: [String: Any]]?) in
       let option = RSOption()
-      
+
       if let context = context, !context.isEmpty {
-        for (key, value) in context { 
+        for (key, value) in context {
           option.putCustomContext(value, withKey: key)
         }
       }
-      
+
       RSClient.sharedInstance().track(event, properties:properties, option: option)
     }
   }
