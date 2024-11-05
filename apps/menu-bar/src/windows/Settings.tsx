@@ -210,16 +210,6 @@ const Settings = () => {
                     </View>
                   </Row>
                 ) : null}
-                {__DEV__ ? (
-                  <TouchableOpacity
-                    onPress={() => WindowsNavigator.open('DebugMenu')}
-                    style={[
-                      styles.debugButton,
-                      getStylesForColor('primary', theme)?.touchableStyle,
-                    ]}>
-                    <SystemIconView systemIconName="ladybug" />
-                  </TouchableOpacity>
-                ) : null}
                 <Button title="Log Out" onPress={handleLogout} style={styles.button} />
               </Row>
             ) : (
@@ -343,14 +333,21 @@ const Settings = () => {
           </View>
         </View>
       </View>
-      <Text color="secondary" size="tiny" align="center">
-        {`Version: ${MenuBarModule.appVersion} ${
-          MenuBarModule.buildVersion ? `(${MenuBarModule.buildVersion})` : ''
-        }`}
-      </Text>
-      <Text color="secondary" size="tiny" align="center">
-        Copyright 650 Industries Inc, 2023
-      </Text>
+      <View>
+        <Text color="secondary" size="tiny" align="center">
+          {`Version: ${MenuBarModule.appVersion} ${
+            MenuBarModule.buildVersion ? `(${MenuBarModule.buildVersion})` : ''
+          }`}
+        </Text>
+        <Text color="secondary" size="tiny" align="center">
+          Copyright 650 Industries Inc, 2023
+        </Text>
+        <TouchableOpacity
+          onPress={() => WindowsNavigator.open('DebugMenu')}
+          style={[styles.debugButton, getStylesForColor('primary', theme)?.touchableStyle]}>
+          <SystemIconView systemIconName="ladybug" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -375,6 +372,9 @@ const styles = StyleSheet.create({
     marginTop: -3,
   },
   debugButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
     height: 32,
     borderRadius: 6,
     paddingHorizontal: 8,

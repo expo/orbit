@@ -8,9 +8,17 @@
 
 ### 🐛 Bug fixes
 
+### 🛠 Breaking changes
+
+## 1.2.1— 2024-11-05
+
+### 🐛 Bug fixes
+
 - Fixed CLI on x64 machines. ([#215](https://github.com/expo/orbit/pull/215) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
-### 🛠 Breaking changes
+### 💡 Others
+
+- Show Debug Window in release mode. ([#216](https://github.com/expo/orbit/pull/216) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.2.0 — 2024-11-05
 
