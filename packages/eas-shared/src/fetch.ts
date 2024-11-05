@@ -1,10 +1,14 @@
 import fetch, { RequestInfo, RequestInit, Response } from 'node-fetch';
-export * from 'node-fetch';
-import { systemCertsSync } from 'system-ca';
+export { Response, RequestInit } from 'node-fetch';
 import https from 'https';
+import { systemCertsSync } from 'system-ca';
 
+let ca: string[] | undefined = undefined;
+try {
+  ca = systemCertsSync({ includeNodeCertificates: true });
+} catch (error) {}
 const agent = new https.Agent({
-  ca: systemCertsSync({ includeNodeCertificates: true }),
+  ca,
 });
 
 export class RequestError extends Error {
