@@ -6,6 +6,37 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>1.2.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Automatically select the correct iOS device depending on app type. (<a href="https://github.com/expo/orbit/pull/200">#200</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add support for self-signed certificates. (<a href="https://github.com/expo/orbit/pull/208">#208</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Update devices order to show physical devices first. (<a href="https://github.com/expo/orbit/pull/197">#197</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve listing connected Apple devices over Wi-Fi. (<a href="https://github.com/expo/orbit/pull/199">#199</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native</code> to 0.75.2. (<a href="https://github.com/expo/orbit/pull/203">#203</a>, <a href="https://github.com/expo/orbit/pull/209">#209</a>, by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade to <code>expo</code> SDK 51. (<a href="https://github.com/expo/orbit/pull/204">#204</a>, <a href="https://github.com/expo/orbit/pull/212">#212</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native-svg</code> to 15.2.0. (<a href="https://github.com/expo/orbit/pull/204">#204</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add debug logs to debug menu. (<a href="https://github.com/expo/orbit/pull/211">#211</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2024-11-05</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v1.2.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v1.2.0/expo-orbit.v1.2.0.zip"
+        sparkle:version="28"
+        sparkle:shortVersionString="1.2.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>1.1.1</title>
       <description>
       <![CDATA[
