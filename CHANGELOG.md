@@ -10,6 +10,12 @@
 
 ### 🛠 Breaking changes
 
+### 💡 Others
+
+- Upgrade `react-native` to 0.76.1. ([#217](https://github.com/expo/orbit/pull/217) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade to `expo` SDK 52. ([#217](https://github.com/expo/orbit/pull/217) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade `react-native-svg` to 15.8.0. ([#217](https://github.com/expo/orbit/pull/217) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 1.2.1— 2024-11-05
 
 ### 🐛 Bug fixes
