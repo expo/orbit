@@ -1,0 +1,134 @@
+diff --git a/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm b/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm
+index f5da0cf..9dd69db 100644
+--- a/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm
++++ b/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm
+@@ -359,27 +359,19 @@ using namespace facebook::react;
+ 
+ - (NSString *)getDataURLWithBounds:(CGRect)bounds
+ {
+-#if !TARGET_OS_OSX // [macOS]
+-  UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:bounds.size];
+-  UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *_Nonnull rendererContext) {
+-#else // [macOS
+-  UIGraphicsBeginImageContextWithOptions(bounds.size, NO, 1);
+-#endif // macOS]
++  RCTUIGraphicsImageRendererFormat *const rendererFormat = [RCTUIGraphicsImageRendererFormat defaultFormat];
++  RCTUIGraphicsImageRenderer *renderer = [[RCTUIGraphicsImageRenderer alloc] initWithSize:bounds.size format:rendererFormat];
++    UIImage *image = [renderer imageWithActions:^(RCTUIGraphicsImageRendererContext *_Nonnull rendererContext) {
++    
+     [self clearChildCache];
+     [self drawRect:bounds];
+     [self clearChildCache];
+     [self invalidate];
+-#if !TARGET_OS_OSX // [macOS]
+   }];
+-#endif
+-#if !TARGET_OS_OSX // [macOS]
++   
+   NSData *imageData = UIImagePNGRepresentation(image);
+   NSString *base64 = [imageData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
+-#else // [macOS
+-  NSData *imageData = UIImagePNGRepresentation(UIGraphicsGetImageFromCurrentImageContext());
+-  NSString *base64 = [imageData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
+-  UIGraphicsEndImageContext();
+-#endif // macOS]
++ 
+   return base64;
+ }
+ 
+diff --git a/node_modules/react-native-svg/apple/Filters/RNSVGFilter.mm b/node_modules/react-native-svg/apple/Filters/RNSVGFilter.mm
+index d36d1d7..5985a38 100644
+--- a/node_modules/react-native-svg/apple/Filters/RNSVGFilter.mm
++++ b/node_modules/react-native-svg/apple/Filters/RNSVGFilter.mm
+@@ -142,7 +142,6 @@ using namespace facebook::react;
+ 
+ - (CGContext *)openContext:(CGSize)size
+ { 
+-  UIGraphicsBeginImageContextWithOptions(size, NO, 1.0);
+   CGContextRef cropContext = UIGraphicsGetCurrentContext();
+ #if TARGET_OS_OSX
+   CGFloat scale = [RNSVGRenderUtils getScreenScale];
+@@ -156,7 +155,7 @@ using namespace facebook::react;
+ 
+ - (void)endContext:(CGContext *)context
+ {
+-  UIGraphicsEndImageContext();
++  
+ }
+ 
+ - (CIImage *)getMaskFromRect:(CGContext *)context rect:(CGRect)rect ctm:(CGAffineTransform)ctm
+diff --git a/node_modules/react-native-svg/apple/RNSVGRenderable.mm b/node_modules/react-native-svg/apple/RNSVGRenderable.mm
+index f9d633e..2b6c335 100644
+--- a/node_modules/react-native-svg/apple/RNSVGRenderable.mm
++++ b/node_modules/react-native-svg/apple/RNSVGRenderable.mm
+@@ -380,12 +380,12 @@ UInt32 saturate(CGFloat value)
+       CGContextRelease(bcontext);
+       free(pixels);
+ 
+-#if !TARGET_OS_OSX // [macOS]
+-      UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+-      UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:rect.size format:format];
++
++      RCTUIGraphicsImageRendererFormat *format = [RCTUIGraphicsImageRendererFormat defaultFormat];
++      RCTUIGraphicsImageRenderer *renderer = [[RCTUIGraphicsImageRenderer alloc] initWithSize:rect.size format:format];
+ 
+       // Blend current element and mask
+-      UIImage *blendedImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *_Nonnull rendererContext) {
++      UIImage *blendedImage = [renderer imageWithActions:^(RCTUIGraphicsImageRendererContext *_Nonnull rendererContext) {
+         CGContextConcatCTM(
+             rendererContext.CGContext, CGAffineTransformInvert(CGContextGetCTM(rendererContext.CGContext)));
+         CGContextConcatCTM(rendererContext.CGContext, screenScaleCTM);
+@@ -403,28 +403,7 @@ UInt32 saturate(CGFloat value)
+ 
+       // Render blended result into current render context
+       [blendedImage drawInRect:scaledRect];
+-#else // [macOS
+-      // Blend current element and mask
+-      UIGraphicsBeginImageContextWithOptions(rect.size, NO, scale);
+-      CGContextRef newContext = UIGraphicsGetCurrentContext();
+-
+-      CGContextSetBlendMode(newContext, kCGBlendModeCopy);
+-      CGContextDrawImage(newContext, rect, maskImage);
+-      CGContextSetBlendMode(newContext, kCGBlendModeSourceIn);
+-      CGContextDrawImage(newContext, rect, contentImage);
+ 
+-      CGImageRef blendedImage = CGBitmapContextCreateImage(newContext);
+-      UIGraphicsEndImageContext();
+-
+-      // Invert the CTM and apply transformations to draw image in 1:1
+-      CGContextConcatCTM(context, CGAffineTransformInvert(currentCTM));
+-      CGContextTranslateCTM(context, 0.0, rect.size.height);
+-      CGContextScaleCTM(context, 1.0, -1.0);
+-
+-      // Render blended result into current render context
+-      CGContextDrawImage(context, rect, blendedImage);
+-      CGImageRelease(blendedImage);
+-#endif // macOS]
+       CGImageRelease(maskImage);
+     }
+     CGImageRelease(contentImage);
+diff --git a/node_modules/react-native-svg/apple/Utils/RNSVGRenderUtils.mm b/node_modules/react-native-svg/apple/Utils/RNSVGRenderUtils.mm
+index a501fbd..2aef676 100644
+--- a/node_modules/react-native-svg/apple/Utils/RNSVGRenderUtils.mm
++++ b/node_modules/react-native-svg/apple/Utils/RNSVGRenderUtils.mm
+@@ -36,11 +36,7 @@
+                       clip:(CGRect *)clip
+ {
+   CGFloat scale = [self getScreenScale];
+-#if TARGET_OS_OSX // [macOS
+-  UIGraphicsBeginImageContextWithOptions(rect.size, NO, 1.0);
+-#else // macOS]
+-  UIGraphicsBeginImageContextWithOptions(rect.size, NO, scale);
+-#endif // [macOS]
++    
+   CGContextRef cgContext = UIGraphicsGetCurrentContext();
+   CGContextConcatCTM(cgContext, CGAffineTransformInvert(CGContextGetCTM(cgContext)));
+ #if TARGET_OS_OSX // [macOS
+@@ -53,7 +49,6 @@
+   }
+   [renderable renderLayerTo:cgContext rect:rect];
+   CGImageRef contentImage = CGBitmapContextCreateImage(cgContext);
+-  UIGraphicsEndImageContext();
+   return contentImage;
+ }
+ 
