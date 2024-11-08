@@ -1,4 +1,4 @@
-import registerRootComponent from 'expo/build/launch/registerRootComponent';
+import { registerRootComponent } from 'expo';
 import { AppRegistry } from 'react-native';
 
 import App from './src/App';
