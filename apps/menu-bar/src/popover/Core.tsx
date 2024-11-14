@@ -50,9 +50,8 @@ type Props = {
 };
 
 function Core(props: Props) {
-  const [selectedDevicesIds, setSelectedDevicesIds] = useState<SelectedDevicesIds>(
-    getSelectedDevicesIds()
-  );
+  const [selectedDevicesIds, setSelectedDevicesIds] =
+    useState<SelectedDevicesIds>(getSelectedDevicesIds());
 
   const { apps, refetch: refetchApps } = useGetPinnedApps();
   usePopoverFocusEffect(

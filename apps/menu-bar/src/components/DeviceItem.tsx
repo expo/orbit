@@ -55,8 +55,8 @@ const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
                 backgroundColor: selected
                   ? PlatformColor('selectedContentBackground')
                   : currentTheme === 'dark'
-                  ? 'rgba(255,255,255,.23)'
-                  : 'rgba(0,0,0,.16)',
+                    ? 'rgba(255,255,255,.23)'
+                    : 'rgba(0,0,0,.16)',
               },
             ]}>
             <IphoneIcon
@@ -66,8 +66,8 @@ const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
                 selected
                   ? palette.dark.white
                   : currentTheme === 'dark'
-                  ? palette.dark.gray['900']
-                  : theme.text.default
+                    ? palette.dark.gray['900']
+                    : theme.text.default
               }
             />
           </View>
