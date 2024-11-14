@@ -2,7 +2,7 @@ import { CodedError } from 'expo-modules-core';
 
 import MenuBarModule, { emitter } from './src/MenuBarModule';
 import Alert from '../../src/modules/Alert';
-import { Logs } from '../../src/modules/Storage';
+import { Logs } from '../../src/modules/Logs';
 import { convertCliErrorObjectToError } from '../../src/utils/helpers';
 
 const logs = new Logs();
