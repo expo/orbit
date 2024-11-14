@@ -1,4 +1,4 @@
-import { Switch as FluentSwitch } from '@fluentui/react-components';
+import { Switch as FluentSwitch } from '@fluentui/react-switch';
 import { SwitchProps } from 'react-native';
 
 export function Switch({ onValueChange, value, disabled }: SwitchProps) {
