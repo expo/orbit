@@ -1,4 +1,4 @@
-import { Checkbox as FluentCheckbox } from '@fluentui/react-components';
+import { Checkbox as FluentCheckbox } from '@fluentui/react-checkbox';
 import React from 'react';
 
 import { CheckboxChangeEvent, NativeCheckboxProps } from './types';

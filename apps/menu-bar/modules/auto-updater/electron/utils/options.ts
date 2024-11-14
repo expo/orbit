@@ -19,7 +19,7 @@ export class Options {
 
   constructor() {
     this.autoDownload = false;
-    this.build = this.makeBuildString(process);
+    this.build = this.makeBuildString(process as unknown as NodeJS.Process);
     this.http = {};
     this.version = '';
     this.url = '';

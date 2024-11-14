@@ -13,7 +13,7 @@ type Props = {
   isDevWindow: boolean;
 };
 
-function App(props: Props) {
+function App(props: Props = { isDevWindow: false }) {
   useEffect(() => {
     Analytics.track(Event.APP_OPENED);
   }, []);
@@ -33,10 +33,6 @@ function App(props: Props) {
     </AutoResizerRootView>
   );
 }
-
-App.defaultProps = {
-  isDevWindow: false,
-};
 
 export default App;
 

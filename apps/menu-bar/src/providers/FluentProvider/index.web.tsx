@@ -1,9 +1,5 @@
-import {
-  FluentProvider as ReactFluentProvider,
-  webLightTheme,
-  webDarkTheme,
-  Theme,
-} from '@fluentui/react-components';
+import { FluentProvider as ReactFluentProvider } from '@fluentui/react-provider';
+import { webLightTheme, webDarkTheme, Theme } from '@fluentui/react-theme';
 import { CSSProperties, ComponentType, ReactElement } from 'react';
 import { useColorScheme } from 'react-native';
 

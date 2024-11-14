@@ -51,6 +51,11 @@ const createMainWindow = () => {
     mainWindow.loadURL(`file://${path.join(__dirname, '../../../app/dist/index.html')}`);
   }
 
+  mainWindow.webContents.once('dom-ready', () => {
+    // Only keep the current session in the logs
+    mainWindow.webContents.executeJavaScript("localStorage.setItem('logs', '[]')");
+  });
+
   return mainWindow;
 };
 

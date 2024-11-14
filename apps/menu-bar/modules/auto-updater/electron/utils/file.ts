@@ -9,6 +9,7 @@ export function calcSha256Hash(filePath: string): Promise<string> {
 
   return new Promise((resolve, reject) => {
     stream
+      //@ts-ignore
       .on('data', (data) => shaSum.update(data))
       .on('end', () => resolve(shaSum.digest('hex')))
       .on('error', reject);

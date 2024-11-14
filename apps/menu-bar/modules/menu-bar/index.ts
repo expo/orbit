@@ -2,10 +2,10 @@ import { CodedError } from 'expo-modules-core';
 
 import MenuBarModule, { emitter } from './src/MenuBarModule';
 import Alert from '../../src/modules/Alert';
+import { Logs } from '../../src/modules/Storage';
 import { convertCliErrorObjectToError } from '../../src/utils/helpers';
 
-export type Log = { command: string; info: string };
-const logs: Log[] = [];
+const logs = new Logs();
 
 let hasShownCliErrorAlert = false;
 let listenerCounter = 0;

@@ -1,4 +1,4 @@
-import { ProgressBar } from '@fluentui/react-components';
+import { ProgressBar } from '@fluentui/react-progress';
 import * as React from 'react';
 
 import { ProgressIndicatorViewProps } from './ProgressIndicator.types';

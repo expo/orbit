@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
 
 import { ObjectInspector } from './ObjectInspector';
-import type { Log } from '../../../modules/menu-bar/index';
+import { Log } from '../../modules/Storage';
 import { Text } from '../Text';
 import { View, Row } from '../View';
 

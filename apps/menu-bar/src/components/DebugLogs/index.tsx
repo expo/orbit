@@ -24,7 +24,7 @@ export const DebugLogs = () => {
         <Text style={{ marginRight: 40 }}>Command: </Text>
         <Text style={{ flex: 1 }}>Extra info:</Text>
       </Row>
-      {MenuBarModule.logs.map((log, index) => {
+      {MenuBarModule.logs.get().map((log, index) => {
         return (
           <DebugLogRow
             log={log}
