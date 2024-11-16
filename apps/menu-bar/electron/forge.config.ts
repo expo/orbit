@@ -4,12 +4,36 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
+import { spawn } from 'child_process';
+import path from 'path';
 
 const config: ForgeConfig = {
   packagerConfig: {
     icon: './assets/images/icon-windows',
   },
   rebuildConfig: {},
+  hooks: {
+    generateAssets: async () => {
+      console.log('Running custom pre-make command: yarn export-web');
+
+      const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
+      return new Promise((resolve, reject) => {
+        const command = process.platform === 'win32' ? 'yarn.cmd' : 'yarn';
+        const child = spawn(command, ['export-web'], {
+          stdio: 'inherit',
+          cwd: parentDir, // Set the working directory to the parent directory
+        });
+
+        child.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`preMake hook failed with exit code ${code}`));
+          }
+        });
+      });
+    },
+  },
   makers: [
     new MakerSquirrel({
       name: 'ExpoOrbit',
