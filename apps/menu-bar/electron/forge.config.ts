@@ -10,28 +10,33 @@ import path from 'path';
 const config: ForgeConfig = {
   packagerConfig: {
     icon: './assets/images/icon-windows',
+    executableName: 'orbit-electron',
+    extraResource: './assets',
   },
   rebuildConfig: {},
   hooks: {
     generateAssets: async () => {
-      console.log('Running custom pre-make command: yarn export-web');
+      // Is running electron forge make command
+      if (process.argv.some((a) => a.includes('electron-forge-make.js'))) {
+        console.log('Running custom pre-make command: yarn export-web');
 
-      const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
-      return new Promise((resolve, reject) => {
-        const command = process.platform === 'win32' ? 'yarn.cmd' : 'yarn';
-        const child = spawn(command, ['export-web'], {
-          stdio: 'inherit',
-          cwd: parentDir, // Set the working directory to the parent directory
-        });
+        const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
+        return new Promise((resolve, reject) => {
+          const command = process.platform === 'win32' ? 'yarn.cmd' : 'yarn';
+          const child = spawn(command, ['export-web'], {
+            stdio: 'inherit',
+            cwd: parentDir, // Set the working directory to the parent directory
+          });
 
-        child.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            reject(new Error(`preMake hook failed with exit code ${code}`));
-          }
+          child.on('close', (code) => {
+            if (code === 0) {
+              resolve();
+            } else {
+              reject(new Error(`preMake hook failed with exit code ${code}`));
+            }
+          });
         });
-      });
+      }
     },
   },
   makers: [
