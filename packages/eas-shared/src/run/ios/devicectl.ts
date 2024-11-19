@@ -13,6 +13,7 @@ import fs from 'fs';
 import assert from 'node:assert';
 import path from 'path';
 import tempy from 'tempy';
+import Debug from 'debug';
 
 import { xcrunAsync } from './xcrun';
 import Log from '../../log';
@@ -20,7 +21,7 @@ import { CommandError } from '../../utils/errors';
 
 const DEVICE_CTL_EXISTS_PATH = path.join(getExpoHomeDirectory(), 'devicectl-exists');
 
-const debug = require('debug')('expo:devicectl') as typeof console.log;
+const debug = Debug('expo:devicectl') as typeof console.log;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 type AnyEnum<T extends string = string> = T | (string & {});

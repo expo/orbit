@@ -1,6 +1,7 @@
 import { guardAsync } from './fn';
+import debugModule from 'debug';
 
-const debug = require('debug')('expo:utils:exit') as typeof console.log;
+const debug = debugModule('expo:utils:exit') as typeof console.log;
 
 type AsyncExitHook = (signal: NodeJS.Signals) => void | Promise<void>;
 
