@@ -35,11 +35,9 @@
   "dependencies": {
     "@expo/json-file": "^8.2.37",
     "common-types": "../../../packages/common-types",
-    "debug": "^4.3.4",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^8.2.0",
     "express": "^4.18.2",
-    "react-native-electron-modules": "../../../packages/react-native-electron-modules",
-    "uuid": "9.0.0"
+    "react-native-electron-modules": "../../../packages/react-native-electron-modules"
   }
 }
