@@ -1,3 +1,4 @@
+import Clipboard from '@react-native-clipboard/clipboard';
 import { useState } from 'react';
 import { TouchableOpacity } from 'react-native';
 
@@ -10,7 +11,14 @@ export const ObjectInspector = ({ obj, name }: { obj: any; name?: string }) => {
   const isArray = Array.isArray(obj);
 
   return (
-    <TouchableOpacity onPress={() => setIsOpen((prev) => !prev)}>
+    <TouchableOpacity
+      onPress={() => {
+        if (isObject) {
+          setIsOpen((prev) => !prev);
+        } else {
+          Clipboard.setString(obj);
+        }
+      }}>
       <View
         style={{
           flexDirection: 'row',
