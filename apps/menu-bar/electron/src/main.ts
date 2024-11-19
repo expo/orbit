@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import os from 'os';
 import path from 'path';
 import { registerMainModules } from 'react-native-electron-modules';
@@ -13,14 +13,18 @@ if (process.platform === 'win32' && require('electron-squirrel-startup')) {
 }
 
 // Use a different protocol for macos so it doesn't conflict with the react-native-macos project
-const protocol = os.platform() !== 'darwin' ? 'expo-orbit' : 'orbit-debug';
+const scheme = os.platform() !== 'darwin' ? 'expo-orbit' : 'orbit-debug';
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient(protocol, process.execPath, [path.resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient(scheme, process.execPath, [path.resolve(process.argv[1])]);
   }
 } else {
-  app.setAsDefaultProtocolClient(protocol);
+  app.setAsDefaultProtocolClient(scheme);
 }
+
+protocol.registerSchemesAsPrivileged([
+  { scheme, privileges: { standard: true, supportFetchAPI: true, secure: true } },
+]);
 
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -48,7 +52,7 @@ const createMainWindow = () => {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
     mainWindow.loadURL('http://localhost:8081');
   } else {
-    mainWindow.loadURL(`file://${path.join(__dirname, '../../../app/dist/index.html')}`);
+    mainWindow.loadURL(`file://${path.join(__dirname, `./renderer/dist/index.html`)}`);
   }
 
   mainWindow.webContents.once('dom-ready', () => {

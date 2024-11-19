@@ -7,8 +7,6 @@ import path from 'node:path';
 // https://vitejs.dev/config
 export default defineConfig({
   resolve: {
-    // Some libs that can run in both Web and Node.js, such as `axios`, we need to tell Vite to build them in Node.js.
-    browserField: false,
     mainFields: ['module', 'jsnext:main', 'jsnext'],
   },
   optimizeDeps: {
@@ -25,6 +23,15 @@ export default defineConfig({
         {
           src: '../modules/auto-updater/electron/**/*.(html|css|js)',
           dest: 'react-native-electron-modules',
+        },
+      ],
+      structured: true,
+    }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: './dist/**/*',
+          dest: 'renderer/',
         },
       ],
       structured: true,
