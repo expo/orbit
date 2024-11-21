@@ -11,6 +11,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     icon: './assets/images/icon-windows',
     executableName: 'orbit-electron',
+    name: 'Expo Orbit',
     extraResource: './assets',
   },
   rebuildConfig: {},
@@ -49,8 +50,21 @@ const config: ForgeConfig = {
         'https://raw.githubusercontent.com/expo/orbit/main/apps/menu-bar/electron/assets/images/icon-windows.ico',
     }),
     new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
-    new MakerDeb({ options: { icon: './assets/images/icon-linux.png' } }),
+    new MakerRpm({
+      options: {
+        mimeType: ['x-scheme-handler/expo-orbit'],
+        icon: `./assets/images/icon-linux.png`,
+        license: 'MIT',
+        categories: ['Utility'],
+      },
+    }),
+    new MakerDeb({
+      options: {
+        mimeType: ['x-scheme-handler/expo-orbit'],
+        icon: `./assets/images/icon-linux.png`,
+        categories: ['Utility'],
+      },
+    }),
   ],
   plugins: [
     new VitePlugin({
