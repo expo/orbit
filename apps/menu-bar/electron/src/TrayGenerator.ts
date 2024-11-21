@@ -108,7 +108,7 @@ const getIconPath = () => {
 };
 
 const getIconName = () => {
-  if (process.platform === 'darwin') {
+  if (process.platform === 'darwin' || process.platform === 'linux') {
     return 'icon.png';
   }
 

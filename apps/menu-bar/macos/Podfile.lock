@@ -4,17 +4,17 @@ PODS:
     - Sparkle (~> 2.5.0)
   - boost (1.84.0)
   - DoubleConversion (1.1.6)
-  - EXConstants (17.0.2):
+  - EXConstants (17.0.3):
     - ExpoModulesCore
-  - Expo (52.0.0-preview.23):
+  - Expo (52.0.6):
     - ExpoModulesCore
-  - ExpoFileSystem (18.0.1):
+  - ExpoFileSystem (18.0.3):
     - ExpoModulesCore
   - ExpoFont (13.0.1):
     - ExpoModulesCore
   - ExpoKeepAwake (14.0.1):
     - ExpoModulesCore
-  - ExpoModulesCore (2.0.0-preview.10):
+  - ExpoModulesCore (2.0.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1601,7 +1601,7 @@ PODS:
   - RNRudder (1.0.0):
     - ExpoModulesCore
     - Rudder (~> 2.4.3)
-  - RNSVG (15.8.0):
+  - RNSVG (15.9.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1621,9 +1621,9 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNSVG/common (= 15.8.0)
+    - RNSVG/common (= 15.9.0)
     - Yoga
-  - RNSVG/common (15.8.0):
+  - RNSVG/common (15.9.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1909,12 +1909,12 @@ SPEC CHECKSUMS:
   AutoUpdater: 835e98da916bc2748024a015db6abd58173ab486
   boost: 78c06792d4bc8e05ba232b20737af9883a947a51
   DoubleConversion: e9fd6969c78f190642ac8adbd3a5ac37995620dc
-  EXConstants: 33cb635065c7c1fe09a0fce5c8ddde8a0a2860c4
-  Expo: 22775a567db450535b91cace34cbb2f4fb54cf81
-  ExpoFileSystem: 60313d0b54cb8242004525f37c9b85988194ae33
+  EXConstants: dd2fe64c6cdb1383b694c309a63028a8e9f2be6d
+  Expo: 8a3384b1e45f23d9bed1225d76ebaa637f3b420c
+  ExpoFileSystem: cc31b7a48031ab565f9eb5c2b61aa08d774a271a
   ExpoFont: 7522d869d84ee2ee8093ee997fef5b86f85d856b
   ExpoKeepAwake: 783e68647b969b210a786047c3daa7b753dcac1f
-  ExpoModulesCore: f085fa8306860953744e07577f5817dd22f94445
+  ExpoModulesCore: ad07b0ca88e23bf1f10736cef63cd5bf0fcbf0a3
   FBLazyVector: 1e632fa86491ab30b47f90255f35ecefff4b9d65
   FilePicker: d9a9846a76942deee1e121a7d91f0938db0c8116
   fmt: c32f09ca7679bf28db6ba79e474dab38daa634a1
@@ -1983,7 +1983,7 @@ SPEC CHECKSUMS:
   ReactCommon: 90da027cc626c25e9dbb8bfffb1158486705ae3a
   RNCClipboard: 4a32044e0c654faf2b47a86db4f3f4bbf4f44f3c
   RNRudder: 888282c1222d8abb07f70365c8b05851b1738e8b
-  RNSVG: 536cd3c866c878faf72beaba166c8b02fe2b762b
+  RNSVG: b2fbe96b2bb3887752f8abc1f495953847e90384
   Rudder: 6d2c0775d5b606e05e00670615ee7f9c0c6d2813
   SocketRocket: 03f7111df1a343b162bf5b06ead333be808e1e0a
   Sparkle: 0e335e5c704ac28dbea18cc0383e15a3927c28dc
