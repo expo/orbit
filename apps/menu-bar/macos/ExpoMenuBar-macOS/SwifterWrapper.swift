@@ -12,7 +12,7 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
     super.init()
 
     server.middleware.append { request in
-      guard let origin = request.headers["origin"], (request.headers["referer"] != nil) else {
+      guard let origin = request.headers["origin"] else {
         return .forbidden
       }
 
