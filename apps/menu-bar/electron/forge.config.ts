@@ -1,15 +1,61 @@
 import { MakerDeb } from '@electron-forge/maker-deb';
+import { MakerDebConfigOptions } from '@electron-forge/maker-deb/dist/Config';
 import { MakerRpm } from '@electron-forge/maker-rpm';
+import { MakerRpmConfigOptions } from '@electron-forge/maker-rpm/dist/Config';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
+import { spawn } from 'child_process';
+import path from 'path';
+
+type CommonParams<T, U> = {
+  [K in keyof T & keyof U]?: T[K] extends U[K] ? T[K] : never;
+};
+
+type LinuxOptions = CommonParams<MakerDebConfigOptions, MakerRpmConfigOptions>;
+
+const linuxOptions: LinuxOptions = {
+  mimeType: ['x-scheme-handler/expo-orbit'],
+  icon: `./assets/images/icon-linux.png`,
+  categories: ['Utility'],
+  productName: 'Expo Orbit',
+  genericName: 'orbit',
+  homepage: 'https://github.com/expo/orbit',
+};
 
 const config: ForgeConfig = {
   packagerConfig: {
     icon: './assets/images/icon-windows',
+    executableName: 'expo-orbit',
+    name: 'Expo Orbit',
+    extraResource: './assets',
   },
   rebuildConfig: {},
+  hooks: {
+    generateAssets: async () => {
+      // Is running electron forge make command
+      if (process.argv.some((a) => a.includes('electron-forge-make.js'))) {
+        console.log('Running custom pre-make command: yarn export-web');
+
+        const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
+        return new Promise((resolve, reject) => {
+          const child = spawn('yarn', ['export-web'], {
+            stdio: 'inherit',
+            cwd: parentDir, // Set the working directory to the parent directory
+          });
+
+          child.on('close', (code) => {
+            if (code === 0) {
+              resolve();
+            } else {
+              reject(new Error(`preMake hook failed with exit code ${code}`));
+            }
+          });
+        });
+      }
+    },
+  },
   makers: [
     new MakerSquirrel({
       name: 'ExpoOrbit',
@@ -20,8 +66,15 @@ const config: ForgeConfig = {
         'https://raw.githubusercontent.com/expo/orbit/main/apps/menu-bar/electron/assets/images/icon-windows.ico',
     }),
     new MakerZIP({}, ['darwin']),
-    new MakerRpm({}),
-    new MakerDeb({ options: { icon: './assets/images/icon-linux.png' } }),
+    new MakerRpm({
+      options: {
+        ...linuxOptions,
+        license: 'MIT',
+      },
+    }),
+    new MakerDeb({
+      options: linuxOptions,
+    }),
   ],
   plugins: [
     new VitePlugin({

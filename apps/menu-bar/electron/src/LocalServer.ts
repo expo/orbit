@@ -16,8 +16,7 @@ export class LocalServer {
   setupMiddlewares() {
     this.app.use((req, res, next) => {
       const origin = req.get('origin');
-      const referer = req.get('referer');
-      if (!origin || !referer || !WHITELISTED_DOMAINS.includes(this.extractRootDomain(origin))) {
+      if (!origin || !WHITELISTED_DOMAINS.includes(this.extractRootDomain(origin))) {
         res.sendStatus(403);
         return;
       }

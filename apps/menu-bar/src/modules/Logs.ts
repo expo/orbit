@@ -2,12 +2,15 @@ import { Platform } from 'react-native';
 
 export type Log = { command: string; info: string };
 export class Logs {
-  private logs = this.get();
+  private logs: Log[] = [];
 
   push(log: Log) {
-    this.logs.push(log);
     if (Platform.OS === 'web') {
-      localStorage.setItem('logs', JSON.stringify(this.logs));
+      const logs = this.get();
+      logs.push(log);
+      localStorage.setItem('logs', JSON.stringify(logs));
+    } else {
+      this.logs.push(log);
     }
   }
 

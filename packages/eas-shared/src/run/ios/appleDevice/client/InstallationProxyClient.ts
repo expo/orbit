@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 import Debug from 'debug';
+import util from 'util';
 import { Socket } from 'net';
 
 import { ResponseError, ServiceClient } from './ServiceClient';
@@ -197,10 +198,7 @@ export class InstallationProxyClient extends ServiceClient<LockdownProtocolClien
           debug(`Installed app: ${resp[0].CFBundleIdentifier}`);
         } else {
           reject(
-            new ResponseError(
-              'There was an error installing app: ' + require('util').inspect(resp),
-              resp
-            )
+            new ResponseError('There was an error installing app: ' + util.inspect(resp), resp)
           );
         }
       }

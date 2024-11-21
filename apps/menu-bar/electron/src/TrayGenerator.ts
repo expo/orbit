@@ -104,7 +104,11 @@ module.exports = TrayGenerator;
 
 const getIconPath = () => {
   const iconName = getIconName();
-  return path.join(__dirname, `../../assets/images/tray/${iconName}`);
+
+  return path.join(
+    path.dirname(__dirname),
+    `${app.isPackaged ? '../..' : '..'}/assets/images/tray/${iconName}`
+  );
 };
 
 const getIconName = () => {
