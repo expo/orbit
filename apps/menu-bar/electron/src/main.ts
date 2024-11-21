@@ -1,4 +1,5 @@
 import { app, BrowserWindow, protocol } from 'electron';
+import started from 'electron-squirrel-startup';
 import os from 'os';
 import path from 'path';
 import { registerMainModules } from 'react-native-electron-modules';
@@ -8,7 +9,7 @@ import TrayGenerator from './TrayGenerator';
 import { MainModules } from '../modules/mainRegistry';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (process.platform === 'win32' && require('electron-squirrel-startup')) {
+if (process.platform === 'win32' && started) {
   app.quit();
 }
 

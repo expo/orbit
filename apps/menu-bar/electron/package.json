@@ -21,6 +21,7 @@
     "@electron-forge/maker-zip": "^7.5.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.5.0",
     "@electron-forge/plugin-vite": "^7.5.0",
+    "@types/electron-squirrel-startup": "^1.0.2",
     "@types/express": "^4.17.21",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
