@@ -1,7 +1,7 @@
 {
   "name": "orbit-electron",
   "productName": "expo-orbit",
-  "description": "Electron wrapper for Orbit",
+  "description": "Accelerate your development workflow with one-click build launches and simulator management from your menu bar",
   "license": "MIT",
   "version": "1.1.0",
   "private": true,
