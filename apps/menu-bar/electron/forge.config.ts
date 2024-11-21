@@ -40,8 +40,7 @@ const config: ForgeConfig = {
 
         const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
         return new Promise((resolve, reject) => {
-          const command = process.platform === 'win32' ? 'yarn.cmd' : 'yarn';
-          const child = spawn(command, ['export-web'], {
+          const child = spawn('yarn', ['export-web'], {
             stdio: 'inherit',
             cwd: parentDir, // Set the working directory to the parent directory
           });
