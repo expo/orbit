@@ -65,15 +65,19 @@ export default class Updater extends EventEmitter {
       this.quitAndInstall();
     });
 
-    this.on('error', this.logger.warn);
-    autoUpdater.on('error', (e) => {
+    this.on('error', (e) => {
       if (this.window) {
         this.window.close();
       }
       dialog.showMessageBox({
         message: 'Something went wrong while installing the update.',
-        detail: 'Please try again.',
+        detail: typeof e === 'string' ? e : 'Please try again.',
       });
+
+      this.logger.warn(e);
+    });
+
+    autoUpdater.on('error', (e) => {
       this.emit('error', e);
     });
   }
@@ -118,6 +122,11 @@ export default class Updater extends EventEmitter {
   checkForUpdates({ silent }: { silent?: boolean } = {}): this {
     this.silent = silent;
     const opt = this.options;
+    if (process.platform === 'linux') {
+      this.emit('error', 'Updates are not available on Linux yet');
+      return this;
+    }
+
     if (!opt.url) {
       this.emit('error', 'You must set url before calling checkForUpdates()');
       return this;

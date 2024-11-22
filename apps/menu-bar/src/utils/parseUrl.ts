@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import { saveSessionSecret } from '../modules/Storage';
 
 export const getPlatformFromURI = (url: string): 'android' | 'ios' => {
@@ -25,7 +27,10 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
    * default to http://expo.dev when creating a new URL instance.
    */
   const urlWithoutProtocol = deeplinkURLString.replace(/^[^:]+:\/\//, '');
-  const deeplinkURL = new URL(deeplinkURLString, 'http://expo.dev');
+  const deeplinkURL = new URL(
+    Platform.OS === 'web' ? urlWithoutProtocol : deeplinkURLString,
+    'http://expo.dev'
+  );
   // On web the pathname starts with '///' instead of '/'
   const pathname = deeplinkURL.pathname.replace('///', '/');
 
