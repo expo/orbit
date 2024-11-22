@@ -1,10 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
+  xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
     <title>Orbit</title>
     <link>https://raw.githubusercontent.com/expo/orbit/main/appcast.xml</link>
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
+    <item>
+      <title>2.0.0</title>
+      <description>
+      <![CDATA[
+      <h2 id="windows-and-linux-builds-now-available-">Windows and Linux builds now available!</h2>
+      <p>We&#39;re promoting Orbit for Windows to a stable version along with support for Linux. Try out Expo Orbit now, explore its capabilities, and share your feedback. Your input will shape the future of this tool and guide us on where to take it next.</p>
+      <h2 id="changelog">Changelog</h2>
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add experimental support for Windows and Linux. (<a href="https://github.com/expo/orbit/pull/152">#152</a>, <a href="https://github.com/expo/orbit/pull/157">#157</a>, <a href="https://github.com/expo/orbit/pull/158">#158</a>, <a href="https://github.com/expo/orbit/pull/160">#160</a>, <a href="https://github.com/expo/orbit/pull/161">#161</a>, <a href="https://github.com/expo/orbit/pull/165">#165</a>, <a href="https://github.com/expo/orbit/pull/170">#170</a>, <a href="https://github.com/expo/orbit/pull/171">#171</a>, <a href="https://github.com/expo/orbit/pull/172">#172</a>, <a href="https://github.com/expo/orbit/pull/173">#173</a>, <a href="https://github.com/expo/orbit/pull/174">#174</a>, <a href="https://github.com/expo/orbit/pull/175">#175</a>, <a href="https://github.com/expo/orbit/pull/177">#177</a>, <a href="https://github.com/expo/orbit/pull/178">#178</a>, <a href="https://github.com/expo/orbit/pull/180">#180</a>, <a href="https://github.com/expo/orbit/pull/181">#181</a>, <a href="https://github.com/expo/orbit/pull/182">#182</a>, <a href="https://github.com/expo/orbit/pull/185">#185</a>, <a href="https://github.com/expo/orbit/pull/191">#191</a>, <a href="https://github.com/expo/orbit/pull/220">#220</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Upgrade <code>react-native</code> to 0.76.1. (<a href="https://github.com/expo/orbit/pull/217">#217</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade to <code>expo</code> SDK 52. (<a href="https://github.com/expo/orbit/pull/217">#217</a>, <a href="https://github.com/expo/orbit/pull/219">#219</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native-svg</code> to 15.8.X. (<a href="https://github.com/expo/orbit/pull/217">#217</a>, <a href="https://github.com/expo/orbit/pull/219">#219</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>electron</code> to 33.2.0. (<a href="https://github.com/expo/orbit/pull/218">#218</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add github workflow to build for Windows and Linux. (<a href="https://github.com/expo/orbit/pull/221">#221</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2024-11-22</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.0.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.0/expo-orbit.v2.0.0-macos.zip"
+        sparkle:version="30"
+        sparkle:shortVersionString="2.0.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
     <item>
       <title>1.2.1</title>
       <description>
@@ -186,7 +219,7 @@
         type="application/octet-stream"
       />
     </item>
-     <item>
+    <item>
       <title>1.0.2</title>
       <description>
       <![CDATA[
@@ -224,7 +257,7 @@
         type="application/octet-stream"
       />
     </item>
-     <item>
+    <item>
       <title>1.0.1</title>
       <description>
       <![CDATA[
