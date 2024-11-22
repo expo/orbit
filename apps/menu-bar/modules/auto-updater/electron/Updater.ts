@@ -71,7 +71,7 @@ export default class Updater extends EventEmitter {
       }
       dialog.showMessageBox({
         message: 'Something went wrong while installing the update.',
-        detail: 'Please try again.',
+        detail: typeof e === 'string' ? e : 'Please try again.',
       });
 
       this.logger.warn(e);
