@@ -1,9 +1,9 @@
 {
   "name": "expo-orbit",
+  "version": "2.0.0",
   "productName": "expo-orbit",
   "description": "Accelerate your development workflow with one-click build launches and simulator management from your menu bar",
   "license": "MIT",
-  "version": "1.1.0",
   "private": true,
   "main": ".vite/build/main.js",
   "scripts": {
