@@ -6,6 +6,8 @@
 
 ### 🐛 Bug fixes
 
+- [macOS] Fix `new NativeEventEmitter() requires a non-null argument` error when clicking "See all". ([#225](https://github.com/expo/orbit/pull/225) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 ### 🛠 Breaking changes
