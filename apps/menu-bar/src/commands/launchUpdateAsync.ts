@@ -6,17 +6,21 @@ type LaunchUpdateAsyncOptions = {
   deviceId: string;
   url: string;
   noInstall?: boolean;
+  forceExpoGo?: boolean;
 };
 
 type LaunchUpdateCallback = (status: MenuBarStatus, progress: number) => void;
 
 export async function launchUpdateAsync(
-  { url, platform, deviceId, noInstall }: LaunchUpdateAsyncOptions,
+  { url, platform, deviceId, noInstall, forceExpoGo }: LaunchUpdateAsyncOptions,
   callback: LaunchUpdateCallback
 ) {
   const args = [url, '-p', platform, '--device-id', deviceId];
   if (noInstall) {
     args.push('--skip-install');
+  }
+  if (forceExpoGo) {
+    args.push('--force-expo-go');
   }
 
   await MenuBarModule.runCli('launch-update', args, (output) => {
