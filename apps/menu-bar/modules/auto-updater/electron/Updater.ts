@@ -65,8 +65,7 @@ export default class Updater extends EventEmitter {
       this.quitAndInstall();
     });
 
-    this.on('error', this.logger.warn);
-    autoUpdater.on('error', (e) => {
+    this.on('error', (e) => {
       if (this.window) {
         this.window.close();
       }
@@ -74,6 +73,11 @@ export default class Updater extends EventEmitter {
         message: 'Something went wrong while installing the update.',
         detail: 'Please try again.',
       });
+
+      this.logger.warn(e);
+    });
+
+    autoUpdater.on('error', (e) => {
       this.emit('error', e);
     });
   }
