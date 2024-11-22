@@ -16,6 +16,7 @@
 - Upgrade to `expo` SDK 52. ([#217](https://github.com/expo/orbit/pull/217), [#219](https://github.com/expo/orbit/pull/219) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade `react-native-svg` to 15.8.X. ([#217](https://github.com/expo/orbit/pull/217), [#219](https://github.com/expo/orbit/pull/219) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade `electron` to 33.2.0. ([#218](https://github.com/expo/orbit/pull/218) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add github workflow to build for Windows and Linux. ([#221](https://github.com/expo/orbit/pull/221) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 1.2.1— 2024-11-05
 
