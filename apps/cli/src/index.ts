@@ -57,6 +57,7 @@ program
   .requiredOption('-p, --platform <string>', 'Selected platform')
   .requiredOption('--device-id  <string>', 'UDID or name of the device')
   .option('--skip-install', 'Skip app installation')
+  .option('--force-expo-go', 'Force update to be launched using Expo Go')
   .action(async (...args) => {
     const { launchUpdateAsync } = await import('./commands/LaunchUpdate');
     returnLoggerMiddleware(launchUpdateAsync)(...args);

@@ -10,11 +10,12 @@ type launchUpdateAsyncOptions = {
   platform: 'android' | 'ios';
   deviceId: string;
   skipInstall: boolean;
+  forceExpoGo: boolean;
 };
 
 export async function launchUpdateAsync(
   updateURL: string,
-  { platform, deviceId, skipInstall }: launchUpdateAsyncOptions
+  { platform, deviceId, skipInstall, forceExpoGo }: launchUpdateAsyncOptions
 ) {
   const { manifest } = await ManifestUtils.getManifestAsync(updateURL);
   const appId = manifest.extra?.eas?.projectId;
@@ -45,8 +46,14 @@ export async function launchUpdateAsync(
     const hasDevClientBuilds = Boolean(app.byId.hasDevClientBuilds.edges.length);
     const isRuntimeCompatibleWithExpoGo = manifest.runtimeVersion.startsWith('exposdk:');
 
-    if (!hasDevClientBuilds && isRuntimeCompatibleWithExpoGo) {
-      const sdkVersion = manifest.runtimeVersion.match(/exposdk:(\d+\.\d+\.\d+)/)?.[1] || '';
+    if ((!hasDevClientBuilds && isRuntimeCompatibleWithExpoGo) || forceExpoGo) {
+      let sdkVersion: string;
+      if (isRuntimeCompatibleWithExpoGo) {
+        sdkVersion = manifest.runtimeVersion.match(/exposdk:(\d+\.\d+\.\d+)/)?.[1] || '';
+      } else {
+        sdkVersion = manifest.extra?.expoClient?.sdkVersion ?? '';
+      }
+
       const launchOnExpoGo =
         platform === 'android' ? launchUpdateOnExpoGoAndroidAsync : launchUpdateOnExpoGoIosAsync;
       return await launchOnExpoGo({
