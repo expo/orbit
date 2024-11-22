@@ -3,7 +3,7 @@ import { AutoUpdaterType } from '../src/AutoUpdater.types';
 
 const updater = new Updater();
 updater.init({
-  url: 'https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json  ',
+  url: 'https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json',
 });
 
 const AutoUpdaterModule: AutoUpdaterType & { name: string } = {

@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { app } from 'electron';
 
 import Logger from './Logger';
@@ -79,12 +80,17 @@ export class Options {
   }
 
   makeBuildString(process: NodeJS.Process): string {
-    let build: NodeJS.Platform | 'mas' | 'winstore' = process.platform;
+    let build: NodeJS.Platform | 'mas' | 'winstore' | 'linux-rpm' | 'linux-deb' | 'linux-unknown' =
+      process.platform;
 
     if (process.mas) {
       build = 'mas';
     } else if (process.windowsStore) {
       build = 'winstore';
+    }
+    if (build === 'linux') {
+      const packageType = getLinuxPackageType();
+      build = `linux-${packageType}`;
     }
 
     return `${build}-${process.arch}`;
@@ -105,5 +111,21 @@ export class Options {
     }
 
     return true;
+  }
+}
+
+function getLinuxPackageType() {
+  try {
+    // Check for dpkg (used for .deb packages)
+    execSync('command -v dpkg', { stdio: 'ignore' });
+    return 'deb';
+  } catch {
+    // dpkg not found, check for rpm
+    try {
+      execSync('command -v rpm', { stdio: 'ignore' });
+      return 'rpm';
+    } catch {
+      return 'unknown';
+    }
   }
 }
