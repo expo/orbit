@@ -283,6 +283,26 @@ function Core(props: Props) {
                     }, 2000);
                   },
                 },
+                {
+                  text: 'Launch with Expo Go',
+                  onPress: async () => {
+                    setStatus(MenuBarStatus.OPENING_UPDATE);
+                    await launchUpdateAsync(
+                      {
+                        url,
+                        deviceId: getDeviceId(device),
+                        platform: getDeviceOS(device),
+                        forceExpoGo: true,
+                      },
+                      (status) => {
+                        setStatus(status);
+                      }
+                    );
+                    setTimeout(() => {
+                      setStatus(MenuBarStatus.LISTENING);
+                    }, 2000);
+                  },
+                },
               ]
             );
           } else {
