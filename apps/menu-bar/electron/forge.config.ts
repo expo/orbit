@@ -76,7 +76,10 @@ const config: ForgeConfig = {
       },
     }),
     new MakerDeb({
-      options: linuxOptions,
+      options: {
+        ...linuxOptions,
+        maintainer: 'Expo',
+      },
     }),
   ],
   plugins: [
