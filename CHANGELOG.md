@@ -4,6 +4,8 @@
 
 ### 🎉 New features
 
+- Allow users to manually launch updates in Expo Go. ([#226](https://github.com/expo/orbit/pull/226) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - [macOS] Fix `new NativeEventEmitter() requires a non-null argument` error when clicking "See all". ([#225](https://github.com/expo/orbit/pull/225) by [@gabrieldonadel](https://github.com/gabrieldonadel))
