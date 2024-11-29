@@ -29,14 +29,13 @@ export default class Linux extends Platform {
       .then(() => {
         this.logger.info(`New version has been downloaded from ${buildInfo.url}`);
         this.emit('update-downloaded', this.meta);
+
+        this.quitAndInstall();
       })
       .catch((e) => this.emit('error', e));
   }
 
-  /**
-   * @param {boolean} restartRequired
-   */
-  quitAndInstall(restartRequired = true) {
+  quitAndInstall() {
     if (!this.lastUpdatePath) {
       return;
     }
@@ -44,30 +43,28 @@ export default class Linux extends Platform {
     const fileExtension = path.extname(this.lastUpdatePath);
     const installCommand =
       fileExtension === '.deb'
-        ? `dpkg -i "${this.lastUpdatePath}"`
+        ? ['dpkg', '-i', this.lastUpdatePath]
         : fileExtension === '.rpm'
-          ? `rpm -i --force "${this.lastUpdatePath}"`
+          ? ['rpm', '-i', '--force', this.lastUpdatePath]
           : null;
 
     if (!installCommand) {
       throw new Error('Unsupported package format. Only .deb and .rpm are supported.');
     }
 
-    const proc = spawn('/bin/bash', ['-c', installCommand], {
+    const proc = spawn('pkexec', installCommand, {
       detached: true,
-      stdio: 'ignore',
+      stdio: 'inherit',
     });
 
     proc.on('exit', (code) => {
       if (code !== 0) {
-        this.logger.error(`Installation process failed with code ${code}`);
+        this.emit('error', `Installation process failed with code ${code}`);
         return;
       }
       this.logger.info('Update installed successfully.');
-      if (restartRequired) {
-        quit();
-        process.exit();
-      }
+      quit();
+      process.exit();
     });
 
     proc.unref();
