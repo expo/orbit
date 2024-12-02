@@ -122,10 +122,6 @@ export default class Updater extends EventEmitter {
   checkForUpdates({ silent }: { silent?: boolean } = {}): this {
     this.silent = silent;
     const opt = this.options;
-    if (process.platform === 'linux') {
-      this.emit('error', 'Updates are not available on Linux yet');
-      return this;
-    }
 
     if (!opt.url) {
       this.emit('error', 'You must set url before calling checkForUpdates()');

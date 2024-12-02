@@ -63,6 +63,17 @@ export default class Linux extends Platform {
         return;
       }
       this.logger.info('Update installed successfully.');
+
+      // Relaunch the app
+      const appPath = process.argv[0]; // Path to the current executable
+      const appArgs = process.argv.slice(1); // Current arguments
+
+      this.logger.info(`Relaunching app from path: ${appPath} with args: ${appArgs.join(' ')}`);
+      spawn(appPath, appArgs, {
+        detached: true,
+        stdio: 'ignore',
+      }).unref();
+
       quit();
       process.exit();
     });
