@@ -4,6 +4,16 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+### 🛠 Breaking changes
+
+## 2.0.1 — 2024-12-03
+
+### 🎉 New features
+
 - Allow users to manually launch updates in Expo Go. ([#226](https://github.com/expo/orbit/pull/226) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - [Linux] Add support for auto updates. ([#229](https://github.com/expo/orbit/pull/229) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
@@ -12,11 +22,7 @@
 - [macOS] Fix `new NativeEventEmitter() requires a non-null argument` error when clicking "See all". ([#225](https://github.com/expo/orbit/pull/225) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - [Linux] Add maintainer field to deb packages. ([#227](https://github.com/expo/orbit/pull/227) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
-### 💡 Others
-
-### 🛠 Breaking changes
-
-## 2.0.0— 2024-11-22
+## 2.0.0 — 2024-11-22
 
 ### 🎉 New features
 
@@ -30,7 +36,7 @@
 - Upgrade `electron` to 33.2.0. ([#218](https://github.com/expo/orbit/pull/218) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add github workflow to build for Windows and Linux. ([#221](https://github.com/expo/orbit/pull/221) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
-## 1.2.1— 2024-11-05
+## 1.2.1 — 2024-11-05
 
 ### 🐛 Bug fixes
 
