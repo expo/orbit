@@ -27,61 +27,73 @@ export default class Linux extends Platform {
   downloadUpdate(buildInfo: BuildInfo) {
     this.downloadUpdateFile(buildInfo)
       .then(() => {
-        this.logger.info(`New version has been downloaded from ${buildInfo.url} `);
+        this.logger.info(`New version has been downloaded from ${buildInfo.url}`);
         this.emit('update-downloaded', this.meta);
+
+        this.quitAndInstall();
       })
       .catch((e) => this.emit('error', e));
   }
 
-  /**
-   * @param {boolean} restartRequired
-   */
-  quitAndInstall(restartRequired = true) {
+  createInstallCommand(updatePath: string) {
+    const fileExtension = path.extname(updatePath);
+    switch (fileExtension) {
+      case '.deb':
+        return ['dpkg', '-i', updatePath];
+      case '.rpm':
+        return ['rpm', '-i', '--force', updatePath];
+      default:
+        throw new Error('Unsupported package format. Only .deb and .rpm are supported.');
+    }
+  }
+
+  quitAndInstall() {
     if (!this.lastUpdatePath) {
       return;
     }
 
-    // @ts-ignore
-    app.off('will-quit', this.quitAndInstall);
+    const installCommand = this.createInstallCommand(this.lastUpdatePath);
 
-    const updateScript = `
-      if [ "\${RESTART_REQUIRED}" = 'true' ]; then
-        cp -f "\${UPDATE_FILE}" "\${APP_IMAGE}"
-        (exec "\${APP_IMAGE}") & disown $!
-      else
-        (sleep 2 && cp -f "\${UPDATE_FILE}" "\${APP_IMAGE}") & disown $!
-      fi
-      kill "\${OLD_PID}" $(ps -h --ppid "\${OLD_PID}" -o pid)
-      rm "\${UPDATE_FILE}"
-    `;
+    if (!installCommand) {
+      throw new Error('Unsupported package format. Only .deb and .rpm are supported.');
+    }
 
-    const proc = spawn('/bin/bash', ['-c', updateScript], {
+    const proc = spawn('pkexec', installCommand, {
       detached: true,
-      stdio: 'ignore',
-      env: {
-        ...process.env,
-        APP_IMAGE: this.getAppImagePath(),
-        // @ts-ignore
-        OLD_PID: process.pid,
-        RESTART_REQUIRED: String(restartRequired),
-        UPDATE_FILE: this.lastUpdatePath,
-      },
+      stdio: 'inherit',
     });
-    // @ts-ignore
-    proc.unref();
 
-    if (restartRequired === true) {
+    proc.on('exit', (code) => {
+      if (code !== 0) {
+        this.emit('error', `Installation process failed with code ${code}`);
+        return;
+      }
+      this.logger.info('Update installed successfully.');
+
+      // Relaunch the app
+      const appPath = process.argv[0]; // Path to the current executable
+      const appArgs = process.argv.slice(1); // Current arguments
+
+      this.logger.info(`Relaunching app from path: ${appPath} with args: ${appArgs.join(' ')}`);
+      spawn(appPath, appArgs, {
+        detached: true,
+        stdio: 'ignore',
+      }).unref();
+
       quit();
       process.exit();
-    }
+    });
+
+    proc.unref();
   }
 
   async downloadUpdateFile(buildInfo: BuildInfo) {
-    this.lastUpdatePath = this.getUpdatePath(buildInfo.sha256 || uuidv4());
+    const fileExtension = buildInfo.url.endsWith('.deb') ? '.deb' : '.rpm';
+    const fileName = `${app.getName()}-${uuidv4()}${fileExtension}`;
+    this.lastUpdatePath = path.join(os.tmpdir(), fileName);
 
     if (!fs.existsSync(this.lastUpdatePath)) {
       await this.httpClient.downloadFile(buildInfo.url, this.lastUpdatePath);
-      await setExecFlag(this.lastUpdatePath);
     }
 
     if (buildInfo.sha256) {
@@ -93,25 +105,7 @@ export default class Linux extends Platform {
       }
     }
 
-    // @ts-ignore
-    app.on('will-quit', this.quitAndInstall);
-
     return this.lastUpdatePath;
-  }
-
-  getAppImagePath() {
-    const appImagePath = process.env.APPIMAGE;
-
-    if (!appImagePath) {
-      throw new Error('It seems that the app is not in AppImage format');
-    }
-
-    return appImagePath;
-  }
-
-  getUpdatePath(id: string) {
-    const fileName = `${app.getName()}-${id}.AppImage`;
-    return path.join(os.tmpdir(), fileName);
   }
 
   async checkHash(hash: string, filePath: string) {
@@ -120,22 +114,4 @@ export default class Linux extends Platform {
       throw new Error(`Update is corrupted. Expected hash: ${hash}, actual: ${fileHash}`);
     }
   }
-}
-
-async function setExecFlag(filePath: string) {
-  return new Promise((resolve, reject) => {
-    fs.access(filePath, fs.constants.X_OK, (err) => {
-      if (!err) {
-        return resolve(filePath);
-      }
-
-      fs.chmod(filePath, '0755', (e) => {
-        if (e) {
-          reject(new Error(`Cannot chmod of ${filePath}`));
-        } else {
-          resolve(filePath);
-        }
-      });
-    });
-  });
 }
