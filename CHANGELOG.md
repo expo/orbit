@@ -5,6 +5,7 @@
 ### 🎉 New features
 
 - Allow users to manually launch updates in Expo Go. ([#226](https://github.com/expo/orbit/pull/226) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- [Linux] Add support for auto updates. ([#229](https://github.com/expo/orbit/pull/229) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
