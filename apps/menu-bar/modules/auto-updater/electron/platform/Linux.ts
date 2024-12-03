@@ -35,18 +35,24 @@ export default class Linux extends Platform {
       .catch((e) => this.emit('error', e));
   }
 
+  createInstallCommand(updatePath: string) {
+    const fileExtension = path.extname(updatePath);
+    switch (fileExtension) {
+      case '.deb':
+        return ['dpkg', '-i', updatePath];
+      case '.rpm':
+        return ['rpm', '-i', '--force', updatePath];
+      default:
+        throw new Error('Unsupported package format. Only .deb and .rpm are supported.');
+    }
+  }
+
   quitAndInstall() {
     if (!this.lastUpdatePath) {
       return;
     }
 
-    const fileExtension = path.extname(this.lastUpdatePath);
-    const installCommand =
-      fileExtension === '.deb'
-        ? ['dpkg', '-i', this.lastUpdatePath]
-        : fileExtension === '.rpm'
-          ? ['rpm', '-i', '--force', this.lastUpdatePath]
-          : null;
+    const installCommand = this.createInstallCommand(this.lastUpdatePath);
 
     if (!installCommand) {
       throw new Error('Unsupported package format. Only .deb and .rpm are supported.');
