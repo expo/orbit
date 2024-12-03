@@ -3,16 +3,18 @@
   "link": "https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json",
   "versions": [
     {
-      "version": "0.0.1",
-      "pub_date": "2023-02-26",
-      "release_notes": "<h3 id=\"-new-features\">\uD83C\uDF89 New features</h3> <ul> <li>Cache builds by default. (<a href=\"https://github.com/expo/orbit/pull/156\">#156</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li> <li>Improve fatal CLI error handling. (<a href=\"https://github.com/expo/orbit/pull/163\">#163</a>,<a href=\"https://github.com/expo/orbit/pull/166\">#166</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li> </ul> <h3 id=\"-bug-fixes\">\uD83D\uDC1B Bug fixes</h3> <ul> <li>Fixed listing devices on x64 machines. (<a href=\"https://github.com/expo/orbit/pull/164\">#164</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li> </ul> <h3 id=\"-others\">\uD83D\uDCA1 Others</h3> <ul> <li>Use Expo CLI instead of react-native community CLI. (<a href=\"https://github.com/expo/orbit/pull/155\">#155</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li> <li>Add basic telemetry. (<a href=\"https://github.com/expo/orbit/pull/168\">#168</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li> <li>Bump <code>snack-content@2.0.0</code> to preview 2. (<a href=\"https://github.com/expo/orbit/pull/167\">#167</a> by <a href=\"https://github.com/byCedric\">@byCedric</a>)</li> </ul>",
+      "version": "2.0.1",
+      "pub_date": "2024-12-03",
+      "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Allow users to manually launch updates in Expo Go. (<a href=\"https://github.com/expo/orbit/pull/226\">#226</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>[Linux] Add support for auto updates. (<a href=\"https://github.com/expo/orbit/pull/229\">#229</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>[macOS] Fix <code>new NativeEventEmitter() requires a non-null argument</code> error when clicking &quot;See all&quot;. (<a href=\"https://github.com/expo/orbit/pull/225\">#225</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>[Linux] Add maintainer field to deb packages. (<a href=\"https://github.com/expo/orbit/pull/227\">#227</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
       "builds": {
         "win32-x64": {
-          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v0.0.1/"
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.1/Expo.Orbit-2.0.1-x64.Setup.exe"
         },
-        "linux-x64": {
-          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v0.0.1/expo-orbit-linux-x64.v0.0.1.AppImage",
-          "sha256": "50e30322cdc83c0af182fff773920d6e093eff7d4c22bf19bca5cbdf762ab1fb"
+        "linux-deb-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.1/expo-orbit_2.0.1_amd64.deb"
+        },
+        "linux-rpm-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.1/expo-orbit-2.0.1-1.x86_64.rpm"
         }
       }
     }
