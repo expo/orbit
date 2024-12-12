@@ -2,6 +2,9 @@ name: Build
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - expo-orbit-v*
 
 jobs:
   build_on_linux:
