@@ -340,7 +340,7 @@ const Settings = () => {
           }`}
         </Text>
         <Text color="secondary" size="tiny" align="center">
-          Copyright 650 Industries Inc, 2023
+          Copyright 650 Industries Inc, 2024
         </Text>
         <TouchableOpacity
           onPress={() => WindowsNavigator.open('DebugMenu')}
