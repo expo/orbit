@@ -8,6 +8,8 @@
 
 ### 💡 Others
 
+- Upgrade `react-native-macos` to 0.76.6. ([#232](https://github.com/expo/orbit/pull/232) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🛠 Breaking changes
 
 ## 2.0.1 — 2024-12-03
