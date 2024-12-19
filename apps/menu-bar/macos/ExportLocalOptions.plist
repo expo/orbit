@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>destination</key>
-	<string>export</string>
-	<key>method</key>
-	<string>developer-id</string>
-	<key>signingCertificate</key>
-	<string>Developer ID Application</string>
-	<key>teamID</key>
-	<string>C8D8QTF339</string>
-</dict>
+	<dict>
+		<key>method</key>
+		<string>developer-id</string>
+		<key>signingCertificate</key>
+		<string>Developer ID Application</string>
+		<key>provisioningProfiles</key>
+		<dict>
+			<key>dev.expo.orbit</key>
+			<string>797ac624-d0d9-4d2b-b7ee-9e67fd39f239</string>
+		</dict>
+	</dict>
 </plist>
