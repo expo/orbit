@@ -10,6 +10,8 @@ import {
 } from 'electron';
 import path from 'path';
 
+import WindowManager from '../modules/WindowManager/main';
+
 export default class TrayGenerator {
   mainWindow: BrowserWindow;
   tray: Tray | null;
@@ -56,6 +58,20 @@ export default class TrayGenerator {
   };
   rightClickMenu = () => {
     const menu: MenuItemConstructorOptions[] = [
+      {
+        label: 'Settings...',
+        click() {
+          WindowManager.openWindow('Settings', {
+            // Keep in sync with menu-bar/src/windows/index.ts
+            title: 'Settings',
+            windowStyle: {
+              titlebarAppearsTransparent: true,
+              height: 580,
+              width: 500,
+            },
+          });
+        },
+      },
       {
         role: 'quit',
         accelerator: 'Command+Q',
