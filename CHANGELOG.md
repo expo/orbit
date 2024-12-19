@@ -4,6 +4,8 @@
 
 ### 🎉 New features
 
+- [Windows] Add settings option to context menu. ([#233](https://github.com/expo/orbit/pull/233) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
