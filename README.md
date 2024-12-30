@@ -9,6 +9,7 @@
 <p align="center">Accelerate your development workflow with one-click build launches and simulator management</p>
 
 ### Features highlights
+
 * Install and launch apps from local files using file explorer or drag and drop a file into the app.
 * Orbit supports any Android .apk, iOS Simulator compatible .app (on macOS), or ad hoc signed apps.
 * Install and launch builds from [EAS](https://expo.dev/eas) to your simulators and real devices in one click.
@@ -16,6 +17,8 @@
 * List and launch simulators, including running Android emulators without audio.
 * Launch [Snack](https://snack.expo.dev/) projects in your simulators in one click.
 * See pinned projects from your EAS dashboard and quickly launch your latest builds.
+
+Try out Expo Orbit now, explore its capabilities, and share your feedback. Your input will shape the future of this tool and guide us on where to take it next.
 
 ## 🛠️ Installation
 
