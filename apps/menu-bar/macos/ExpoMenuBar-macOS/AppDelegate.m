@@ -7,7 +7,6 @@
 
 #import "DevViewController.h"
 #import "WindowNavigator.h"
-#import "FileHandler.h"
 #import "Expo_Orbit-Swift.h"
 #import "DragDropStatusItemView.h"
 
@@ -73,7 +72,8 @@
 - (BOOL)application:(NSApplication *)_ openFile:(NSString *)filename
 {
   [self openPopover];
-  [[FileHandler shared] notifyFileOpened:filename];
+
+  [NSNotificationCenter.defaultCenter postNotificationName:@"ExpoOrbit_OnOpenFile" object:filename];
   return  YES;
 }
 

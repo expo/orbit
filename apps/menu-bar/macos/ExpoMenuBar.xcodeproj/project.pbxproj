@@ -24,8 +24,6 @@
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
 		C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */; };
-		C06B8F8A2AAA9024009F2BB5 /* FileHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = C06B8F892AAA9024009F2BB5 /* FileHandler.m */; };
-		C06B8F8D2AAA9058009F2BB5 /* FileHandlerManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C06B8F8C2AAA9058009F2BB5 /* FileHandlerManager.m */; };
 		C06B8F902AAB77D0009F2BB5 /* DragDropStatusItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = C06B8F8F2AAB77D0009F2BB5 /* DragDropStatusItemView.m */; };
 		C081507F2A610E9C00E8890F /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = C081507E2A610E9C00E8890F /* fonts */; };
 		C08E65212A5C411D0079E3A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E65202A5C411D0079E3A9 /* AppDelegate.swift */; };
@@ -88,10 +86,6 @@
 		C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemIconViewManager.h; sourceTree = "<group>"; };
 		C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SystemIconViewManager.m; sourceTree = "<group>"; };
 		C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTImageView+Private.h"; sourceTree = "<group>"; };
-		C06B8F892AAA9024009F2BB5 /* FileHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FileHandler.m; sourceTree = "<group>"; };
-		C06B8F8B2AAA9032009F2BB5 /* FileHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileHandler.h; sourceTree = "<group>"; };
-		C06B8F8C2AAA9058009F2BB5 /* FileHandlerManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FileHandlerManager.m; sourceTree = "<group>"; };
-		C06B8F8E2AAA906A009F2BB5 /* FileHandlerManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FileHandlerManager.h; sourceTree = "<group>"; };
 		C06B8F8F2AAB77D0009F2BB5 /* DragDropStatusItemView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DragDropStatusItemView.m; sourceTree = "<group>"; };
 		C06B8F912AAB77EC009F2BB5 /* DragDropStatusItemView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DragDropStatusItemView.h; sourceTree = "<group>"; };
 		C081507E2A610E9C00E8890F /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../public/fonts; sourceTree = "<group>"; };
@@ -199,10 +193,6 @@
 				C08E65352A5D0A580079E3A9 /* WindowNavigator.h */,
 				C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */,
 				C051EC0C2AA227C600C6D615 /* ExpoMenuBar-macOS-Bridging-Header.h */,
-				C06B8F892AAA9024009F2BB5 /* FileHandler.m */,
-				C06B8F8B2AAA9032009F2BB5 /* FileHandler.h */,
-				C06B8F8C2AAA9058009F2BB5 /* FileHandlerManager.m */,
-				C06B8F8E2AAA906A009F2BB5 /* FileHandlerManager.h */,
 				C06B8F8F2AAB77D0009F2BB5 /* DragDropStatusItemView.m */,
 				C06B8F912AAB77EC009F2BB5 /* DragDropStatusItemView.h */,
 				6DF0AD98E1DDDB5E7C991DB8 /* PrivacyInfo.xcprivacy */,
@@ -497,11 +487,9 @@
 			files = (
 				C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */,
 				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
-				C06B8F8A2AAA9024009F2BB5 /* FileHandler.m in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C06B8F902AAB77D0009F2BB5 /* DragDropStatusItemView.m in Sources */,
 				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
-				C06B8F8D2AAA9058009F2BB5 /* FileHandlerManager.m in Sources */,
 				C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
 				514201582437B4B40078DB4F /* main.m in Sources */,
