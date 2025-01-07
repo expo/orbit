@@ -1,12 +1,8 @@
-import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
-
-const openURLTargets = new WeakSet<WebContents>();
+import { app, BrowserWindow } from 'electron';
 
 function sendOpenFile(url: string) {
   for (const window of BrowserWindow.getAllWindows()) {
-    if (openURLTargets.has(window.webContents)) {
-      window.webContents.send('onOpenFile', url);
-    }
+    window.webContents.send('onOpenFile', { path: url });
   }
 }
 
@@ -19,13 +15,6 @@ function isLikelyFilePath(str: string) {
 
   return hasSlashes && hasFileExtension;
 }
-
-ipcMain.handle('register-onOpenFile-target', (event) => {
-  openURLTargets.add(event.sender);
-});
-ipcMain.handle('unregister-onOpenFile-target', (event) => {
-  openURLTargets.delete(event.sender);
-});
 
 app.on('second-instance', (_, argv) => {
   const lastArg = argv[argv.length - 1];
