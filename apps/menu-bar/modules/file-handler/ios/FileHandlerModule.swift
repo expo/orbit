@@ -11,23 +11,23 @@ public class FileHandlerModule: Module {
     Events(onOpenFileEvent)
 
     OnStartObserving {
-        hasListeners = true
-        NotificationCenter.default.addObserver(
-          self,
-          selector: #selector(self.onOpenFile),
-          name: NSNotification.Name("ExpoOrbit_OnOpenFile"),
-          object: nil
-        )
-      }
+      hasListeners = true
+      NotificationCenter.default.addObserver(
+        self,
+        selector: #selector(self.onOpenFile),
+        name: NSNotification.Name("ExpoOrbit_OnOpenFile"),
+        object: nil
+      )
+    }
 
-      OnStopObserving {
-        hasListeners = false
-        NotificationCenter.default.removeObserver(
-          self,
-          name: NSNotification.Name("ExpoOrbit_OnOpenFile"),
-          object: nil
-        )
-      }
+    OnStopObserving {
+      hasListeners = false
+      NotificationCenter.default.removeObserver(
+        self,
+        name: NSNotification.Name("ExpoOrbit_OnOpenFile"),
+        object: nil
+      )
+    }
 
   }
 
@@ -38,7 +38,7 @@ public class FileHandlerModule: Module {
     }
 
     if let filename = notification.object as? String {
-            sendEvent(onOpenFileEvent, ["path": filename])
-        }
+      sendEvent(onOpenFileEvent, ["path": filename])
+    }
   }
 }
