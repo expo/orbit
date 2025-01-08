@@ -2,7 +2,6 @@
 #import <Cocoa/Cocoa.h>
 
 #import "DragDropStatusItemView.h"
-#import "FileHandler.h"
 
 @implementation DragDropStatusItemView
 
@@ -55,7 +54,7 @@
 
   for (NSURL *url in files) {
     NSString *filePath = [url path];
-    [[FileHandler shared] notifyFileOpened:filePath];
+    [NSNotificationCenter.defaultCenter postNotificationName:@"ExpoOrbit_OnOpenFile" object:filePath];
   }
 
   return YES;

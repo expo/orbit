@@ -38,6 +38,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - FBLazyVector (0.76.6)
+  - FileHandler (1.0.0):
+    - ExpoModulesCore
   - FilePicker (1.0.0):
     - ExpoModulesCore
   - fmt (9.1.0)
@@ -1663,6 +1665,7 @@ DEPENDENCIES:
   - ExpoKeepAwake (from `../../../node_modules/expo-keep-awake/ios`)
   - ExpoModulesCore (from `../../../node_modules/expo-modules-core`)
   - FBLazyVector (from `../../../node_modules/react-native-macos/Libraries/FBLazyVector`)
+  - FileHandler (from `../modules/file-handler/ios`)
   - FilePicker (from `../modules/file-picker/ios`)
   - fmt (from `../../../node_modules/react-native-macos/third-party-podspecs/fmt.podspec`)
   - glog (from `../../../node_modules/react-native-macos/third-party-podspecs/glog.podspec`)
@@ -1765,6 +1768,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-modules-core"
   FBLazyVector:
     :path: "../../../node_modules/react-native-macos/Libraries/FBLazyVector"
+  FileHandler:
+    :path: "../modules/file-handler/ios"
   FilePicker:
     :path: "../modules/file-picker/ios"
   fmt:
@@ -1916,6 +1921,7 @@ SPEC CHECKSUMS:
   ExpoKeepAwake: 783e68647b969b210a786047c3daa7b753dcac1f
   ExpoModulesCore: ad07b0ca88e23bf1f10736cef63cd5bf0fcbf0a3
   FBLazyVector: c5f485ffd9dbfa25baaf946d4f8e71e822219374
+  FileHandler: 251b35d0cb70a23f7f9acfd2e993b3f0850977b0
   FilePicker: d9a9846a76942deee1e121a7d91f0938db0c8116
   fmt: cca1eb84179ad528ae1ba9fdf135ed1ac49e19cb
   glog: 750f96a379703a2d724d2f1fc6cb3a3eff000817

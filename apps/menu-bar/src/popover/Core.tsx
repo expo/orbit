@@ -10,6 +10,7 @@ import DevicesListError from './DevicesListError';
 import { FOOTER_HEIGHT } from './Footer';
 import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
+import { useFileHandler } from '../../modules/file-handler';
 import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
@@ -26,7 +27,6 @@ import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
 import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import Alert from '../modules/Alert';
-import { useFileHandler } from '../modules/FileHandlerModule';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   SelectedDevicesIds,

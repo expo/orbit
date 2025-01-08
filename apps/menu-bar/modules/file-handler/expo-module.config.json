@@ -1,0 +1,6 @@
+{
+  "platforms": ["apple", "web"],
+  "apple": {
+    "modules": ["FileHandlerModule"]
+  }
+}
