@@ -9,6 +9,7 @@ import { checkToolsAsync } from './commands/CheckTools';
 import { setSessionAsync } from './commands/SetSession';
 import { detectIOSAppTypeAsync } from './commands/DetectIOSAppType';
 import { returnLoggerMiddleware } from './utils';
+import { launchExpoGoAsync } from './commands/LaunchExpoGo';
 
 const program = new Command();
 
@@ -45,6 +46,14 @@ program
   .requiredOption('-p, --platform <string>', 'Selected platform')
   .requiredOption('--device-id  <string>', 'UDID or name of the device')
   .action(returnLoggerMiddleware(launchSnackAsync));
+
+program
+  .command('launch-expo-go')
+  .argument('<string>', 'Development server URL')
+  .requiredOption('-p, --platform <string>', 'Selected platform')
+  .requiredOption('--device-id  <string>', 'UDID or name of the device')
+  .option('--sdk-version <string>', 'The Expo SDK version to use for Expo Go, if available')
+  .action(returnLoggerMiddleware(launchExpoGoAsync));
 
 program
   .command('check-tools')

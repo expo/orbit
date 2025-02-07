@@ -17,6 +17,7 @@ import { bootDeviceAsync } from '../commands/bootDeviceAsync';
 import { detectIOSAppTypeAsync } from "../commands/detectIOSAppTypeAsync'";
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
+import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchSnackAsync } from '../commands/launchSnackAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
 import { Spacer, View } from '../components';
@@ -92,42 +93,45 @@ function Core(props: Props) {
       ? heightOfAllDevices
       : estimatedAvailableSizeForDevices;
 
-  const getAvailableDeviceForSnack = useCallback(() => {
-    const selectedIosDevice = devicesPerPlatform.ios.devices.get(selectedDevicesIds.ios ?? '');
-    const selectedAndroidDevice = devicesPerPlatform.android.devices.get(
-      selectedDevicesIds.android ?? ''
-    );
+  const getAvailableDeviceForExpoGo = useCallback(
+    ({ noDeviceWarning }: { noDeviceWarning: string }) => {
+      const selectedIosDevice = devicesPerPlatform.ios.devices.get(selectedDevicesIds.ios ?? '');
+      const selectedAndroidDevice = devicesPerPlatform.android.devices.get(
+        selectedDevicesIds.android ?? ''
+      );
 
-    if (selectedIosDevice || selectedAndroidDevice) {
-      return selectedIosDevice ?? selectedAndroidDevice;
-    }
+      if (selectedIosDevice || selectedAndroidDevice) {
+        return selectedIosDevice ?? selectedAndroidDevice;
+      }
 
-    const iosDevicesArray = Array.from(devicesPerPlatform.ios.devices.values());
-    const androidDevicesArray = Array.from(devicesPerPlatform.android.devices.values());
+      const iosDevicesArray = Array.from(devicesPerPlatform.ios.devices.values());
+      const androidDevicesArray = Array.from(devicesPerPlatform.android.devices.values());
 
-    const bootedIosDevice = iosDevicesArray?.find(
-      (d) => isVirtualDevice(d) && d.state === 'Booted'
-    );
-    const bootedAndroidDevice = androidDevicesArray?.find(
-      (d) => isVirtualDevice(d) && d.state === 'Booted'
-    );
+      const bootedIosDevice = iosDevicesArray?.find(
+        (d) => isVirtualDevice(d) && d.state === 'Booted'
+      );
+      const bootedAndroidDevice = androidDevicesArray?.find(
+        (d) => isVirtualDevice(d) && d.state === 'Booted'
+      );
 
-    const fistDeviceAvailable = iosDevicesArray?.[0] ?? androidDevicesArray?.[0];
+      const fistDeviceAvailable = iosDevicesArray?.[0] ?? androidDevicesArray?.[0];
 
-    const device = bootedIosDevice ?? bootedAndroidDevice ?? fistDeviceAvailable;
+      const device = bootedIosDevice ?? bootedAndroidDevice ?? fistDeviceAvailable;
 
-    if (!device) {
-      Alert.alert("You don't have any device available to run Snack. Please check your setup.");
-      return;
-    }
+      if (!device) {
+        Alert.alert(noDeviceWarning);
+        return;
+      }
 
-    setSelectedDevicesIds((prev) => {
-      const platform = getDeviceOS(device);
-      return { ...prev, [platform]: getDeviceId(device) };
-    });
+      setSelectedDevicesIds((prev) => {
+        const platform = getDeviceOS(device);
+        return { ...prev, [platform]: getDeviceId(device) };
+      });
 
-    return device;
-  }, [devicesPerPlatform, selectedDevicesIds]);
+      return device;
+    },
+    [devicesPerPlatform, selectedDevicesIds]
+  );
 
   const ensureDeviceIsRunning = useCallback(
     async (device: Device) => {
@@ -181,7 +185,9 @@ function Core(props: Props) {
 
   const handleSnackUrl = useCallback(
     async (url: string) => {
-      const device = getAvailableDeviceForSnack();
+      const device = getAvailableDeviceForExpoGo({
+        noDeviceWarning: `You don't have any device available to run Snack, start an emulator or simulator manually.`,
+      });
       if (!device) {
         return;
       }
@@ -206,7 +212,39 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getAvailableDeviceForSnack]
+    [ensureDeviceIsRunning, getAvailableDeviceForExpoGo]
+  );
+
+  const handleExpoGoUrl = useCallback(
+    async (url: string) => {
+      const device = getAvailableDeviceForExpoGo({
+        noDeviceWarning: `You don't have any device available to run Expo Go, start an emulator or simulator manually.`,
+      });
+      if (!device) {
+        return;
+      }
+
+      try {
+        setStatus(MenuBarStatus.BOOTING_DEVICE);
+        await ensureDeviceIsRunning(device);
+        setStatus(MenuBarStatus.OPENING_EXPO_GO_PROJECT);
+        await launchExpoGoAsync({
+          url,
+          deviceId: getDeviceId(device),
+          platform: getDeviceOS(device),
+        });
+      } catch (error) {
+        if (error instanceof InternalError) {
+          Alert.alert('Something went wrong', error.message);
+        }
+        console.log(`error: ${JSON.stringify(error)}`);
+      } finally {
+        setTimeout(() => {
+          setStatus(MenuBarStatus.LISTENING);
+        }, 2000);
+      }
+    },
+    [ensureDeviceIsRunning, getAvailableDeviceForExpoGo]
   );
 
   const handleUpdateUrl = useCallback(
@@ -415,6 +453,10 @@ function Core(props: Props) {
                 Analytics.track(Event.LAUNCH_SNACK);
                 handleSnackUrl(url);
                 break;
+              case URLType.EXPO_GO:
+                Analytics.track(Event.LAUNCH_EXPO_GO);
+                handleExpoGoUrl(url);
+                break;
               case URLType.EXPO_UPDATE:
                 Analytics.track(Event.LAUNCH_EXPO_UPDATE);
                 handleUpdateUrl(url);
@@ -433,7 +475,7 @@ function Core(props: Props) {
           }
         }
       },
-      [props.isDevWindow, handleSnackUrl, handleUpdateUrl, installAppFromURI]
+      [props.isDevWindow, handleSnackUrl, handleExpoGoUrl, handleUpdateUrl, installAppFromURI]
     )
   );
 

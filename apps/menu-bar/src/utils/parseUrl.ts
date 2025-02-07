@@ -55,6 +55,12 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
     };
   }
+  if (pathname.startsWith('/go')) {
+    return {
+      urlType: URLType.EXPO_GO,
+      url: getUrlFromSearchParams(deeplinkURL.searchParams),
+    };
+  }
 
   // Deprecated formats
   if (urlWithoutProtocol.startsWith('expo.dev/artifacts')) {
@@ -94,5 +100,6 @@ export enum URLType {
   EXPO_UPDATE = 'EXPO_UPDATE',
   EXPO_BUILD = 'EXPO_BUILD',
   SNACK = 'SNACK',
+  EXPO_GO = 'EXPO_GO',
   UNKNOWN = 'UNKNOWN',
 }

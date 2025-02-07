@@ -41,6 +41,8 @@ const BuildsSection = ({ status, installAppFromURI, progress }: Props) => {
         return 'Installing Snack...';
       case MenuBarStatus.OPENING_SNACK_PROJECT:
         return 'Opening project in Snack...';
+      case MenuBarStatus.OPENING_EXPO_GO_PROJECT:
+        return 'Opening project with Expo Go...';
       case MenuBarStatus.OPENING_UPDATE:
         return 'Opening update...';
       default:
