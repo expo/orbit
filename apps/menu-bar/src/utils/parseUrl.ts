@@ -16,11 +16,20 @@ export function handleAuthUrl(url: string) {
 
   saveSessionSecret(sessionSecret);
 }
-
-export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
-  urlType: URLType;
+type BaseDeeplinkURLType = {
+  urlType: Exclude<URLType, URLType.GO>;
   url: string;
-} {
+};
+
+type GoDeeplinkURLType = {
+  urlType: URLType.GO;
+  url: string;
+  sdkVersion: string | null;
+};
+
+type DeeplinkURLType = BaseDeeplinkURLType | GoDeeplinkURLType;
+
+export function identifyAndParseDeeplinkURL(deeplinkURLString: string): DeeplinkURLType {
   /**
    * The URL implementation when running Jest does not support
    * custom schemes + URLs without domains. That's why we
@@ -49,6 +58,14 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): {
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
     };
   }
+  if (pathname.startsWith('/go')) {
+    return {
+      urlType: URLType.GO,
+      url: getUrlFromSearchParams(deeplinkURL.searchParams),
+      sdkVersion: deeplinkURL.searchParams.get('sdkVersion'),
+    };
+  }
+  // Deprecate in future versions
   if (pathname.startsWith('/snack')) {
     return {
       urlType: URLType.SNACK,
@@ -94,5 +111,6 @@ export enum URLType {
   EXPO_UPDATE = 'EXPO_UPDATE',
   EXPO_BUILD = 'EXPO_BUILD',
   SNACK = 'SNACK',
+  GO = 'GO',
   UNKNOWN = 'UNKNOWN',
 }
