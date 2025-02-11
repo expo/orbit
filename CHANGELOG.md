@@ -6,6 +6,7 @@
 
 - [Windows] Add settings option to context menu. ([#233](https://github.com/expo/orbit/pull/233) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for opening APK files from Explorer on Windows and Linux. ([#237](https://github.com/expo/orbit/pull/237) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add support for opening projects directly in Expo Go through a deep link. ([#241](https://github.com/expo/orbit/pull/241) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
