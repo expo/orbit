@@ -367,7 +367,7 @@ export async function openURLAsync(options: {
   ]);
 }
 
-export async function openSnackURLAsync(udid: string, url: string) {
+export async function openExpoGoURLAsync(udid: string, url: string) {
   return await openURLAsync({
     bundleId: EXPO_GO_BUNDLE_IDENTIFIER,
     udid,

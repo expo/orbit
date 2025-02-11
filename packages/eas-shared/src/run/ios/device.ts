@@ -2,7 +2,7 @@ import {
   getConnectedDevicesAsync,
   getBundleIdentifierForBinaryAsync,
   openURLAsync,
-  openSnackURLAsync,
+  openExpoGoURLAsync,
   ensureExpoClientInstalledAsync,
   checkIfAppIsInstalled,
 } from './appleDevice/AppleDevice';
@@ -14,7 +14,7 @@ const AppleDevice = {
   installOnDeviceAsync,
   getBundleIdentifierForBinaryAsync,
   openURLAsync,
-  openSnackURLAsync,
+  openExpoGoURLAsync,
   ensureExpoClientInstalledAsync,
   checkIfAppIsInstalled,
 };
