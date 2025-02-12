@@ -57,6 +57,33 @@ describe('identifyAndParseDeeplinkURL', () => {
     });
   });
 
+  describe('Expo GO URLs', () => {
+    it('Should parse url parameter from /go route', () => {
+      const url =
+        'exp://staging-u.expo.dev/2dce2748-c51f-4865-bae0-392af794d60a?runtime-version=exposdk%3A50.0.0&channel-name=production&snack-channel=Hhhqw6NhFw';
+      const deeplinkURL = `expo-orbit:///go?url=${encodeURIComponent(url)}`;
+
+      expect(identifyAndParseDeeplinkURL(deeplinkURL)).toEqual({
+        urlType: URLType.GO,
+        url,
+        sdkVersion: null,
+      });
+    });
+
+    it('Should parse sdkVersion parameter from /go route', () => {
+      const sdkVersion = '50.0.0';
+      const url =
+        'exp://staging-u.expo.dev/2dce2748-c51f-4865-bae0-392af794d60a?runtime-version=exposdk%3A50.0.0&channel-name=production&snack-channel=Hhhqw6NhFw';
+      const deeplinkURL = `expo-orbit:///go?url=${encodeURIComponent(url)}&sdkVersion=${sdkVersion}`;
+
+      expect(identifyAndParseDeeplinkURL(deeplinkURL)).toEqual({
+        urlType: URLType.GO,
+        url,
+        sdkVersion,
+      });
+    });
+  });
+
   describe('Snack URLs', () => {
     it('Should identiy exp.host URLs as Snack URLs', () => {
       const snackDeeplinkURL = 'expo-orbit://exp.host/@gabrieldonadel/ec41d8+IH9vwTGYrg';

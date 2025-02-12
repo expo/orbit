@@ -1,43 +1,44 @@
 import { Emulator, Simulator, AppleDevice } from 'eas-shared';
 import { parseRuntimeUrl } from 'snack-content';
 
-type launchSnackAsyncOptions = {
+type launchExpoGoURLAsyncOptions = {
   platform: 'android' | 'ios';
   deviceId: string;
+  sdkVersion?: string;
 };
 
-export async function launchSnackAsync(
-  snackURL: string,
-  { platform, deviceId }: launchSnackAsyncOptions
+export async function launchExpoGoURLAsync(
+  url: string,
+  { platform, deviceId, sdkVersion }: launchExpoGoURLAsyncOptions
 ) {
-  const version = await getSDKVersionForSnackUrl(snackURL);
+  const version = sdkVersion ?? (await getSDKVersionForSnackUrl(url));
 
   if (platform === 'android') {
-    await launchSnackOnAndroidAsync(snackURL, deviceId, version);
+    await launchExpoGoURLOnAndroidAsync(url, deviceId, version);
   } else {
-    await launchSnackOnIOSAsync(snackURL, deviceId, version);
+    await launchExpoGoURLOnIOSAsync(url, deviceId, version);
   }
 }
 
-async function launchSnackOnAndroidAsync(snackURL: string, deviceId: string, version?: string) {
+async function launchExpoGoURLOnAndroidAsync(url: string, deviceId: string, version?: string) {
   const device = await Emulator.getRunningDeviceAsync(deviceId);
 
   await Emulator.ensureExpoClientInstalledAsync(device.pid, version);
-  await Emulator.openURLAsync({ url: snackURL, pid: device.pid });
+  await Emulator.openURLAsync({ url: url, pid: device.pid });
 }
 
-async function launchSnackOnIOSAsync(snackURL: string, deviceId: string, version?: string) {
+async function launchExpoGoURLOnIOSAsync(url: string, deviceId: string, version?: string) {
   if (await Simulator.isSimulatorAsync(deviceId)) {
     await Simulator.ensureExpoClientInstalledAsync(deviceId, version);
     await Simulator.openURLAsync({
-      url: snackURL,
+      url: url,
       udid: deviceId,
     });
     return;
   }
 
   await AppleDevice.ensureExpoClientInstalledAsync(deviceId);
-  await AppleDevice.openSnackURLAsync(deviceId, snackURL);
+  await AppleDevice.openExpoGoURLAsync(deviceId, url);
 }
 
 /** Get SDK version from an EAS Update, or classic updates Snack URL */

@@ -4,7 +4,7 @@ import { downloadBuildAsync } from './commands/DownloadBuild';
 import { listDevicesAsync } from './commands/ListDevices';
 import { bootDeviceAsync } from './commands/BootDevice';
 import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
-import { launchSnackAsync } from './commands/LaunchSnack';
+import { launchExpoGoURLAsync } from './commands/LaunchExpoGo';
 import { checkToolsAsync } from './commands/CheckTools';
 import { setSessionAsync } from './commands/SetSession';
 import { detectIOSAppTypeAsync } from './commands/DetectIOSAppType';
@@ -40,11 +40,15 @@ program
   .action(returnLoggerMiddleware(installAndLaunchAppAsync));
 
 program
-  .command('launch-snack')
+  .command('launch-expo-go')
   .argument('<string>', 'Snack URL')
   .requiredOption('-p, --platform <string>', 'Selected platform')
   .requiredOption('--device-id  <string>', 'UDID or name of the device')
-  .action(returnLoggerMiddleware(launchSnackAsync));
+  .option(
+    '--sdk-version  <string>',
+    'Version of the Expo SDK that should be used by Expo Go. E.g. 52.0.0'
+  )
+  .action(returnLoggerMiddleware(launchExpoGoURLAsync));
 
 program
   .command('check-tools')
