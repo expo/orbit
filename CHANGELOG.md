@@ -2,20 +2,26 @@
 
 ## Unpublished
 
+### 🛠 Breaking changes
+
+### 🎉 New features
+
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 2.0.2 — 2025-02-27
+
 ### 🎉 New features
 
 - [Windows] Add settings option to context menu. ([#233](https://github.com/expo/orbit/pull/233) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for opening APK files from Explorer on Windows and Linux. ([#237](https://github.com/expo/orbit/pull/237) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add support for opening projects directly in Expo Go through a deep link. ([#241](https://github.com/expo/orbit/pull/241) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
-### 🐛 Bug fixes
-
 ### 💡 Others
 
 - Upgrade `react-native-macos` to 0.76.6. ([#232](https://github.com/expo/orbit/pull/232) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add tracking simulator launches. ([#246](https://github.com/expo/orbit/pull/246) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 🛠 Breaking changes
 
 ## 2.0.1 — 2024-12-03
 
