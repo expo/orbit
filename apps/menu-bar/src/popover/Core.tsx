@@ -481,6 +481,7 @@ function Core(props: Props) {
                   key={device.name}
                   onPress={() => onSelectDevice(device)}
                   onPressLaunch={async () => {
+                    Analytics.track(Event.LAUNCH_SIMULATOR);
                     await bootDeviceAsync({ platform, id });
                     refetch();
                   }}
