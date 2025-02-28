@@ -3,6 +3,22 @@
   "link": "https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json",
   "versions": [
     {
+      "version": "2.0.2",
+      "pub_date": "2025-02-27",
+      "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>[Windows] Add settings option to context menu. (<a href=\"https://github.com/expo/orbit/pull/233\">#233</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Add support for opening APK files from Explorer on Windows and Linux. (<a href=\"https://github.com/expo/orbit/pull/237\">#237</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Add support for opening projects directly in Expo Go through a deep link. (<a href=\"https://github.com/expo/orbit/pull/241\">#241</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-others\">💡 Others</h3>\n      <ul>\n        <li>Upgrade <code>react-native-macos</code> to 0.76.6. (<a href=\"https://github.com/expo/orbit/pull/232\">#232</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Add tracking simulator launches. (<a href=\"https://github.com/expo/orbit/pull/246\">#246</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>'",
+      "builds": {
+        "win32-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.2/Expo.Orbit-2.0.2-x64.Setup.exe"
+        },
+        "linux-deb-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.2/expo-orbit_2.0.2_amd64.deb"
+        },
+        "linux-rpm-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.2/expo-orbit-2.0.2-1.x86_64.rpm"
+        }
+      }
+    },
+    {
       "version": "2.0.1",
       "pub_date": "2024-12-03",
       "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Allow users to manually launch updates in Expo Go. (<a href=\"https://github.com/expo/orbit/pull/226\">#226</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>[Linux] Add support for auto updates. (<a href=\"https://github.com/expo/orbit/pull/229\">#229</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>[macOS] Fix <code>new NativeEventEmitter() requires a non-null argument</code> error when clicking &quot;See all&quot;. (<a href=\"https://github.com/expo/orbit/pull/225\">#225</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>[Linux] Add maintainer field to deb packages. (<a href=\"https://github.com/expo/orbit/pull/227\">#227</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",

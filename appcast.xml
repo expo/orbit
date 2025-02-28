@@ -7,6 +7,34 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.0.2</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>[Windows] Add settings option to context menu. (<a href="https://github.com/expo/orbit/pull/233">#233</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add support for opening APK files from Explorer on Windows and Linux. (<a href="https://github.com/expo/orbit/pull/237">#237</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add support for opening projects directly in Expo Go through a deep link. (<a href="https://github.com/expo/orbit/pull/241">#241</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Upgrade <code>react-native-macos</code> to 0.76.6. (<a href="https://github.com/expo/orbit/pull/232">#232</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add tracking simulator launches. (<a href="https://github.com/expo/orbit/pull/246">#246</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2025-02-27</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.0.2</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.2/expo-orbit.v2.0.2-macos.zip"
+        sparkle:version="32"
+        sparkle:shortVersionString="2.0.2"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.0.1</title>
       <description>
       <![CDATA[
