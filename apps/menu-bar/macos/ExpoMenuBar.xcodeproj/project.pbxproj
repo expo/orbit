@@ -268,6 +268,7 @@
 			buildConfigurationList = 5142015A2437B4B40078DB4F /* Build configuration list for PBXNativeTarget "ExpoMenuBar-macOS" */;
 			buildPhases = (
 				1A938104A937498D81B3BD3B /* [CP] Check Pods Manifest.lock */,
+				C091563F2D7787B200FC1EB6 /* Archive and sign CLI  */,
 				381D8A6F24576A6C00465D17 /* Start Packager */,
 				63FA8EA00DD165DC6FA0B487 /* [Expo] Configure project */,
 				514201452437B4B30078DB4F /* Sources */,
@@ -460,6 +461,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ExpoMenuBar-macOS/expo-configure-project.sh\"\n";
+		};
+		C091563F2D7787B200FC1EB6 /* Archive and sign CLI  */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Archive and sign CLI ";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$CONFIGURATION\" == \"Release\" ]; then \n    echo \"Archive and signing CLI...\"\n   \"$PODS_ROOT/../\"scripts/archive_cli.sh  \nelse\n    echo \"Skipping archiving CLI\"\nfi\n";
 		};
 		DF76CD60CADE3DD346ABE802 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
