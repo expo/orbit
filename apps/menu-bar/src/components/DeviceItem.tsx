@@ -27,7 +27,7 @@ const isValidDevice = (device: Device): boolean => {
   ) {
     Alert.alert(
       'Developer Mode Required',
-      'To use this device, you must enable developer mode on your device.'
+      'To use this device, you must enable developer mode on your device settings.'
     );
     return false;
   }

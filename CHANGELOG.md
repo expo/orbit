@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add warning when developer mode is disabled on iOS. ([#250](https://github.com/expo/orbit/pull/250) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
