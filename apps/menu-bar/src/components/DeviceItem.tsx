@@ -1,14 +1,16 @@
 import { palette } from '@expo/styleguide-native';
 import { Device } from 'common-types/build/devices';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Pressable } from 'react-native';
 
 import Button from './Button';
 import { Text } from './Text';
 import { Row, View } from './View';
+import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
+import Alert from '../modules/Alert';
 import { PlatformColor } from '../modules/PlatformColor';
 import { useTheme } from '../providers/ThemeProvider';
 import { isVirtualDevice } from '../utils/device';
@@ -17,6 +19,22 @@ import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const DEVICE_ITEM_HEIGHT = 42;
 
+const isValidDevice = (device: Device): boolean => {
+  if (
+    device.osType === 'iOS' &&
+    device.deviceType === 'device' &&
+    device.developerModeStatus === 'disabled'
+  ) {
+    Alert.alert(
+      'Developer Mode Required',
+      'To use this device, you must enable developer mode on your device settings.'
+    );
+    return false;
+  }
+
+  return true;
+};
+
 interface Props {
   device: Device;
   onPress: () => void;
@@ -24,13 +42,19 @@ interface Props {
   selected?: boolean;
 }
 
-const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
+const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: Props) => {
   const theme = useExpoTheme();
   const currentTheme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isDeviceLaunching, setDeviceLaunching] = useState(false);
 
   const isVirtual = isVirtualDevice(device);
+
+  const onPress = useCallback(() => {
+    if (isValidDevice(device)) {
+      propOnPress();
+    }
+  }, [device, propOnPress]);
 
   return (
     <Pressable
@@ -86,6 +110,14 @@ const DeviceItem = ({ device, onPress, onPressLaunch, selected }: Props) => {
             ) : (
               <CableConnectorIcon height={24} width={24} fill={PlatformColor('text')} />
             )}
+            {device.osType === 'iOS' && device.developerModeStatus === 'disabled' ? (
+              <AlertIcon
+                height={15}
+                width={15}
+                fill={PlatformColor('labelColor')}
+                style={{ opacity: currentTheme === 'dark' ? 0.65 : 0.85 }}
+              />
+            ) : null}
           </>
         )}
         {isVirtual && device.state === 'Booted' && (

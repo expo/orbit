@@ -12,6 +12,7 @@ export interface AppleConnectedDevice {
   /** @example `15.4.1` */
   osVersion: string;
   osType: 'iOS';
+  developerModeStatus?: 'enabled' | 'disabled';
 }
 
 export interface IosSimulator {

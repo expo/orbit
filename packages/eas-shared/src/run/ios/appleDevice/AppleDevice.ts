@@ -56,6 +56,7 @@ async function getConnectedDevicesUsingNativeToolsAsync(): Promise<AppleConnecte
             device.connectionProperties.transportType === 'localNetwork' ? 'Network' : 'USB',
           osVersion: device.deviceProperties.osVersionNumber,
           osType: device.hardwareProperties.platform as 'iOS',
+          developerModeStatus: device.deviceProperties.developerModeStatus,
         };
       })
   );

@@ -72,7 +72,7 @@ type DeviceCtlDeviceProperties = {
   /** false */
   ddiServicesAvailable: boolean;
 
-  developerModeStatus: AnyEnum<'enabled'>;
+  developerModeStatus: 'enabled' | 'disabled';
   /** false */
   hasInternalOSBuild: boolean;
   /** "Evan's phone" */
