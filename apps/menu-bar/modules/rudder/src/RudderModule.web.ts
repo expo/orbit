@@ -15,6 +15,9 @@ const RudderModule: RudderClient = {
         name: RudderElectronModule.platform,
         version: RudderElectronModule.osVersion,
       },
+      device: {
+        model: RudderElectronModule.osArch,
+      },
       app: {
         name: 'orbit',
         version: RudderElectronModule.appVersion,

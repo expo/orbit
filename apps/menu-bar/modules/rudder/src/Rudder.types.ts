@@ -12,6 +12,7 @@ export interface ElectronRudderModule {
   platform: string;
   appVersion: string;
   osVersion: string;
+  osArch: string;
 }
 
 export interface RudderClient {
