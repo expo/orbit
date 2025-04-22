@@ -13,6 +13,7 @@
 ### 💡 Others
 
 - Add CLI archive build phase to macOS project. ([#248](https://github.com/expo/orbit/pull/248) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add arch info to Rudder module. ([#252](https://github.com/expo/orbit/pull/252) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.0.2 — 2025-02-27
 

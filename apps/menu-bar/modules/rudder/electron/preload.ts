@@ -1,3 +1,5 @@
+import { ElectronRudderModule } from '../src/Rudder.types';
+
 function getAnalyticsPlatformFromPlatform(platform: string): string {
   switch (platform) {
     case 'darwin':
@@ -9,7 +11,7 @@ function getAnalyticsPlatformFromPlatform(platform: string): string {
   }
 }
 
-const RudderModule = {
+const RudderModule: Pick<ElectronRudderModule, 'name' | 'platform'> = {
   name: 'Rudder',
   platform: getAnalyticsPlatformFromPlatform(process.platform),
 };
