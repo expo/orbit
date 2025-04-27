@@ -13,3 +13,5 @@ apps/menu-bar/cli/expo-orbit-cli
 apps/menu-bar/cli/orbit-cli*
 
 .idea
+
+.DS_Store
