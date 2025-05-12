@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix "no such file" error when opening cached builds. ([#256](https://github.com/expo/orbit/pull/256) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 - Add CLI archive build phase to macOS project. ([#248](https://github.com/expo/orbit/pull/248) by [@gabrieldonadel](https://github.com/gabrieldonadel))
