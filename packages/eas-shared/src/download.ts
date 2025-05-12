@@ -125,15 +125,8 @@ export async function downloadAndMaybeExtractAppAsync(url: string): Promise<stri
   const name = encodeURIComponent(url.replace(/^[^:]+:\/\//, ''));
 
   const outputDir = path.join(_downloadsCacheDirectory(), `${name}`);
-  if (await fs.pathExists(outputDir)) {
-    try {
-      const appPath = await getAppPathAsync(outputDir);
-      return appPath;
-    } catch (error) {
-      if (error instanceof InternalError) {
-        throw error;
-      }
-    }
+  if (await checkCacheAvailabilityAsync(outputDir)) {
+    return outputDir;
   }
 
   await fs.promises.mkdir(outputDir, { recursive: true });
@@ -177,6 +170,24 @@ export async function extractAppFromLocalArchiveAsync(appArchivePath: string): P
   await tarExtractAsync(appArchivePath, outputDir);
 
   return await getAppPathAsync(outputDir);
+}
+
+async function checkCacheAvailabilityAsync(outputDir: string): Promise<boolean> {
+  if (!(await fs.pathExists(outputDir))) {
+    return false;
+  }
+
+  try {
+    const appPath = await getAppPathAsync(outputDir);
+    if (appPath.endsWith('.app')) {
+      // Check for Info.plist because the folder may exist but not be a valid .app
+      return fs.existsSync(path.join(appPath, 'Info.plist'));
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 async function getAppPathAsync(outputDir: string): Promise<string> {
