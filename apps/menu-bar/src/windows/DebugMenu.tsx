@@ -1,6 +1,7 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { View, Row, Text } from '../components';
+import Button from '../components/Button';
 import { DebugLogs } from '../components/DebugLogs';
 import NativeColorPalette from '../components/NativeColorPalette';
 import MenuBarModule from '../modules/MenuBarModule';
@@ -15,12 +16,20 @@ const DebugMenu = () => {
         </Text>
       </Row>
       <DebugLogs />
-      <TouchableOpacity onPress={resetStorage}>
-        <Text color="warning">Reset storage</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={resetApolloStore}>
-        <Text color="warning">Clear Apollo Store</Text>
-      </TouchableOpacity>
+      <Row mb="1" align="center">
+        <Button
+          style={styles.button}
+          color="primary"
+          title="Reset MMKV storage"
+          onPress={resetStorage}
+        />
+        <Button
+          style={styles.button}
+          color="primary"
+          title="Clear Apollo Store"
+          onPress={resetApolloStore}
+        />
+      </Row>
       <NativeColorPalette />
       <Row>
         <Text color="secondary" style={styles.about}>
@@ -36,5 +45,8 @@ export default DebugMenu;
 const styles = StyleSheet.create({
   about: {
     fontSize: 13,
+  },
+  button: {
+    height: 28,
   },
 });
