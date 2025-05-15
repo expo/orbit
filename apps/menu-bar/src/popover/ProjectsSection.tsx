@@ -61,6 +61,7 @@ export const ProjectsSection = ({ apps }: Props) => {
       />
       <FlatList
         data={apps}
+        contentContainerStyle={styles.listContentContainer}
         alwaysBounceVertical={apps.length > minNumberOfApps}
         renderItem={({ item: app, index }) => (
           <Item
@@ -96,5 +97,8 @@ const styles = StyleSheet.create({
   },
   itemMargin: {
     marginBottom: spacing[1],
+  },
+  listContentContainer: {
+    width: '100%',
   },
 });
