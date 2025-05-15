@@ -11,6 +11,7 @@
 ### 🐛 Bug fixes
 
 - Fix "no such file" error when opening cached builds. ([#256](https://github.com/expo/orbit/pull/256) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Ensure UsbmuxClient can load binary plist pair record data from Apple devices. ([#257](https://github.com/expo/orbit/pull/257) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
