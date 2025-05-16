@@ -10,23 +10,21 @@
 #import "Expo_Orbit-Swift.h"
 #import "DragDropStatusItemView.h"
 
-
-@interface AppDelegate () <RCTBridgeDelegate>
-#if RCT_DEV
-  @property (nonatomic, strong) NSWindowController *devWindowController;
-#endif
-
-@end
-
 @implementation AppDelegate
 
-- (void)awakeFromNib {
-  [super awakeFromNib];
+- (void)applicationDidFinishLaunching:(NSNotification *)notification {
+  httpServer = [[SwifterWrapper alloc] init];
+  
+  self.moduleName = @"main";
+  // You can add your custom initial props in the dictionary below.
+  // They will be passed down to the ViewController used by React Native.
+  self.initialProps = @{};
 
-  _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:nil];
+  return [super applicationDidFinishLaunching:notification];
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+- (void)loadReactNativeWindow:(NSDictionary *)launchOptions
+{
   statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
   DragDropStatusItemView *dragDropView = [[DragDropStatusItemView alloc] initWithFrame:NSMakeRect(0, 0, 22, 22)];
    dragDropView.openPopoverAction = ^{
@@ -37,10 +35,9 @@
   [statusItem.button sendActionOn:NSEventMaskRightMouseUp | NSEventMaskLeftMouseUp];
   [statusItem.button setAction:@selector(onPressStatusItem:)];
 
-  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:_bridge
-                                                moduleName:@"main"
-                                        initialProperties:@{}];
-
+  RCTPlatformView *rootView = [self.rootViewFactory viewWithModuleName:self.moduleName
+                                                     initialProperties:self.initialProps
+                                                         launchOptions:launchOptions];
   NSViewController *rootViewController = [[NSViewController alloc] init];
   rootViewController.view = rootView;
 
@@ -64,9 +61,13 @@
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
   #endif
 #endif
+  
   [NSApp activateIgnoringOtherApps:YES];
+}
 
-  httpServer = [[SwifterWrapper alloc] init];
+- (void)customizeRootView:(RCTUIView *)rootView
+{
+  rootView.backgroundColor = [NSColor clearColor];
 }
 
 - (BOOL)application:(NSApplication *)_ openFile:(NSString *)filename
@@ -108,7 +109,7 @@
                        ofView:statusItem.button
                 preferredEdge:NSMinYEdge];
   [popover.contentViewController.view.window makeKeyWindow];
-  [_bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
+  [self.bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
                     args:@[@"popoverFocused", @{
                       @"screenSize": @{
                         @"height":  @([[NSScreen mainScreen] frame].size.height),
@@ -190,12 +191,32 @@
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
+  return [self bundleURL];
+}
+
+- (NSURL *)bundleURL
+{
 #if DEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@".expo/.virtual-metro-entry"];
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
 }
+
+/// This method controls whether the `concurrentRoot`feature of React18 is turned on or off.
+///
+/// @see: https://reactjs.org/blog/2022/03/29/react-v18.html
+/// @note: This requires to be rendering on Fabric (i.e. on the New Architecture).
+/// @return: `true` if the `concurrentRoot` feature is enabled. Otherwise, it returns `false`.
+- (BOOL)concurrentRootEnabled
+{
+#ifdef RN_FABRIC_ENABLED
+  return true;
+#else
+  return false;
+#endif
+}
+
 
 - (IBAction)showHelp:(id)sender {
   [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://docs.expo.dev/build/orbit/"]];
