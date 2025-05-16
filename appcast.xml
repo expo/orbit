@@ -7,6 +7,38 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.0.3</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add a warning when developer mode is disabled on iOS. (<a href="https://github.com/expo/orbit/pull/250">#250</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix &quot;no such file&quot; error when opening cached builds. (<a href="https://github.com/expo/orbit/pull/256">#256</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Ensure UsbmuxClient can load binary plist pair record data from Apple devices. (<a href="https://github.com/expo/orbit/pull/257">#257</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Add CLI archive build phase to macOS project. (<a href="https://github.com/expo/orbit/pull/248">#248</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add arch info to Rudder module. (<a href="https://github.com/expo/orbit/pull/252">#252</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native</code> and <code>react-native-macos</code> to 0.76.9. (<a href="https://github.com/expo/orbit/pull/258">#258</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2025-05-16</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.0.3</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.3/expo-orbit.v2.0.3-macos.zip"
+        sparkle:version="33"
+        sparkle:shortVersionString="2.0.3"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.0.2</title>
       <description>
       <![CDATA[
