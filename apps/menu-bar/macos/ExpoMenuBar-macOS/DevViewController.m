@@ -8,13 +8,15 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
-  RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge moduleName:@"main" initialProperties:@{@"isDevWindow" : @YES}];
+  RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
+  RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:@"main"
+                                                                  initialProperties:@{@"isDevWindow" : @YES}];
 
   NSView *view = [self view];
+  view.wantsLayer = YES;
+  view.layer.backgroundColor = [NSColor windowBackgroundColor].CGColor;
 
   [view addSubview:rootView];
-  [rootView setBackgroundColor:[NSColor windowBackgroundColor]];
   [rootView setFrame:[view bounds]];
   [rootView setAutoresizingMask:(NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin | NSViewWidthSizable | NSViewHeightSizable)];
 }

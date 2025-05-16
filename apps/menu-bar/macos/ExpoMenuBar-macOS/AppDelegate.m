@@ -14,7 +14,7 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification {
   httpServer = [[SwifterWrapper alloc] init];
-  
+
   self.moduleName = @"main";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
@@ -61,7 +61,7 @@
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
   #endif
 #endif
-  
+
   [NSApp activateIgnoringOtherApps:YES];
 }
 
@@ -216,7 +216,6 @@
   return false;
 #endif
 }
-
 
 - (IBAction)showHelp:(id)sender {
   [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"https://docs.expo.dev/build/orbit/"]];
