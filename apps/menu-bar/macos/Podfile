@@ -19,8 +19,15 @@ prepare_react_native_project!
 target 'ExpoMenuBar-macOS' do
   platform :macos, '11.0'
   use_expo_modules!
-  config = use_native_modules!
-
+  config_command = [
+    'npx',
+    'expo-modules-autolinking',
+    'react-native-config',
+    '--json',
+    '--platform',
+    'ios'
+  ]
+  config = use_native_modules!(config_command)
 
   relative_rn_macos_path = "#{config[:reactNativePath]}-macos"
   use_react_native!(

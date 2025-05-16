@@ -59,10 +59,9 @@
         }
       };
 
-      RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
-      RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
-                                                       moduleName:moduleName
-                                                initialProperties:@{}];
+      RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
+      RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:moduleName
+                                                                       initialProperties:@{}];
       newWindow.contentView = rootView;
       [self->_windowsMap setObject:newWindow forKey:moduleName];
       newWindow.delegate = self;
@@ -80,8 +79,8 @@
     [window setTitlebarAppearsTransparent:titlebarAppearsTransparent];
     if(window.styleMask != windowStyleMask){
       [window setStyleMask:windowStyleMask];
-      [window display];
     }
+    [window display];
 
     NSApplication *application = [NSApplication sharedApplication];
     [application activateIgnoringOtherApps:YES];
@@ -101,7 +100,7 @@
 - (void)windowDidBecomeKey:(NSNotification *)notification {
   RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
   NSWindow *keyWindow = notification.object;
-  
+
   for (NSString *moduleName in self->_windowsMap) {
     NSWindow *window = self->_windowsMap[moduleName];
     if (window == keyWindow) {
