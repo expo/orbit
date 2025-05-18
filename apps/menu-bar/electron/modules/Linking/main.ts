@@ -1,5 +1,5 @@
 import { shell, app, BrowserWindow, WebContents, ipcMain } from 'electron';
-import { LinkingStatic } from 'react-native';
+import { LinkingImpl } from 'react-native';
 
 const openURLTargets = new WeakSet<WebContents>();
 
@@ -42,7 +42,7 @@ async function openURL(url: string) {
   await shell.openExternal(url);
 }
 
-const Linking: Partial<LinkingStatic> & { name: string } = {
+const Linking: Partial<LinkingImpl> & { name: string } = {
   name: 'Linking',
   openURL,
   getInitialURL,
