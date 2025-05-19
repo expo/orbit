@@ -9,11 +9,11 @@ import { getExpoHomeDirectory } from '@expo/config/build/getUserState';
 import JsonFile from '@expo/json-file';
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import { execSync } from 'child_process';
+import Debug from 'debug';
 import fs from 'fs';
 import assert from 'node:assert';
 import path from 'path';
 import tempy from 'tempy';
-import Debug from 'debug';
 
 import { xcrunAsync } from './xcrun';
 import Log from '../../log';
@@ -23,7 +23,6 @@ const DEVICE_CTL_EXISTS_PATH = path.join(getExpoHomeDirectory(), 'devicectl-exis
 
 const debug = Debug('expo:devicectl') as typeof console.log;
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 type AnyEnum<T extends string = string> = T | (string & {});
 
 type DeviceCtlDevice = {

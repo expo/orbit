@@ -24,9 +24,9 @@
     "@types/node-fetch": "^2.6.4",
     "@types/tar": "^6.1.5",
     "@types/uuid": "^9.0.1",
-    "eslint-config-universe": "^11.3.0",
+    "eslint-config-universe": "^15.0.3",
     "expo-manifests": "^0.13.1",
-    "typescript": "^5.3.0"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@expo/config": "^8.1.2",

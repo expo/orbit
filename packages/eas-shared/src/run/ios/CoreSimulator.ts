@@ -1,6 +1,6 @@
+import { sync as globSync } from 'fast-glob';
 import fs from 'fs';
 import { boolish } from 'getenv';
-import { sync as globSync } from 'fast-glob';
 import os from 'os';
 import path from 'path';
 

@@ -6,8 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 import Debug from 'debug';
-import util from 'util';
 import { Socket } from 'net';
+import util from 'util';
 
 import { ResponseError, ServiceClient } from './ServiceClient';
 import { LockdownProtocolClient } from '../protocol/LockdownProtocol';

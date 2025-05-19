@@ -1,20 +1,20 @@
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
+import { IosSimulator } from 'common-types/build/devices';
 import fs from 'fs-extra';
 import path from 'path';
-import { IosSimulator } from 'common-types/build/devices';
 
 import * as CoreSimulator from './CoreSimulator';
+import { EXPO_GO_BUNDLE_IDENTIFIER } from './constants';
 import { simctlAsync } from './simctl';
 import { xcrunAsync } from './xcrun';
 import { downloadAppAsync } from '../../downloadAppAsync';
 import Log from '../../log';
 import UserSettings from '../../userSettings';
 import { delayAsync } from '../../utils/delayAsync';
+import { parseBinaryPlistAsync } from '../../utils/parseBinaryPlistAsync';
 import { sleepAsync } from '../../utils/promise';
 import * as Versions from '../../versions';
-import { EXPO_GO_BUNDLE_IDENTIFIER } from './constants';
-import { parseBinaryPlistAsync } from '../../utils/parseBinaryPlistAsync';
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
@@ -321,7 +321,7 @@ export async function checkIfAppSupportsLaunchingUpdate({
       await parseBinaryPlistAsync(expoInfoPlistPath);
 
     return EXUpdatesRuntimeVersion === runtimeVersion;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -343,7 +343,7 @@ export async function expoSDKSupportedVersionsOnSimulatorAsync(
       await parseBinaryPlistAsync(builtInfoPlistPath);
 
     return sdkVersions;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

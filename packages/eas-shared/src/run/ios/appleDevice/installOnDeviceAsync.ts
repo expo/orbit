@@ -1,10 +1,10 @@
+import { InternalError } from 'common-types';
 import os from 'os';
 import path from 'path';
 
 import * as AppleDevice from './AppleDevice';
-import * as devicectl from '../devicectl';
 import { ensureDirectory } from '../../../utils/dir';
-import { InternalError } from 'common-types';
+import * as devicectl from '../devicectl';
 
 /** Get the app_delta folder for faster subsequent rebuilds on devices. */
 export function getAppDeltaDirectory(bundleId: string): string {

@@ -1,10 +1,10 @@
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
+import { InternalError } from 'common-types';
 
 import { getAaptExecutableAsync } from './aapt';
 import { getAdbExecutableAsync } from './adb';
 import { getEmulatorExecutableAsync } from './emulator';
-import { InternalError } from 'common-types';
 
 async function assertExecutableExistsAsync(executable: string, options?: string[]): Promise<void> {
   try {

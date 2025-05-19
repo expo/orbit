@@ -9,12 +9,12 @@ import { Platform } from './platform';
 export type Device<P> = P extends Platform.Ios
   ? IosSimulator | AppleConnectedDevice
   : P extends Platform.Android
-  ? AndroidConnectedDevice | AndroidEmulator
-  : never;
+    ? AndroidConnectedDevice | AndroidEmulator
+    : never;
 
 export type DevicesPerPlatform = {
   [P in Exclude<Platform, Platform.All>]: {
-    devices: Array<Device<P>>;
+    devices: Device<P>[];
     error?: { code: string; message: string };
   };
 };

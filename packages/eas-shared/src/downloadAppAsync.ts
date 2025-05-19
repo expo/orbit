@@ -2,8 +2,8 @@ import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import fs from 'fs-extra';
 import path from 'path';
 
-import UserSettings from './userSettings';
 import { tarExtractAsync } from './download';
+import UserSettings from './userSettings';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;

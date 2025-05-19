@@ -1,21 +1,21 @@
-import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import * as osascript from '@expo/osascript';
+import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import assert from 'assert';
 import chalk from 'chalk';
-import os from 'os';
-import path from 'path';
 import { execFileSync } from 'child_process';
-import semver from 'semver';
 import { AndroidConnectedDevice, AndroidEmulator } from 'common-types/build/devices';
 import fs from 'fs-extra';
+import os from 'os';
+import path from 'path';
+import semver from 'semver';
 
-import * as Versions from '../../versions';
-import Log from '../../log';
 import { adbAsync, isEmulatorBootedAsync, waitForEmulatorToBeBootedAsync } from './adb';
 import { getAndroidSdkRootAsync } from './sdk';
-import { downloadApkAsync } from '../../downloadApkAsync';
-import { getTmpDirectory } from '../../paths';
 import { tarExtractAsync } from '../../download';
+import { downloadApkAsync } from '../../downloadApkAsync';
+import Log from '../../log';
+import { getTmpDirectory } from '../../paths';
+import * as Versions from '../../versions';
 
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
@@ -98,7 +98,7 @@ export async function bootEmulatorAsync(
   const emulatorProcess = spawnAsync(emulatorExecutable, spawnArgs, {
     stdio: 'ignore',
     // Running detached on Windows causes a CMD window to popup. windowsHide:true does not work. Check https://github.com/nodejs/node/issues/21825
-    detached: process.platform != 'win32',
+    detached: process.platform !== 'win32',
   });
 
   // we don't want to wait for the emulator process to exit before we can finish `eas build:run` command

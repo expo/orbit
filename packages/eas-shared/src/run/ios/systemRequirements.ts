@@ -1,12 +1,12 @@
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
+import { InternalError } from 'common-types';
 import semver from 'semver';
 
-import Log from '../../log';
 import { getSimulatorAppIdAsync } from './simulator';
 import * as xcode from './xcode';
 import { isXcrunInstalledAsync } from './xcrun';
-import { InternalError } from 'common-types';
+import Log from '../../log';
 
 function assertPlatform(): void {
   if (process.platform !== 'darwin') {

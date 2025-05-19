@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "lerna run build",
+    "lint": "lerna run lint",
     "watch": "lerna run watch --stream --parallel",
     "typecheck": "lerna run typecheck",
     "postinstall": "patch-package"
