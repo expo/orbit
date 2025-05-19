@@ -43,10 +43,16 @@ jobs:
         run: yarn install --frozen-lockfile
         working-directory: apps/menu-bar/electron
 
+      - name: 🚨 Lint "common-types" package files
+        run: yarn lint --max-warnings 0
+        working-directory: packages/common-types
       - name: 📦️ Build "common-types" package
         run: yarn build
         working-directory: packages/common-types
 
+      - name: 🚨 Lint "eas-shared" package files
+        run: yarn lint --max-warnings 0
+        working-directory: packages/eas-shared
       - name: 🏗️ TSC "eas-shared" package files
         run: yarn tsc --noEmit
         working-directory: packages/eas-shared
@@ -54,6 +60,9 @@ jobs:
         run: yarn build
         working-directory: packages/eas-shared
 
+      - name: 🚨 Lint "react-native-electron-modules" package files
+        run: yarn lint --max-warnings 0
+        working-directory: packages/react-native-electron-modules
       - name: 🏗️ TSC "react-native-electron-modules" package files
         run: yarn tsc --noEmit
         working-directory: packages/react-native-electron-modules
