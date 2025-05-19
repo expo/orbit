@@ -15,5 +15,6 @@ module.exports = {
     'electron/dist/**',
     'electron/node_modules/**',
     'electron/out/**',
+    'src/generated/**',
   ],
 };

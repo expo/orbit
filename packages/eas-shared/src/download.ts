@@ -1,4 +1,6 @@
 import spawnAsync from '@expo/spawn-async';
+import { InternalError } from 'common-types';
+import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
 import glob from 'fast-glob';
 import fs from 'fs-extra';
 import path from 'path';
@@ -8,12 +10,10 @@ import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
 
 import fetch, { RequestInit, Response } from './fetch';
-import Log from './log';
 import { formatBytes } from './files';
+import Log from './log';
 import { getTmpDirectory } from './paths';
 import { ProgressHandler, createProgressTracker } from './progress';
-import { InternalError } from 'common-types';
-import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
 
 export enum AppPlatform {
   Android = 'ANDROID',
@@ -185,7 +185,7 @@ async function checkCacheAvailabilityAsync(outputDir: string): Promise<boolean> 
     }
 
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

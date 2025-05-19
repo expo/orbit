@@ -36,8 +36,8 @@ export type InternalErrorCode =
   | 'UNAUTHORIZED_ACCOUNT';
 
 export type MultipleAppsInTarballErrorDetails = {
-  apps: Array<{
+  apps: {
     name: string;
     path: string;
-  }>;
+  }[];
 };

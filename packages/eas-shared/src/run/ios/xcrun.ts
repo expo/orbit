@@ -1,6 +1,6 @@
 import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
-import { InternalError } from 'common-types';
 import chalk from 'chalk';
+import { InternalError } from 'common-types';
 
 import Log from '../../log';
 import { sleepAsync } from '../../utils/promise';

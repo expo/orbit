@@ -1,27 +1,27 @@
-import fs from 'fs';
-import path from 'path';
+import { InternalError } from 'common-types';
 import { AppleConnectedDevice } from 'common-types/build/devices';
 import debug from 'debug';
+import fs from 'fs';
+import path from 'path';
 
 import { ClientManager } from './ClientManager';
 import { XcodeDeveloperDiskImagePrerequisite } from './XcodeDeveloperDiskImagePrerequisite';
+import {
+  APP_STORE_BUNDLE_IDENTIFIER,
+  EXPO_GO_APP_STORE_URL,
+  EXPO_GO_BUNDLE_IDENTIFIER,
+} from '../constants';
+import * as devicectl from '../devicectl';
+import { xcrunAsync } from '../xcrun';
 import { IPLookupResult, OnInstallProgressCallback } from './client/InstallationProxyClient';
 import { LockdowndClient } from './client/LockdowndClient';
 import { UsbmuxdClient } from './client/UsbmuxdClient';
 import { AFC_STATUS, AFCError } from './protocol/AFCProtocol';
 import { delayAsync } from '../../../utils/delayAsync';
 import { CommandError } from '../../../utils/errors';
-import { parseBinaryPlistAsync } from '../../../utils/parseBinaryPlistAsync';
 import { installExitHooks } from '../../../utils/exit';
-import { xcrunAsync } from '../xcrun';
-import {
-  APP_STORE_BUNDLE_IDENTIFIER,
-  EXPO_GO_APP_STORE_URL,
-  EXPO_GO_BUNDLE_IDENTIFIER,
-} from '../constants';
-import { InternalError } from 'common-types';
-import * as devicectl from '../devicectl';
 import { uniqBy } from '../../../utils/fn';
+import { parseBinaryPlistAsync } from '../../../utils/parseBinaryPlistAsync';
 
 /** @returns a list of connected Apple devices. */
 export async function getConnectedDevicesAsync(): Promise<AppleConnectedDevice[]> {
@@ -43,7 +43,7 @@ async function getConnectedDevicesUsingNativeToolsAsync(): Promise<AppleConnecte
       .filter((device) => {
         return (
           device.connectionProperties.pairingState === 'paired' &&
-          device.connectionProperties.tunnelState != 'unavailable'
+          device.connectionProperties.tunnelState !== 'unavailable'
         );
       })
       .map((device) => {
@@ -321,7 +321,7 @@ export async function checkIfAppIsInstalled({
     const { [bundleId]: appInfo } = await installer.lookupApp([bundleId]);
 
     return appInfo;
-  } catch (error) {
+  } catch {
   } finally {
     clientManager.end();
   }
@@ -338,7 +338,7 @@ export async function isExpoClientInstalledOnDeviceAsync(udid: string): Promise<
 }
 
 export async function ensureExpoClientInstalledAsync(udid: string) {
-  let isInstalled = await isExpoClientInstalledOnDeviceAsync(udid);
+  const isInstalled = await isExpoClientInstalledOnDeviceAsync(udid);
 
   if (!isInstalled) {
     await openExpoGoOnAppStoreAsync(udid);

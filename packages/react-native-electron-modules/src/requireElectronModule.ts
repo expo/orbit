@@ -7,6 +7,7 @@ type ReactNativeElectronModulesObject = {
 };
 
 declare global {
+  // eslint-disable-next-line no-var
   var __reactNativeElectronModules: ReactNativeElectronModulesObject | undefined;
 }
 

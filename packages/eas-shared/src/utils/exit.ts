@@ -1,5 +1,6 @@
-import { guardAsync } from './fn';
 import debugModule from 'debug';
+
+import { guardAsync } from './fn';
 
 const debug = debugModule('expo:utils:exit') as typeof console.log;
 

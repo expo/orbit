@@ -2,8 +2,9 @@ import {
   isMultipartPartWithName,
   parseMultipartMixedResponseAsync,
 } from '@expo/multipart-body-parser';
-import fetch, { Response } from './fetch';
 import { NewManifest } from 'expo-manifests';
+
+import fetch, { Response } from './fetch';
 
 export type Manifest = NewManifest;
 
