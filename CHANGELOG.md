@@ -14,7 +14,7 @@
 
 - Upgrade to `expo` SDK 53 and react-native `0.79`. ([#254](https://github.com/expo/orbit/pull/254) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Update ESLint, `eslint-config-universe` and setups, bump TypeScript versions. ([#261](https://github.com/expo/orbit/pull/261) by [@Simek](https://github.com/Simek))
-- Add macos build script. ([#262](https://github.com/expo/orbit/pull/262) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add macOS build script. ([#262](https://github.com/expo/orbit/pull/262) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.0.3 — 2025-05-16
 
