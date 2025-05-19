@@ -14,7 +14,7 @@
 ## 🏎️ Start the Development environment
 
 1. From the `apps/menu-bar` directory, run `yarn start` to start Metro Bundler.
-2. Run `xed macos` and build the `menu-bar` app with Xcode.
+2. Run `yarn macos` and build the `menu-bar` app with Xcode.
 3. And Orbit should automatically show up in your menu bar.
 
 ## 📝 Writing a Commit Message
