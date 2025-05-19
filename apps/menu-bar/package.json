@@ -8,6 +8,7 @@
     "export-upload-archive": "yarn export-archive -exportOptionsPlist macos/ExportUploadOptions.plist",
     "export-local-archive": "yarn export-archive -exportOptionsPlist macos/ExportLocalOptions.plist",
     "export-web": "expo export --platform web --output-dir electron/dist",
+    "macos": "bash ./macos/scripts/build.sh",
     "notarize": "xcodebuild -exportNotarizedApp -archivePath build/ExpoOrbit.xcarchive -exportPath build/Notarized",
     "lint": "eslint .",
     "start": "expo start",
