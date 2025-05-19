@@ -69,7 +69,7 @@ export const ProjectsSection = ({ apps }: Props) => {
             key={app.id}
             onPress={() => openProjectURL(app)}>
             <Row gap="2" align="center">
-              <ProjectIcon name={app.name} iconUrl={app.icon?.url} isPinned={app.isPinned} />
+              <ProjectIcon app={app} />
               <View>
                 <Text size="small" color="default">
                   {app.name}

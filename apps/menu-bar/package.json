@@ -10,7 +10,6 @@
     "export-web": "expo export --platform web --output-dir electron/dist",
     "notarize": "xcodebuild -exportNotarizedApp -archivePath build/ExpoOrbit.xcarchive -exportPath build/Notarized",
     "lint": "eslint .",
-    "macos": "react-native run-macos",
     "start": "expo start",
     "test": "jest",
     "update-cli": "mkdir -p cli && cp -R ../cli/dist/ cli/",

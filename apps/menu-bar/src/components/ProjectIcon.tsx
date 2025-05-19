@@ -4,18 +4,22 @@ import { Text } from './Text';
 import { View } from './View';
 import PinWithOutline from '../assets/icons/pin-with-outline.svg';
 import ProjectBackgroundIcon from '../assets/icons/project-background-icon.svg';
+import { PinnedApp } from '../hooks/useGetPinnedApps.ts';
 import { getProjectBackgroundColor } from '../utils/theme';
 
-type Props = { name: string; iconUrl?: string; isPinned?: boolean };
+type Props = { app: PinnedApp };
 
-export const ProjectIcon = ({ name, iconUrl, isPinned }: Props) => {
+export const ProjectIcon = ({ app: { name, icon, isPinned, profileImageUrl } }: Props) => {
   const backgroundColor = getProjectBackgroundColor(name);
+  const iconUrl = profileImageUrl ?? icon?.url;
 
   return (
     <View style={styles.icon} align="centered">
       <View rounded="small" overflow="hidden" style={styles.icon}>
         {iconUrl ? (
-          <Image source={{ uri: iconUrl }} style={styles.flex} />
+          <View bg="secondary" flex="1" align="centered">
+            <Image source={{ uri: iconUrl }} style={StyleSheet.absoluteFill} />
+          </View>
         ) : (
           <View style={{ backgroundColor }} flex="1" align="centered">
             <View inset="full">

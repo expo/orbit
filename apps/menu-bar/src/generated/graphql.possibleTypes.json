@@ -5,9 +5,10 @@
     ],
     "ActivityTimelineProjectActivity": [
       "Build",
-      "BuildJob",
       "Submission",
-      "Update"
+      "Update",
+      "WorkerDeployment",
+      "WorkflowRun"
     ],
     "Actor": [
       "Robot",
@@ -15,12 +16,7 @@
       "User"
     ],
     "BuildOrBuildJob": [
-      "Build",
-      "BuildJob"
-    ],
-    "EASBuildOrClassicBuildJob": [
-      "Build",
-      "BuildJob"
+      "Build"
     ],
     "FcmSnippet": [
       "FcmSnippetLegacy",
