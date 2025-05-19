@@ -1,5 +1,5 @@
 #import "DevViewController.h"
-#import "AppDelegate.h"
+//#import "AppDelegate.h"
 
 #import <React/RCTRootView.h>
 
@@ -8,17 +8,17 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
-  RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:@"main"
-                                                                  initialProperties:@{@"isDevWindow" : @YES}];
-
-  NSView *view = [self view];
-  view.wantsLayer = YES;
-  view.layer.backgroundColor = [NSColor windowBackgroundColor].CGColor;
-
-  [view addSubview:rootView];
-  [rootView setFrame:[view bounds]];
-  [rootView setAutoresizingMask:(NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin | NSViewWidthSizable | NSViewHeightSizable)];
+//  RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
+//  RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:@"main"
+//                                                                  initialProperties:@{@"isDevWindow" : @YES}];
+//
+//  NSView *view = [self view];
+//  view.wantsLayer = YES;
+//  view.layer.backgroundColor = [NSColor windowBackgroundColor].CGColor;
+//
+//  [view addSubview:rootView];
+//  [rootView setFrame:[view bounds]];
+//  [rootView setAutoresizingMask:(NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin | NSViewWidthSizable | NSViewHeightSizable)];
 }
 
 @end

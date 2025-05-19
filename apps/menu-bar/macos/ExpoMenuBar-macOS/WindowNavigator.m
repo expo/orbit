@@ -3,7 +3,7 @@
 
 #import "WindowWithDeallocCallback.h"
 #import "WindowNavigator.h"
-#import "AppDelegate.h"
+//#import "AppDelegate.h"
 
 @implementation WindowNavigator
 
@@ -59,13 +59,13 @@
         }
       };
 
-      RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
-      RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:moduleName
-                                                                       initialProperties:@{}];
-      newWindow.contentView = rootView;
-      [self->_windowsMap setObject:newWindow forKey:moduleName];
-      newWindow.delegate = self;
-      window = newWindow;
+//      RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
+//      RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:moduleName
+//                                                                       initialProperties:@{}];
+//      newWindow.contentView = rootView;
+//      [self->_windowsMap setObject:newWindow forKey:moduleName];
+//      newWindow.delegate = self;
+//      window = newWindow;
     }else{
       NSRect contentRect = [window contentRectForFrameRect:[window frame]];
       if(contentRect.size.width != width || contentRect.size.height != height){
@@ -98,17 +98,17 @@
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
-  RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
-  NSWindow *keyWindow = notification.object;
-
-  for (NSString *moduleName in self->_windowsMap) {
-    NSWindow *window = self->_windowsMap[moduleName];
-    if (window == keyWindow) {
-      [bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
-                        args:@[@"windowFocused", moduleName]];
-       break;
-    }
-  }
+//  RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
+//  NSWindow *keyWindow = notification.object;
+//
+//  for (NSString *moduleName in self->_windowsMap) {
+//    NSWindow *window = self->_windowsMap[moduleName];
+//    if (window == keyWindow) {
+//      [bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
+//                        args:@[@"windowFocused", moduleName]];
+//       break;
+//    }
+//  }
 }
 
 @end
