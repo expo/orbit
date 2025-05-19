@@ -1,6 +1,5 @@
 #import "AutoResizerRootView.h"
-#import "AppDelegate.h"
-
+#import "Expo_Orbit-Swift.h"
 
 const CGFloat minimumViewSize = 40.0;
 
@@ -30,8 +29,7 @@ const CGFloat minimumViewSize = 40.0;
   CGFloat newHeight = frameHeight <= maxHeight ? frameHeight : maxHeight;
 
   dispatch_async(dispatch_get_main_queue(), ^{
-    AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
-    [appDelegate setPopoverContentSize:CGSizeMake(self.frame.size.width, newHeight)];
+    [PopoverManager.shared setPopoverContentSize:CGSizeMake(self.frame.size.width, newHeight)];
   });
 }
 
