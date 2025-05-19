@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { EmitterSubscription, LinkingStatic } from 'react-native';
+import { EmitterSubscription, LinkingImpl } from 'react-native';
 
 const eventHandlers = new Map<(event: { url: string }) => void, (event: { url: string }) => void>();
 
@@ -28,7 +28,7 @@ const addEventListener = (_: 'url', handler: (event: { url: string }) => void) =
 // Apply same behavior as react-native-web
 const canOpenURL = (): Promise<boolean> => Promise.resolve(true);
 
-const Linking: Partial<LinkingStatic> & { name: string } = {
+const Linking: Partial<LinkingImpl> & { name: string } = {
   name: 'Linking',
   canOpenURL,
   addEventListener,
