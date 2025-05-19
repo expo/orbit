@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add support for displaying new project icons. ([#260](https://github.com/expo/orbit/pull/260) by [@Simek](https://github.com/Simek))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
