@@ -2,13 +2,10 @@
 
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
-#import <React/RCTRootView.h>
 #import <React/RCTLinkingManager.h>
 
 #import "DevViewController.h"
-#import "WindowNavigator.h"
 #import "Expo_Orbit-Swift.h"
-#import "DragDropStatusItemView.h"
 
 @implementation AppDelegate
 
@@ -25,27 +22,14 @@
 
 - (void)loadReactNativeWindow:(NSDictionary *)launchOptions
 {
-  statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
-  DragDropStatusItemView *dragDropView = [[DragDropStatusItemView alloc] initWithFrame:NSMakeRect(0, 0, 22, 22)];
-   dragDropView.openPopoverAction = ^{
-     [self openPopover];
-   };
-  [statusItem.button addSubview:dragDropView];
-  [statusItem.button setTarget:self];
-  [statusItem.button sendActionOn:NSEventMaskRightMouseUp | NSEventMaskLeftMouseUp];
-  [statusItem.button setAction:@selector(onPressStatusItem:)];
-
   RCTPlatformView *rootView = [self.rootViewFactory viewWithModuleName:self.moduleName
                                                      initialProperties:self.initialProps
                                                          launchOptions:launchOptions];
   NSViewController *rootViewController = [[NSViewController alloc] init];
   rootViewController.view = rootView;
 
-  popover = [[NSPopover alloc] init];
-  popover.contentSize = NSMakeSize(380, 450);
-  popover.contentViewController = rootViewController;
-  popover.behavior = NSPopoverBehaviorTransient;
-  [self addPopoverObservers];
+  popoverManager = [PopoverManager initializeSharedWithDelegate:self];
+  [popoverManager setContentViewController:rootViewController];
 
 #ifdef SHOW_DEV_WINDOW
   #if RCT_DEV
@@ -72,90 +56,9 @@
 
 - (BOOL)application:(NSApplication *)_ openFile:(NSString *)filename
 {
-  [self openPopover];
-
+  [popoverManager openPopover];
   [NSNotificationCenter.defaultCenter postNotificationName:@"ExpoOrbit_OnOpenFile" object:filename];
   return  YES;
-}
-
-- (NSMenu *)createContextMenu {
-    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"My Menu"];
-
-    [menu addItemWithTitle:@"Settings..." action:@selector(settingsAction:) keyEquivalent:@""];
-    [menu addItemWithTitle:@"Quit" action:@selector(quitAction:) keyEquivalent:@"q"];
-
-    return menu;
-}
-
-
-- (void)quitAction:(id)sender {
-  exit(0);
-}
-
-
-- (void)settingsAction:(id)sender {
-  WindowNavigator *windowNavigator = [WindowNavigator shared];
-  [windowNavigator openWindow:@"Settings" options:@{
-    @"windowStyle": @{
-      @"titlebarAppearsTransparent": @YES,
-      @"height": @(580.0),
-      @"width": @(500.0)
-    }
-  }];
-}
-
-- (void)openPopover {
-  [popover showRelativeToRect:statusItem.button.bounds
-                       ofView:statusItem.button
-                preferredEdge:NSMinYEdge];
-  [popover.contentViewController.view.window makeKeyWindow];
-  [self.bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
-                    args:@[@"popoverFocused", @{
-                      @"screenSize": @{
-                        @"height":  @([[NSScreen mainScreen] frame].size.height),
-                        @"width":  @([[NSScreen mainScreen] frame].size.width)
-                      }
-                    }]];
-}
-
-- (void)closePopover {
-    [popover close];
-}
-
-- (void)setPopoverContentSize:(NSSize)size {
-  [popover setContentSize:size];
-  [popover.contentViewController.view setFrameSize:size];
-}
-
-- (void)addPopoverObservers {
-  NSNotificationCenter *notificationCenter = NSNotificationCenter.defaultCenter;
-  __weak typeof(self) weakSelf = self;
-
-  [notificationCenter addObserverForName:@"ExpoOrbit_OpenPopover" object:nil queue:nil usingBlock:^(NSNotification * _Nonnull notification) {
-    [weakSelf openPopover];
-  }];
-  [notificationCenter addObserverForName:@"ExpoOrbit_ClosePopover" object:nil queue:nil usingBlock:^(NSNotification * _Nonnull notification) {
-    [weakSelf closePopover];
-  }];
-}
-
-- (void)onPressStatusItem:(id)sender {
-  NSEvent *event = [NSApp currentEvent];
-  if (event.type == NSEventTypeRightMouseUp) {
-    NSMenu *contextMenu = [self createContextMenu];
-    [statusItem popUpStatusItemMenu:contextMenu];
-    return;
-  }
-
-  if (popover.isShown) {
-    [self closePopover];
-  } else {
-    [self openPopover];
-  }
-}
-
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
-  // Insert code here to tear down your application
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)__unused aNotification
@@ -171,7 +74,7 @@
 // Called when the user tries to reopen the app from the Dock or Spotlight
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender hasVisibleWindows:(BOOL)visibleWindows {
     if (!visibleWindows) {
-      [self openPopover];
+      [popoverManager openPopover];
     }
 
     return YES;
@@ -179,13 +82,10 @@
 
 - (void)getUrlEventHandler:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent
 {
-    [self openPopover];
+    [popoverManager openPopover];
     [RCTLinkingManager getUrlEventHandler:event withReplyEvent:replyEvent];
 }
 
-- (NSPopover *)popover {
-    return popover;
-}
 
 #pragma mark - RCTBridgeDelegate Methods
 
