@@ -17,7 +17,8 @@
       "bundler": "metro"
     },
     "experiments": {
-      "baseUrl": "./"
+      "baseUrl": "./",
+      "reactCompiler": true
     }
   }
 }
