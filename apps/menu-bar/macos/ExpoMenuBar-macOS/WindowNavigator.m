@@ -3,7 +3,7 @@
 
 #import "WindowWithDeallocCallback.h"
 #import "WindowNavigator.h"
-#import "AppDelegate.h"
+#import "Expo_Orbit-Swift.h"
 
 @implementation WindowNavigator
 
