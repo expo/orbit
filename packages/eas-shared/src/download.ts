@@ -126,7 +126,10 @@ export async function downloadAndMaybeExtractAppAsync(url: string): Promise<stri
 
   const outputDir = path.join(_downloadsCacheDirectory(), `${name}`);
   if (await checkCacheAvailabilityAsync(outputDir)) {
-    return outputDir;
+    const cachedAppPath = await getAppPathAsync(outputDir);
+    if (cachedAppPath) {
+      return cachedAppPath;
+    }
   }
 
   await fs.promises.mkdir(outputDir, { recursive: true });
