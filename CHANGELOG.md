@@ -6,11 +6,7 @@
 
 ### 🎉 New features
 
-- Add support for displaying new project icons. ([#260](https://github.com/expo/orbit/pull/260) by [@Simek](https://github.com/Simek))
-
 ### 🐛 Bug fixes
-
-- [electron] Fix multi display popover position logic. ([#265](https://github.com/expo/orbit/pull/265) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
@@ -18,6 +14,17 @@
 - Update ESLint, `eslint-config-universe` and setups, bump TypeScript versions. ([#261](https://github.com/expo/orbit/pull/261) by [@Simek](https://github.com/Simek))
 - Add macOS build script. ([#262](https://github.com/expo/orbit/pull/262) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Simplify `AppDelegate.m` logic in to align with Expo's template. ([#263](https://github.com/expo/orbit/pull/263) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
+## 2.0.4 — 2025-06-02
+
+### 🎉 New features
+
+- Add support for displaying new project icons. ([#260](https://github.com/expo/orbit/pull/260) by [@Simek](https://github.com/Simek))
+
+### 🐛 Bug fixes
+
+- Fix cache check to return app path instead of directory. ([#266](https://github.com/expo/orbit/pull/266) by [@altaywtf](https://github.com/altaywtf))
+- [electron] Fix multi display popover position logic. ([#265](https://github.com/expo/orbit/pull/265) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.0.3 — 2025-05-16
 

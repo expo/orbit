@@ -1,6 +1,6 @@
 {
   "name": "orbit",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "private": true,
   "scripts": {
     "archive": "yarn update-cli && xcodebuild archive -workspace macos/ExpoMenuBar.xcworkspace -scheme ExpoMenuBar-macOS -destination 'generic/platform=macOS,name=Any Mac' -archivePath build/ExpoOrbit.xcarchive",
