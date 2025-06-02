@@ -6,14 +6,20 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 2.0.4 — 2025-06-02
+
+### 🎉 New features
+
 - Add support for displaying new project icons. ([#260](https://github.com/expo/orbit/pull/260) by [@Simek](https://github.com/Simek))
 
 ### 🐛 Bug fixes
 
 - Fix cache check to return app path instead of directory. ([#266](https://github.com/expo/orbit/pull/266) by [@altaywtf](https://github.com/altaywtf))
 - [electron] Fix multi display popover position logic. ([#265](https://github.com/expo/orbit/pull/265) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 💡 Others
 
 ## 2.0.3 — 2025-05-16
 
