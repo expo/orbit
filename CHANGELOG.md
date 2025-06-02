@@ -10,6 +10,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix cache check to return app path instead of directory. ([#266](https://github.com/expo/orbit/pull/266) by [@altaywtf](https://github.com/altaywtf))
+
 ### 💡 Others
 
 ## 2.0.3 — 2025-05-16
