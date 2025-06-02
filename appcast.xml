@@ -7,6 +7,32 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.0.4</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add support for displaying new project icons. (<a href="https://github.com/expo/orbit/pull/260">#260</a> by <a href="https://github.com/Simek">@Simek</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix cache check to return app path instead of directory. (<a href="https://github.com/expo/orbit/pull/266">#266</a> by <a href="https://github.com/altaywtf">@altaywtf</a>)</li>
+        <li>[electron] Fix multi-display popover position logic. (<a href="https://github.com/expo/orbit/pull/265">#265</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2025-06-02</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.0.4</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.4/expo-orbit.v2.0.4-macos.zip"
+        sparkle:version="34"
+        sparkle:shortVersionString="2.0.4"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.0.3</title>
       <description>
       <![CDATA[
