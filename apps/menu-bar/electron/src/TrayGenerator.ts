@@ -35,13 +35,21 @@ export default class TrayGenerator {
     const trayCenterX = trayBounds.x + trayBounds.width / 2;
     const distanceToLeft = trayCenterX - workArea.x;
     const distanceToRight = workArea.x + workArea.width - trayCenterX;
-    const isLeft = distanceToLeft < distanceToRight;
+    let isLeft = distanceToLeft < distanceToRight;
 
     // Determine closest vertical edge
     const trayCenterY = trayBounds.y + trayBounds.height / 2;
     const distanceToTop = trayCenterY - workArea.y;
     const distanceToBottom = workArea.y + workArea.height - trayCenterY;
-    const isTop = distanceToTop < distanceToBottom;
+    let isTop = distanceToTop < distanceToBottom;
+
+    const zeroTray =
+      trayBounds.x === 0 && trayBounds.y === 0 && trayBounds.width === 0 && trayBounds.height === 0;
+    if (process.platform === 'linux' && zeroTray) {
+      // On Linux trayBounds may return an empty Rectagle, in these cases force to top-right corner
+      isTop = true;
+      isLeft = false;
+    }
 
     const x = isLeft
       ? workArea.x + PADDING
