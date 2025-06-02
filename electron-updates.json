@@ -3,6 +3,22 @@
   "link": "https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json",
   "versions": [
     {
+      "version": "2.0.4",
+      "pub_date": "2025-06-02",
+      "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Add support for displaying new project icons. (<a href=\"https://github.com/expo/orbit/pull/260\">#260</a> by <a href=\"https://github.com/Simek\">@Simek</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>Fix cache check to return app path instead of directory. (<a href=\"https://github.com/expo/orbit/pull/266\">#266</a> by <a href=\"https://github.com/altaywtf\">@altaywtf</a>)</li>\n        <li>[electron] Fix multi-display popover position logic. (<a href=\"https://github.com/expo/orbit/pull/265\">#265</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
+      "builds": {
+        "win32-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.4/Expo.Orbit-2.0.4-x64.Setup.exe"
+        },
+        "linux-deb-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.4/expo-orbit_2.0.4_amd64.deb"
+        },
+        "linux-rpm-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.4/expo-orbit-2.0.4-1.x86_64.rpm"
+        }
+      }
+    },
+    {
       "version": "2.0.3",
       "pub_date": "2025-05-16",
       "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Add a warning when developer mode is disabled on iOS. (<a href=\"https://github.com/expo/orbit/pull/250\">#250</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>Fix &quot;no such file&quot; error when opening cached builds. (<a href=\"https://github.com/expo/orbit/pull/256\">#256</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Ensure UsbmuxClient can load binary plist pair record data from Apple devices. (<a href=\"https://github.com/expo/orbit/pull/257\">#257</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-others\">💡 Others</h3>\n      <ul>\n        <li>Add CLI archive build phase to macOS project. (<a href=\"https://github.com/expo/orbit/pull/248\">#248</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Add arch info to Rudder module. (<a href=\"https://github.com/expo/orbit/pull/252\">#252</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Upgrade <code>react-native</code> and <code>react-native-macos</code> to 0.76.9. (<a href=\"https://github.com/expo/orbit/pull/258\">#258</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
