@@ -13,6 +13,7 @@ export type UserPreferences = {
   launchOnLogin: boolean;
   emulatorWithoutAudio: boolean;
   customSdkPath?: string;
+  trustedSources?: string[];
   showIosSimulators: boolean;
   showTvosSimulators: boolean;
   showAndroidEmulators: boolean;
