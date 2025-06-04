@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 
+import { returnLoggerMiddleware, trustedSourcesValidatorMiddleware } from './utils';
 import { downloadBuildAsync } from './commands/DownloadBuild';
 import { listDevicesAsync } from './commands/ListDevices';
 import { bootDeviceAsync } from './commands/BootDevice';
@@ -8,7 +9,7 @@ import { launchExpoGoURLAsync } from './commands/LaunchExpoGo';
 import { checkToolsAsync } from './commands/CheckTools';
 import { setSessionAsync } from './commands/SetSession';
 import { detectIOSAppTypeAsync } from './commands/DetectIOSAppType';
-import { returnLoggerMiddleware } from './utils';
+import { getTrustedSourcesAsync, setTrustedSourcesAsync } from './commands/TrustedSources';
 
 const program = new Command();
 
@@ -19,7 +20,7 @@ program
 program
   .command('download-build')
   .argument('<string>', 'Build URL')
-  .action(returnLoggerMiddleware(downloadBuildAsync));
+  .action(returnLoggerMiddleware(trustedSourcesValidatorMiddleware(downloadBuildAsync)));
 
 program
   .command('list-devices')
@@ -48,7 +49,7 @@ program
     '--sdk-version  <string>',
     'Version of the Expo SDK that should be used by Expo Go. E.g. 52.0.0'
   )
-  .action(returnLoggerMiddleware(launchExpoGoURLAsync));
+  .action(returnLoggerMiddleware(trustedSourcesValidatorMiddleware(launchExpoGoURLAsync)));
 
 program
   .command('check-tools')
@@ -64,7 +65,7 @@ program
   .option('--force-expo-go', 'Force update to be launched using Expo Go')
   .action(async (...args) => {
     const { launchUpdateAsync } = await import('./commands/LaunchUpdate');
-    returnLoggerMiddleware(launchUpdateAsync)(...args);
+    returnLoggerMiddleware(trustedSourcesValidatorMiddleware(launchUpdateAsync))(...args);
   });
 
 program
@@ -76,6 +77,13 @@ program
   .command('detect-ios-app-type')
   .argument('<string>', 'Local path of the app')
   .action(returnLoggerMiddleware(detectIOSAppTypeAsync));
+
+program.command('get-trusted-sources').action(returnLoggerMiddleware(getTrustedSourcesAsync));
+
+program
+  .command('set-trusted-sources')
+  .argument('<string>', 'Trusted sources')
+  .action(returnLoggerMiddleware(setTrustedSourcesAsync));
 
 if (process.argv.length < 3) {
   program.help();

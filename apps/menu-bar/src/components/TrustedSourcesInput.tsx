@@ -1,5 +1,5 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, TextInput as NativeTextInput } from 'react-native';
 
 import { TextInput } from './Text';
@@ -11,25 +11,29 @@ import { useCurrentTheme } from '../utils/useExpoTheme';
 const TrustedSourcesInput = React.forwardRef<
   NativeTextInput,
   React.ComponentProps<typeof TextInput> & {
-    initialValue?: string[];
-    onSave: (value: string[]) => void;
+    onSave: (trustedSources: string) => void;
   }
->(({ editable, initialValue, onSave, ...props }, forwardedRef) => {
+>(({ editable, onSave, ...props }, forwardedRef) => {
   const theme = useCurrentTheme();
-  const [value, setValue] = useState(initialValue?.join(', ') ?? '');
+  const [value, setValue] = useState(props.value ?? '');
 
   const backgroundColor =
     theme === 'light'
       ? addOpacity(lightTheme.background.default, 0.6)
       : addOpacity(darkTheme.background.default, 0.2);
 
+  useEffect(() => {
+    setValue(props.value ?? '');
+  }, [props.value]);
+
   const handleSave = () => {
     const formattedValue = value
       ?.split(',')
       .map((domain) => domain.trim())
-      .filter((i) => !!i);
+      .filter((i) => !!i)
+      .join(',');
 
-    onSave(formattedValue ?? []);
+    onSave(formattedValue);
   };
 
   return (
@@ -48,7 +52,6 @@ const TrustedSourcesInput = React.forwardRef<
         editable={editable}
         onChangeText={setValue}
         onSubmitEditing={handleSave}
-        onBlur={handleSave}
         numberOfLines={2}
       />
     </Row>

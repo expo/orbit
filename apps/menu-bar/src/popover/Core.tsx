@@ -44,7 +44,6 @@ import {
   handleAuthUrl,
   identifyAndParseDeeplinkURL,
 } from '../utils/parseUrl';
-import { validateDeeplinkURL } from '../utils/validateDeeplinkUrl';
 
 type Props = {
   isDevWindow: boolean;
@@ -409,12 +408,6 @@ function Core(props: Props) {
           try {
             const deeplinkInfo = identifyAndParseDeeplinkURL(deeplinkUrl);
             const { urlType, url } = deeplinkInfo;
-
-            const validationResult = validateDeeplinkURL(url);
-            if (!validationResult.isValid) {
-              Alert.alert('Invalid URL', validationResult.reason);
-              return;
-            }
 
             switch (urlType) {
               case URLType.AUTH:

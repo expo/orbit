@@ -10,6 +10,8 @@ import {
   WebBrowserResultType,
 } from '../../modules/web-authentication-session';
 import { withApolloProvider } from '../api/ApolloClient';
+import { getTrustedSourcesAsync } from '../commands/getTrustesSourcesAsync';
+import { setTrustedSourcesAsync } from '../commands/setTrustedSourcesAsync';
 import { Checkbox, View, Row, Text, Divider } from '../components';
 import { Avatar } from '../components/Avatar';
 import Button, { getStylesForColor } from '../components/Button';
@@ -75,9 +77,8 @@ const Settings = () => {
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
     Boolean(getUserPreferences().customSdkPath)
   );
-  const [trustedSourcesEnabled, setTrustedSourcesEnabled] = useState(
-    Boolean(getUserPreferences().trustedSources?.length)
-  );
+  const [trustedSourcesEnabled, setTrustedSourcesEnabled] = useState(false);
+  const [trustedSources, setTrustedSources] = useState<string>('');
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
 
   const { data } = useGetCurrentUserQuery({
@@ -89,6 +90,13 @@ const Settings = () => {
 
   useEffect(() => {
     AutoUpdater.getAutomaticallyChecksForUpdates().then(setAutomaticallyChecksForUpdates);
+  }, []);
+
+  useEffect(() => {
+    getTrustedSourcesAsync().then((trustedSources) => {
+      setTrustedSourcesEnabled(Boolean(trustedSources));
+      setTrustedSources(trustedSources);
+    });
   }, []);
 
   const onPressLaunchOnLogin = async (value: boolean) => {
@@ -144,11 +152,7 @@ const Settings = () => {
   const toggleTrustedSources = (value: boolean) => {
     setTrustedSourcesEnabled(value);
     if (!value) {
-      setUserPreferences((prev) => {
-        const newPreferences = { ...prev, trustedSources: undefined };
-        saveUserPreferences(newPreferences);
-        return newPreferences;
-      });
+      setTrustedSourcesAsync('');
     }
   };
 
@@ -333,16 +337,10 @@ const Settings = () => {
               <TrustedSourcesInput
                 editable={trustedSourcesEnabled}
                 onSave={(trustedSources) => {
-                  setUserPreferences((prev) => {
-                    const newPreferences = {
-                      ...prev,
-                      trustedSources,
-                    };
-                    saveUserPreferences(newPreferences);
-                    return newPreferences;
-                  });
+                  setTrustedSources(trustedSources);
+                  setTrustedSourcesAsync(trustedSources);
                 }}
-                initialValue={userPreferences.trustedSources}
+                value={trustedSources}
                 placeholder="Enter trusted sources, separated by commas (e.g. https://expo.io/**)"
               />
             </View>
