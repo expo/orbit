@@ -14,6 +14,7 @@
 - Update ESLint, `eslint-config-universe` and setups, bump TypeScript versions. ([#261](https://github.com/expo/orbit/pull/261) by [@Simek](https://github.com/Simek))
 - Add macOS build script. ([#262](https://github.com/expo/orbit/pull/262) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Simplify `AppDelegate.m` logic in to align with Expo's template. ([#263](https://github.com/expo/orbit/pull/263) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Improve setup instructions for contributors. ([#271](https://github.com/expo/orbit/pull/271) by [@altaywtf](https://github.com/altaywtf))
 
 ## 2.0.4 — 2025-06-02
 
