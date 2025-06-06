@@ -1,6 +1,7 @@
 module.exports = {
   root: true,
   extends: 'universe/native',
+  plugins: ['react-compiler'],
   overrides: [
     {
       extends: 'universe/node',
@@ -9,6 +10,7 @@ module.exports = {
   ],
   rules: {
     'react-hooks/exhaustive-deps': 'error',
+    'react-compiler/react-compiler': 'error',
   },
   ignorePatterns: [
     'electron/.vite/**',
