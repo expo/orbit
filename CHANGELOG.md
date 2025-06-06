@@ -17,6 +17,7 @@
 - Add macOS build script. ([#262](https://github.com/expo/orbit/pull/262) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Simplify `AppDelegate.m` logic in to align with Expo's template. ([#263](https://github.com/expo/orbit/pull/263) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Migrate AppDelegate to Swift. ([#264](https://github.com/expo/orbit/pull/264) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Enable react compiler. ([#272](https://github.com/expo/orbit/pull/272) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.0.4 — 2025-06-02
 
