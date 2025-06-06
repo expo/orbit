@@ -408,6 +408,7 @@ function Core(props: Props) {
           try {
             const deeplinkInfo = identifyAndParseDeeplinkURL(deeplinkUrl);
             const { urlType, url } = deeplinkInfo;
+
             switch (urlType) {
               case URLType.AUTH:
                 handleAuthUrl(url);

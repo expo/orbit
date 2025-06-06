@@ -15,3 +15,5 @@ apps/menu-bar/cli/orbit-cli*
 .idea
 
 .DS_Store
+
+coverage
