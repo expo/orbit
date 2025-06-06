@@ -1,57 +1,54 @@
+// Learn more https://docs.expo.dev/guides/customizing-metro/
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
-const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '../..');
-
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
-const {
-  resolver: { sourceExts, assetExts },
-} = config;
+const monorepoRoot = path.join(__dirname, '../..');
 
-module.exports = {
-  ...config,
-  watchFolders: [workspaceRoot],
-  resolver: {
-    ...config.resolver,
-    disableHierarchicalLookup: true,
-    nodeModulesPaths: [
-      path.resolve(projectRoot, 'node_modules'),
-      path.resolve(workspaceRoot, 'node_modules'),
-    ],
-    assetExts: assetExts.filter((ext) => ext !== 'svg'),
-    sourceExts: [...sourceExts, 'svg'],
+// Minimize the "watched" folders that Metro crawls through to speed up Metro in big monorepos.
+// Note, omitting folders disables Metro from resolving files within these folders
+// This also happens when symlinks falls within these folders, but the real location doesn't.
+config.watchFolders = [
+  __dirname, // Allow Metro to resolve all files within this project
+  path.join(monorepoRoot, 'packages'), // Allow Metro to resolve all workspace files of the monorepo
+  path.join(monorepoRoot, 'node_modules'), // Allow Metro to resolve "shared" `node_modules` of the monorepo
+];
 
-    resolveRequest: (context, moduleName, platform) => {
-      if (
-        platform === 'macos' &&
-        (moduleName === 'react-native' || moduleName.startsWith('react-native/'))
-      ) {
-        const newModuleName = moduleName.replace('react-native', 'react-native-macos');
-        return context.resolveRequest(context, newModuleName, platform);
-      }
-      return context.resolveRequest(context, moduleName, platform);
-    },
-  },
-  transformer: {
-    ...config.transformer,
-    babelTransformerPath: require.resolve('react-native-svg-transformer'),
-    getTransformOptions: async () => ({
-      transform: {
-        experimentalImportSupport: true,
-        inlineRequires: true,
-      },
-    }),
-  },
-  serializer: {
-    ...config.serializer,
-    getModulesRunBeforeMainModule() {
-      return [
-        require.resolve('react-native/Libraries/Core/InitializeCore'),
-        require.resolve('react-native-macos/Libraries/Core/InitializeCore'),
-        ...config.serializer.getModulesRunBeforeMainModule(),
-      ];
-    },
-  },
+config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== 'svg');
+config.resolver.sourceExts = [
+  ...config.resolver.sourceExts,
+  'svg', // react-native-svg-transformer
+];
+
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (
+    platform === 'macos' &&
+    (moduleName === 'react-native' || moduleName.startsWith('react-native/'))
+  ) {
+    const newModuleName = moduleName.replace('react-native', 'react-native-macos');
+    return context.resolveRequest(context, newModuleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
 };
+
+config.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer/expo');
+config.transformer.getTransformOptions = async () => ({
+  transform: {
+    experimentalImportSupport: true,
+    inlineRequires: true,
+  },
+});
+
+const originalGetModulesRunBeforeMainModule = config.serializer.getModulesRunBeforeMainModule;
+config.serializer.getModulesRunBeforeMainModule = () => {
+  try {
+    return [
+      require.resolve('react-native/Libraries/Core/InitializeCore'),
+      require.resolve('react-native-macos/Libraries/Core/InitializeCore'),
+    ];
+  } catch {}
+  return originalGetModulesRunBeforeMainModule();
+};
+
+module.exports = config;
