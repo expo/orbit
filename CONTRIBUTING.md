@@ -9,7 +9,7 @@
    - [ruby](https://www.ruby-lang.org/) (3.2 or higher is recommended)
 3. Install the Node packages (`yarn install`).
 4. Install the Ruby packages (`bundle install`) inside the `apps/menu-bar` directory.
-5. Install the Pods (`bundle exec pod install`) inside the `apps/menu-bar/macos` directory.
+5. Install the Pods (`npx pod-install`) inside the `apps/menu-bar` directory.
 6. Build `common-types`, `eas-shared` and `cli` by running `yarn build` at the root of the project.
 7. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`.
 8. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local CLI file.
