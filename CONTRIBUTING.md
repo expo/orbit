@@ -4,12 +4,15 @@
 
 1. [Fork](https://help.github.com/articles/fork-a-repo/) this repository to your own GitHub account and then [clone](https://help.github.com/articles/cloning-a-repository/) it to your local device. (`git remote add upstream git@github.com:expo/orbit.git` 😉).
 2. Make sure you have the following packages globally installed on your system:
-   - [node](https://nodejs.org/) (Node 12 or higher is recommended)
-   - [yarn](https://yarnpkg.com/)
+   - [node](https://nodejs.org/) (Node 20 or higher is recommended)
+   - [yarn](https://yarnpkg.com/) (1.22 or higher is recommended)
+   - [ruby](https://www.ruby-lang.org/) (3.2 or higher is recommended)
 3. Install the Node packages (`yarn install`).
-4. Build `common-types`, `eas-shared` and `cli` by running `yarn build` at the root of the project.
-5. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`.
-6. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local CLI file.
+4. Install the Ruby packages (`bundle install`) inside the `apps/menu-bar` directory.
+5. Install the Pods (`bundle exec pod install`) inside the `apps/menu-bar/macos` directory.
+6. Build `common-types`, `eas-shared` and `cli` by running `yarn build` at the root of the project.
+7. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`.
+8. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local CLI file.
 
 ## 🏎️ Start the Development environment
 

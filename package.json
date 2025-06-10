@@ -20,5 +20,9 @@
     "lerna": "^7.3.0",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0"
+  },
+  "packageManager": "yarn@1.22.22",
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
