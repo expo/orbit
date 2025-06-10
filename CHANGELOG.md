@@ -19,6 +19,7 @@
 - Migrate AppDelegate to Swift. ([#264](https://github.com/expo/orbit/pull/264) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Enable react compiler. ([#272](https://github.com/expo/orbit/pull/272) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade `react-native-svg-transformer` to 1.5.1 ([#273](https://github.com/expo/orbit/pull/273) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Improve setup instructions for contributors. ([#271](https://github.com/expo/orbit/pull/271) by [@altaywtf](https://github.com/altaywtf))
 
 ## 2.0.4 — 2025-06-02
 
