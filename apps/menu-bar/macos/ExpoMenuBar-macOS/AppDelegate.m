@@ -97,7 +97,7 @@
   [windowNavigator openWindow:@"Settings" options:@{
     @"windowStyle": @{
       @"titlebarAppearsTransparent": @YES,
-      @"height": @(580.0),
+      @"height": @(660.0),
       @"width": @(500.0)
     }
   }];

@@ -44,6 +44,7 @@ import {
   handleAuthUrl,
   identifyAndParseDeeplinkURL,
 } from '../utils/parseUrl';
+import { WindowsNavigator } from '../windows';
 
 type Props = {
   isDevWindow: boolean;
@@ -383,6 +384,16 @@ function Core(props: Props) {
           );
 
           await installAppFromURI(apps[selectedAppNameIndex].path);
+        }
+        if (error instanceof InternalError && error.code === 'UNTRUSTED_SOURCE') {
+          Alert.alert(
+            'Untrusted source',
+            `${error.message}\n\nYou add custom trusted sources through the Settings window.`,
+            [
+              { text: 'OK', style: 'default' },
+              { text: 'Open Settings', onPress: () => WindowsNavigator.open('Settings') },
+            ]
+          );
         } else if (error instanceof Error) {
           if (__DEV__) {
             console.log('Something went wrong while installing the app.', error.message);
