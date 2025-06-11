@@ -341,7 +341,7 @@ const Settings = () => {
                   setTrustedSourcesAsync(trustedSources);
                 }}
                 value={trustedSources}
-                placeholder="Enter trusted sources, separated by commas (e.g. https://expo.io/**)"
+                placeholder="Enter trusted sources, separated by commas (e.g. https://expo.dev/**)"
               />
             </View>
           </View>

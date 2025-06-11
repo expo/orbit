@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { returnLoggerMiddleware, trustedSourcesValidatorMiddleware } from './utils';
+import { returnLoggerMiddleware } from './utils';
 import { downloadBuildAsync } from './commands/DownloadBuild';
 import { listDevicesAsync } from './commands/ListDevices';
 import { bootDeviceAsync } from './commands/BootDevice';
@@ -9,7 +9,11 @@ import { launchExpoGoURLAsync } from './commands/LaunchExpoGo';
 import { checkToolsAsync } from './commands/CheckTools';
 import { setSessionAsync } from './commands/SetSession';
 import { detectIOSAppTypeAsync } from './commands/DetectIOSAppType';
-import { getTrustedSourcesAsync, setTrustedSourcesAsync } from './commands/TrustedSources';
+import {
+  getCustomTrustedSourcesAsync,
+  setCustomTrustedSourcesAsync,
+  trustedSourcesValidatorMiddleware,
+} from './commands/TrustedSources';
 
 const program = new Command();
 
@@ -78,12 +82,14 @@ program
   .argument('<string>', 'Local path of the app')
   .action(returnLoggerMiddleware(detectIOSAppTypeAsync));
 
-program.command('get-trusted-sources').action(returnLoggerMiddleware(getTrustedSourcesAsync));
+program
+  .command('get-custom-trusted-sources')
+  .action(returnLoggerMiddleware(getCustomTrustedSourcesAsync));
 
 program
-  .command('set-trusted-sources')
+  .command('set-custom-trusted-sources')
   .argument('<string>', 'Trusted sources')
-  .action(returnLoggerMiddleware(setTrustedSourcesAsync));
+  .action(returnLoggerMiddleware(setCustomTrustedSourcesAsync));
 
 if (process.argv.length < 3) {
   program.help();

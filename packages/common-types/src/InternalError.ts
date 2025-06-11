@@ -33,7 +33,8 @@ export type InternalErrorCode =
   | 'XCODE_NOT_INSTALLED'
   | 'SIMCTL_NOT_AVAILABLE'
   | 'NO_DEVELOPMENT_BUILDS_AVAILABLE'
-  | 'UNAUTHORIZED_ACCOUNT';
+  | 'UNAUTHORIZED_ACCOUNT'
+  | 'UNTRUSTED_SOURCE';
 
 export type MultipleAppsInTarballErrorDetails = {
   apps: {
