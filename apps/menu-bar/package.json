@@ -33,6 +33,7 @@
     "common-types": "1.0.0",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
     "expo": "~53.0.9",
+    "expo-web-browser": "^14.2.0",
     "graphql": "^16.8.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
