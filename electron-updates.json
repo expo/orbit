@@ -8,7 +8,7 @@
       "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Add support for displaying new project icons. (<a href=\"https://github.com/expo/orbit/pull/260\">#260</a> by <a href=\"https://github.com/Simek\">@Simek</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>Fix cache check to return app path instead of directory. (<a href=\"https://github.com/expo/orbit/pull/266\">#266</a> by <a href=\"https://github.com/altaywtf\">@altaywtf</a>)</li>\n        <li>[electron] Fix multi-display popover position logic. (<a href=\"https://github.com/expo/orbit/pull/265\">#265</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
       "builds": {
         "win32-x64": {
-          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.4/Expo.Orbit-2.0.4-x64.Setup.exe"
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.4/"
         },
         "linux-deb-x64": {
           "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.0.4/expo-orbit_2.0.4_amd64.deb"
