@@ -67,6 +67,8 @@ const config: ForgeConfig = {
         'Accelerate your development workflow with one-click build launches and simulator management from your menu bar',
       iconUrl:
         'https://raw.githubusercontent.com/expo/orbit/main/apps/menu-bar/electron/assets/images/icon-windows.ico',
+      loadingGif:
+        'https://raw.githubusercontent.com/expo/orbit/main/apps/menu-bar/electron/assets/images/loadingGif.gif',
     }),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({
