@@ -37,7 +37,10 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
    */
   const urlWithoutProtocol = deeplinkURLString.replace(/^[^:]+:\/\//, '');
   const deeplinkURL = new URL(
-    Platform.OS === 'web' ? urlWithoutProtocol : deeplinkURLString,
+    Platform.OS === 'web'
+      ? urlWithoutProtocol
+      : // Replace double slash URLs with tripple slash to please the URL parser
+        deeplinkURLString.replace(/^([^:]+:\/\/)(auth|update|download|go|snack)/, '$1/$2'),
     'http://expo.dev'
   );
   // On web the pathname starts with '///' instead of '/'
