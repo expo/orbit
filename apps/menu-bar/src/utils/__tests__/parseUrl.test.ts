@@ -106,6 +106,28 @@ describe('identifyAndParseDeeplinkURL', () => {
     });
   });
 
+  describe('No leading / URLs', () => {
+    it('Should parse url parameter from /download route', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const artifactDeeplinkURL = `expo-orbit://download/?url=${encodeURIComponent(artifactURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(artifactDeeplinkURL)).toEqual({
+        urlType: URLType.EXPO_BUILD,
+        url: artifactURL,
+      });
+    });
+
+    it('Should parse url parameter from /update route', () => {
+      const updateURL = 'https://u.expo.dev/update/addecbed-f477-4a75-bd88-0732dc928fe9';
+      const updateDeeplinkURL = `expo-orbit://update?url=${encodeURIComponent(updateURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(updateDeeplinkURL)).toEqual({
+        urlType: URLType.EXPO_UPDATE,
+        url: updateURL,
+      });
+    });
+  });
+
   describe('Unsuported URLs', () => {
     it('Should throw an error when the URL route is not supported', () => {
       const unsuportedURL = 'expo-orbit:///some-future-route';
