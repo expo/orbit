@@ -7,6 +7,33 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.1.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add support for configuring trusted sources for opening URLs via the CLI and menu-bar app. (<a href="https://github.com/expo/orbit/pull/270">#270</a>, <a href="https://github.com/expo/orbit/pull/275">#275</a> by <a href="https://github.com/altaywtf">@altaywtf</a>)</li>
+        <li>Add support for deep linking with both expo-orbit:// and expo-orbit:///. (<a href="https://github.com/expo/orbit/pull/279">#279</a> by <a href="https://github.com/oblador">@oblador</a>)</li>
+        <li>Add support for launching multiple apps simultaneously. (<a href="https://github.com/expo/orbit/pull/281">#281</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Remove deprecated deeplink formats. (<a href="https://github.com/expo/orbit/pull/280">#280</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2025-06-17</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.1.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.1.0/expo-orbit.v2.1.0-macos.zip"
+        sparkle:version="36"
+        sparkle:shortVersionString="2.1.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.0.4</title>
       <description>
       <![CDATA[
