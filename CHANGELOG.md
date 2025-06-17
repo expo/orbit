@@ -8,6 +8,7 @@
 
 - Add support for configuring trusted sources for opening URLs via the CLI and menu-bar app. ([#270](https://github.com/expo/orbit/pull/270), [#275](https://github.com/expo/orbit/pull/275) by [@altaywtf](https://github.com/altaywtf))
 - Add support for deep linking with both expo-orbit:// and expo-orbit:///. ([#279](https://github.com/expo/orbit/pull/279) by [@oblador](https://github.com/oblador))
+- Add support launching multiple apps simultaneously. ([#281](https://github.com/expo/orbit/pull/281) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 

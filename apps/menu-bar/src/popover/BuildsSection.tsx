@@ -8,18 +8,17 @@ import File05Icon from '../assets/icons/file-05.svg';
 import { Text, View } from '../components';
 import MenuBarModule from '../modules/MenuBarModule';
 import { openProjectsSelectorURL } from '../utils/constants';
-import { MenuBarStatus } from '../utils/helpers';
+import { MenuBarStatus, Task } from '../utils/helpers';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const BUILDS_SECTION_HEIGHT = 88;
 
 interface Props {
-  status: MenuBarStatus;
+  tasks: Map<string, Task>;
   installAppFromURI: (appURI: string) => Promise<void>;
-  progress: number;
 }
 
-const BuildsSection = ({ status, installAppFromURI, progress }: Props) => {
+const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
   const theme = useExpoTheme();
 
   async function openFilePicker() {
@@ -29,31 +28,12 @@ const BuildsSection = ({ status, installAppFromURI, progress }: Props) => {
     await installAppFromURI(appPath);
   }
 
-  function getDescription() {
-    switch (status) {
-      case MenuBarStatus.BOOTING_DEVICE:
-        return 'Initializing device...';
-      case MenuBarStatus.DOWNLOADING:
-        return 'Downloading build...';
-      case MenuBarStatus.INSTALLING_APP:
-        return 'Installing...';
-      case MenuBarStatus.INSTALLING_EXPO_GO:
-        return 'Installing Expo Go...';
-      case MenuBarStatus.OPENING_PROJECT_IN_EXPO_GO:
-        return 'Opening project in Expo Go...';
-      case MenuBarStatus.OPENING_UPDATE:
-        return 'Opening update...';
-      default:
-        return '';
-    }
-  }
-
   return (
-    <View style={{ height: BUILDS_SECTION_HEIGHT }}>
+    <View style={{ minHeight: BUILDS_SECTION_HEIGHT }}>
       <View pt="2.5" pb="tiny">
         <SectionHeader label="Builds" />
       </View>
-      {status === MenuBarStatus.LISTENING ? (
+      {tasks.size === 0 ? (
         <>
           <Item onPress={openProjectsSelectorURL}>
             <Earth02Icon stroke={theme.text.default} />
@@ -65,17 +45,40 @@ const BuildsSection = ({ status, installAppFromURI, progress }: Props) => {
           </Item>
         </>
       ) : (
-        <View px="medium">
-          <ProgressIndicator
-            progress={status === MenuBarStatus.DOWNLOADING ? progress : undefined}
-            indeterminate={status !== MenuBarStatus.DOWNLOADING}
-            key={status}
-          />
-          <Text>{getDescription()}</Text>
-        </View>
+        [...tasks.values()].map((task) => {
+          return (
+            <View px="medium" key={task.id}>
+              <ProgressIndicator
+                progress={task.status === MenuBarStatus.DOWNLOADING ? task.progress : undefined}
+                indeterminate={task.status !== MenuBarStatus.DOWNLOADING}
+                key={task.status}
+              />
+              <Text>{getDescription(task.status)}</Text>
+            </View>
+          );
+        })
       )}
     </View>
   );
 };
 
 export default BuildsSection;
+
+function getDescription(status: MenuBarStatus): string {
+  switch (status) {
+    case MenuBarStatus.BOOTING_DEVICE:
+      return 'Initializing device...';
+    case MenuBarStatus.DOWNLOADING:
+      return 'Downloading build...';
+    case MenuBarStatus.INSTALLING_APP:
+      return 'Installing...';
+    case MenuBarStatus.INSTALLING_EXPO_GO:
+      return 'Installing Expo Go...';
+    case MenuBarStatus.OPENING_PROJECT_IN_EXPO_GO:
+      return 'Opening project in Expo Go...';
+    case MenuBarStatus.OPENING_UPDATE:
+      return 'Opening update...';
+    default:
+      return '';
+  }
+}
