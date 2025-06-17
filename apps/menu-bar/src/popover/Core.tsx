@@ -37,7 +37,7 @@ import {
 } from '../modules/Storage';
 import { useListDevices } from '../providers/DevicesProvider';
 import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
-import { MenuBarStatus } from '../utils/helpers';
+import { MenuBarStatus, Task } from '../utils/helpers';
 import {
   URLType,
   getPlatformFromURI,
@@ -61,8 +61,40 @@ function Core(props: Props) {
     }, [refetchApps])
   );
 
-  const [status, setStatus] = useState(MenuBarStatus.LISTENING);
-  const [progress, setProgress] = useState(0);
+  const [tasks, setTasks] = useState<Map<string, Task>>(new Map());
+  const createTask = useCallback(
+    (props: Task) => {
+      setTasks((prevMap) => {
+        const newMap = new Map(prevMap);
+        newMap.set(props.id, props);
+        return newMap;
+      });
+    },
+    [setTasks]
+  );
+  const updateTask = useCallback(
+    (props: Partial<Task> & Pick<Task, 'id'>) => {
+      setTasks((prevMap) => {
+        const newMap = new Map(prevMap);
+        const item = newMap.get(props.id);
+        if (item) {
+          newMap.set(props.id, { ...item, ...props });
+        }
+        return newMap;
+      });
+    },
+    [setTasks]
+  );
+  const deleteTask = useCallback(
+    (id: Task['id']) => {
+      setTasks((prevMap) => {
+        const newMap = new Map(prevMap);
+        newMap.delete(id);
+        return newMap;
+      });
+    },
+    [setTasks]
+  );
 
   const {
     devicesPerPlatform,
@@ -188,9 +220,13 @@ function Core(props: Props) {
       }
 
       try {
-        setStatus(MenuBarStatus.BOOTING_DEVICE);
+        createTask({
+          id: url,
+          status: MenuBarStatus.BOOTING_DEVICE,
+          progress: 0,
+        });
         await ensureDeviceIsRunning(device);
-        setStatus(MenuBarStatus.OPENING_PROJECT_IN_EXPO_GO);
+        updateTask({ id: url, status: MenuBarStatus.OPENING_PROJECT_IN_EXPO_GO });
         await launchExpoGoAsync({
           url,
           deviceId: getDeviceId(device),
@@ -204,11 +240,11 @@ function Core(props: Props) {
         console.log(`error: ${JSON.stringify(error)}`);
       } finally {
         setTimeout(() => {
-          setStatus(MenuBarStatus.LISTENING);
+          deleteTask(url);
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getAvailableDeviceForExpoGo]
+    [ensureDeviceIsRunning, getAvailableDeviceForExpoGo, createTask, deleteTask, updateTask]
   );
 
   const handleUpdateUrl = useCallback(
@@ -241,9 +277,13 @@ function Core(props: Props) {
       }
 
       try {
-        setStatus(MenuBarStatus.BOOTING_DEVICE);
+        createTask({
+          id: url,
+          status: MenuBarStatus.BOOTING_DEVICE,
+          progress: 0,
+        });
         await ensureDeviceIsRunning(device);
-        setStatus(MenuBarStatus.OPENING_UPDATE);
+        updateTask({ id: url, status: MenuBarStatus.OPENING_UPDATE });
         await launchUpdateAsync(
           {
             url,
@@ -251,10 +291,11 @@ function Core(props: Props) {
             platform: getDeviceOS(device),
           },
           (status, progress) => {
-            setStatus(status);
-            if (status === MenuBarStatus.DOWNLOADING) {
-              setProgress(progress);
-            }
+            updateTask({
+              id: url,
+              status,
+              progress: status === MenuBarStatus.DOWNLOADING ? progress : 0,
+            });
           }
         );
       } catch (error) {
@@ -268,7 +309,7 @@ function Core(props: Props) {
                 {
                   text: 'Launch with deep link',
                   onPress: async () => {
-                    setStatus(MenuBarStatus.OPENING_UPDATE);
+                    updateTask({ id: url, status: MenuBarStatus.OPENING_UPDATE });
                     await launchUpdateAsync(
                       {
                         url,
@@ -277,18 +318,18 @@ function Core(props: Props) {
                         noInstall: true,
                       },
                       (status) => {
-                        setStatus(status);
+                        updateTask({ id: url, status });
                       }
                     );
                     setTimeout(() => {
-                      setStatus(MenuBarStatus.LISTENING);
+                      deleteTask(url);
                     }, 2000);
                   },
                 },
                 {
                   text: 'Launch with Expo Go',
                   onPress: async () => {
-                    setStatus(MenuBarStatus.OPENING_UPDATE);
+                    updateTask({ id: url, status: MenuBarStatus.OPENING_UPDATE });
                     await launchUpdateAsync(
                       {
                         url,
@@ -297,11 +338,11 @@ function Core(props: Props) {
                         forceExpoGo: true,
                       },
                       (status) => {
-                        setStatus(status);
+                        updateTask({ id: url, status });
                       }
                     );
                     setTimeout(() => {
-                      setStatus(MenuBarStatus.LISTENING);
+                      deleteTask(url);
                     }, 2000);
                   },
                 },
@@ -314,20 +355,31 @@ function Core(props: Props) {
         console.log(`error: ${JSON.stringify(error)}`);
       } finally {
         setTimeout(() => {
-          setStatus(MenuBarStatus.LISTENING);
+          deleteTask(url);
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getDeviceByPlatform]
+    [ensureDeviceIsRunning, getDeviceByPlatform, createTask, deleteTask, updateTask]
   );
 
   const installAppFromURI = useCallback(
     async (appURI: string) => {
+      if (tasks.has(appURI)) {
+        return;
+      }
+
       let localFilePath = appURI.startsWith('https://') ? undefined : appURI;
+
       try {
         if (!localFilePath) {
-          setStatus(MenuBarStatus.DOWNLOADING);
-          const buildPath = await downloadBuildAsync(appURI, setProgress);
+          createTask({
+            id: appURI,
+            status: MenuBarStatus.DOWNLOADING,
+            progress: 0,
+          });
+          const buildPath = await downloadBuildAsync(appURI, (progress) => {
+            updateTask({ id: appURI, progress });
+          });
           localFilePath = buildPath;
         }
 
@@ -347,11 +399,19 @@ function Core(props: Props) {
         }
         const deviceId = getDeviceId(device);
 
-        setStatus(MenuBarStatus.BOOTING_DEVICE);
+        if (tasks.get(appURI)) {
+          updateTask({ id: appURI, status: MenuBarStatus.BOOTING_DEVICE });
+        } else {
+          createTask({
+            id: appURI,
+            status: MenuBarStatus.BOOTING_DEVICE,
+            progress: 0,
+          });
+        }
         await ensureDeviceIsRunning(device);
 
         try {
-          setStatus(MenuBarStatus.INSTALLING_APP);
+          updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
           await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
         } catch (error) {
           if (error instanceof InternalError) {
@@ -403,11 +463,11 @@ function Core(props: Props) {
         }
       } finally {
         setTimeout(() => {
-          setStatus(MenuBarStatus.LISTENING);
+          deleteTask(appURI);
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getDeviceByPlatform]
+    [ensureDeviceIsRunning, getDeviceByPlatform, createTask, deleteTask, updateTask, tasks]
   );
 
   useFileHandler({ onOpenFile: installAppFromURI });
@@ -471,7 +531,7 @@ function Core(props: Props) {
 
   return (
     <View shrink="1">
-      <BuildsSection status={status} installAppFromURI={installAppFromURI} progress={progress} />
+      <BuildsSection installAppFromURI={installAppFromURI} tasks={tasks} />
       <ProjectsSection apps={apps} />
       <View shrink="1" pt="tiny" overflow="hidden">
         {devicesError ? (
