@@ -30,17 +30,23 @@ type GoDeeplinkURLType = {
 type DeeplinkURLType = BaseDeeplinkURLType | GoDeeplinkURLType;
 
 export function identifyAndParseDeeplinkURL(deeplinkURLString: string): DeeplinkURLType {
+  // Replace double slash URLs with triple slash to support Slack and other deeplink previews
+  const tripleSlashURL = deeplinkURLString.replace(
+    /^([^:]+:\/\/)(auth|update|download|go|snack)/,
+    '$1/$2'
+  );
+
   /**
    * The URL implementation when running Jest does not support
    * custom schemes + URLs without domains. That's why we
    * default to http://expo.dev when creating a new URL instance.
    */
-  const urlWithoutProtocol = deeplinkURLString.replace(/^[^:]+:\/\//, '');
+  const urlWithoutProtocol = tripleSlashURL.replace(/^[^:]+:\/\//, '');
   const deeplinkURL = new URL(
     Platform.OS === 'web'
       ? urlWithoutProtocol
-      : // Replace double slash URLs with tripple slash to please the URL parser
-        deeplinkURLString.replace(/^([^:]+:\/\/)(auth|update|download|go|snack)/, '$1/$2'),
+      : // Replace double slash URLs with triple slash to please the URL parser
+        tripleSlashURL,
     'http://expo.dev'
   );
   // On web the pathname starts with '///' instead of '/'
@@ -76,20 +82,6 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
     };
   }
 
-  // Deprecated formats
-  if (urlWithoutProtocol.startsWith('expo.dev/artifacts')) {
-    return {
-      urlType: URLType.EXPO_BUILD,
-      url: `https://${urlWithoutProtocol}`,
-    };
-  }
-  if (urlWithoutProtocol.includes('exp.host/')) {
-    return {
-      urlType: URLType.SNACK,
-      url: `exp://${urlWithoutProtocol}`,
-    };
-  }
-
   // For future usage when we add support for other URL formats
   if (
     urlWithoutProtocol.indexOf('/') < urlWithoutProtocol.indexOf('.') ||
@@ -98,7 +90,7 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
     throw new Error('Please make sure you are using the latest version of Expo Orbit.');
   }
 
-  return { urlType: URLType.UNKNOWN, url: `https://${urlWithoutProtocol}` };
+  throw new Error('Unsupported URL');
 }
 
 function getUrlFromSearchParams(searchParams: URLSearchParams): string {

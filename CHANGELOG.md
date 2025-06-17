@@ -13,6 +13,8 @@
 
 ### 💡 Others
 
+- Remove deprecated deeplink formats. ([#280](https://github.com/expo/orbit/pull/280) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 2.0.4 — 2025-06-02
 
 ### 🎉 New features
