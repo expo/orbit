@@ -5,7 +5,8 @@ import { InternalError } from 'common-types';
 
 const DEFAULT_TRUSTED_SOURCES = [
   'https://expo.dev/**',
-  'https://staging.expo.dev/**',
+  'https://*.expo.dev/**',
+  'exp://*.expo.dev/**',
   'https://expo.test/**',
 ];
 export const getTrustedSources = () => {
