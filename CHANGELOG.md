@@ -22,6 +22,7 @@
 - Upgrade `react-native-svg-transformer` to 1.5.1 ([#273](https://github.com/expo/orbit/pull/273) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve setup instructions for contributors. ([#271](https://github.com/expo/orbit/pull/271) by [@altaywtf](https://github.com/altaywtf))
 - Use `expo-web-browser` for authentication on macOS. ([#276](https://github.com/expo/orbit/pull/276) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Remove deprecated deeplink formats. ([#280](https://github.com/expo/orbit/pull/280) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.0.4 — 2025-06-02
 
