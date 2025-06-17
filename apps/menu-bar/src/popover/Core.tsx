@@ -244,7 +244,7 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getAvailableDeviceForExpoGo]
+    [ensureDeviceIsRunning, getAvailableDeviceForExpoGo, createTask, deleteTask, updateTask]
   );
 
   const handleUpdateUrl = useCallback(
@@ -359,7 +359,7 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getDeviceByPlatform]
+    [ensureDeviceIsRunning, getDeviceByPlatform, createTask, deleteTask, updateTask]
   );
 
   const installAppFromURI = useCallback(
@@ -467,7 +467,7 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getDeviceByPlatform]
+    [ensureDeviceIsRunning, getDeviceByPlatform, createTask, deleteTask, updateTask, tasks]
   );
 
   useFileHandler({ onOpenFile: installAppFromURI });
