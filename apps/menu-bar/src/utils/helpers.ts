@@ -52,3 +52,9 @@ export function extractDownloadProgress(string: string) {
 
   return 0;
 }
+
+export type Task = {
+  id: string;
+  status: MenuBarStatus;
+  progress: number;
+};
