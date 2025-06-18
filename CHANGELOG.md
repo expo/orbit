@@ -10,16 +10,6 @@
 
 ### 💡 Others
 
-## 2.0.5 — 2025-06-17
-
-### 🎉 New features
-
-- Add support for configuring trusted sources for opening URLs via the CLI and menu-bar app. ([#270](https://github.com/expo/orbit/pull/270), [#275](https://github.com/expo/orbit/pull/275) by [@altaywtf](https://github.com/altaywtf))
-- Add support for deep linking with both expo-orbit:// and expo-orbit:///. ([#279](https://github.com/expo/orbit/pull/279) by [@oblador](https://github.com/oblador))
-- Add support launching multiple apps simultaneously. ([#281](https://github.com/expo/orbit/pull/281) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 💡 Others
-
 - Upgrade to `expo` SDK 53 and react-native `0.79`. ([#254](https://github.com/expo/orbit/pull/254) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Update ESLint, `eslint-config-universe` and setups, bump TypeScript versions. ([#261](https://github.com/expo/orbit/pull/261) by [@Simek](https://github.com/Simek))
 - Add macOS build script. ([#262](https://github.com/expo/orbit/pull/262) by [@gabrieldonadel](https://github.com/gabrieldonadel))
@@ -29,6 +19,17 @@
 - Upgrade `react-native-svg-transformer` to 1.5.1 ([#273](https://github.com/expo/orbit/pull/273) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve setup instructions for contributors. ([#271](https://github.com/expo/orbit/pull/271) by [@altaywtf](https://github.com/altaywtf))
 - Use `expo-web-browser` for authentication on macOS. ([#276](https://github.com/expo/orbit/pull/276) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
+## 2.1.0 — 2025-06-17
+
+### 🎉 New features
+
+- Add support for configuring trusted sources for opening URLs via the CLI and menu-bar app. ([#270](https://github.com/expo/orbit/pull/270), [#275](https://github.com/expo/orbit/pull/275) by [@altaywtf](https://github.com/altaywtf))
+- Add support for deep linking with both expo-orbit:// and expo-orbit:///. ([#279](https://github.com/expo/orbit/pull/279) by [@oblador](https://github.com/oblador))
+- Add support launching multiple apps simultaneously. ([#281](https://github.com/expo/orbit/pull/281) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
+### 💡 Others
+
 - Remove deprecated deeplink formats. ([#280](https://github.com/expo/orbit/pull/280) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.0.4 — 2025-06-02
