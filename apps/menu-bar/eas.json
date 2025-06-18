@@ -17,7 +17,7 @@
       "credentialsSource": "remote",
       "ios": {
         "image": "latest",
-        "applicationArchivePath": "build/Notarized/*.app"
+        "applicationArchivePath": "build/Release/*.zip"
       }
     }
   },
