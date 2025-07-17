@@ -21,6 +21,7 @@ import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
 import { Spacer, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
+import { errorAlert } from '../components/ErrorAlert';
 import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
@@ -45,7 +46,6 @@ import {
   identifyAndParseDeeplinkURL,
 } from '../utils/parseUrl';
 import { WindowsNavigator } from '../windows';
-import { errorAlert } from '../components/ErrorAlert';
 
 type Props = {
   isDevWindow: boolean;
@@ -460,7 +460,9 @@ function Core(props: Props) {
             console.log('Something went wrong while installing the app.', error.message);
             console.log(`Stack: ${error.stack}`);
           }
-          errorAlert('Something went wrong while installing the app.', error.message);
+          errorAlert('Something went wrong while installing the app.', error.message, [
+            { text: 'OK', style: 'default', onPress: () => deleteTask(appURI) },
+          ]);
         }
       } finally {
         setTimeout(() => {
