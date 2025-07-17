@@ -45,6 +45,7 @@ import {
   identifyAndParseDeeplinkURL,
 } from '../utils/parseUrl';
 import { WindowsNavigator } from '../windows';
+import { errorAlert } from '../components/ErrorAlert';
 
 type Props = {
   isDevWindow: boolean;
@@ -235,7 +236,7 @@ function Core(props: Props) {
         });
       } catch (error) {
         if (error instanceof InternalError) {
-          Alert.alert('Something went wrong', error.message);
+          errorAlert('Something went wrong', error.message);
         }
         console.log(`error: ${JSON.stringify(error)}`);
       } finally {
@@ -301,7 +302,7 @@ function Core(props: Props) {
       } catch (error) {
         if (error instanceof Error) {
           if (error instanceof InternalError && error.code === 'NO_DEVELOPMENT_BUILDS_AVAILABLE') {
-            Alert.alert(
+            errorAlert(
               'Unable to find a compatible development build',
               `${error.message} Either create a new development build with EAS Build or, if the app is already installed on the target device and uses the correct runtime version, you can launch the update using a deep link.`,
               [
@@ -349,7 +350,7 @@ function Core(props: Props) {
               ]
             );
           } else {
-            Alert.alert('Something went wrong', error.message);
+            errorAlert('Something went wrong', error.message);
           }
         }
         console.log(`error: ${JSON.stringify(error)}`);
@@ -421,7 +422,7 @@ function Core(props: Props) {
                 'We were unable to launch your app because the device is currently locked.'
               );
             } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
-              Alert.alert(
+              errorAlert(
                 error.message,
                 'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
               );
@@ -446,7 +447,7 @@ function Core(props: Props) {
           await installAppFromURI(apps[selectedAppNameIndex].path);
         }
         if (error instanceof InternalError && error.code === 'UNTRUSTED_SOURCE') {
-          Alert.alert(
+          errorAlert(
             'Untrusted source',
             `${error.message}\n\nYou add custom trusted sources through the Settings window.`,
             [
@@ -459,7 +460,7 @@ function Core(props: Props) {
             console.log('Something went wrong while installing the app.', error.message);
             console.log(`Stack: ${error.stack}`);
           }
-          Alert.alert('Something went wrong while installing the app.', error.message);
+          errorAlert('Something went wrong while installing the app.', error.message);
         }
       } finally {
         setTimeout(() => {
@@ -505,7 +506,7 @@ function Core(props: Props) {
             }
           } catch (error) {
             if (error instanceof Error) {
-              Alert.alert('Unsupported URL', error.message);
+              errorAlert('Unsupported URL', error.message);
             }
           }
         }
