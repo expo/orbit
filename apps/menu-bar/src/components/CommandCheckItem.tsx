@@ -15,7 +15,6 @@ import { View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CheckIcon from '../assets/icons/check-circle.svg';
 import Alert from '../modules/Alert';
-import { errorAlert } from './ErrorAlert';
 
 type Props = {
   title: string;
@@ -38,7 +37,7 @@ const CommandCheckItem = ({ description, icon, title, reason, success, loading }
       });
     }
 
-    errorAlert('Something went wrong', reason?.message, buttons);
+    Alert.alert('Something went wrong', reason?.message, buttons);
   };
 
   return (
