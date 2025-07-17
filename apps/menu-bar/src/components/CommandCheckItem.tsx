@@ -10,11 +10,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { errorAlert } from './ErrorAlert';
 import { Text } from './Text';
 import { View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CheckIcon from '../assets/icons/check-circle.svg';
+import Alert from '../modules/Alert';
+import { errorAlert } from './ErrorAlert';
 
 type Props = {
   title: string;
