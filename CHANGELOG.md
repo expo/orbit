@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Limit the size of error alerts in menu-bar. ([#288](https://github.com/expo/orbit/pull/288) by [@douglowder](https://github.com/douglowder))
+
 ### 💡 Others
 
 - Upgrade to `expo` SDK 53 and react-native `0.79`. ([#254](https://github.com/expo/orbit/pull/254) by [@gabrieldonadel](https://github.com/gabrieldonadel))
