@@ -5,6 +5,14 @@ type MacOSAlertOptions = AlertOptions & {
   critical?: boolean;
 };
 
+export function abbreviatedAlertMessage(message: string) {
+  const maxMessageLength = 1000;
+  const longMessageTrailer = `...\n\n + Messages over ${maxMessageLength} characters are abbreviated.`;
+  return message.length < maxMessageLength
+    ? message
+    : message.substring(0, maxMessageLength - longMessageTrailer.length) + longMessageTrailer;
+}
+
 /**
  * A wrapper around RNAlert to override the
  * default alert and set modal true, that way
@@ -18,7 +26,10 @@ const Alert = {
     buttons?: AlertButton[],
     options: MacOSAlertOptions = {}
   ): void {
-    RNAlert.alert(title, message, buttons, { modal: true, ...options });
+    RNAlert.alert(title, message && abbreviatedAlertMessage(message), buttons, {
+      modal: true,
+      ...options,
+    });
   },
 };
 
