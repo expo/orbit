@@ -21,6 +21,7 @@
 - Upgrade `react-native-svg-transformer` to 1.5.1 ([#273](https://github.com/expo/orbit/pull/273) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve setup instructions for contributors. ([#271](https://github.com/expo/orbit/pull/271) by [@altaywtf](https://github.com/altaywtf))
 - Use `expo-web-browser` for authentication on macOS. ([#276](https://github.com/expo/orbit/pull/276) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade `react-native-macos` to 0.79.0. ([#290](https://github.com/expo/orbit/pull/290) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.1.0 — 2025-06-17
 
