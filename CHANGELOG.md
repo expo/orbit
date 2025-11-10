@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Warn users when automatically switching devices. ([#302](https://github.com/expo/orbit/pull/302) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Limit the size of error alerts in menu-bar. ([#288](https://github.com/expo/orbit/pull/288) by [@douglowder](https://github.com/douglowder))
