@@ -3,7 +3,7 @@ import {
   Simulator,
   extractAppFromLocalArchiveAsync,
   AppleDevice,
-  detectIOSAppType,
+  detectAppleAppType,
 } from 'eas-shared';
 import { Platform } from 'common-types/build/cli-commands';
 
@@ -27,10 +27,10 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
 }
 
 async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
-  const appType = await detectIOSAppType(appPath);
+  const appType = await detectAppleAppType(appPath);
 
   if (await Simulator.isSimulatorAsync(deviceId)) {
-    if (appType === 'device') {
+    if (appType === 'iphone') {
       throw new Error(
         "iOS apps built to target physical devices can't be installed on simulators. Either use a physical device or generate a new simulator build."
       );

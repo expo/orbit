@@ -166,10 +166,10 @@ expo-orbit-cli check-tools [--platform <platform>]
 
 ---
 
-### detect-ios-app-type
+### detect-apple-app-type
 
 ```bash
-expo-orbit-cli detect-ios-app-type <app-path>
+expo-orbit-cli detect-apple-app-type <app-path>
 ```
 
 - **Arguments**

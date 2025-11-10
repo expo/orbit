@@ -14,7 +14,7 @@ import { useFileHandler } from '../../modules/file-handler';
 import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
-import { detectIOSAppTypeAsync } from "../commands/detectIOSAppTypeAsync'";
+import { detectAppleAppTypeAsync } from "../commands/detectIOSAppTypeAsync'";
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
@@ -188,6 +188,8 @@ function Core(props: Props) {
           return devices.get(selectedDevicesId);
         }
       }
+
+      // add a message if no devices are available
 
       for (const device of devices.values()) {
         if (
@@ -385,12 +387,15 @@ function Core(props: Props) {
 
         const platform = getPlatformFromURI(appURI);
 
-        let appType: Device['deviceType'] | undefined;
+        let appType: 'iphone' | 'macos' | 'simulator' | undefined;
         if (platform === 'ios') {
-          appType = await detectIOSAppTypeAsync(localFilePath);
+          appType = await detectAppleAppTypeAsync(localFilePath);
         }
 
-        const device = getDeviceByPlatform(platform, appType);
+        const device = getDeviceByPlatform(
+          platform,
+          appType === 'simulator' ? 'simulator' : 'device'
+        );
         if (!device) {
           Alert.alert(
             `You don't have any ${platform} device available to run this build, please make sure your environment is configured correctly and try again.`

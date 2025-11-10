@@ -8,7 +8,7 @@ import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
 import { launchExpoGoURLAsync } from './commands/LaunchExpoGo';
 import { checkToolsAsync } from './commands/CheckTools';
 import { setSessionAsync } from './commands/SetSession';
-import { detectIOSAppTypeAsync } from './commands/DetectIOSAppType';
+import { detectAppleAppTypeAsync } from './commands/DetectIOSAppType';
 import {
   getCustomTrustedSourcesAsync,
   setCustomTrustedSourcesAsync,
@@ -78,9 +78,9 @@ program
   .action(returnLoggerMiddleware(setSessionAsync));
 
 program
-  .command('detect-ios-app-type')
+  .command('detect-apple-app-type')
   .argument('<string>', 'Local path of the app')
-  .action(returnLoggerMiddleware(detectIOSAppTypeAsync));
+  .action(returnLoggerMiddleware(detectAppleAppTypeAsync));
 
 program
   .command('get-custom-trusted-sources')
