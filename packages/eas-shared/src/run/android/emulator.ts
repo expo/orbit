@@ -153,25 +153,30 @@ export async function uninstallAppAsync(
 export async function startAppAsync(
   emulator: AndroidConnectedDevice | AndroidEmulator,
   packageName: string,
-  activityName: string
+  activityName?: string
 ): Promise<void> {
   Log.newLine();
   Log.log('Starting your app...');
 
   assert(emulator.pid);
-  await adbAsync(
-    '-s',
-    emulator.pid,
-    'shell',
-    'am',
-    'start',
-    '-a',
-    'android.intent.action.MAIN',
-    '-f',
-    '0x20000000', // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
-    '-n',
-    `${packageName}/${activityName}`
-  );
+  const args = ['-s', emulator.pid, 'shell'];
+
+  if (activityName) {
+    args.push(
+      'am',
+      'start',
+      '-a',
+      'android.intent.action.MAIN',
+      '-f',
+      '0x20000000', // FLAG_ACTIVITY_SINGLE_TOP -- If set, the activity will not be launched if it is already running at the top of the history stack.
+      '-n',
+      `${packageName}/${activityName}`
+    );
+  } else {
+    args.push('monkey', '-p', packageName, '-c', 'android.intent.category.LAUNCHER', '1');
+  }
+
+  await adbAsync(...args);
 
   Log.succeed('Successfully started your app!');
 }
