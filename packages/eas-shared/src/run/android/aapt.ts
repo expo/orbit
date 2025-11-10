@@ -36,7 +36,7 @@ export async function getAaptExecutableAsync(): Promise<string> {
 
 export async function getAptParametersAsync(
   appPath: string
-): Promise<{ packageName: string; activityName: string }> {
+): Promise<{ packageName: string; activityName?: string }> {
   const { stdout } = await aaptAsync('dump', 'badging', appPath);
 
   const packageNameMatch = stdout.match(/package: name='([^']+)'/);
@@ -46,12 +46,9 @@ export async function getAptParametersAsync(
 
   // get activity name
   const activityNameMatch = stdout.match(/launchable-activity: name='([^']+)'/);
-  if (!activityNameMatch) {
-    throw new Error(`Could not read activity name from ${appPath}`);
-  }
 
   return {
     packageName: packageNameMatch[1],
-    activityName: activityNameMatch[1],
+    activityName: activityNameMatch?.[1],
   };
 }
