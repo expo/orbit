@@ -48,12 +48,19 @@ const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
         [...tasks.values()].map((task) => {
           return (
             <View px="medium" key={task.id}>
-              <ProgressIndicator
-                progress={task.status === MenuBarStatus.DOWNLOADING ? task.progress : undefined}
-                indeterminate={task.status !== MenuBarStatus.DOWNLOADING}
-                key={task.status}
-              />
-              <Text>{getDescription(task.status)}</Text>
+              {task.status !== MenuBarStatus.WARNING && (
+                <ProgressIndicator
+                  progress={task.status === MenuBarStatus.DOWNLOADING ? task.progress : undefined}
+                  indeterminate={task.status !== MenuBarStatus.DOWNLOADING}
+                  key={task.status}
+                />
+              )}
+              <Text
+                style={{
+                  color: task.status === MenuBarStatus.WARNING ? theme.text.warning : undefined,
+                }}>
+                {getDescription(task)}
+              </Text>
             </View>
           );
         })
@@ -64,8 +71,8 @@ const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
 
 export default BuildsSection;
 
-function getDescription(status: MenuBarStatus): string {
-  switch (status) {
+function getDescription(task: Task): string {
+  switch (task.status) {
     case MenuBarStatus.BOOTING_DEVICE:
       return 'Initializing device...';
     case MenuBarStatus.DOWNLOADING:
@@ -78,6 +85,8 @@ function getDescription(status: MenuBarStatus): string {
       return 'Opening project in Expo Go...';
     case MenuBarStatus.OPENING_UPDATE:
       return 'Opening update...';
+    case MenuBarStatus.WARNING:
+      return task.message ?? '';
     default:
       return '';
   }

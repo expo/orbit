@@ -186,6 +186,17 @@ function Core(props: Props) {
         const device = devices.get(selectedDevicesId);
         if (!deviceType || device?.deviceType === deviceType) {
           return devices.get(selectedDevicesId);
+        } else {
+          createTask({
+            id: 'incompatible-device-selected',
+            status: MenuBarStatus.WARNING,
+            progress: 0,
+            message:
+              "The app you're trying to run is not compatible with the selected device. Auto-selecting another device.",
+          });
+          setTimeout(() => {
+            deleteTask('incompatible-device-selected');
+          }, 8000);
         }
       }
 
@@ -209,7 +220,7 @@ function Core(props: Props) {
       setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
       return firstDevice;
     },
-    [devicesPerPlatform, selectedDevicesIds]
+    [createTask, deleteTask, devicesPerPlatform, selectedDevicesIds]
   );
 
   const handleExpoGoUrl = useCallback(
