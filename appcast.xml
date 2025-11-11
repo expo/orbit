@@ -7,6 +7,46 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.2.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Warn users when automatically switching devices. (<a href="https://github.com/expo/orbit/pull/302">#302</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Limit the size of error alerts in menu-bar. (<a href="https://github.com/expo/orbit/pull/288">#288</a> by <a href="https://github.com/douglowder">@douglowder</a>)</li>
+        <li>Fix launching Android apps that use activity-alias. (<a href="https://github.com/expo/orbit/pull/301">#301</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Upgrade to <code>expo</code> SDK 53 and react-native <code>0.79</code>. (<a href="https://github.com/expo/orbit/pull/254">#254</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Update ESLint, <code>eslint-config-universe</code> and setups, bump TypeScript versions. (<a href="https://github.com/expo/orbit/pull/261">#261</a> by <a href="https://github.com/Simek">@Simek</a>)</li>
+        <li>Add macOS build script. (<a href="https://github.com/expo/orbit/pull/262">#262</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Simplify <code>AppDelegate.m</code> logic in to align with Expo&#39;s template. (<a href="https://github.com/expo/orbit/pull/263">#263</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Migrate AppDelegate to Swift. (<a href="https://github.com/expo/orbit/pull/264">#264</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Enable react compiler. (<a href="https://github.com/expo/orbit/pull/272">#272</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native-svg-transformer</code> to 1.5.1 (<a href="https://github.com/expo/orbit/pull/273">#273</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve setup instructions for contributors. (<a href="https://github.com/expo/orbit/pull/271">#271</a> by <a href="https://github.com/altaywtf">@altaywtf</a>)</li>
+        <li>Use <code>expo-web-browser</code> for authentication on macOS. (<a href="https://github.com/expo/orbit/pull/276">#276</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native-macos</code> to 0.79.0. (<a href="https://github.com/expo/orbit/pull/290">#290</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Update Orbit app and menu bar icons. (<a href="https://github.com/expo/orbit/pull/299">#299</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2025-11-11</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.2.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.2.0/expo-orbit.v2.2.0-macos.zip"
+        sparkle:version="37"
+        sparkle:shortVersionString="2.2.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.1.0</title>
       <description>
       <![CDATA[
