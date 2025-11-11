@@ -37,6 +37,7 @@ export enum MenuBarStatus {
   INSTALLING_EXPO_GO,
   OPENING_PROJECT_IN_EXPO_GO,
   OPENING_UPDATE,
+  WARNING,
 }
 
 export function extractDownloadProgress(string: string) {
@@ -57,4 +58,5 @@ export type Task = {
   id: string;
   status: MenuBarStatus;
   progress: number;
+  message?: string;
 };
