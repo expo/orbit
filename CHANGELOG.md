@@ -6,6 +6,14 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 2.2.0 — 2025-11-11
+
+### 🎉 New features
+
 - Warn users when automatically switching devices. ([#302](https://github.com/expo/orbit/pull/302) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
