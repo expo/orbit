@@ -552,6 +552,7 @@ function Core(props: Props) {
             sections={sections}
             style={{ minHeight: estimatedListHeight }}
             contentContainerStyle={{ width: '100%' }}
+            showsHorizontalScrollIndicator={false}
             SectionSeparatorComponent={Separator}
             renderSectionHeader={({ section: { label, error } }) => (
               <DeviceListSectionHeader label={label} errorMessage={error?.message} />
