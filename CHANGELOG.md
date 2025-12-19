@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Hide horizontal scroll indicator in menu popover. ([#305](https://github.com/expo/orbit/pull/305) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 ## 2.2.0 — 2025-11-11
