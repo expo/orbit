@@ -93,6 +93,9 @@ async function configureMacOSCredentials(
       KEYCHAIN_NAME,
     ]);
 
+    // Set default keychain to temp keychain
+    await spawnAsync('security', ['default-keychain', '-s', KEYCHAIN_NAME]);
+
     // List all available identities
     let result = await spawnAsync('security', ['find-identity']);
     ctx.logger.info(`Identities: ${result.output}`);
@@ -102,6 +105,19 @@ async function configureMacOSCredentials(
 
     // Set the keychain timeout to infinity
     await spawnAsync('security', ['set-keychain-settings', KEYCHAIN_NAME]);
+
+    await spawnAsync('mkdir', ['-p', '/Users/expo/Library/MobileDevice/Provisioning Profiles/']);
+
+    // install provisioning profile
+    const fileBuffer = Buffer.from(process.env?.ORBIT_PROVISIONPROFILE_BASE64 ?? '', 'base64');
+    const filePath = `./${process.env?.ORBIT_PROVISIONPROFILE_UUID}.provisionprofile`;
+    fs.writeFileSync(filePath, fileBuffer);
+    console.log('File written successfully:', filePath);
+
+    await spawnAsync('cp', [
+      `./${process.env?.ORBIT_PROVISIONPROFILE_UUID}.provisionprofile`,
+      `/Users/expo/Library/MobileDevice/Provisioning Profiles/${process.env?.ORBIT_PROVISIONPROFILE_UUID}.provisionprofile`,
+    ]);
   } catch (error) {
     ctx.logger.error(`ERROR: ${error}`);
     throw error;
