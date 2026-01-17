@@ -17,7 +17,7 @@ FileUtils.remove_dir("./build", true)
 prepare_react_native_project!
 
 target 'ExpoMenuBar-macOS' do
-  platform :macos, '11.0'
+  platform :macos, '14.0'
   use_expo_modules!
   config_command = [
     'npx',
