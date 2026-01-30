@@ -1,0 +1,12 @@
+diff --git a/node_modules/expo-modules-core/ios/Platform/Platform.h b/node_modules/expo-modules-core/ios/Platform/Platform.h
+index 5131633..8bf4cb7 100644
+--- a/node_modules/expo-modules-core/ios/Platform/Platform.h
++++ b/node_modules/expo-modules-core/ios/Platform/Platform.h
+@@ -13,6 +13,7 @@
+ @compatibility_alias UIResponder NSResponder;
+ @compatibility_alias UIColor NSColor;
+ @compatibility_alias UIWindow NSWindow;
++@compatibility_alias UIImage NSImage;
+ 
+ #ifndef UIApplication
+ @compatibility_alias UIApplication NSApplication;
