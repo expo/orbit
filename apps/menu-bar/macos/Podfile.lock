@@ -89,9 +89,6 @@ PODS:
   - hermes-engine/Pre-built (0.81.5)
   - MenuBar (1.0.0):
     - ExpoModulesCore
-  - MMKV (2.3.0):
-    - MMKVCore (~> 2.3.0)
-  - MMKVCore (2.3.0)
   - ProgressIndicator (1.0.0):
     - ExpoModulesCore
   - RCT-Folly (2024.11.18.00):
@@ -1835,14 +1832,13 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-mmkv (2.12.2):
+  - react-native-mmkv (3.3.3):
     - boost
     - DoubleConversion
     - fast_float
     - fmt
     - glog
     - hermes-engine
-    - MMKV (>= 1.3.3)
     - RCT-Folly
     - RCT-Folly/Fabric
     - RCTRequired
@@ -2401,6 +2397,16 @@ PODS:
     - ExpoModulesCore
     - Rudder (~> 2.4.3)
   - RNSVG (15.15.2):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
     - React-debug
     - React-Fabric
@@ -2416,10 +2422,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNSVG/common (= 15.12.1)
+    - RNSVG/common (= 15.15.2)
     - SocketRocket
     - Yoga
-  - RNSVG/common (15.12.1):
+  - RNSVG/common (15.15.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -2548,8 +2554,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - MMKV
-    - MMKVCore
     - Rudder
     - SocketRocket
     - Sparkle
@@ -2754,8 +2758,6 @@ SPEC CHECKSUMS:
   glog: 0b31c25149b9d350b2666c7d459229861a00ec07
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
   MenuBar: 5986d3736166dc022b970e61baefc9de9adbdd60
-  MMKV: c953dbaac0da392c24b005e763c03ce2638b4ed7
-  MMKVCore: d078dce7d6586a888b2c2ef5343b6242678e3ee8
   ProgressIndicator: 542bea1889c04508f35bebe4ec5fb3409e84dc3f
   RCT-Folly: c803cf33238782d5fd21a5e02d44f64068e0e130
   RCTDeprecation: c4b9e2fd0ab200e3af72b013ed6113187c607077
@@ -2790,7 +2792,7 @@ SPEC CHECKSUMS:
   React-logger: 348119fcecd60fc8c555dbc4b0bb6de7dabb721c
   React-Mapbuffer: 15d41cf2e5215c37e0cccea3d5c4493b7bf856f2
   React-microtasksnativemodule: 86204a62d73dfbd29d1e2ed93d1db2a424ade491
-  react-native-mmkv: b128128938c42ef6d3de47b05236315ea0c1f863
+  react-native-mmkv: ac7507625cd74bac0eb5333604a7cd7b08fe9e3e
   React-NativeModulesApple: 7a688e1516c692afbae4ffdf3cf5d3b04cc1450d
   React-oscompat: 8a27536d4ae736ce0fe2c7f96c22421c31889761
   React-perflogger: 269feff6b4867de2ec6fb080ccdbf52c1a2dbf0c
@@ -2823,7 +2825,7 @@ SPEC CHECKSUMS:
   ReactCommon: ac50e6ceb52cd62597dca02d18aedb7121d842d4
   RNCClipboard: 4780e15695838a873dc1553af4f486b2395aeda7
   RNRudder: 43aceecc499fe6b69df88f5fb549bc344e4c9894
-  RNSVG: f195e1bc1aaf7bf608b4579dc65cced7accf0526
+  RNSVG: 2665a9bfe8821a19898dbeb49fdd2c95f8ae2b48
   Rudder: 6d2c0775d5b606e05e00670615ee7f9c0c6d2813
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Sparkle: 0e335e5c704ac28dbea18cc0383e15a3927c28dc
