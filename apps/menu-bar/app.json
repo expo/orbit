@@ -19,6 +19,9 @@
     "experiments": {
       "baseUrl": "./",
       "reactCompiler": true
-    }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }
