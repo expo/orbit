@@ -14,6 +14,9 @@ relative_rn_macos_path = ''
 # Delete the codegen build folder
 FileUtils.remove_dir("./build", true)
 
+# Disable the new architecture until we bump to SDK 55
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+
 prepare_react_native_project!
 
 target 'ExpoMenuBar-macOS' do
