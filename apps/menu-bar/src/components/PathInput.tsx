@@ -10,47 +10,50 @@ import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme, useExpoTheme } from '../utils/useExpoTheme';
 
-const PathInput = React.forwardRef<NativeTextInput, React.ComponentProps<typeof TextInput>>(
-  ({ onChangeText, editable, ...props }, forwardedRef) => {
-    const theme = useCurrentTheme();
-    const expoTheme = useExpoTheme();
+const PathInput = ({
+  onChangeText,
+  editable,
+  ref,
+  ...props
+}: React.ComponentProps<typeof TextInput> & { ref?: React.Ref<NativeTextInput> }) => {
+  const theme = useCurrentTheme();
+  const expoTheme = useExpoTheme();
 
-    const handleSelectFolder = async () => {
-      try {
-        const path = await FilePicker.pickFolder();
-        onChangeText?.(path);
-      } catch {}
-    };
+  const handleSelectFolder = async () => {
+    try {
+      const path = await FilePicker.pickFolder();
+      onChangeText?.(path);
+    } catch {}
+  };
 
-    const backgroundColor =
-      theme === 'light'
-        ? addOpacity(lightTheme.background.default, 0.6)
-        : addOpacity(darkTheme.background.default, 0.2);
+  const backgroundColor =
+    theme === 'light'
+      ? addOpacity(lightTheme.background.default, 0.6)
+      : addOpacity(darkTheme.background.default, 0.2);
 
-    return (
-      <Row
-        border="light"
-        rounded="medium"
-        align="center"
-        style={[styles.inputContainer, { backgroundColor }, !editable && styles.inputDisabled]}>
-        <TextInput
-          shadow="input"
-          {...props}
-          style={styles.input}
-          placeholderTextColor={PlatformColor('placeholderTextColor')}
-          ref={forwardedRef as any}
-          editable={editable}
-          onChangeText={onChangeText}
-          numberOfLines={1}
-          placeholder="Android SDK root path"
-        />
-        <TouchableOpacity style={styles.icon} onPress={handleSelectFolder} disabled={!editable}>
-          <FolderIcon fill={expoTheme.text.default} height={18} width={18} />
-        </TouchableOpacity>
-      </Row>
-    );
-  }
-);
+  return (
+    <Row
+      border="light"
+      rounded="medium"
+      align="center"
+      style={[styles.inputContainer, { backgroundColor }, !editable && styles.inputDisabled]}>
+      <TextInput
+        shadow="input"
+        {...props}
+        style={styles.input}
+        placeholderTextColor={PlatformColor('placeholderTextColor')}
+        ref={ref as any}
+        editable={editable}
+        onChangeText={onChangeText}
+        numberOfLines={1}
+        placeholder="Android SDK root path"
+      />
+      <TouchableOpacity style={styles.icon} onPress={handleSelectFolder} disabled={!editable}>
+        <FolderIcon fill={expoTheme.text.default} height={18} width={18} />
+      </TouchableOpacity>
+    </Row>
+  );
+};
 
 export default PathInput;
 
