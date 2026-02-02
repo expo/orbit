@@ -13,6 +13,7 @@
 ### 💡 Others
 
 - Upgrade to `expo` SDK 54 and react-native `0.81`. ([#254](https://github.com/expo/orbit/pull/254) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Optimize code for React 19. ([#307](https://github.com/expo/orbit/pull/307) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.2.0 — 2025-11-11
 
