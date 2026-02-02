@@ -23,5 +23,5 @@ export function ThemeProvider({ children, themePreference = 'no-preference' }: T
     return systemTheme ?? 'light';
   }, [themePreference, systemTheme]);
 
-  return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
+  return <ThemeContext value={theme}>{children}</ThemeContext>;
 }

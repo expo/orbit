@@ -9,7 +9,7 @@ type WindowProviderProps = {
 };
 
 export function WindowProvider({ children, id }: WindowProviderProps) {
-  return <WindowContext.Provider value={id}>{children}</WindowContext.Provider>;
+  return <WindowContext value={id}>{children}</WindowContext>;
 }
 
 export const withWindowProvider = <P extends object>(
