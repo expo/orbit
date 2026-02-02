@@ -20,15 +20,15 @@ const Checkbox = ({
   ...props
 }: NativeCheckboxProps & {
   onChange?: (event: CheckboxChangeEvent) => void;
-  ref?: React.Ref<{ setNative: (native: { value?: boolean }) => void }>;
+  ref?: React.Ref<{ setNativeValue: (value: boolean | undefined) => void }>;
 }) => {
   const nativeSwitchRef = useRef<React.ElementRef<typeof NativeCheckbox> | null>(null);
-  const [native, setNative] = useState<{ value?: boolean }>({ value: undefined });
+  const [nativeValue, setNativeValue] = useState<boolean | undefined>(undefined);
 
   useImperativeHandle(
     ref,
     () => ({
-      setNative,
+      setNativeValue,
     }),
     []
   );
@@ -38,15 +38,15 @@ const Checkbox = ({
     // that the update should be ignored and we should stick with the value
     // that we have in JS.
     const jsValue = props.value === true;
-    const shouldUpdateNativeSwitch = native.value != null && native.value !== jsValue;
+    const shouldUpdateNativeSwitch = nativeValue != null && nativeValue !== jsValue;
     if (shouldUpdateNativeSwitch && nativeSwitchRef.current?.setNativeProps != null) {
       Commands.setValue(nativeSwitchRef.current, jsValue);
     }
-  }, [props.value, native]);
+  }, [props.value, nativeValue]);
 
   const handleChange = (event: CheckboxChangeEvent) => {
     onChange?.(event);
-    setNative({ value: event.nativeEvent.value });
+    setNativeValue(event.nativeEvent.value);
   };
 
   return <NativeCheckbox {...props} onChange={handleChange} ref={nativeSwitchRef} />;
