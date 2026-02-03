@@ -8,12 +8,15 @@ import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
-const TrustedSourcesInput = React.forwardRef<
-  NativeTextInput,
-  React.ComponentProps<typeof TextInput> & {
-    onSave: (trustedSources: string) => void;
-  }
->(({ editable, onSave, ...props }, forwardedRef) => {
+const TrustedSourcesInput = ({
+  editable,
+  onSave,
+  ref,
+  ...props
+}: React.ComponentProps<typeof TextInput> & {
+  onSave: (trustedSources: string) => void;
+  ref?: React.Ref<NativeTextInput>;
+}) => {
   const theme = useCurrentTheme();
   const [value, setValue] = useState(props.value ?? '');
 
@@ -48,7 +51,7 @@ const TrustedSourcesInput = React.forwardRef<
         value={value}
         style={styles.input}
         placeholderTextColor={PlatformColor('placeholderTextColor')}
-        ref={forwardedRef as any}
+        ref={ref}
         editable={editable}
         onChangeText={setValue}
         onSubmitEditing={handleSave}
@@ -56,7 +59,7 @@ const TrustedSourcesInput = React.forwardRef<
       />
     </Row>
   );
-});
+};
 
 export default TrustedSourcesInput;
 

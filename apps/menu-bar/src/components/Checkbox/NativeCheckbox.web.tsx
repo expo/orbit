@@ -3,7 +3,11 @@ import React from 'react';
 
 import { CheckboxChangeEvent, NativeCheckboxProps } from './types';
 
-const Checkbox = React.forwardRef(({ value, onChange }: NativeCheckboxProps, ref) => {
+const Checkbox = ({
+  value,
+  onChange,
+  ref: _ref,
+}: NativeCheckboxProps & { ref?: React.Ref<unknown> }) => {
   return (
     <FluentCheckbox
       type="checkbox"
@@ -17,6 +21,6 @@ const Checkbox = React.forwardRef(({ value, onChange }: NativeCheckboxProps, ref
       }
     />
   );
-});
+};
 
 export default Checkbox;

@@ -1,4 +1,4 @@
-import { ComponentType, PropsWithChildren, createElement, forwardRef } from 'react';
+import { ComponentType, PropsWithChildren, Ref, createElement } from 'react';
 import { type ImageStyle, StyleSheet, type TextStyle, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../providers/ThemeProvider';
@@ -39,10 +39,10 @@ export function create<T extends object, O extends Options>(
   config.selectors = config.selectors ?? {};
   config.variants = config.variants ?? {};
 
-  return forwardRef<
-    T,
-    PropsWithChildren<T> & Nested<(typeof config)['variants']> & { selectors?: SelectorProps }
-  >((props, ref) => {
+  return function CreatedComponent(
+    props: PropsWithChildren<T> &
+      Nested<(typeof config)['variants']> & { selectors?: SelectorProps; ref?: Ref<T> }
+  ) {
     const theme = useTheme();
 
     const variantFreeProps: any = { ...props };
@@ -69,9 +69,8 @@ export function create<T extends object, O extends Options>(
         selectorPropsStyles,
         variantFreeProps.style ?? {},
       ]),
-      ref,
     });
-  });
+  };
 }
 
 function stylesForVariants(props: any, variants: any = {}) {

@@ -96,7 +96,7 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
   }, [updateDevicesList]);
 
   return (
-    <DevicesContext.Provider
+    <DevicesContext
       value={{
         devicesPerPlatform,
         sections,
@@ -107,6 +107,6 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
         refetch: updateDevicesList,
       }}>
       {children}
-    </DevicesContext.Provider>
+    </DevicesContext>
   );
 }

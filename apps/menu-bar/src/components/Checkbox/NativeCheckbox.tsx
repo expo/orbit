@@ -14,44 +14,42 @@ const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
   supportedCommands: ['setValue'],
 });
 
-const Checkbox = React.forwardRef(
-  (
-    {
-      onChange,
-      ...props
-    }: NativeCheckboxProps & {
-      onChange?: (event: CheckboxChangeEvent) => void;
-    },
-    ref: React.ForwardedRef<{ setNative: (native: { value?: boolean }) => void }>
-  ) => {
-    const nativeSwitchRef = useRef<React.ElementRef<typeof NativeCheckbox> | null>(null);
-    const [native, setNative] = useState<{ value?: boolean }>({ value: undefined });
+const Checkbox = ({
+  onChange,
+  ref,
+  ...props
+}: NativeCheckboxProps & {
+  onChange?: (event: CheckboxChangeEvent) => void;
+  ref?: React.Ref<{ setNativeValue: (value: boolean | undefined) => void }>;
+}) => {
+  const nativeSwitchRef = useRef<React.ElementRef<typeof NativeCheckbox> | null>(null);
+  const [nativeValue, setNativeValue] = useState<boolean | undefined>(undefined);
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        setNative,
-      }),
-      []
-    );
+  useImperativeHandle(
+    ref,
+    () => ({
+      setNativeValue,
+    }),
+    []
+  );
 
-    useLayoutEffect(() => {
-      // This is necessary in case native updates the switch and JS decides
-      // that the update should be ignored and we should stick with the value
-      // that we have in JS.
-      const jsValue = props.value === true;
-      const shouldUpdateNativeSwitch = native.value != null && native.value !== jsValue;
-      if (shouldUpdateNativeSwitch && nativeSwitchRef.current?.setNativeProps != null) {
-        Commands.setValue(nativeSwitchRef.current, jsValue);
-      }
-    }, [props.value, native]);
+  useLayoutEffect(() => {
+    // This is necessary in case native updates the switch and JS decides
+    // that the update should be ignored and we should stick with the value
+    // that we have in JS.
+    const jsValue = props.value === true;
+    const shouldUpdateNativeSwitch = nativeValue != null && nativeValue !== jsValue;
+    if (shouldUpdateNativeSwitch && nativeSwitchRef.current?.setNativeProps != null) {
+      Commands.setValue(nativeSwitchRef.current, jsValue);
+    }
+  }, [props.value, nativeValue]);
 
-    const handleChange = (event: CheckboxChangeEvent) => {
-      onChange?.(event);
-      setNative({ value: event.nativeEvent.value });
-    };
+  const handleChange = (event: CheckboxChangeEvent) => {
+    onChange?.(event);
+    setNativeValue(event.nativeEvent.value);
+  };
 
-    return <NativeCheckbox {...props} onChange={handleChange} ref={nativeSwitchRef} />;
-  }
-);
+  return <NativeCheckbox {...props} onChange={handleChange} ref={nativeSwitchRef} />;
+};
+
 export default Checkbox;
