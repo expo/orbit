@@ -33,6 +33,12 @@ class AppDelegate: RCTAppDelegate, NSUserNotificationCenterDelegate {
     let rootViewController = NSViewController()
     rootViewController.view = rootView
 
+    // Configure react-native-multi-window
+    RNMultiWindowNavigator.setRootViewFactory(self.rootViewFactory())
+    if let bridge = self.bridge {
+      RNMultiWindowNavigator.setBridge(bridge)
+    }
+
     popoverManager = PopoverManager.initializeShared(delegate: self)
     popoverManager.setContentViewController(rootViewController)
 

@@ -98,7 +98,7 @@ class PopoverManager: NSObject {
   // MARK: - Actions
 
   @objc private func settingsAction() {
-    WindowNavigator.shared().openWindow(
+    RNMultiWindowNavigator.shared().openWindow(
       "Settings",
       options: [
         "windowStyle": ["titlebarAppearsTransparent": true, "height": 680.0, "width": 500.0]

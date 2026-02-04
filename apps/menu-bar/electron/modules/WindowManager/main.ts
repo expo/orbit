@@ -1,11 +1,10 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-
 import {
-  WindowOptions,
-  WindowsManagerType,
   WindowStyleMask,
-} from '../../../src/modules/WindowManager/types';
+  type WindowOptions,
+  type WindowsManagerType,
+} from 'react-native-multi-window';
 
 const _windowsMap: { [key: string]: BrowserWindow } = {};
 

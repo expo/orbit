@@ -2,13 +2,16 @@
 #import <React/RCTRootView.h>
 
 #import "WindowWithDeallocCallback.h"
-#import "WindowNavigator.h"
-#import "Expo_Orbit-Swift.h"
+#import "RNMultiWindowNavigator.h"
 
-@implementation WindowNavigator
+static RCTRootViewFactory *_rootViewFactory = nil;
+// TODO: use RCTBridge current
+static RCTBridge *_bridge = nil;
+
+@implementation RNMultiWindowNavigator
 
 + (instancetype)shared {
-  static WindowNavigator *sharedInstance = nil;
+  static RNMultiWindowNavigator *sharedInstance = nil;
   static dispatch_once_t onceToken;
 
   dispatch_once(&onceToken, ^{
@@ -16,6 +19,14 @@
   });
 
   return sharedInstance;
+}
+
++ (void)setRootViewFactory:(RCTRootViewFactory *)factory {
+  _rootViewFactory = factory;
+}
+
++ (void)setBridge:(RCTBridge *)bridge {
+  _bridge = bridge;
 }
 
 - (instancetype)init {
@@ -28,7 +39,7 @@
 
 - (void)openWindow:(NSString *)moduleName options:(NSDictionary *)options {
   dispatch_async(dispatch_get_main_queue(), ^{
-    if(self->_windowsMap.count == 0){
+    if (self->_windowsMap.count == 0) {
       [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     }
 
@@ -54,21 +65,22 @@
 
       newWindow.deallocCallback = ^{
         [self->_windowsMap removeObjectForKey:moduleName];
-        if(self->_windowsMap.count == 0){
+        if (self->_windowsMap.count == 0) {
           [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
         }
       };
 
-      RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
-      RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:moduleName
-                                                                       initialProperties:@{}];
-      newWindow.contentView = rootView;
+      if (_rootViewFactory != nil) {
+        RCTPlatformView *rootView = [_rootViewFactory viewWithModuleName:moduleName
+                                                       initialProperties:@{}];
+        newWindow.contentView = rootView;
+      }
       [self->_windowsMap setObject:newWindow forKey:moduleName];
       newWindow.delegate = self;
       window = newWindow;
-    }else{
+    } else {
       NSRect contentRect = [window contentRectForFrameRect:[window frame]];
-      if(contentRect.size.width != width || contentRect.size.height != height){
+      if (contentRect.size.width != width || contentRect.size.height != height) {
         CGFloat titleBarHeight = [window frame].size.height - contentRect.size.height;
         NSRect newFrame = NSMakeRect(originX, originY, width, height + titleBarHeight);
         [window setFrame:newFrame display:YES];
@@ -77,7 +89,7 @@
 
     window.title = title;
     [window setTitlebarAppearsTransparent:titlebarAppearsTransparent];
-    if(window.styleMask != windowStyleMask){
+    if (window.styleMask != windowStyleMask) {
       [window setStyleMask:windowStyleMask];
     }
     [window display];
@@ -90,7 +102,7 @@
   });
 }
 
-- (void) closeWindow:(NSString *)moduleName {
+- (void)closeWindow:(NSString *)moduleName {
   dispatch_async(dispatch_get_main_queue(), ^{
     NSWindow *window = [self->_windowsMap objectForKey:moduleName];
     [window close];
@@ -98,15 +110,18 @@
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
-  RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
+  if (_bridge == nil) {
+    return;
+  }
+
   NSWindow *keyWindow = notification.object;
 
   for (NSString *moduleName in self->_windowsMap) {
     NSWindow *window = self->_windowsMap[moduleName];
     if (window == keyWindow) {
-      [bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
+      [_bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
                         args:@[@"windowFocused", moduleName]];
-       break;
+      break;
     }
   }
 }

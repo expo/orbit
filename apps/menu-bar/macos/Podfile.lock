@@ -1864,6 +1864,36 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - react-native-multi-window (0.0.2):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTAppDelegate
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactAppDependencyProvider
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - React-NativeModulesApple (0.81.1):
     - boost
     - DoubleConversion
@@ -2438,6 +2468,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../../../node_modules/react-native-macos/ReactCommon`)
   - React-microtasksnativemodule (from `../../../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks`)
   - react-native-mmkv (from `../../../node_modules/react-native-mmkv`)
+  - react-native-multi-window (from `../../../packages/react-native-multi-window`)
   - React-NativeModulesApple (from `../../../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../../../node_modules/react-native-macos/ReactCommon/oscompat`)
   - React-perflogger (from `../../../node_modules/react-native-macos/ReactCommon/reactperflogger`)
@@ -2594,6 +2625,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks"
   react-native-mmkv:
     :path: "../../../node_modules/react-native-mmkv"
+  react-native-multi-window:
+    :path: "../../../packages/react-native-multi-window"
   React-NativeModulesApple:
     :path: "../../../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios"
   React-oscompat:
@@ -2720,6 +2753,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 15d41cf2e5215c37e0cccea3d5c4493b7bf856f2
   React-microtasksnativemodule: 86204a62d73dfbd29d1e2ed93d1db2a424ade491
   react-native-mmkv: df237ae1b10c6deec66787c73498b58c6264c1a6
+  react-native-multi-window: 094099c56ec73a9615c730039e4930ed26f86aac
   React-NativeModulesApple: 7a688e1516c692afbae4ffdf3cf5d3b04cc1450d
   React-oscompat: 8a27536d4ae736ce0fe2c7f96c22421c31889761
   React-perflogger: 269feff6b4867de2ec6fb080ccdbf52c1a2dbf0c
