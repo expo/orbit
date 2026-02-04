@@ -34,13 +34,23 @@ build:
         name: Export archive menu-bar
         working_directory: ../../apps/menu-bar
         command: |
-          yarn export-upload-archive
+          yarn export-local-archive
+    - run:
+        name: codesign menu-bar
+        working_directory: ../../apps/menu-bar
+        command: |
+          codesign --force -s "Developer ID Application: 650 Industries, Inc. (C8D8QTF339)" -v build/Release/Expo\ Orbit.app --deep --strict --options=runtime --timestamp
+    - run:
+        name: zip menu-bar export
+        working_directory: ../../apps/menu-bar
+        command: |
+          zip -r build/Release/ExpoOrbit.zip build/Release/Expo\ Orbit.app
+    - eas/find_and_upload_build_artifacts
     - run:
         name: Notarize menu-bar
         working_directory: ../../apps/menu-bar
         command: |
-          yarn notarize
-    - eas/find_and_upload_build_artifacts
+          xcrun notarytool submit "build/Release/ExpoOrbit.zip" --apple-id $APPLE_ID_NOTARIZATION_EMAIL --password $APPLE_ID_NOTARIZATION_PASSWORD  --team-id "C8D8QTF339" --wait
 functions:
   configure_macos_credentials:
     name: Configure macOS Credentials
