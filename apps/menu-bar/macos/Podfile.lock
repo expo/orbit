@@ -2374,7 +2374,7 @@ PODS:
   - RNRudder (1.0.0):
     - ExpoModulesCore
     - Rudder (~> 2.4.3)
-  - RNSVG (15.12.1):
+  - RNSVG (15.15.2):
     - React-Core
   - Rudder (2.4.3)
   - SocketRocket (0.7.1)
@@ -2752,7 +2752,7 @@ SPEC CHECKSUMS:
   ReactCommon: ac50e6ceb52cd62597dca02d18aedb7121d842d4
   RNCClipboard: 7c3e3b5f71d84ef61690ad377b6c50cf27864ff5
   RNRudder: 43aceecc499fe6b69df88f5fb549bc344e4c9894
-  RNSVG: d3f55b1e5f680744764389119f1cb7512058672b
+  RNSVG: f195e1bc1aaf7bf608b4579dc65cced7accf0526
   Rudder: 6d2c0775d5b606e05e00670615ee7f9c0c6d2813
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Sparkle: 0e335e5c704ac28dbea18cc0383e15a3927c28dc
