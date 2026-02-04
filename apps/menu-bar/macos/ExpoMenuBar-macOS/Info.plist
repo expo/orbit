@@ -99,7 +99,7 @@
 	<key>NSSupportsSuddenTermination</key>
 	<true/>
 	<key>RCTNewArchEnabled</key>
-	<false/>
+	<true/>
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/expo/orbit/main/appcast.xml</string>
 </dict>

@@ -89,9 +89,6 @@ PODS:
   - hermes-engine/Pre-built (0.81.5)
   - MenuBar (1.0.0):
     - ExpoModulesCore
-  - MMKV (2.3.0):
-    - MMKVCore (~> 2.3.0)
-  - MMKVCore (2.3.0)
   - ProgressIndicator (1.0.0):
     - ExpoModulesCore
   - RCT-Folly (2024.11.18.00):
@@ -1835,14 +1832,13 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-mmkv (2.12.2):
+  - react-native-mmkv (3.3.3):
     - boost
     - DoubleConversion
     - fast_float
     - fmt
     - glog
     - hermes-engine
-    - MMKV (>= 1.3.3)
     - RCT-Folly
     - RCT-Folly/Fabric
     - RCTRequired
@@ -2370,12 +2366,93 @@ PODS:
     - React-utils (= 0.81.1)
     - SocketRocket
   - RNCClipboard (1.14.3):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - RNRudder (1.0.0):
     - ExpoModulesCore
     - Rudder (~> 2.4.3)
   - RNSVG (15.15.2):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - RNSVG/common (= 15.15.2)
+    - SocketRocket
+    - Yoga
+  - RNSVG/common (15.15.2):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - Rudder (2.4.3)
   - SocketRocket (0.7.1)
   - Sparkle (2.5.2)
@@ -2477,8 +2554,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - MMKV
-    - MMKVCore
     - Rudder
     - SocketRocket
     - Sparkle
@@ -2668,12 +2743,12 @@ SPEC CHECKSUMS:
   boost: cea1d4f90a3a59537f3deb03ff5656489d7133dd
   DoubleConversion: d31b1eb37f6d6f456530c4fd9124b857d6889cab
   EXConstants: fce59a631a06c4151602843667f7cfe35f81e271
-  Expo: 7d05846ebbd3420aabc05dddd826f60e20c841a9
+  Expo: e74d268db4bae0220e5ffb72a391233d1984c314
   ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
   ExpoFileSystem: 858a44267a3e6e9057e0888ad7c7cfbf55d52063
   ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
   ExpoKeepAwake: 55f75eca6499bb9e4231ebad6f3e9cb8f99c0296
-  ExpoModulesCore: 39c0aca5ee449ec315f1ded494cbdcc7ebe66aae
+  ExpoModulesCore: d86dab8a6c8f1184f9b0b0503ace93919882aa15
   ExpoWebBrowser: 17b064c621789e41d4816c95c93f429b84971f52
   fast_float: 20817c22759af6ac8d4d67e6e059b8b499953656
   FBLazyVector: 47006f04f48c051efc49874d37464783f567a24b
@@ -2683,8 +2758,6 @@ SPEC CHECKSUMS:
   glog: 0b31c25149b9d350b2666c7d459229861a00ec07
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
   MenuBar: 5986d3736166dc022b970e61baefc9de9adbdd60
-  MMKV: c953dbaac0da392c24b005e763c03ce2638b4ed7
-  MMKVCore: d078dce7d6586a888b2c2ef5343b6242678e3ee8
   ProgressIndicator: 542bea1889c04508f35bebe4ec5fb3409e84dc3f
   RCT-Folly: c803cf33238782d5fd21a5e02d44f64068e0e130
   RCTDeprecation: c4b9e2fd0ab200e3af72b013ed6113187c607077
@@ -2719,21 +2792,21 @@ SPEC CHECKSUMS:
   React-logger: 348119fcecd60fc8c555dbc4b0bb6de7dabb721c
   React-Mapbuffer: 15d41cf2e5215c37e0cccea3d5c4493b7bf856f2
   React-microtasksnativemodule: 86204a62d73dfbd29d1e2ed93d1db2a424ade491
-  react-native-mmkv: df237ae1b10c6deec66787c73498b58c6264c1a6
+  react-native-mmkv: ac7507625cd74bac0eb5333604a7cd7b08fe9e3e
   React-NativeModulesApple: 7a688e1516c692afbae4ffdf3cf5d3b04cc1450d
   React-oscompat: 8a27536d4ae736ce0fe2c7f96c22421c31889761
   React-perflogger: 269feff6b4867de2ec6fb080ccdbf52c1a2dbf0c
   React-performancetimeline: d5065b59a7b58a84dbc4353a7daffdd9326a0d96
   React-RCTActionSheet: 0328ba439a451e5ffc2142cd0a1a6ef5ad4430ab
   React-RCTAnimation: 6dfcb6ff73dff3c05a2c23aeb58b6bacad4287f7
-  React-RCTAppDelegate: 6a8c3bb4498fc1351779ff34f52974669724f515
+  React-RCTAppDelegate: 0c1121ff435d2790401766278041ab3a1013b306
   React-RCTBlob: 444b27bc565e6ac93c7e5354288373edbcacb44e
-  React-RCTFabric: 4b450812db5aaf1f04164d3b51e556e5c5d09460
-  React-RCTFBReactNativeSpec: 2c4eef69aae7d65bd7bf898baed94170b17282c4
+  React-RCTFabric: 64ae9526a3ad54349db07a837143fc8c5e3e7257
+  React-RCTFBReactNativeSpec: 15a219b0e92ac537ac0136b9e3f749e171e9201b
   React-RCTImage: 5fa5088ba0032427313baec75505db3cf8ab0100
   React-RCTLinking: 6e2985c70e695c9cca8f1c57703f2a280c526ca8
   React-RCTNetwork: da0cc27fc7906346c83bd4c4a814495ccfc3f751
-  React-RCTRuntime: 5c27887fe45bb354356830d2b491af6b99068b57
+  React-RCTRuntime: 60bf5353cd445aa2bbb7ddec352daee6e4c78c5d
   React-RCTSettings: 492dea9a063b1b24605a880ef03b6991e3139d62
   React-RCTText: a0cf29acce4aed34afb96191b961fe5090488ea2
   React-RCTVibration: 8b8e25c4f218b3ffdf1034408c3cabcf1e649bf5
@@ -2750,15 +2823,15 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 6acd88031cae2a41ac1233c6e90c0445c4095c54
   ReactCodegen: 09f77d08588e613f888b478e6528c811019c0a46
   ReactCommon: ac50e6ceb52cd62597dca02d18aedb7121d842d4
-  RNCClipboard: 7c3e3b5f71d84ef61690ad377b6c50cf27864ff5
+  RNCClipboard: 4780e15695838a873dc1553af4f486b2395aeda7
   RNRudder: 43aceecc499fe6b69df88f5fb549bc344e4c9894
-  RNSVG: f195e1bc1aaf7bf608b4579dc65cced7accf0526
+  RNSVG: 2665a9bfe8821a19898dbeb49fdd2c95f8ae2b48
   Rudder: 6d2c0775d5b606e05e00670615ee7f9c0c6d2813
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Sparkle: 0e335e5c704ac28dbea18cc0383e15a3927c28dc
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
   Yoga: b9d6f057671b0ab86481057b33f1127f170dddf2
 
-PODFILE CHECKSUM: eb8e2172010cef0c40049579c03e0c1ebc5b4d1f
+PODFILE CHECKSUM: 136d1cab7f052614c8f264495d5486b69a6b45cd
 
 COCOAPODS: 1.16.2
