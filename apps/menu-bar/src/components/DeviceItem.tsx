@@ -66,7 +66,8 @@ const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: P
       ]}
       onPress={onPress}
       onHoverIn={() => setIsHovered(true)}
-      onHoverOut={() => setIsHovered(false)}>
+      onHoverOut={() => setIsHovered(false)}
+      testID="device-item">
       <Row flex="1" px="2" align="center">
         <Row flex="1">
           <View
