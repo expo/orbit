@@ -1,0 +1,38 @@
+{
+  "name": "react-native-multi-window",
+  "version": "0.0.2",
+  "description": "Multi-window management for React Native macOS and Electron",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "yarn build --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "^0.81.0",
+    "react-native-macos": "^0.81.0",
+    "react-native-electron-modules": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native-electron-modules": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-universe": "^14.0.0",
+    "typescript": "^5.8.0"
+  },
+  "homepage": "https://github.com/expo/expo/tree/main/packages/react-native-multi-window",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/orbit.git",
+    "directory": "packages/react-native-multi-window"
+  },
+  "author": "Expo",
+  "license": "MIT"
+}

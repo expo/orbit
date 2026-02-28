@@ -1,6 +1,7 @@
 import { CliCommands } from 'common-types';
 import { useCallback, useRef, useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet } from 'react-native';
+import { useWindowFocusEffect } from 'react-native-multi-window';
 
 import { WindowsNavigator } from './index';
 import AndroidStudio from '../assets/images/android-studio.png';
@@ -13,7 +14,6 @@ import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
-import { useWindowFocusEffect } from '../modules/WindowManager/useWindowFocus';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';

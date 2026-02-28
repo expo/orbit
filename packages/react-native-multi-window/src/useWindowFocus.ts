@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 
 import { useWindowId } from './WindowProvider';
-import { DeviceEventEmitter } from '../DeviceEventEmitter';
 
 export function useWindowFocusEffect(callback: () => void) {
   const windowId = useWindowId();
