@@ -3,7 +3,7 @@ import Swifter
 import Dispatch
 
 private let PORTS = [35783, 47909, 44171, 50799]
-private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host"]
+private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "agent.expo.app"]
 
 @objc class SwifterWrapper: NSObject {
   let server = HttpServer()
