@@ -15,6 +15,7 @@ export type UserPreferences = {
   customSdkPath?: string;
   showIosSimulators: boolean;
   showTvosSimulators: boolean;
+  showWatchosSimulators: boolean;
   showAndroidEmulators: boolean;
 };
 
@@ -23,6 +24,7 @@ export const defaultUserPreferences: UserPreferences = {
   emulatorWithoutAudio: false,
   showIosSimulators: Platform.OS === 'macos',
   showTvosSimulators: false,
+  showWatchosSimulators: Platform.OS === 'macos',
   showAndroidEmulators: true,
 };
 
