@@ -19,7 +19,7 @@ export interface IosSimulator {
   runtime: string;
   osVersion: string;
   windowName: string;
-  osType: 'iOS' | 'tvOS';
+  osType: 'iOS' | 'tvOS' | 'watchOS';
   state: 'Booted' | 'Shutdown';
   isAvailable: boolean;
   name: string;

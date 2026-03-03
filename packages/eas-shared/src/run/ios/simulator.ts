@@ -46,7 +46,7 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
     // Create an array [tvOS, 13, 4]
     const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
 
-    if (osType === 'iOS' || osType === 'tvOS') {
+    if (osType === 'iOS' || osType === 'tvOS' || osType === 'watchOS') {
       // Join the end components [13, 4] -> '13.4'
       const osVersion = osVersionComponents.join('.');
       const sims = info.devices[runtime];
