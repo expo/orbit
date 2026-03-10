@@ -82,6 +82,10 @@ class AppDelegate: RCTAppDelegate, NSUserNotificationCenterDelegate {
   }
 
   @objc func getUrlEventHandler(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
+    // Emit deepLinkOpened before opening popover so React sees the flag
+    // before the popoverFocused event arrives.
+    bridge?.enqueueJSCall(
+      "RCTDeviceEventEmitter.emit", args: ["deepLinkOpened", [:]])
     popoverManager.openPopover()
     RCTLinkingManager.getUrlEventHandler(event, withReplyEvent: replyEvent)
   }

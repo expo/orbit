@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import Core from './Core';
 import { ErrorBoundary, FallbackProps } from './ErrorBoundary';
@@ -18,6 +18,11 @@ type Props = {
 function Popover(props: Props) {
   const { height } = useSafeDisplayDimensions();
   const { hasInitialized } = useListDevices();
+  const [isDeepLinkMode, setIsDeepLinkMode] = useState(false);
+
+  const onDeepLinkModeChange = useCallback((mode: boolean) => {
+    setIsDeepLinkMode(mode);
+  }, []);
 
   useEffect(() => {
     const hasSeenOnboarding = storage.getBoolean(hasSeenOnboardingStorageKey);
@@ -46,9 +51,9 @@ function Popover(props: Props) {
         maxHeight: height,
       }}>
       <ErrorBoundary fallback={Fallback}>
-        <Core isDevWindow={props.isDevWindow} />
+        <Core isDevWindow={props.isDevWindow} onDeepLinkModeChange={onDeepLinkModeChange} />
       </ErrorBoundary>
-      <Footer />
+      {!isDeepLinkMode && <Footer />}
     </View>
   );
 }
