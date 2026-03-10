@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Show minimal popover with only progress bar when opened via deep link. ([#XXX](https://github.com/expo/orbit/pull/XXX) by [@krystofwoldrich](https://github.com/krystofwoldrich))
+
 ### 🐛 Bug fixes
 
 - Hide horizontal scroll indicator in menu popover. ([#305](https://github.com/expo/orbit/pull/305) by [@gabrieldonadel](https://github.com/gabrieldonadel))
