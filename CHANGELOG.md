@@ -6,7 +6,7 @@
 
 ### 🎉 New features
 
-- Show minimal popover with only progress bar when opened via deep link. ([#XXX](https://github.com/expo/orbit/pull/XXX) by [@krystofwoldrich](https://github.com/krystofwoldrich))
+- Show minimal popover with only progress bar when opened via deep link. ([#312](https://github.com/expo/orbit/pull/312) by [@krystofwoldrich](https://github.com/krystofwoldrich))
 
 ### 🐛 Bug fixes
 
