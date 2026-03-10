@@ -22,13 +22,13 @@ import { launchUpdateAsync } from '../commands/launchUpdateAsync';
 import { Spacer, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import { useDeepLinking } from '../hooks/useDeepLinking';
-import { Linking } from '../modules/Linking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
 import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
-import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
+import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   SelectedDevicesIds,
@@ -136,9 +136,10 @@ function Core(props: Props) {
     }, [])
   );
 
+  const { onDeepLinkModeChange } = props;
   useEffect(() => {
-    props.onDeepLinkModeChange?.(isDeepLinkMode);
-  }, [isDeepLinkMode, props.onDeepLinkModeChange]);
+    onDeepLinkModeChange?.(isDeepLinkMode);
+  }, [isDeepLinkMode, onDeepLinkModeChange]);
 
   const {
     devicesPerPlatform,
