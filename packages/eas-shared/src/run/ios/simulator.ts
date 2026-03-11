@@ -17,6 +17,10 @@ import { sleepAsync } from '../../utils/promise';
 import * as Versions from '../../versions';
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
+const SIMULATOR_BOOT_TIMEOUT_MS = 60 * 1000;
+const SIMULATOR_BOOT_POLL_INTERVAL_MS = 1000;
+const SIMCTL_INSTALL_MAX_RETRIES = 3;
+const SIMCTL_INSTALL_RETRY_DELAY_MS = 2000;
 
 export async function getAvailableAppleSimulatorsListAsync(
   query?: string
@@ -85,7 +89,36 @@ export async function ensureSimulatorBootedAsync(simulator: IosSimulator): Promi
     return;
   }
 
-  await simctlAsync(['boot', simulator.udid]);
+  Log.log('Booting simulator...');
+  try {
+    await simctlAsync(['boot', simulator.udid]);
+  } catch (error: any) {
+    // Simulator may have been booted by another process in the meantime
+    if (error.message?.includes('Unable to boot device in current state: Booted')) {
+      return;
+    }
+    throw error;
+  }
+  await waitForSimulatorReadyAsync(simulator.udid);
+}
+
+/**
+ * After `simctl boot`, the simulator may not be immediately ready to accept
+ * commands like `simctl install`. Poll until it reports as Booted.
+ */
+async function waitForSimulatorReadyAsync(udid: string): Promise<void> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < SIMULATOR_BOOT_TIMEOUT_MS) {
+    const simulators = await getAvailableIosSimulatorsListAsync();
+    const sim = simulators.find((s) => s.udid === udid);
+    if (sim?.state === 'Booted') {
+      return;
+    }
+    await sleepAsync(SIMULATOR_BOOT_POLL_INTERVAL_MS);
+  }
+  throw new Error(
+    `Timed out waiting for simulator ${udid} to finish booting. Please try again.`
+  );
 }
 
 export async function openSimulatorAppAsync(simulatorUdid: string): Promise<void> {
@@ -184,9 +217,43 @@ export async function installAppAsync(deviceId: string, filePath: string): Promi
   Log.newLine();
   Log.log('Installing your app on the simulator...');
 
-  await simctlAsync(['install', deviceId, filePath]);
+  await simctlInstallWithRetryAsync(deviceId, filePath);
 
   Log.succeed('Successfully installed your app on the simulator!');
+}
+
+/**
+ * Retries `simctl install` when the simulator is in a transitional state
+ * (e.g. still booting after a `simctl boot` command). Detects errors like
+ * "Unable to lookup in current state: Shutdown" (CoreSimulator.SimError code 405).
+ */
+async function simctlInstallWithRetryAsync(
+  deviceId: string,
+  filePath: string
+): Promise<void> {
+  for (let attempt = 1; attempt <= SIMCTL_INSTALL_MAX_RETRIES; attempt++) {
+    try {
+      await simctlAsync(['install', deviceId, filePath]);
+      return;
+    } catch (error: any) {
+      const message = error.message ?? '';
+      const isTransientSimulatorState =
+        error.code === 'SIMULATOR_NOT_READY' ||
+        message.includes('Unable to lookup in current state') ||
+        message.includes('Unable to boot device in current state') ||
+        message.includes('CoreSimulator.SimError');
+
+      if (isTransientSimulatorState && attempt < SIMCTL_INSTALL_MAX_RETRIES) {
+        Log.warn(
+          `Simulator not ready (attempt ${attempt}/${SIMCTL_INSTALL_MAX_RETRIES}), retrying in ${SIMCTL_INSTALL_RETRY_DELAY_MS / 1000}s...`
+        );
+        await sleepAsync(SIMCTL_INSTALL_RETRY_DELAY_MS);
+        continue;
+      }
+
+      throw error;
+    }
+  }
 }
 
 export async function getSimulatorAppIdAsync(): Promise<string | undefined> {

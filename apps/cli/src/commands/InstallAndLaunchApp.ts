@@ -5,6 +5,7 @@ import {
   AppleDevice,
   detectAppleAppType,
 } from 'eas-shared';
+import { IosSimulator } from 'common-types/build/devices';
 import { Platform } from 'common-types/build/cli-commands';
 
 import { getPlatformFromURI } from '../utils';
@@ -41,6 +42,7 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
       );
     }
 
+    await Simulator.ensureSimulatorBootedAsync({ udid: deviceId } as IosSimulator);
     const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
     await Simulator.installAppAsync(deviceId, appPath);
     await Simulator.launchAppAsync(deviceId, bundleIdentifier);
