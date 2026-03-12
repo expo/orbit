@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add watchOS support. ([#313](https://github.com/expo/orbit/pull/313) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Hide horizontal scroll indicator in menu popover. ([#305](https://github.com/expo/orbit/pull/305) by [@gabrieldonadel](https://github.com/gabrieldonadel))
