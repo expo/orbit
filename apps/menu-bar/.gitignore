@@ -61,3 +61,4 @@ yarn-error.log
 
 !.eas/build/
 .expo/
+ios/build/

@@ -3,7 +3,7 @@ import {
   Simulator,
   extractAppFromLocalArchiveAsync,
   AppleDevice,
-  detectIOSAppType,
+  detectAppleAppType,
 } from 'eas-shared';
 import { Platform } from 'common-types/build/cli-commands';
 
@@ -27,7 +27,7 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
 }
 
 async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
-  const appType = await detectIOSAppType(appPath);
+  const appType = await detectAppleAppType(appPath);
 
   if (await Simulator.isSimulatorAsync(deviceId)) {
     if (appType === 'device') {

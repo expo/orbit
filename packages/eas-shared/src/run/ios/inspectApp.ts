@@ -3,7 +3,7 @@ import path from 'path';
 
 import { parseBinaryPlistAsync } from '../../utils/parseBinaryPlistAsync';
 
-export async function detectIOSAppType(appPath: string): Promise<'device' | 'simulator'> {
+export async function detectAppleAppType(appPath: string): Promise<'device' | 'simulator'> {
   const builtInfoPlistPath = path.join(appPath, 'Info.plist');
   if (!fs.existsSync(builtInfoPlistPath)) {
     return 'device';

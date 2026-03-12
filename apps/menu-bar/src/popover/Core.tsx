@@ -14,7 +14,7 @@ import { useFileHandler } from '../../modules/file-handler';
 import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
-import { detectIOSAppTypeAsync } from "../commands/detectIOSAppTypeAsync'";
+import { detectAppleAppTypeAsync } from '../commands/detectAppleAppTypeAsync';
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
@@ -398,7 +398,7 @@ function Core(props: Props) {
 
         let appType: Device['deviceType'] | undefined;
         if (platform === 'ios') {
-          appType = await detectIOSAppTypeAsync(localFilePath);
+          appType = await detectAppleAppTypeAsync(localFilePath);
         }
 
         const device = getDeviceByPlatform(platform, appType);

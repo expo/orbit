@@ -2,9 +2,9 @@ import { Device } from 'common-types/build/devices';
 
 import MenuBarModule from '../modules/MenuBarModule';
 
-export const detectIOSAppTypeAsync = async (appPath: string) => {
+export const detectAppleAppTypeAsync = async (appPath: string) => {
   return (await MenuBarModule.runCli(
-    'detect-ios-app-type',
+    'detect-apple-app-type',
     [appPath],
     console.log
   )) as Device['deviceType'];
