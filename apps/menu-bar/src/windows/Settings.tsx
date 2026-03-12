@@ -373,6 +373,7 @@ const Settings = () => {
                       value={Boolean(userPreferences[key])}
                       onValueChange={(value) => toggleOS(key, value)}
                       disabled={!supported}
+                      style={{ alignSelf: 'center' }}
                     />
                   </Row>
                   {list.length - 1 !== index ? <Divider /> : null}
