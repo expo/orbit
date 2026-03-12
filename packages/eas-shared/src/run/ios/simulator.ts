@@ -1,6 +1,6 @@
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
-import { IosSimulator } from 'common-types/build/devices';
+import { IosSimulator, TVosSimulator, WatchosSimulator } from 'common-types/build/devices';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -18,18 +18,9 @@ import * as Versions from '../../versions';
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
-export async function getFirstBootedIosSimulatorAsync(): Promise<IosSimulator | undefined> {
-  const bootedSimulators = await getAvailableAppleSimulatorsListAsync('booted');
-
-  if (bootedSimulators.length > 0) {
-    return bootedSimulators[0];
-  }
-  return undefined;
-}
-
 export async function getAvailableAppleSimulatorsListAsync(
   query?: string
-): Promise<IosSimulator[]> {
+): Promise<(IosSimulator | TVosSimulator | WatchosSimulator)[]> {
   const { stdout } = query
     ? await simctlAsync(['list', 'devices', '--json', query])
     : await simctlAsync(['list', 'devices', '--json']);

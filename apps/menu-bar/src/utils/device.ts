@@ -85,6 +85,8 @@ export function getSectionsFromDeviceList(
   return sections.filter((section) => section.data.length > 0 || section.error);
 }
 
-export function isVirtualDevice(device: Device): device is IosSimulator | AndroidEmulator {
+export function isVirtualDevice(
+  device: Device
+): device is IosSimulator | TVosSimulator | WatchosSimulator | AndroidEmulator {
   return device.deviceType === 'simulator' || device.deviceType === 'emulator';
 }
