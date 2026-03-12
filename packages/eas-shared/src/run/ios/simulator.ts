@@ -19,7 +19,7 @@ import * as Versions from '../../versions';
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
 export async function getFirstBootedIosSimulatorAsync(): Promise<IosSimulator | undefined> {
-  const bootedSimulators = await getAvailableIosSimulatorsListAsync('booted');
+  const bootedSimulators = await getAvailableAppleSimulatorsListAsync('booted');
 
   if (bootedSimulators.length > 0) {
     return bootedSimulators[0];
@@ -27,7 +27,9 @@ export async function getFirstBootedIosSimulatorAsync(): Promise<IosSimulator | 
   return undefined;
 }
 
-export async function getAvailableIosSimulatorsListAsync(query?: string): Promise<IosSimulator[]> {
+export async function getAvailableAppleSimulatorsListAsync(
+  query?: string
+): Promise<IosSimulator[]> {
   const { stdout } = query
     ? await simctlAsync(['list', 'devices', '--json', query])
     : await simctlAsync(['list', 'devices', '--json']);
@@ -70,7 +72,7 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
 }
 
 export async function isSimulatorAsync(udid: string) {
-  const availableIosSimulators = await getAvailableIosSimulatorsListAsync();
+  const availableIosSimulators = await getAvailableAppleSimulatorsListAsync();
   return availableIosSimulators.some((sim) => sim.udid === udid);
 }
 

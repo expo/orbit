@@ -27,12 +27,21 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
 }
 
 async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
-  const appType = await detectAppleAppType(appPath);
+  const appInfo = await detectAppleAppType(appPath);
 
   if (await Simulator.isSimulatorAsync(deviceId)) {
-    if (appType === 'device') {
+    if (appInfo.deviceType === 'device') {
       throw new Error(
-        "iOS apps built to target physical devices can't be installed on simulators. Either use a physical device or generate a new simulator build."
+        "Apps built to target physical devices can't be installed on simulators. Either use a physical device or generate a new simulator build."
+      );
+    }
+
+    // Validate the simulator's OS matches the app's target OS
+    const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
+    const targetSimulator = simulators.find((sim) => sim.udid === deviceId);
+    if (targetSimulator && targetSimulator.osType !== appInfo.osType) {
+      throw new Error(
+        `This app was built for ${appInfo.osType} but the selected simulator runs ${targetSimulator.osType}. Please select a compatible ${appInfo.osType} simulator.`
       );
     }
 
@@ -42,9 +51,9 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
     return;
   }
 
-  if (appType === 'simulator') {
+  if (appInfo.deviceType === 'simulator') {
     throw new Error(
-      "iOS simulator builds can't be installed on physical devices. Either use a simulator or generate an internal distribution build."
+      "Simulator builds can't be installed on physical devices. Either use a simulator or generate an internal distribution build."
     );
   }
   const appId = await AppleDevice.getBundleIdentifierForBinaryAsync(appPath);

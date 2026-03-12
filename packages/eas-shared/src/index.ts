@@ -6,7 +6,12 @@ import {
 import * as Env from './env';
 import * as ManifestUtils from './manifest';
 import { Manifest } from './manifest';
-import { runAppOnIosSimulatorAsync, runAppOnAndroidEmulatorAsync, detectAppleAppType } from './run';
+import {
+  runAppOnIosSimulatorAsync,
+  runAppOnAndroidEmulatorAsync,
+  detectAppleAppType,
+  type AppleAppInfo,
+} from './run';
 import * as Emulator from './run/android/emulator';
 import { assertExecutablesExistAsync as validateAndroidSystemRequirementsAsync } from './run/android/systemRequirements';
 import AppleDevice from './run/ios/device';
@@ -22,6 +27,7 @@ export {
   validateAndroidSystemRequirementsAsync,
   validateIOSSystemRequirementsAsync,
   detectAppleAppType,
+  type AppleAppInfo,
   Emulator,
   Simulator,
   AppleDevice,

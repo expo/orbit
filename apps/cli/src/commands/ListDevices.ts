@@ -22,7 +22,7 @@ export async function listDevicesAsync<P extends Platform>({
       }
 
       result.ios.devices = result.ios.devices.concat(
-        await Simulator.getAvailableIosSimulatorsListAsync()
+        await Simulator.getAvailableAppleSimulatorsListAsync()
       );
     } catch (error) {
       console.warn('Unable to get iOS devices', error);

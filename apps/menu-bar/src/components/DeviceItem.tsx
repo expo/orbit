@@ -9,6 +9,7 @@ import { Row, View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
+import WatchIcon from '../assets/icons/watch.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
 import Alert from '../modules/Alert';
 import { PlatformColor } from '../modules/PlatformColor';
@@ -83,17 +84,31 @@ const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: P
                     : 'rgba(0,0,0,.16)',
               },
             ]}>
-            <IphoneIcon
-              height={30}
-              width={30}
-              fill={
-                selected
-                  ? palette.dark.white
-                  : currentTheme === 'dark'
-                    ? palette.dark.gray['900']
-                    : theme.text.default
-              }
-            />
+            {device.osType === 'watchOS' ? (
+              <WatchIcon
+                height={30}
+                width={30}
+                fill={
+                  selected
+                    ? palette.dark.white
+                    : currentTheme === 'dark'
+                      ? palette.dark.gray['900']
+                      : theme.text.default
+                }
+              />
+            ) : (
+              <IphoneIcon
+                height={30}
+                width={30}
+                fill={
+                  selected
+                    ? palette.dark.white
+                    : currentTheme === 'dark'
+                      ? palette.dark.gray['900']
+                      : theme.text.default
+                }
+              />
+            )}
           </View>
           <View flex="1" justify="center">
             <Text numberOfLines={1}>{device.name}</Text>

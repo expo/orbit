@@ -5,7 +5,7 @@ export async function detectAppleAppTypeAsync(appPath: string) {
     appPath = await extractAppFromLocalArchiveAsync(appPath);
   }
 
-  const appType = await detectAppleAppType(appPath);
+  const appInfo = await detectAppleAppType(appPath);
 
-  return appType;
+  return appInfo;
 }
