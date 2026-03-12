@@ -36,15 +36,6 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
       );
     }
 
-    // Validate the simulator's OS matches the app's target OS
-    const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
-    const targetSimulator = simulators.find((sim) => sim.udid === deviceId);
-    if (targetSimulator && targetSimulator.osType !== appInfo.osType) {
-      throw new Error(
-        `This app was built for ${appInfo.osType} but the selected simulator runs ${targetSimulator.osType}. Please select a compatible ${appInfo.osType} simulator.`
-      );
-    }
-
     const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
     await Simulator.installAppAsync(deviceId, appPath);
     await Simulator.launchAppAsync(deviceId, bundleIdentifier);

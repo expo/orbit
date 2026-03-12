@@ -1,10 +1,10 @@
-import { IosSimulator } from 'common-types/build/devices';
+import { IosSimulator, TVosSimulator, WatchosSimulator } from 'common-types/build/devices';
 
 import MenuBarModule from '../modules/MenuBarModule';
 
 export type AppleAppInfo = {
   deviceType: 'device' | 'simulator';
-  osType: IosSimulator['osType'];
+  osType: (IosSimulator | TVosSimulator | WatchosSimulator)['osType'];
 };
 
 export const detectAppleAppTypeAsync = async (appPath: string): Promise<AppleAppInfo> => {

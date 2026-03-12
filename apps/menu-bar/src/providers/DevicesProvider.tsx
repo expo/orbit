@@ -18,6 +18,8 @@ const defaultValues: ListDevicesContext = {
   devicesPerPlatform: {
     android: { devices: new Map() },
     ios: { devices: new Map() },
+    tvos: { devices: new Map() },
+    watchos: { devices: new Map() },
   },
   sections: [],
   numberOfDevices: 0,
@@ -32,6 +34,8 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
   const [devicesPerPlatform, setDevicesPerPlatform] = useState<DevicesPerPlatform>({
     android: { devices: new Map() },
     ios: { devices: new Map() },
+    tvos: { devices: new Map() },
+    watchos: { devices: new Map() },
   });
   const [hasInitialized, setHasInitialized] = useState(false);
   const [error, setError] = useState<Error>();
@@ -47,6 +51,14 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
     } = getUserPreferences();
 
     const iosDevices = new Map<string, CliCommands.ListDevices.Device<CliCommands.Platform.Ios>>();
+    const tvosDevices = new Map<
+      string,
+      CliCommands.ListDevices.Device<CliCommands.Platform.Tvos>
+    >();
+    const watchosDevices = new Map<
+      string,
+      CliCommands.ListDevices.Device<CliCommands.Platform.Watchos>
+    >();
     const androidDevices = new Map<
       string,
       CliCommands.ListDevices.Device<CliCommands.Platform.Android>
@@ -56,23 +68,31 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
       setDevicesPerPlatform({
         android: { error: undefined, devices: androidDevices },
         ios: { error: undefined, devices: iosDevices },
+        tvos: { error: undefined, devices: tvosDevices },
+        watchos: { error: undefined, devices: watchosDevices },
       });
     }
 
-    const platform =
-      showAndroid && (showIos || showTvos || showWatchos) ? 'all' : showAndroid ? 'android' : 'ios';
+    const showApple = showIos || showTvos || showWatchos;
+    const platform = showAndroid && showApple ? 'all' : showAndroid ? 'android' : 'ios';
     try {
       const devicesList = await listDevicesAsync({ platform });
 
-      if (showIos || showTvos || showWatchos) {
+      if (showIos) {
         devicesList.ios.devices.forEach((device) => {
-          if (
-            (device.osType === 'iOS' && showIos) ||
-            (device.osType === 'tvOS' && showTvos) ||
-            (device.osType === 'watchOS' && showWatchos)
-          ) {
-            iosDevices.set(getDeviceId(device), device);
-          }
+          iosDevices.set(getDeviceId(device), device);
+        });
+      }
+
+      if (showTvos) {
+        devicesList.tvos.devices.forEach((device) => {
+          tvosDevices.set(getDeviceId(device), device);
+        });
+      }
+
+      if (showWatchos) {
+        devicesList.watchos.devices.forEach((device) => {
+          watchosDevices.set(getDeviceId(device), device);
         });
       }
 
@@ -91,6 +111,14 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
           error: devicesList.ios.error,
           devices: iosDevices,
         },
+        tvos: {
+          error: devicesList.tvos.error,
+          devices: tvosDevices,
+        },
+        watchos: {
+          error: devicesList.watchos.error,
+          devices: watchosDevices,
+        },
       });
     } catch (err) {
       setError(err as Error);
@@ -107,7 +135,10 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
         devicesPerPlatform,
         sections,
         numberOfDevices:
-          devicesPerPlatform.android.devices.size + devicesPerPlatform.ios.devices.size,
+          devicesPerPlatform.android.devices.size +
+          devicesPerPlatform.ios.devices.size +
+          devicesPerPlatform.tvos.devices.size +
+          devicesPerPlatform.watchos.devices.size,
         hasInitialized,
         error,
         refetch: updateDevicesList,

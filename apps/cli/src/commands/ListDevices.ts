@@ -10,6 +10,8 @@ export async function listDevicesAsync<P extends Platform>({
   let result: DevicesPerPlatform = {
     android: { devices: [], error: undefined },
     ios: { devices: [], error: undefined },
+    tvos: { devices: [], error: undefined },
+    watchos: { devices: [], error: undefined },
   };
 
   if (platform === Platform.Ios || platform === Platform.All) {
@@ -21,16 +23,26 @@ export async function listDevicesAsync<P extends Platform>({
         }
       }
 
-      result.ios.devices = result.ios.devices.concat(
-        await Simulator.getAvailableAppleSimulatorsListAsync()
-      );
+      const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
+      for (const simulator of simulators) {
+        if (simulator.osType === 'watchOS') {
+          result.watchos.devices.push(simulator);
+        } else if (simulator.osType === 'tvOS') {
+          result.tvos.devices.push(simulator);
+        } else {
+          result.ios.devices.push(simulator);
+        }
+      }
     } catch (error) {
-      console.warn('Unable to get iOS devices', error);
+      console.warn('Unable to get Apple devices', error);
       if (error instanceof Error) {
-        result.ios.error = {
+        const errorInfo = {
           code: error instanceof InternalError ? error.code : 'UNKNOWN_ERROR',
           message: error.message,
         };
+        result.ios.error = errorInfo;
+        result.tvos.error = errorInfo;
+        result.watchos.error = errorInfo;
       }
     }
   }

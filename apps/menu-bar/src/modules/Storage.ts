@@ -42,6 +42,7 @@ const selectedDevicesIdsStorageKey = 'selected-devices-ids';
 export type SelectedDevicesIds = {
   android?: string;
   ios?: string;
+  tvos?: string;
   watchos?: string;
 };
 
