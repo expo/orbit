@@ -9,6 +9,7 @@ import { Row, View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
+import TvosIcon from '../assets/icons/tvos.svg';
 import WatchIcon from '../assets/icons/watch.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
 import Alert from '../modules/Alert';
@@ -86,6 +87,18 @@ const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: P
             ]}>
             {device.osType === 'watchOS' ? (
               <WatchIcon
+                height={30}
+                width={30}
+                fill={
+                  selected
+                    ? palette.dark.white
+                    : currentTheme === 'dark'
+                      ? palette.dark.gray['900']
+                      : theme.text.default
+                }
+              />
+            ) : device.osType === 'tvOS' ? (
+              <TvosIcon
                 height={30}
                 width={30}
                 fill={
