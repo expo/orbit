@@ -7,7 +7,8 @@
 ### 🎉 New features
 
 - Add watchOS support. ([#313](https://github.com/expo/orbit/pull/313) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Add support for launching macOS apps. ([#314](https://github.com/expo/orbit/pull/314) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add support for launching macOS apps. ([#315](https://github.com/expo/orbit/pull/315) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Improve iOS simulator boot and app install reliability. ([#314](https://github.com/expo/orbit/pull/314) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
