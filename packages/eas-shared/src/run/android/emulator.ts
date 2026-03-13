@@ -9,7 +9,12 @@ import os from 'os';
 import path from 'path';
 import semver from 'semver';
 
-import { adbAsync, isEmulatorBootedAsync, waitForEmulatorToBeBootedAsync } from './adb';
+import {
+  adbAsync,
+  getCachedOsVersionByName,
+  isEmulatorBootedAsync,
+  waitForEmulatorToBeBootedAsync,
+} from './adb';
 import { getAndroidSdkRootAsync } from './sdk';
 import { tarExtractAsync } from '../../download';
 import { downloadApkAsync } from '../../downloadApkAsync';
@@ -60,11 +65,15 @@ export async function getAvailableAndroidEmulatorsAsync(): Promise<
          * "INFO    | Storing crashdata in: /tmp/android-brent/emu-crash-34.1.18.db
          */
         .filter((name) => !name.trim().includes(' '))
-        .map((name) => ({
-          name,
-          osType: 'Android',
-          deviceType: 'emulator',
-        }))
+        .map((name) => {
+          const osVersion = getCachedOsVersionByName(name);
+          return {
+            name,
+            ...(osVersion && { osVersion }),
+            osType: 'Android' as const,
+            deviceType: 'emulator' as const,
+          };
+        })
     );
   } catch {
     return [];

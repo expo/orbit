@@ -1,5 +1,6 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import { AndroidConnectedDevice, AndroidEmulator } from 'common-types/build/devices';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
@@ -49,6 +50,11 @@ export function sanitizeAdbDeviceName(deviceName: string): string | undefined {
  * @param devicePid a value like `emulator-5554` from `abd devices`
  */
 export async function getAdbNameForEmulatorIdAsync(emulatorPid: string): Promise<string | null> {
+  const cached = getCacheEntry(emulatorPid);
+  if (cached?.name) {
+    return cached.name;
+  }
+
   const { stdout } = await adbAsync('-s', emulatorPid, 'emu', 'avd', 'name');
 
   if (stdout.match(/could not connect to TCP port .*: Connection refused/)) {
@@ -56,7 +62,87 @@ export async function getAdbNameForEmulatorIdAsync(emulatorPid: string): Promise
     throw new Error(`Emulator not found: ${stdout}`);
   }
 
-  return sanitizeAdbDeviceName(stdout) ?? null;
+  const name = sanitizeAdbDeviceName(stdout) ?? null;
+  if (name) {
+    setCacheEntry(emulatorPid, { name });
+  }
+  return name;
+}
+
+const ADB_CACHE_FILE = path.join(os.tmpdir(), 'expo-orbit-adb-cache.json');
+console.log('ADB_CACHE_FILE', ADB_CACHE_FILE);
+const ADB_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+interface AdbCacheEntry {
+  name?: string;
+  osVersion?: string;
+  timestamp: number;
+}
+
+type AdbCache = Record<string, AdbCacheEntry>;
+
+function readAdbCache(): AdbCache {
+  try {
+    return JSON.parse(fs.readFileSync(ADB_CACHE_FILE, 'utf-8'));
+  } catch {
+    return {};
+  }
+}
+
+function writeAdbCache(cache: AdbCache): void {
+  try {
+    fs.writeFileSync(ADB_CACHE_FILE, JSON.stringify(cache));
+  } catch {}
+}
+
+function getCacheEntry(pid: string): AdbCacheEntry | undefined {
+  const cache = readAdbCache();
+  const entry = cache[pid];
+  if (entry && Date.now() - entry.timestamp < ADB_CACHE_TTL_MS) {
+    return entry;
+  }
+  return undefined;
+}
+
+function setCacheEntry(pid: string, data: Omit<AdbCacheEntry, 'timestamp'>): void {
+  const cache = readAdbCache();
+  cache[pid] = { ...cache[pid], ...data, timestamp: Date.now() };
+  writeAdbCache(cache);
+}
+
+export function getCachedOsVersionByName(name: string): string | undefined {
+  const cache = readAdbCache();
+  const now = Date.now();
+  for (const entry of Object.values(cache)) {
+    if (entry.name === name && entry.osVersion && now - entry.timestamp < ADB_CACHE_TTL_MS) {
+      return entry.osVersion;
+    }
+  }
+  return undefined;
+}
+
+async function getOsVersionForDeviceAsync(devicePid: string): Promise<string | undefined> {
+  const cached = getCacheEntry(devicePid);
+  if (cached?.osVersion) {
+    return cached.osVersion;
+  }
+
+  try {
+    const { stdout } = await adbAsync(
+      '-s',
+      devicePid,
+      'shell',
+      'getprop',
+      'ro.build.version.release'
+    );
+    const version = stdout.trim();
+    if (version) {
+      setCacheEntry(devicePid, { osVersion: version });
+    }
+    return version || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // TODO: This is very expensive for some operations.
@@ -105,13 +191,20 @@ export async function getRunningDevicesAsync(): Promise<
 
   const devicePromises = attachedDevices.map(async (device) => {
     let name = 'model' in device ? device.model : '';
+    const osVersionPromise = device.pid
+      ? getOsVersionForDeviceAsync(device.pid)
+      : Promise.resolve(undefined);
+
     if (device.deviceType === 'emulator' && device.pid) {
       name = (await getAdbNameForEmulatorIdAsync(device.pid)) ?? name;
     }
 
+    const osVersion = await osVersionPromise;
+
     const result: AndroidConnectedDevice | AndroidEmulator = {
       ...device,
       name,
+      ...(osVersion && { osVersion }),
     };
     return result;
   });

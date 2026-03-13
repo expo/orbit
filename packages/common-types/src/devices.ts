@@ -42,6 +42,7 @@ export interface WatchosSimulator extends AppleSimulator {
 export interface AndroidEmulator {
   pid?: string;
   name: string;
+  osVersion?: string;
   osType: 'Android';
   deviceType: 'emulator';
   state: 'Booted' | 'Shutdown';
@@ -51,6 +52,7 @@ export interface AndroidConnectedDevice {
   pid: string;
   model: string;
   name: string;
+  osVersion?: string;
   osType: 'Android';
   deviceType: 'device';
   connectionType?: 'USB' | 'Network';
