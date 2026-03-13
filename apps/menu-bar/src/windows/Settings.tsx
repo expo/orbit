@@ -50,8 +50,14 @@ const osList: OsListItem[] = [
     unsupportedMessage: 'macOS only',
   },
   {
-    label: 'tvOS (experimental)',
+    label: 'tvOS',
     key: 'showTvosSimulators',
+    supported: Platform.OS === 'macos',
+    unsupportedMessage: 'macOS only',
+  },
+  {
+    label: 'watchOS',
+    key: 'showWatchosSimulators',
     supported: Platform.OS === 'macos',
     unsupportedMessage: 'macOS only',
   },
@@ -367,6 +373,7 @@ const Settings = () => {
                       value={Boolean(userPreferences[key])}
                       onValueChange={(value) => toggleOS(key, value)}
                       disabled={!supported}
+                      style={{ alignSelf: 'center' }}
                     />
                   </Row>
                   {list.length - 1 !== index ? <Divider /> : null}

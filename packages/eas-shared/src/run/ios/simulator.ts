@@ -1,6 +1,6 @@
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
-import { IosSimulator } from 'common-types/build/devices';
+import { IosSimulator, TVosSimulator, WatchosSimulator } from 'common-types/build/devices';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -18,16 +18,9 @@ import * as Versions from '../../versions';
 
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
-export async function getFirstBootedIosSimulatorAsync(): Promise<IosSimulator | undefined> {
-  const bootedSimulators = await getAvailableIosSimulatorsListAsync('booted');
-
-  if (bootedSimulators.length > 0) {
-    return bootedSimulators[0];
-  }
-  return undefined;
-}
-
-export async function getAvailableIosSimulatorsListAsync(query?: string): Promise<IosSimulator[]> {
+export async function getAvailableAppleSimulatorsListAsync(
+  query?: string
+): Promise<(IosSimulator | TVosSimulator | WatchosSimulator)[]> {
   const { stdout } = query
     ? await simctlAsync(['list', 'devices', '--json', query])
     : await simctlAsync(['list', 'devices', '--json']);
@@ -46,7 +39,7 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
     // Create an array [tvOS, 13, 4]
     const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
 
-    if (osType === 'iOS' || osType === 'tvOS') {
+    if (osType === 'iOS' || osType === 'tvOS' || osType === 'watchOS') {
       // Join the end components [13, 4] -> '13.4'
       const osVersion = osVersionComponents.join('.');
       const sims = info.devices[runtime];
@@ -70,7 +63,7 @@ export async function getAvailableIosSimulatorsListAsync(query?: string): Promis
 }
 
 export async function isSimulatorAsync(udid: string) {
-  const availableIosSimulators = await getAvailableIosSimulatorsListAsync();
+  const availableIosSimulators = await getAvailableAppleSimulatorsListAsync();
   return availableIosSimulators.some((sim) => sim.udid === udid);
 }
 

@@ -15,17 +15,28 @@ export interface AppleConnectedDevice {
   developerModeStatus?: 'enabled' | 'disabled';
 }
 
-export interface IosSimulator {
+export interface AppleSimulator {
   runtime: string;
   osVersion: string;
   windowName: string;
-  osType: 'iOS' | 'tvOS';
   state: 'Booted' | 'Shutdown';
   isAvailable: boolean;
   name: string;
   udid: string;
   lastBootedAt?: number;
   deviceType: 'simulator';
+}
+
+export interface IosSimulator extends AppleSimulator {
+  osType: 'iOS';
+}
+
+export interface TVosSimulator extends AppleSimulator {
+  osType: 'tvOS';
+}
+
+export interface WatchosSimulator extends AppleSimulator {
+  osType: 'watchOS';
 }
 
 export interface AndroidEmulator {
@@ -45,4 +56,10 @@ export interface AndroidConnectedDevice {
   connectionType?: 'USB' | 'Network';
 }
 
-export type Device = AppleConnectedDevice | IosSimulator | AndroidEmulator | AndroidConnectedDevice;
+export type Device =
+  | AppleConnectedDevice
+  | IosSimulator
+  | TVosSimulator
+  | WatchosSimulator
+  | AndroidEmulator
+  | AndroidConnectedDevice;

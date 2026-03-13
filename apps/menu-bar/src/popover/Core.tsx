@@ -14,7 +14,7 @@ import { useFileHandler } from '../../modules/file-handler';
 import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
-import { detectIOSAppTypeAsync } from "../commands/detectIOSAppTypeAsync'";
+import { detectAppleAppTypeAsync } from '../commands/detectAppleAppTypeAsync';
 import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
@@ -36,7 +36,14 @@ import {
   storage,
 } from '../modules/Storage';
 import { useListDevices } from '../providers/DevicesProvider';
-import { getDeviceId, getDeviceOS, isVirtualDevice } from '../utils/device';
+import {
+  DevicePlatform,
+  DevicesPerPlatform,
+  PlatformToDevice,
+  getDeviceId,
+  getDeviceOS,
+  isVirtualDevice,
+} from '../utils/device';
 import { MenuBarStatus, Task } from '../utils/helpers';
 import {
   URLType,
@@ -179,13 +186,16 @@ function Core(props: Props) {
   );
 
   const getDeviceByPlatform = useCallback(
-    (platform: 'android' | 'ios', deviceType?: Device['deviceType']) => {
-      const devices = devicesPerPlatform[platform].devices;
+    <P extends DevicePlatform>(
+      platform: P,
+      deviceType?: Device['deviceType']
+    ): PlatformToDevice<P> | undefined => {
+      const devices = devicesPerPlatform[platform as keyof DevicesPerPlatform].devices;
       const selectedDevicesId = selectedDevicesIds[platform];
       if (selectedDevicesId && devices.has(selectedDevicesId)) {
         const device = devices.get(selectedDevicesId);
         if (!deviceType || device?.deviceType === deviceType) {
-          return devices.get(selectedDevicesId);
+          return devices.get(selectedDevicesId) as PlatformToDevice<P> | undefined;
         } else {
           createTask({
             id: 'incompatible-device-selected',
@@ -206,7 +216,7 @@ function Core(props: Props) {
           (deviceType !== 'device' && isVirtualDevice(device) && device.state === 'Booted')
         ) {
           setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(device) }));
-          return device;
+          return device as PlatformToDevice<P>;
         }
       }
 
@@ -218,7 +228,7 @@ function Core(props: Props) {
       }
 
       setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
-      return firstDevice;
+      return firstDevice as PlatformToDevice<P>;
     },
     [createTask, deleteTask, devicesPerPlatform, selectedDevicesIds]
   );
@@ -394,17 +404,23 @@ function Core(props: Props) {
           localFilePath = buildPath;
         }
 
-        const platform = getPlatformFromURI(appURI);
-
+        let devicePlatform: DevicePlatform = getPlatformFromURI(appURI);
         let appType: Device['deviceType'] | undefined;
-        if (platform === 'ios') {
-          appType = await detectIOSAppTypeAsync(localFilePath);
+
+        if (devicePlatform === 'ios') {
+          const appInfo = await detectAppleAppTypeAsync(localFilePath);
+          appType = appInfo.deviceType;
+          if (appInfo.osType === 'tvOS') {
+            devicePlatform = 'tvos';
+          } else if (appInfo.osType === 'watchOS') {
+            devicePlatform = 'watchos';
+          }
         }
 
-        const device = getDeviceByPlatform(platform, appType);
+        const device = getDeviceByPlatform(devicePlatform, appType);
         if (!device) {
           Alert.alert(
-            `You don't have any ${platform} device available to run this build, please make sure your environment is configured correctly and try again.`
+            `You don't have any ${devicePlatform} device available to run this build, please make sure your environment is configured correctly and try again.`
           );
           return;
         }

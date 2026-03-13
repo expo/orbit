@@ -1,5 +1,13 @@
 import { CliCommands } from 'common-types';
-import { Device, IosSimulator, AndroidEmulator } from 'common-types/build/devices';
+import {
+  Device,
+  IosSimulator,
+  AndroidEmulator,
+  AppleConnectedDevice,
+  TVosSimulator,
+  WatchosSimulator,
+  AndroidConnectedDevice,
+} from 'common-types/build/devices';
 import { SectionListData } from 'react-native';
 
 export type DevicesPerPlatform = {
@@ -9,15 +17,36 @@ export type DevicesPerPlatform = {
   };
 };
 
-export function getDeviceOS(device: Device): 'android' | 'ios' {
-  if (device.osType === 'tvOS') {
-    return 'ios';
-  }
-  return device.osType.toLowerCase() as 'android' | 'ios';
+export type DevicePlatform = 'android' | 'ios' | 'tvos' | 'watchos';
+
+type DeviceToPlatform<T extends Device> = T extends IosSimulator | AppleConnectedDevice
+  ? 'ios'
+  : T extends TVosSimulator
+    ? 'tvos'
+    : T extends WatchosSimulator
+      ? 'watchos'
+      : T extends AndroidEmulator | AndroidConnectedDevice
+        ? 'android'
+        : DevicePlatform;
+
+export type PlatformToDevice<P extends DevicePlatform> = P extends 'ios'
+  ? IosSimulator | AppleConnectedDevice
+  : P extends 'tvos'
+    ? TVosSimulator
+    : P extends 'watchos'
+      ? WatchosSimulator
+      : P extends 'android'
+        ? AndroidEmulator | AndroidConnectedDevice
+        : Device;
+
+export function getDeviceOS<T extends Device>(device: T): DeviceToPlatform<T> {
+  return device.osType.toLowerCase() as DeviceToPlatform<T>;
 }
 
 export function getDeviceId(device: Device): string {
-  return device.osType === 'iOS' || device.osType === 'tvOS' ? device.udid : device.name;
+  return device.osType === 'iOS' || device.osType === 'tvOS' || device.osType === 'watchOS'
+    ? device.udid
+    : device.name;
 }
 
 export function getSectionsFromDeviceList(
@@ -39,11 +68,25 @@ export function getSectionsFromDeviceList(
       label: 'Android',
       error: devicesPerPlatform.android.error,
     },
+    {
+      data: Array.from(devicesPerPlatform.tvos.devices.values()),
+      key: 'tvos',
+      label: 'tvOS',
+      error: devicesPerPlatform.tvos.error,
+    },
+    {
+      data: Array.from(devicesPerPlatform.watchos.devices.values()),
+      key: 'watchos',
+      label: 'watchOS',
+      error: devicesPerPlatform.watchos.error,
+    },
   ];
 
   return sections.filter((section) => section.data.length > 0 || section.error);
 }
 
-export function isVirtualDevice(device: Device): device is IosSimulator | AndroidEmulator {
+export function isVirtualDevice(
+  device: Device
+): device is IosSimulator | TVosSimulator | WatchosSimulator | AndroidEmulator {
   return device.deviceType === 'simulator' || device.deviceType === 'emulator';
 }
