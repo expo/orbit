@@ -9,20 +9,9 @@ type BootDeviceAsyncOptions = {
 
 export async function bootDeviceAsync({ platform, id, noAudio }: BootDeviceAsyncOptions) {
   if (platform === 'ios') {
-    try {
-      await Simulator.ensureSimulatorBootedAsync({
-        udid: id,
-      } as IosSimulator);
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.includes('Unable to boot device in current state: Booted')
-      ) {
-        return;
-      }
-
-      throw error;
-    }
+    await Simulator.ensureSimulatorBootedAsync({
+      udid: id,
+    } as IosSimulator);
 
     return await Simulator.ensureSimulatorAppOpenedAsync(id);
   }
