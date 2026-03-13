@@ -82,8 +82,10 @@ class AppDelegate: RCTAppDelegate, NSUserNotificationCenterDelegate {
   }
 
   @objc func getUrlEventHandler(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
-    popoverManager.openPopover()
-    RCTLinkingManager.getUrlEventHandler(event, withReplyEvent: replyEvent)
+    // Emit RCTLinkingManager event before opening popover so React sees the flag
+    // before the popoverFocused event arrives. 
+RCTLinkingManager.getUrlEventHandler(event, withReplyEvent: replyEvent)
+popoverManager.openPopover()
   }
 
   // MARK: - RCTBridgeDelegate

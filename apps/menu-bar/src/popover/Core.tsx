@@ -1,7 +1,7 @@
 import { InternalError } from 'common-types';
 import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
 import { Device } from 'common-types/build/devices';
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { SectionList } from 'react-native';
 
 import BuildsSection, { BUILDS_SECTION_HEIGHT } from './BuildsSection';
@@ -27,6 +27,8 @@ import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
 import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
+import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   SelectedDevicesIds,
@@ -55,6 +57,7 @@ import { WindowsNavigator } from '../windows';
 
 type Props = {
   isDevWindow: boolean;
+  onDeepLinkModeChange?: (isDeepLinkMode: boolean) => void;
 };
 
 function Core(props: Props) {
@@ -102,6 +105,48 @@ function Core(props: Props) {
     },
     [setTasks]
   );
+
+  // Track whether the popover was opened via a deep link (browser) or user click.
+  // In deep link mode, only the progress UI is shown.
+  const [isDeepLinkMode, setIsDeepLinkMode] = useState(false);
+  const deepLinkPending = useRef(false);
+
+  // Handle cold start: if app was launched via URL scheme, React wasn't mounted
+  // when deepLinkOpened fired, so check the initial URL instead.
+  useEffect(() => {
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        setIsDeepLinkMode(true);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    const listener = DeviceEventEmitter.addListener('deepLinkOpened', () => {
+      deepLinkPending.current = true;
+    });
+    return () => listener.remove();
+  }, []);
+
+  // When popover is focused by user click, exit deep link mode.
+  // Deep link opens also trigger popoverFocused, but deepLinkPending
+  // distinguishes them: the native side emits deepLinkOpened before
+  // popoverFocused, so we check and consume the flag here.
+  usePopoverFocusEffect(
+    useCallback(() => {
+      if (deepLinkPending.current) {
+        deepLinkPending.current = false;
+        setIsDeepLinkMode(true);
+      } else {
+        setIsDeepLinkMode(false);
+      }
+    }, [])
+  );
+
+  const { onDeepLinkModeChange } = props;
+  useEffect(() => {
+    onDeepLinkModeChange?.(isDeepLinkMode);
+  }, [isDeepLinkMode, onDeepLinkModeChange]);
 
   const {
     devicesPerPlatform,
@@ -582,40 +627,44 @@ function Core(props: Props) {
   return (
     <View shrink="1">
       <BuildsSection installAppFromURI={installAppFromURI} tasks={tasks} />
-      <ProjectsSection apps={apps} />
-      <View shrink="1" pt="tiny" overflow="hidden">
-        {devicesError ? (
-          <DevicesListError error={devicesError} />
-        ) : (
-          <SectionList
-            sections={sections}
-            style={{ minHeight: estimatedListHeight }}
-            contentContainerStyle={{ width: '100%' }}
-            showsHorizontalScrollIndicator={false}
-            SectionSeparatorComponent={Separator}
-            renderSectionHeader={({ section: { label, error } }) => (
-              <DeviceListSectionHeader label={label} errorMessage={error?.message} />
+      {!isDeepLinkMode && (
+        <>
+          <ProjectsSection apps={apps} />
+          <View shrink="1" pt="tiny" overflow="hidden">
+            {devicesError ? (
+              <DevicesListError error={devicesError} />
+            ) : (
+              <SectionList
+                sections={sections}
+                style={{ minHeight: estimatedListHeight }}
+                contentContainerStyle={{ width: '100%' }}
+                showsHorizontalScrollIndicator={false}
+                SectionSeparatorComponent={Separator}
+                renderSectionHeader={({ section: { label, error } }) => (
+                  <DeviceListSectionHeader label={label} errorMessage={error?.message} />
+                )}
+                renderItem={({ item: device }: { item: Device }) => {
+                  const platform = getDeviceOS(device);
+                  const id = getDeviceId(device);
+                  return (
+                    <DeviceItem
+                      device={device}
+                      key={device.name}
+                      onPress={() => onSelectDevice(device)}
+                      onPressLaunch={async () => {
+                        Analytics.track(Event.LAUNCH_SIMULATOR);
+                        await bootDeviceAsync({ platform, id });
+                        refetch();
+                      }}
+                      selected={selectedDevicesIds[platform] === id}
+                    />
+                  );
+                }}
+              />
             )}
-            renderItem={({ item: device }: { item: Device }) => {
-              const platform = getDeviceOS(device);
-              const id = getDeviceId(device);
-              return (
-                <DeviceItem
-                  device={device}
-                  key={device.name}
-                  onPress={() => onSelectDevice(device)}
-                  onPressLaunch={async () => {
-                    Analytics.track(Event.LAUNCH_SIMULATOR);
-                    await bootDeviceAsync({ platform, id });
-                    refetch();
-                  }}
-                  selected={selectedDevicesIds[platform] === id}
-                />
-              );
-            }}
-          />
-        )}
-      </View>
+          </View>
+        </>
+      )}
     </View>
   );
 }
