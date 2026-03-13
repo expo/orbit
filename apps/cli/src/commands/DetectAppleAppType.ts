@@ -1,11 +1,12 @@
+import { CliCommands } from 'common-types';
 import { extractAppFromLocalArchiveAsync, detectAppleAppType } from 'eas-shared';
 
-export async function detectAppleAppTypeAsync(appPath: string) {
+export async function detectAppleAppTypeAsync(
+  appPath: string
+): Promise<CliCommands.DetectAppleAppType.AppleAppInfo> {
   if (!appPath.endsWith('.app') && !appPath.endsWith('.ipa')) {
     appPath = await extractAppFromLocalArchiveAsync(appPath);
   }
 
-  const appInfo = await detectAppleAppType(appPath);
-
-  return appInfo;
+  return detectAppleAppType(appPath);
 }

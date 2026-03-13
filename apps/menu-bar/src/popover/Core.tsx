@@ -410,7 +410,30 @@ function Core(props: Props) {
         if (devicePlatform === 'ios') {
           const appInfo = await detectAppleAppTypeAsync(localFilePath);
           appType = appInfo.deviceType;
-          if (appInfo.osType === 'tvOS') {
+          if (appInfo.osType === 'macOS') {
+            if (tasks.get(appURI)) {
+              updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
+            } else {
+              createTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP, progress: 0 });
+            }
+
+            try {
+              await installAndLaunchAppAsync({ appPath: localFilePath, deviceId: undefined });
+            } catch (error) {
+              if (error instanceof Error) {
+                if (__DEV__) {
+                  console.log('Something went wrong while installing the app.', error.message);
+                  console.log(`Stack: ${error.stack}`);
+                }
+                Alert.alert('Something went wrong while installing the app.', error.message);
+              }
+            } finally {
+              setTimeout(() => {
+                deleteTask(appURI);
+              }, 2000);
+            }
+            return;
+          } else if (appInfo.osType === 'tvOS') {
             devicePlatform = 'tvos';
           } else if (appInfo.osType === 'watchOS') {
             devicePlatform = 'watchos';
