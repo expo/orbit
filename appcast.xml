@@ -7,6 +7,40 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.3.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add watchOS support. (<a href="https://github.com/expo/orbit/pull/313">#313</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add support for launching macOS apps. (<a href="https://github.com/expo/orbit/pull/315">#315</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve iOS simulator boot and app install reliability. (<a href="https://github.com/expo/orbit/pull/314">#314</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Hide horizontal scroll indicator in menu popover. (<a href="https://github.com/expo/orbit/pull/305">#305</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Upgrade to <code>expo</code> SDK 54 and react-native <code>0.81</code>. (<a href="https://github.com/expo/orbit/pull/254">#254</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Optimize code for React 19. (<a href="https://github.com/expo/orbit/pull/307">#307</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade <code>react-native-svg</code> to 15.15.2. (<a href="https://github.com/expo/orbit/pull/308">#308</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add localhost to local server whitelisted domains. (<a href="https://github.com/expo/orbit/pull/317">#317</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2026-03-13</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.3.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.3.0/expo-orbit.v2.3.0-macos.zip"
+        sparkle:version="38"
+        sparkle:shortVersionString="2.3.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.2.0</title>
       <description>
       <![CDATA[
