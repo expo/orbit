@@ -8,7 +8,8 @@ import path from 'path';
 export async function installOnMacOSAsync(appPath: string): Promise<string> {
   const appName = path.basename(appPath);
   const destination = path.join('/Applications', appName);
-  await fs.copy(appPath, destination, { overwrite: true });
+  await fs.remove(destination);
+  await fs.copy(appPath, destination);
   return destination;
 }
 

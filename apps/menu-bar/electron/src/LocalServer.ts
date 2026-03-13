@@ -2,7 +2,7 @@ import { app as electronApp } from 'electron';
 import express, { Express } from 'express';
 
 const PORTS = [35783, 47909, 44171, 50799];
-const WHITELISTED_DOMAINS = ['expo.dev', 'expo.test', 'exp.host'];
+const WHITELISTED_DOMAINS = ['expo.dev', 'expo.test', 'exp.host', 'localhost'];
 
 export class LocalServer {
   app: Express;
@@ -76,7 +76,10 @@ export class LocalServer {
       }
 
       if (!hostName.includes('.')) {
-        hostName = originUrl.pathname.split('/').filter(Boolean)[1];
+        const pathSegments = originUrl.pathname.split('/').filter(Boolean);
+        if (pathSegments.length > 1) {
+          hostName = pathSegments[1];
+        }
       }
       const components = hostName.split('.');
       return components.slice(-2).join('.');
