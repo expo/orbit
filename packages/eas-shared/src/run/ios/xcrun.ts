@@ -31,6 +31,12 @@ function throwXcrunError(e: any): never {
     );
   } else if (e.stderr?.match(/the device was not, or could not be, unlocked/)) {
     throw new InternalError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
+  } else if (e.stderr?.match(/Unable to lookup in current state: Shutdown/)) {
+    throw new InternalError(
+      'SIMULATOR_NOT_READY',
+      'The simulator is not booted. Orbit will attempt to boot it automatically.',
+      { stderr: e.stderr }
+    );
   }
 
   if (Array.isArray(e.output)) {
