@@ -7,6 +7,7 @@ import {
   checkIfAppIsInstalled,
 } from './appleDevice/AppleDevice';
 import { getAppDeltaDirectory, installOnDeviceAsync } from './appleDevice/installOnDeviceAsync';
+import { installOnMacOSAsync, launchOnMacOSAsync } from './macOS';
 
 const AppleDevice = {
   getConnectedDevicesAsync,
@@ -17,6 +18,8 @@ const AppleDevice = {
   openExpoGoURLAsync,
   ensureExpoClientInstalledAsync,
   checkIfAppIsInstalled,
+  installOnMacOSAsync,
+  launchOnMacOSAsync,
 };
 
 export default AppleDevice;

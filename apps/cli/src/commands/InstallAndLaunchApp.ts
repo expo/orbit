@@ -11,7 +11,7 @@ import { getPlatformFromURI } from '../utils';
 
 type InstallAndLaunchAppAsyncOptions = {
   appPath: string;
-  deviceId: string;
+  deviceId?: string;
 };
 
 export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsyncOptions) {
@@ -19,6 +19,11 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
   if (!appPath.endsWith('.app') && !appPath.endsWith('.apk')) {
     appPath = await extractAppFromLocalArchiveAsync(appPath);
   }
+
+  if (!options.deviceId) {
+    return installAndLaunchMacOSAppAsync(appPath);
+  }
+
   const platform = getPlatformFromURI(appPath);
 
   return platform === Platform.Ios
@@ -54,6 +59,11 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
     appDeltaDirectory: AppleDevice.getAppDeltaDirectory(appId),
     udid: deviceId,
   });
+}
+
+async function installAndLaunchMacOSAppAsync(appPath: string) {
+  const destination = await AppleDevice.installOnMacOSAsync(appPath);
+  await AppleDevice.launchOnMacOSAsync(destination);
 }
 
 async function installAndLaunchAndroidAppAsync(appPath: string, deviceId: string) {

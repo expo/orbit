@@ -87,17 +87,14 @@ expo-orbit-cli boot-device --platform <platform> --id <device-id> [--no-audio]
 ### install-and-launch
 
 ```bash
-expo-orbit-cli install-and-launch --app-path <path> --device-id <device-id>
+expo-orbit-cli install-and-launch --app-path <path> [--device-id <device-id>]
 ```
 
 - **Options**
   `--app-path <string>`
   : Local filesystem path to the built app (`.app` or `.apk`).
   `--device-id <string>`
-  : UDID or name of the target device/emulator.
-
-- **Description**
-  Installs the given app binary on the target device and immediately launches it.
+  : (Optional) UDID or name of the target device/emulator. When omitted, the app is treated as a macOS app — it is copied to `/Applications` and launched on the host machine.
 
 ---
 
