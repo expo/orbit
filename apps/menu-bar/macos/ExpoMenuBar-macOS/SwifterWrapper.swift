@@ -3,20 +3,25 @@ import Swifter
 import Dispatch
 
 private let PORTS = [35783, 47909, 44171, 50799]
-private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localhost"]
+private let DEFAULT_WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localhost"]
 
 @objc class SwifterWrapper: NSObject {
   let server = HttpServer()
+  private var whitelistedDomains: [String] = DEFAULT_WHITELISTED_DOMAINS
+  private var fileMonitorSource: DispatchSourceFileSystemObject?
 
   override init() {
     super.init()
+
+    loadTrustedSources()
+    watchTrustedSources()
 
     server.middleware.append { request in
       guard let origin = request.headers["origin"] else {
         return .forbidden
       }
 
-      if !WHITELISTED_DOMAINS.contains(self.extractRootDomain(from: origin)) {
+      if !self.whitelistedDomains.contains(self.extractRootDomain(from: origin)) {
         return .forbidden
       }
 
@@ -34,7 +39,7 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
         return .badRequest(nil)
       }
 
-      if !WHITELISTED_DOMAINS.contains(self.extractRootDomain(from: urlParam)) {
+      if !self.whitelistedDomains.contains(self.extractRootDomain(from: urlParam)) {
         return .badRequest(nil)
       }
 
@@ -59,6 +64,67 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
     }
 
     startServer()
+  }
+
+  private func loadTrustedSources() {
+    let homeDir = NSHomeDirectory()
+    let authPath = "\(homeDir)/.expo/orbit/auth.json"
+
+    guard let data = FileManager.default.contents(atPath: authPath),
+          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+          let sources = json["trustedSources"] as? [String] else {
+      whitelistedDomains = DEFAULT_WHITELISTED_DOMAINS
+      return
+    }
+
+    let customDomains = extractDomainsFromPatterns(sources)
+    whitelistedDomains = DEFAULT_WHITELISTED_DOMAINS + customDomains
+  }
+
+  private func watchTrustedSources() {
+    let homeDir = NSHomeDirectory()
+    let authPath = "\(homeDir)/.expo/orbit/auth.json"
+    let fd = open(authPath, O_EVTONLY)
+    guard fd >= 0 else { return }
+
+    let source = DispatchSource.makeFileSystemObjectSource(
+      fileDescriptor: fd,
+      eventMask: [.write, .rename],
+      queue: DispatchQueue.global(qos: .utility)
+    )
+    source.setEventHandler { [weak self] in
+      self?.loadTrustedSources()
+    }
+    source.setCancelHandler {
+      close(fd)
+    }
+    source.resume()
+    fileMonitorSource = source
+  }
+
+  private func extractDomainsFromPatterns(_ patterns: [String]) -> [String] {
+    var domains = Set<String>()
+    for pattern in patterns {
+      var clean = pattern
+      if clean.hasSuffix("/**") { clean = String(clean.dropLast(3)) }
+      else if clean.hasSuffix("/*") { clean = String(clean.dropLast(2)) }
+      clean = clean.replacingOccurrences(of: "://*.", with: "://wildcard.")
+
+      guard let url = URL(string: clean), let host = url.host else { continue }
+
+      let components = host.components(separatedBy: ".")
+      let rootDomain: String
+      if components.count > 2 {
+        rootDomain = components.suffix(2).joined(separator: ".")
+      } else {
+        rootDomain = host
+      }
+
+      if !rootDomain.isEmpty {
+        domains.insert(rootDomain)
+      }
+    }
+    return Array(domains)
   }
 
   private func startServer(attempts: Int = 0) {

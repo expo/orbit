@@ -1,22 +1,57 @@
 import { app as electronApp } from 'electron';
 import express, { Express } from 'express';
+import JsonFile from '@expo/json-file';
+import { StorageUtils } from 'common-types';
+import fs from 'fs';
+import os from 'os';
 
 const PORTS = [35783, 47909, 44171, 50799];
-const WHITELISTED_DOMAINS = ['expo.dev', 'expo.test', 'exp.host', 'localhost'];
+const DEFAULT_WHITELISTED_DOMAINS = ['expo.dev', 'expo.test', 'exp.host', 'localhost'];
 
 export class LocalServer {
   app: Express;
+  private whitelistedDomains: string[] = [...DEFAULT_WHITELISTED_DOMAINS];
 
   constructor() {
     this.app = express();
+    this.loadTrustedSources();
+    this.watchTrustedSources();
     this.setupMiddlewares();
     this.setupRoutes();
+  }
+
+  private loadTrustedSources() {
+    try {
+      const settingsPath = StorageUtils.userSettingsFile(os.homedir());
+      const jsonFile = new JsonFile<StorageUtils.UserSettingsData>(settingsPath, {
+        jsonParseErrorDefault: {},
+        cantReadFileDefault: {},
+      });
+      const settings = jsonFile.read();
+      const customDomains = StorageUtils.extractDomainsFromTrustedSources(
+        settings.trustedSources || []
+      );
+      this.whitelistedDomains = [...DEFAULT_WHITELISTED_DOMAINS, ...customDomains];
+    } catch {
+      this.whitelistedDomains = [...DEFAULT_WHITELISTED_DOMAINS];
+    }
+  }
+
+  private watchTrustedSources() {
+    try {
+      const settingsPath = StorageUtils.userSettingsFile(os.homedir());
+      fs.watchFile(settingsPath, { interval: 5000 }, () => {
+        this.loadTrustedSources();
+      });
+    } catch {
+      // Ignore watch errors - app restart refreshes
+    }
   }
 
   setupMiddlewares() {
     this.app.use((req, res, next) => {
       const origin = req.get('origin');
-      if (!origin || !WHITELISTED_DOMAINS.includes(this.extractRootDomain(origin))) {
+      if (!origin || !this.whitelistedDomains.includes(this.extractRootDomain(origin))) {
         res.sendStatus(403);
         return;
       }
@@ -33,7 +68,7 @@ export class LocalServer {
 
     this.app.get('/orbit/open', (req, res) => {
       const urlParam = req.query.url as string | undefined;
-      if (!urlParam || !WHITELISTED_DOMAINS.includes(this.extractRootDomain(urlParam))) {
+      if (!urlParam || !this.whitelistedDomains.includes(this.extractRootDomain(urlParam))) {
         res.sendStatus(400);
         return;
       }
