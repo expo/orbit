@@ -16,18 +16,24 @@ export function handleAuthUrl(url: string) {
 
   saveSessionSecret(sessionSecret);
 }
-type BaseDeeplinkURLType = {
-  urlType: Exclude<URLType, URLType.GO>;
+export type BaseDeeplinkURLType = {
+  urlType: Exclude<URLType, URLType.GO | URLType.EXPO_BUILD>;
   url: string;
 };
 
-type GoDeeplinkURLType = {
+export type GoDeeplinkURLType = {
   urlType: URLType.GO;
   url: string;
   sdkVersion: string | null;
 };
 
-type DeeplinkURLType = BaseDeeplinkURLType | GoDeeplinkURLType;
+export type DowndloadDeeplinkURLType = {
+  urlType: URLType.EXPO_BUILD;
+  url: string;
+  launchURL?: string;
+};
+
+type DeeplinkURLType = BaseDeeplinkURLType | GoDeeplinkURLType | DowndloadDeeplinkURLType;
 
 export function identifyAndParseDeeplinkURL(deeplinkURLString: string): DeeplinkURLType {
   // Replace double slash URLs with triple slash to support Slack and other deeplink previews
@@ -65,6 +71,7 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
     return {
       urlType: URLType.EXPO_BUILD,
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
+      launchURL: deeplinkURL.searchParams.get('launchURL') ?? undefined,
     };
   }
   if (pathname.startsWith('/go')) {
@@ -107,5 +114,4 @@ export enum URLType {
   EXPO_BUILD = 'EXPO_BUILD',
   SNACK = 'SNACK',
   GO = 'GO',
-  UNKNOWN = 'UNKNOWN',
 }

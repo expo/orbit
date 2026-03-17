@@ -42,6 +42,7 @@ program
   .command('install-and-launch')
   .requiredOption('--app-path  <string>', 'Local path of the app')
   .option('--device-id  <string>', 'UDID or name of the device')
+  .option('--launch-url  <string>', 'URL to open on the device after installing the app')
   .action(returnLoggerMiddleware(installAndLaunchAppAsync));
 
 program

@@ -33,14 +33,19 @@ export class LocalServer {
 
     this.app.get('/orbit/open', (req, res) => {
       const urlParam = req.query.url as string | undefined;
+      const launchURL = req.query.launchURL as string | undefined;
       if (!urlParam || !WHITELISTED_DOMAINS.includes(this.extractRootDomain(urlParam))) {
         res.sendStatus(400);
         return;
       }
 
-      const deeplinkURL = urlParam
+      let deeplinkURL = urlParam
         .replace('https://', 'expo-orbit://')
         .replace('exp://', 'expo-orbit://');
+
+      if (launchURL) {
+        deeplinkURL += `${deeplinkURL.includes('?') ? '&' : '?'}launchURL=${encodeURIComponent(launchURL)}`;
+      }
 
       electronApp.emit('open-url', null, deeplinkURL);
       res.json({ ok: true });

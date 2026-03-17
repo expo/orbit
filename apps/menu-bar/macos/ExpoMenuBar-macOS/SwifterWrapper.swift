@@ -38,8 +38,14 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
         return .badRequest(nil)
       }
 
-      let deeplinkURLString = decodedURLParam.replacingOccurrences(of: "https://", with: "expo-orbit://")
+      var deeplinkURLString = decodedURLParam.replacingOccurrences(of: "https://", with: "expo-orbit://")
                                              .replacingOccurrences(of: "exp://", with: "expo-orbit://")
+
+      if let (_, launchURLParam) = request.queryParams.first(where: { $0.0 == "launchURL" }),
+         let encodedLaunchURL = launchURLParam.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+        let separator = deeplinkURLString.contains("?") ? "&" : "?"
+        deeplinkURLString += "\(separator)launchURL=\(encodedLaunchURL)"
+      }
 
       let appleEvent = NSAppleEventDescriptor(eventClass: AEEventClass(kInternetEventClass),
                                               eventID: AEEventID(kAEGetURL),

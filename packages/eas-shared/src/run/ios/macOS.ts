@@ -15,10 +15,12 @@ export async function installOnMacOSAsync(appPath: string): Promise<string> {
 
 /**
  * Launches a macOS .app bundle using `open`.
+ * If a launchURL is provided, opens it with the app using `open -a`.
  */
-export async function launchOnMacOSAsync(appPath: string): Promise<void> {
+export async function launchOnMacOSAsync(appPath: string, launchURL?: string): Promise<void> {
+  const args = launchURL ? ['-a', appPath, launchURL] : [appPath];
   return new Promise<void>((resolve, reject) => {
-    const child = spawn('open', [appPath], { stdio: 'ignore' });
+    const child = spawn('open', args, { stdio: 'ignore' });
     child.on('close', (code) => {
       if (code === 0) {
         resolve();
