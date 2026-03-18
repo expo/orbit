@@ -55,7 +55,7 @@ class AppDelegate: RCTAppDelegate, NSUserNotificationCenterDelegate {
   }
 
   override func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-    popoverManager.openPopover()
+    popoverManager?.openPopover()
     NotificationCenter.default.post(
       name: Notification.Name("ExpoOrbit_OnOpenFile"),
       object: filename
@@ -76,13 +76,13 @@ class AppDelegate: RCTAppDelegate, NSUserNotificationCenterDelegate {
 
   override func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
     if !flag {
-      popoverManager.openPopover()
+      popoverManager?.openPopover()
     }
     return true
   }
 
   @objc func getUrlEventHandler(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
-    popoverManager.openPopover()
+    popoverManager?.openPopover()
     RCTLinkingManager.getUrlEventHandler(event, withReplyEvent: replyEvent)
   }
 
