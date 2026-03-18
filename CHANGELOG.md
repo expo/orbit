@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add support for setting the app launch url. ([#319](https://github.com/expo/orbit/pull/319) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Fix crash when opening app via deep link from cold start. ([#320](https://github.com/expo/orbit/pull/320) by [@gabrieldonadel](https://github.com/gabrieldonadel))

@@ -1,4 +1,4 @@
-import { URLType, identifyAndParseDeeplinkURL } from '../parseUrl';
+import { DowndloadDeeplinkURLType, URLType, identifyAndParseDeeplinkURL } from '../parseUrl';
 
 jest.mock('../../modules/Storage', () => ({
   saveSessionSecret: jest.fn(),
@@ -18,16 +18,6 @@ describe('identifyAndParseDeeplinkURL', () => {
   });
 
   describe('Build URLs', () => {
-    it('Should identiy expo.dev/artifacts URLs as Build URLs', () => {
-      const artifactDeeplinkURL =
-        'expo-orbit://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
-
-      expect(identifyAndParseDeeplinkURL(artifactDeeplinkURL)).toEqual({
-        urlType: URLType.EXPO_BUILD,
-        url: artifactDeeplinkURL.replace('expo-orbit://', 'https://'),
-      });
-    });
-
     it('Should parse url parameter from /download route', () => {
       const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
       const artifactDeeplinkURL = `expo-orbit:///download/?url=${encodeURIComponent(artifactURL)}`;
@@ -36,6 +26,27 @@ describe('identifyAndParseDeeplinkURL', () => {
         urlType: URLType.EXPO_BUILD,
         url: artifactURL,
       });
+    });
+
+    it('Should parse launchURL parameter from /download route', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const launchURL = 'myapp://expo-development-client/?url=http://localhost:8081';
+      const artifactDeeplinkURL = `expo-orbit:///download/?url=${encodeURIComponent(artifactURL)}&launchURL=${encodeURIComponent(launchURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(artifactDeeplinkURL)).toEqual({
+        urlType: URLType.EXPO_BUILD,
+        url: artifactURL,
+        launchURL,
+      });
+    });
+
+    it('Should return undefined launchURL when not provided in /download route', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const artifactDeeplinkURL = `expo-orbit:///download/?url=${encodeURIComponent(artifactURL)}`;
+
+      const result = identifyAndParseDeeplinkURL(artifactDeeplinkURL) as DowndloadDeeplinkURLType;
+
+      expect(result.launchURL).toBeUndefined();
     });
   });
 
@@ -85,15 +96,6 @@ describe('identifyAndParseDeeplinkURL', () => {
   });
 
   describe('Snack URLs', () => {
-    it('Should identiy exp.host URLs as Snack URLs', () => {
-      const snackDeeplinkURL = 'expo-orbit://exp.host/@gabrieldonadel/ec41d8+IH9vwTGYrg';
-
-      expect(identifyAndParseDeeplinkURL(snackDeeplinkURL)).toEqual({
-        urlType: URLType.SNACK,
-        url: snackDeeplinkURL.replace('expo-orbit://', 'exp://'),
-      });
-    });
-
     it('Should parse url parameter from /snack route', () => {
       const snackURL =
         'exp://staging-u.expo.dev/2dce2748-c51f-4865-bae0-392af794d60a?runtime-version=exposdk%3A50.0.0&channel-name=production&snack-channel=Hhhqw6NhFw';
@@ -114,6 +116,18 @@ describe('identifyAndParseDeeplinkURL', () => {
       expect(identifyAndParseDeeplinkURL(artifactDeeplinkURL)).toEqual({
         urlType: URLType.EXPO_BUILD,
         url: artifactURL,
+      });
+    });
+
+    it('Should parse launchURL parameter from /download route without leading slash', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const launchURL = 'myapp://expo-development-client/?url=http://localhost:8081';
+      const artifactDeeplinkURL = `expo-orbit://download/?url=${encodeURIComponent(artifactURL)}&launchURL=${encodeURIComponent(launchURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(artifactDeeplinkURL)).toEqual({
+        urlType: URLType.EXPO_BUILD,
+        url: artifactURL,
+        launchURL,
       });
     });
 
@@ -143,14 +157,11 @@ describe('identifyAndParseDeeplinkURL', () => {
   });
 
   describe('Unknown URLs', () => {
-    it('Should identiy non-expo domains that are not using specific routes as Unknown URLs', () => {
+    it('Should throw for non-expo domains that are not using specific routes', () => {
       const unknownURL =
         'expo-orbit://github.com/expo/orbit/releases/download/expo-orbit-v1.0.2/expo-orbit.v1.0.2.zip';
 
-      expect(identifyAndParseDeeplinkURL(unknownURL)).toEqual({
-        urlType: URLType.UNKNOWN,
-        url: unknownURL.replace('expo-orbit://', 'https://'),
-      });
+      expect(() => identifyAndParseDeeplinkURL(unknownURL)).toThrow('Unsupported URL');
     });
   });
 });

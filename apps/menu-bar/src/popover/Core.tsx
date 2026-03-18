@@ -384,7 +384,7 @@ function Core(props: Props) {
   );
 
   const installAppFromURI = useCallback(
-    async (appURI: string) => {
+    async (appURI: string, launchURL?: string) => {
       if (tasks.has(appURI)) {
         return;
       }
@@ -418,7 +418,11 @@ function Core(props: Props) {
             }
 
             try {
-              await installAndLaunchAppAsync({ appPath: localFilePath, deviceId: undefined });
+              await installAndLaunchAppAsync({
+                appPath: localFilePath,
+                deviceId: undefined,
+                launchURL,
+              });
             } catch (error) {
               if (error instanceof Error) {
                 if (__DEV__) {
@@ -462,7 +466,7 @@ function Core(props: Props) {
 
         try {
           updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
-          await installAndLaunchAppAsync({ appPath: localFilePath, deviceId });
+          await installAndLaunchAppAsync({ appPath: localFilePath, deviceId, launchURL });
         } catch (error) {
           if (error instanceof InternalError) {
             if (error.code === 'APPLE_DEVICE_LOCKED') {
@@ -547,10 +551,8 @@ function Core(props: Props) {
                 handleUpdateUrl(url);
                 break;
               case URLType.EXPO_BUILD:
-              case URLType.UNKNOWN:
-              default:
                 Analytics.track(Event.LAUNCH_BUILD);
-                installAppFromURI(url);
+                installAppFromURI(url, deeplinkInfo.launchURL);
                 break;
             }
           } catch (error) {

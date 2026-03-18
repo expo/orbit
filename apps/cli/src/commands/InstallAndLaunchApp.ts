@@ -12,6 +12,7 @@ import { getPlatformFromURI } from '../utils';
 type InstallAndLaunchAppAsyncOptions = {
   appPath: string;
   deviceId?: string;
+  launchUrl?: string;
 };
 
 export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsyncOptions) {
@@ -21,17 +22,17 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
   }
 
   if (!options.deviceId) {
-    return installAndLaunchMacOSAppAsync(appPath);
+    return installAndLaunchMacOSAppAsync(appPath, options.launchUrl);
   }
 
   const platform = getPlatformFromURI(appPath);
 
   return platform === Platform.Ios
-    ? installAndLaunchIOSAppAsync(appPath, options.deviceId)
-    : installAndLaunchAndroidAppAsync(appPath, options.deviceId);
+    ? installAndLaunchIOSAppAsync(appPath, options.deviceId, options.launchUrl)
+    : installAndLaunchAndroidAppAsync(appPath, options.deviceId, options.launchUrl);
 }
 
-async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
+async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string, launchURL?: string) {
   const appInfo = await detectAppleAppType(appPath);
 
   if (await Simulator.isSimulatorAsync(deviceId)) {
@@ -43,6 +44,15 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
 
     const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
     await Simulator.installAppAsync(deviceId, appPath);
+
+    if (launchURL) {
+      try {
+        await Simulator.openURLAsync({ udid: deviceId, url: launchURL });
+        return;
+      } catch {
+        // Fall back to normal launch
+      }
+    }
     await Simulator.launchAppAsync(deviceId, bundleIdentifier);
     return;
   }
@@ -59,14 +69,36 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string) {
     appDeltaDirectory: AppleDevice.getAppDeltaDirectory(appId),
     udid: deviceId,
   });
+
+  if (launchURL) {
+    try {
+      await AppleDevice.openURLAsync({ udid: deviceId, url: launchURL, bundleId: appId });
+      return;
+    } catch {
+      // Fall back — device install doesn't have a separate launch step
+    }
+  }
 }
 
-async function installAndLaunchMacOSAppAsync(appPath: string) {
+async function installAndLaunchMacOSAppAsync(appPath: string, launchURL?: string) {
   const destination = await AppleDevice.installOnMacOSAsync(appPath);
+
+  if (launchURL) {
+    try {
+      await AppleDevice.launchOnMacOSAsync(destination, launchURL);
+      return;
+    } catch {
+      // Fall back to normal launch
+    }
+  }
   await AppleDevice.launchOnMacOSAsync(destination);
 }
 
-async function installAndLaunchAndroidAppAsync(appPath: string, deviceId: string) {
+async function installAndLaunchAndroidAppAsync(
+  appPath: string,
+  deviceId: string,
+  launchURL?: string
+) {
   const device = await Emulator.getRunningDeviceAsync(deviceId);
 
   const { packageName, activityName } = await Emulator.getAptParametersAsync(appPath);
@@ -81,5 +113,13 @@ async function installAndLaunchAndroidAppAsync(appPath: string, deviceId: string
     }
   }
 
+  if (launchURL) {
+    try {
+      await Emulator.openURLAsync({ pid: device.pid, url: launchURL });
+      return;
+    } catch {
+      // Fall back to normal launch
+    }
+  }
   await Emulator.startAppAsync(device, packageName, activityName);
 }
