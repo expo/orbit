@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix crash when opening app via deep link from cold start. ([#320](https://github.com/expo/orbit/pull/320) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 ## 2.3.0 — 2026-03-13
