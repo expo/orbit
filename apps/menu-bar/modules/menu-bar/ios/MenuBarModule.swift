@@ -83,7 +83,7 @@ public class MenuBarModule: Module {
       let task = Process()
       let pipe = Pipe()
       
-      task.executableURL = Bundle.main.url(forResource: getCliResourceNameForArch(), withExtension: nil)
+      task.executableURL = Bundle.main.url(forResource: "orbit-cli", withExtension: nil)
       task.arguments = [command] + arguments
       
       var environment = ProcessInfo.processInfo.environment
@@ -209,24 +209,4 @@ public class MenuBarModule: Module {
     }
   }
   
-  private func getHardwareArch() -> String? {
-    var sysinfo = utsname()
-    let result = uname(&sysinfo)
-    
-    if result != 0 {
-      return nil
-    }
-    
-    let machine = withUnsafePointer(to: &sysinfo.machine) {
-      $0.withMemoryRebound(to: CChar.self, capacity: Int(_SYS_NAMELEN)) {
-        ptr in String(cString: ptr)
-      }
-    }
-    
-    return machine
-  }
-  
-  private func getCliResourceNameForArch() -> String {
-    return getHardwareArch() == "arm64" ? "orbit-cli-arm64" : "orbit-cli-x64"
-  }
 }

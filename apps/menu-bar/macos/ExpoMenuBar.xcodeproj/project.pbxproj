@@ -15,8 +15,7 @@
 		A961E5EFDD85D2BD61A876CD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8C8623B49FAF0AE99A5F7711 /* PrivacyInfo.xcprivacy */; };
 		C032EB582EBD108800D6F4A1 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = C032EB572EBD108800D6F4A1 /* AppIcon.icon */; };
 		C032EB5A2EBD116700D6F4A1 /* AppIconDebug.icon in Resources */ = {isa = PBXBuildFile; fileRef = C032EB592EBD116700D6F4A1 /* AppIconDebug.icon */; };
-		C032EDB72A1FE6F300FBC597 /* orbit-cli-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */; };
-		C051E6B62A83577800C6D615 /* orbit-cli-x64 in Resources */ = {isa = PBXBuildFile; fileRef = C051E6B52A83577800C6D615 /* orbit-cli-x64 */; };
+		C032EDB72A1FE6F300FBC597 /* orbit-cli in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* orbit-cli */; };
 		C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */; };
 		C0523ECC2A550983003371AF /* WindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowManager.m */; };
 		C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */; };
@@ -68,10 +67,9 @@
 		B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ExpoMenuBar-macOS/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		C032EB572EBD108800D6F4A1 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		C032EB592EBD116700D6F4A1 /* AppIconDebug.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIconDebug.icon; sourceTree = "<group>"; };
-		C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "orbit-cli-arm64"; path = "../../cli/orbit-cli-arm64"; sourceTree = "<group>"; };
+		C032EDB62A1FE6F300FBC597 /* orbit-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "orbit-cli"; path = "../../cli/orbit-cli"; sourceTree = "<group>"; };
 		C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ExpoMenuBar-macOSRelease.entitlements"; sourceTree = "<group>"; };
 		C051E6B42A8340AF00C6D615 /* AutoLauncherRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncherRelease.entitlements; sourceTree = "<group>"; };
-		C051E6B52A83577800C6D615 /* orbit-cli-x64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "orbit-cli-x64"; path = "../../cli/orbit-cli-x64"; sourceTree = "<group>"; };
 		C051EC0C2AA227C600C6D615 /* ExpoMenuBar-macOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ExpoMenuBar-macOS-Bridging-Header.h"; sourceTree = "<group>"; };
 		C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwifterWrapper.swift; sourceTree = "<group>"; };
 		C0523ECB2A550983003371AF /* WindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowManager.m; sourceTree = "<group>"; };
@@ -167,8 +165,7 @@
 				C032EB572EBD108800D6F4A1 /* AppIcon.icon */,
 				C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */,
 				C081507C2A610E2F00E8890F /* Resources */,
-				C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */,
-				C051E6B52A83577800C6D615 /* orbit-cli-x64 */,
+				C032EDB62A1FE6F300FBC597 /* orbit-cli */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
 				C0D4407B2DDBD86F006B7C16 /* AppDelegate.swift */,
 				514201512437B4B40078DB4F /* Assets.xcassets */,
@@ -354,8 +351,7 @@
 			files = (
 				C032EB5A2EBD116700D6F4A1 /* AppIconDebug.icon in Resources */,
 				C032EB582EBD108800D6F4A1 /* AppIcon.icon in Resources */,
-				C051E6B62A83577800C6D615 /* orbit-cli-x64 in Resources */,
-				C032EDB72A1FE6F300FBC597 /* orbit-cli-arm64 in Resources */,
+				C032EDB72A1FE6F300FBC597 /* orbit-cli in Resources */,
 				C081507F2A610E9C00E8890F /* fonts in Resources */,
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,

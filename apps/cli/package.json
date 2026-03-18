@@ -11,11 +11,11 @@
     "cli": "node ./build/index.js",
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc",
-    "archive": "yarn build && pkg build/index.js --config pkg.config.json -o dist/orbit-cli",
+    "archive": "yarn build && pkg build/index.js --config pkg.config.json -o dist/orbit-cli && lipo -create -output dist/orbit-cli dist/orbit-cli-arm64 dist/orbit-cli-x64 && rm dist/orbit-cli-arm64 dist/orbit-cli-x64",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "watch": "tsc --watch --preserveWatchOutput",
-    "codesign": "codesign --options=runtime --sign \"Developer ID Application: 650 Industries, Inc. (C8D8QTF339)\" --entitlements ./macos/entitlements.plist --force ./dist/orbit-cli-arm64 ./dist/orbit-cli-x64",
+    "codesign": "codesign --options=runtime --sign \"Developer ID Application: 650 Industries, Inc. (C8D8QTF339)\" --entitlements ./macos/entitlements.plist --force ./dist/orbit-cli",
     "typecheck": "tsc",
     "gql": "graphql-codegen --config codegen.ts",
     "test": "jest"
