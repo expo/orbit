@@ -41,5 +41,7 @@ export type MultipleAppsInTarballErrorDetails = {
   apps: {
     name: string;
     path: string;
+    osType?: string;
+    deviceType?: 'simulator' | 'device';
   }[];
 };
