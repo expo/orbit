@@ -14,6 +14,7 @@ import { formatBytes } from './files';
 import Log from './log';
 import { getTmpDirectory } from './paths';
 import { ProgressHandler, createProgressTracker } from './progress';
+import { detectAppleAppType } from './run/ios/inspectApp';
 
 export enum AppPlatform {
   Android = 'ANDROID',
@@ -211,25 +212,92 @@ async function getAppPathAsync(outputDir: string): Promise<string> {
     throw Error('Did not find any installable apps inside tarball.');
   }
 
-  if (appFilePaths.length === 1) {
-    return path.join(outputDir, appFilePaths[0]);
+  // Filter out .app bundles nested inside other .app bundles when they have
+  // the same size as a standalone copy (e.g. watchOS apps embedded in iOS apps).
+  const filteredAppFilePaths = await filterNestedDuplicateAppsAsync(appFilePaths, outputDir);
+
+  if (filteredAppFilePaths.length === 1) {
+    return path.join(outputDir, filteredAppFilePaths[0]);
   }
 
   Log.newLine();
   Log.log('Detected multiple apps in the tarball:');
   Log.newLine();
 
-  const details: MultipleAppsInTarballErrorDetails = {
-    apps: appFilePaths.map((filePath) => ({
-      name: filePath,
-      path: path.join(outputDir, filePath),
-    })),
-  };
+  const apps = await Promise.all(
+    filteredAppFilePaths.map(async (filePath) => {
+      const fullPath = path.join(outputDir, filePath);
+      const platformInfo =
+        filePath.endsWith('.apk') || filePath.endsWith('.aab')
+          ? { osType: 'android' }
+          : await detectAppleAppType(fullPath);
+
+      return {
+        name: path.basename(filePath),
+        path: fullPath,
+        ...platformInfo,
+      };
+    })
+  );
+
+  const details: MultipleAppsInTarballErrorDetails = { apps };
   throw new InternalError(
     'MULTIPLE_APPS_IN_TARBALL',
     'Multiple apps detected in the tarball.',
     details
   );
+}
+
+async function getAppDirectorySizeAsync(appPath: string): Promise<number> {
+  const stat = await fs.promises.stat(appPath);
+  if (!stat.isDirectory()) {
+    return stat.size;
+  }
+  const entries = await fs.promises.readdir(appPath, { withFileTypes: true });
+  const sizes = await Promise.all(
+    entries.map((entry) => getAppDirectorySizeAsync(path.join(appPath, entry.name)))
+  );
+  return sizes.reduce((total, size) => total + size, 0);
+}
+
+async function filterNestedDuplicateAppsAsync(
+  appFilePaths: string[],
+  outputDir: string
+): Promise<string[]> {
+  const nestedPaths = new Set<string>();
+
+  for (const filePath of appFilePaths) {
+    if (!filePath.endsWith('.app')) {
+      continue;
+    }
+    // Check if this .app is nested inside another .app
+    const isNested = filePath.replace(/\/[^/]+$/, '').includes('.app/');
+    if (!isNested) {
+      continue;
+    }
+
+    const baseName = path.basename(filePath);
+    // Find a standalone copy with the same filename
+    const standaloneMatch = appFilePaths.find(
+      (otherPath) =>
+        otherPath !== filePath &&
+        path.basename(otherPath) === baseName &&
+        !appFilePaths.some((p) => p !== otherPath && otherPath.includes(`${p}/`))
+    );
+    if (!standaloneMatch) {
+      continue;
+    }
+
+    const [nestedSize, standaloneSize] = await Promise.all([
+      getAppDirectorySizeAsync(path.join(outputDir, filePath)),
+      getAppDirectorySizeAsync(path.join(outputDir, standaloneMatch)),
+    ]);
+    if (nestedSize === standaloneSize) {
+      nestedPaths.add(filePath);
+    }
+  }
+
+  return appFilePaths.filter((filePath) => !nestedPaths.has(filePath));
 }
 
 export async function tarExtractAsync(input: string, output: string): Promise<void> {
