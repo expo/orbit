@@ -11,6 +11,7 @@
       "WorkflowRun"
     ],
     "Actor": [
+      "PartnerActor",
       "Robot",
       "SSOUser",
       "User"
@@ -26,6 +27,14 @@
       "BuildLimitThresholdExceededMetadata",
       "BuildPlanCreditThresholdExceededMetadata",
       "TestNotificationMetadata"
+    ],
+    "NotificationPreference": [
+      "AccountNotificationPreference",
+      "AppNotificationPreference"
+    ],
+    "NotificationPreferenceItem": [
+      "AccountNotificationPreference",
+      "AppNotificationPreference"
     ],
     "PlanEnablement": [
       "Concurrencies",
