@@ -6,6 +6,14 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 2.4.0 — 2026-03-23
+
+### 🎉 New features
+
 - Add support for setting the app launch url. ([#319](https://github.com/expo/orbit/pull/319) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
