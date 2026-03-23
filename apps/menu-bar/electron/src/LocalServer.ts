@@ -33,7 +33,7 @@ export class LocalServer {
 
     this.app.get('/orbit/open', (req, res) => {
       const urlParam = req.query.url as string | undefined;
-      if (!urlParam || !WHITELISTED_DOMAINS.includes(this.extractRootDomain(urlParam))) {
+      if (!urlParam) {
         res.sendStatus(400);
         return;
       }

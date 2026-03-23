@@ -34,10 +34,6 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
         return .badRequest(nil)
       }
 
-      if !WHITELISTED_DOMAINS.contains(self.extractRootDomain(from: urlParam)) {
-        return .badRequest(nil)
-      }
-
       let deeplinkURLString = decodedURLParam.replacingOccurrences(of: "https://", with: "expo-orbit://")
                                              .replacingOccurrences(of: "exp://", with: "expo-orbit://")
 
