@@ -3,6 +3,22 @@
   "link": "https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json",
   "versions": [
     {
+      "version": "2.4.0",
+      "pub_date": "2026-03-23",
+      "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Add support for setting the app launch url. (<a href=\"https://github.com/expo/orbit/pull/319\">#319</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>Fix crash when opening app via deep link from cold start. (<a href=\"https://github.com/expo/orbit/pull/320\">#320</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
+      "builds": {
+        "win32-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.4.0/"
+        },
+        "linux-deb-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.4.0/expo-orbit_2.4.0_amd64.deb"
+        },
+        "linux-rpm-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.4.0/expo-orbit-2.4.0-1.x86_64.rpm"
+        }
+      }
+    },
+    {
       "version": "2.3.0",
       "pub_date": "2026-03-13",
       "release_notes": "<h3 id=\"-new-features\">🎉 New features</h3>\n<ul>\n<li>Add watchOS support. (<a href=\"https://github.com/expo/orbit/pull/313\">#313</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n<li>Add support for launching macOS apps. (<a href=\"https://github.com/expo/orbit/pull/315\">#315</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n<li>Improve iOS simulator boot and app install reliability. (<a href=\"https://github.com/expo/orbit/pull/314\">#314</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n</ul>\n<h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n<ul>\n<li>Hide horizontal scroll indicator in menu popover. (<a href=\"https://github.com/expo/orbit/pull/305\">#305</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n</ul>\n<h3 id=\"-others\">💡 Others</h3>\n<ul>\n<li>Upgrade to <code>expo</code> SDK 54 and react-native <code>0.81</code>. (<a href=\"https://github.com/expo/orbit/pull/254\">#254</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n<li>Optimize code for React 19. (<a href=\"https://github.com/expo/orbit/pull/307\">#307</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n<li>Upgrade <code>react-native-svg</code> to 15.15.2. (<a href=\"https://github.com/expo/orbit/pull/308\">#308</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n<li>Add localhost to local server whitelisted domains. (<a href=\"https://github.com/expo/orbit/pull/317\">#317</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n</ul>\n",
