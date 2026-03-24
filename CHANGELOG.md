@@ -14,6 +14,8 @@
 
 ### 💡 Others
 
+- Add `exp://*.on.expo.app/**` and `exp://*.on.staging.expo.app/**` to default trusted sources. ([#323](https://github.com/expo/orbit/pull/323) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 2.3.0 — 2026-03-13
 
 ### 🎉 New features

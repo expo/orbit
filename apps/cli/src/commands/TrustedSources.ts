@@ -8,6 +8,8 @@ const DEFAULT_TRUSTED_SOURCES = [
   'https://*.expo.dev/**',
   'exp://*.expo.dev/**',
   'https://expo.test/**',
+  'exp://*.on.expo.app/**',
+  'exp://*.on.staging.expo.app/**',
 ];
 export const getTrustedSources = () => {
   return [DEFAULT_TRUSTED_SOURCES, ...getCustomTrustedSources()];
