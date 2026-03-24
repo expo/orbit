@@ -10,6 +10,8 @@
 
 ### 💡 Others
 
+- Add release automation scripts. ([#327](https://github.com/expo/orbit/pull/327) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 2.4.0 — 2026-03-23
 
 ### 🎉 New features

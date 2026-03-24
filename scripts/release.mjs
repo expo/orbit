@@ -118,7 +118,7 @@ async function main() {
   // Check tag doesn't already exist
   const tag = `expo-orbit-v${newVersion}`;
   try {
-    exec(`git rev-parse ${tag}`);
+    exec(`git rev-parse ${tag}`, { stdio: ['pipe', 'pipe', 'ignore'] });
     console.error(`Tag ${tag} already exists.`);
     process.exit(1);
   } catch {
