@@ -85,10 +85,10 @@ public class MenuBarModule: Module {
       
       task.executableURL = Bundle.main.url(forResource: getCliResourceNameForArch(), withExtension: nil)
       task.arguments = [command] + arguments
-      
+
       var environment = ProcessInfo.processInfo.environment
       environment["EXPO_MENU_BAR"] = "true"
-      
+
       if let envVars = UserDefaults.standard.object(forKey: "envVars") as? Dictionary<String, String> {
         if envVars.count > 0 {
           environment = environment.merging(envVars) { _, new in
@@ -96,61 +96,53 @@ public class MenuBarModule: Module {
           }
         }
       }
-      
+
       task.environment = environment
       task.standardOutput = pipe
       task.standardError = pipe
-      
+
       let file = pipe.fileHandleForReading
-      var fullOutput = ""
-      var returnOutput = ""
-      var hasReachedReturnOutput = false
-      var hasReachedError = false
-      
+      var accumulatedOutput = ""
+
       file.readabilityHandler = { [weak self] handle in
         guard let self else {
           return
         }
-        
+
         let availableData = handle.availableData
         let wholeOutput = String(data: availableData, encoding: .utf8)
         guard let outputs = wholeOutput?.components(separatedBy: .newlines) else {
           return
         }
-        
+
         for output in outputs {
           if output.isEmpty {
             continue
           }
-          fullOutput.append(output)
+          accumulatedOutput.append(output + "\n")
 
-          if hasReachedReturnOutput || hasReachedError {
-            returnOutput.append(output)
-          } else if output == "---- return output ----" {
-            hasReachedReturnOutput = true
-          } else if output == "---- thrown error ----" {
-            hasReachedError = true
-          } else if hasListeners && !output.isEmpty && output != "\n" {
+          if hasListeners && !output.isEmpty && output != "\n"
+              && !isCliOutputMarker(output) {
             let eventData = ["listenerId": listenerId, "output": output]
             sendEvent(onCLIOutput, eventData)
           }
         }
       }
-      
+
       task.terminationHandler = { task in
         file.readabilityHandler = nil
-        
-        if hasReachedError {
-          promise.reject(CLIOutputError(returnOutput))
+
+        let result = parseCliOutput(accumulatedOutput)
+
+        if let error = result.error {
+          promise.reject(CLIOutputError(error))
+        } else if task.terminationStatus == 0 {
+          promise.resolve(result.returnOutput)
         } else {
-          if task.terminationStatus == 0 {
-            promise.resolve(hasReachedReturnOutput ? returnOutput : nil)
-          } else {
-            promise.reject(IntenalCLIError(fullOutput))
-          }
+          promise.reject(IntenalCLIError(result.fullOutput))
         }
       }
-      
+
       try task.run()
     }
     
@@ -209,24 +201,4 @@ public class MenuBarModule: Module {
     }
   }
   
-  private func getHardwareArch() -> String? {
-    var sysinfo = utsname()
-    let result = uname(&sysinfo)
-    
-    if result != 0 {
-      return nil
-    }
-    
-    let machine = withUnsafePointer(to: &sysinfo.machine) {
-      $0.withMemoryRebound(to: CChar.self, capacity: Int(_SYS_NAMELEN)) {
-        ptr in String(cString: ptr)
-      }
-    }
-    
-    return machine
-  }
-  
-  private func getCliResourceNameForArch() -> String {
-    return getHardwareArch() == "arm64" ? "orbit-cli-arm64" : "orbit-cli-x64"
-  }
 }
