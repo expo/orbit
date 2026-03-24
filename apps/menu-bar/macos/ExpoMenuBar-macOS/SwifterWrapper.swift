@@ -28,6 +28,47 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
       return self.okJsonResponseWithCorsHeaders(json: ["ok": true, "version": version], request: request)
     }
 
+    server.GET["/orbit/devices"] = { request in
+      let task = Process()
+      let pipe = Pipe()
+
+      task.executableURL = Bundle.main.url(forResource: self.getCliResourceNameForArch(), withExtension: nil)
+      task.arguments = ["list-devices"]
+      task.standardOutput = pipe
+      task.standardError = FileHandle.nullDevice
+
+      var environment = ProcessInfo.processInfo.environment
+      environment["EXPO_MENU_BAR"] = "true"
+      task.environment = environment
+
+      do {
+        try task.run()
+      } catch {
+        return self.okJsonResponseWithCorsHeaders(json: ["error": "Failed to run CLI: \(error.localizedDescription)"], request: request)
+      }
+
+      task.waitUntilExit()
+
+      let data = pipe.fileHandleForReading.readDataToEndOfFile()
+      let output = String(data: data, encoding: .utf8) ?? ""
+
+      // The CLI outputs "---- return output ----" before the JSON payload
+      let marker = "---- return output ----"
+      let jsonString: String
+      if let range = output.range(of: marker) {
+        jsonString = String(output[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+      } else {
+        jsonString = output.trimmingCharacters(in: .whitespacesAndNewlines)
+      }
+
+      guard let jsonData = jsonString.data(using: .utf8),
+            let json = try? JSONSerialization.jsonObject(with: jsonData) else {
+        return self.okJsonResponseWithCorsHeaders(json: ["error": "Failed to parse device list"], request: request)
+      }
+
+      return self.okJsonResponseWithCorsHeaders(json: json, request: request)
+    }
+
     server.GET["/orbit/open"] = { request in
       guard let (_, urlParam) = request.queryParams.first(where: { $0.0 == "url" }),
             let decodedURLParam = urlParam.removingPercentEncoding else {
@@ -104,6 +145,17 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
     } else {
       return hostName
     }
+  }
+
+  private func getCliResourceNameForArch() -> String {
+    var sysinfo = utsname()
+    uname(&sysinfo)
+    let machine = withUnsafePointer(to: &sysinfo.machine) {
+      $0.withMemoryRebound(to: CChar.self, capacity: 1) {
+        String(validatingUTF8: $0) ?? "unknown"
+      }
+    }
+    return machine == "arm64" ? "orbit-cli-arm64" : "orbit-cli-x64"
   }
 
   func okJsonResponseWithCorsHeaders(json: Any, request: HttpRequest) -> HttpResponse {
