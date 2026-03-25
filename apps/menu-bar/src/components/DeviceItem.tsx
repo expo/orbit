@@ -18,6 +18,7 @@ import { useTheme } from '../providers/ThemeProvider';
 import { isVirtualDevice } from '../utils/device';
 import { capitalize } from '../utils/helpers';
 import { useExpoTheme } from '../utils/useExpoTheme';
+import SystemIconView from './SystemIconView';
 
 export const DEVICE_ITEM_HEIGHT = 42;
 
@@ -86,40 +87,28 @@ const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: P
               },
             ]}>
             {device.osType === 'watchOS' ? (
-              <WatchIcon
-                height={30}
-                width={30}
-                fill={
-                  selected
-                    ? palette.dark.white
-                    : currentTheme === 'dark'
-                      ? palette.dark.gray['900']
-                      : theme.text.default
-                }
+              <SystemIconView
+                style={{
+                  height: 20,
+                  width: 20,
+                }}
+                systemIconName="applewatch"
               />
             ) : device.osType === 'tvOS' ? (
-              <TvosIcon
-                height={30}
-                width={30}
-                fill={
-                  selected
-                    ? palette.dark.white
-                    : currentTheme === 'dark'
-                      ? palette.dark.gray['900']
-                      : theme.text.default
-                }
+              <SystemIconView
+                style={{
+                  height: 20,
+                  width: 20,
+                }}
+                systemIconName="tv"
               />
             ) : (
-              <IphoneIcon
-                height={30}
-                width={30}
-                fill={
-                  selected
-                    ? palette.dark.white
-                    : currentTheme === 'dark'
-                      ? palette.dark.gray['900']
-                      : theme.text.default
-                }
+              <SystemIconView
+                style={{
+                  height: 24,
+                  width: 24,
+                }}
+                systemIconName="iphone"
               />
             )}
           </View>
