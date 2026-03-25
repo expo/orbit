@@ -1,68 +1,50 @@
-# **Creating a New Release for Expo Orbit**
+# Creating a New Release for Expo Orbit
 
-Follow these steps to create a new release for Expo Orbit.
+## Prerequisites
 
-## **1. Update Version Information**
+- On the `main` branch with a clean working tree
+- `CHANGELOG.md` has entries in the `## Unpublished` section
+- `gh` CLI authenticated with GitHub
 
-### Update App Versions
+## 1. Run the release script
 
-Modify the app version in the following files:
+```bash
+yarn release
+```
 
-- `apps/menu-bar/electron/package.json`
-- `apps/menu-bar/package.json`
-- `apps/menu-bar/macos/ExpoMenuBar-macOS/Info.plist`
+This will:
 
-### Bump Build Version
+- Prompt for the new version (e.g., `2.5.0` or `minor`)
+- Bump versions in `apps/menu-bar/package.json`, `apps/menu-bar/electron/package.json`, and `Info.plist`
+- Increment `CFBundleVersion` build number
+- Stamp the `CHANGELOG.md` Unpublished section with the new version and date
+- Commit, tag (`expo-orbit-vX.X.X`), and push
 
-Update the `CFBundleVersion` in the file:
+This triggers a CI workflow that builds Linux and Windows artifacts and creates a **draft** GitHub Release.
 
-- `apps/menu-bar/macos/ExpoMenuBar-macOS/Info.plist`
-
-## **2. Update the Changelog**
-
-- Add the latest changes to the **changelog file**.
-- Commit the updated changelog to your branch.
-
-## **3. Create and Push a Git Tag**
-
-- Create a new tag using the following format:
-  `expo-orbit-vX.X.X`
-
-- Push the tag to the repository:
-  ```bash
-  git push origin expo-orbit-vX.X.X
-  ```
-
-This will trigger an automated workflow to generate assets for Linux and Windows.
-
-## **4. Archive and Notarize the macOS App**
+## 2. Archive and notarize the macOS app
 
 On your local machine:
 
-1. Open the macOS project in **Xcode**.
-2. Archive the app.
-3. Notarize the archived app using your Apple Developer account.
+```bash
+cd apps/menu-bar
+yarn archive
+yarn export-local-archive
+yarn notarize
+```
 
-## **5. Publish a GitHub Release**
+## 3. Publish the GitHub Release
 
-- Create a new release on **GitHub**.
-- Use the changelog as the release notes.
-- Attach the generated assets (Linux, Windows, and notarized macOS builds).
+1. Upload the notarized macOS zip to the draft GitHub Release
+2. Review the release notes
+3. Publish the release (mark as latest)
 
-## **6. Update Metadata**
+## 4. Update auto-update metadata
 
-### Update Appcast
-
-- Edit and save updates to `appcast.xml`.
-
-### Update Electron Updates
-
-- Modify `electron-updates.json` with the new version details.
-
-## **7. Update Homebrew Cask**
-
-Run the following command to update the Homebrew cask version:
+After the release is published:
 
 ```bash
-brew bump-cask-pr expo-orbit --version X.X.X
+yarn release:metadata
 ```
+
+This updates `appcast.xml` and `electron-updates.json` with the new version entry, commits as `[appcast] Bump version to X.X.X`, and pushes.

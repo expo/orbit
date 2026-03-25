@@ -6,6 +6,9 @@ on:
     tags:
       - expo-orbit-v*
 
+permissions:
+  contents: write
+
 jobs:
   build_on_linux:
     runs-on: ubuntu-latest
@@ -28,10 +31,16 @@ jobs:
       - name: 📦️ Build electron app
         run: yarn make
         working-directory: apps/menu-bar/electron
-      - uses: actions/upload-artifact@v4
+      - name: 📤 Upload DEB artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: linux-artifact
-          path: apps/menu-bar/electron/out
+          name: linux-deb
+          path: apps/menu-bar/electron/out/make/deb/x64/*.deb
+      - name: 📤 Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-rpm
+          path: apps/menu-bar/electron/out/make/rpm/x64/*.rpm
 
   build_on_win:
     runs-on: windows-latest
@@ -54,7 +63,52 @@ jobs:
       - name: 📦️ Build electron app
         run: yarn make
         working-directory: apps/menu-bar/electron
-      - uses: actions/upload-artifact@v4
+      - name: 📤 Upload Windows artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: windows-artifact
-          path: apps/menu-bar/electron/out
+          name: windows-exe
+          path: |
+            apps/menu-bar/electron/out/make/squirrel.windows/x64/*Setup.exe
+            apps/menu-bar/electron/out/make/squirrel.windows/x64/*.nupkg
+            apps/menu-bar/electron/out/make/squirrel.windows/x64/RELEASES
+
+  create_release:
+    if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
+    needs: [build_on_linux, build_on_win]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 👀 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 📝 Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/expo-orbit-v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Extract the section for this version from CHANGELOG.md
+          NOTES=$(awk "/^## ${VERSION} /{found=1; next} /^## [0-9]/{if(found) exit} found{print}" CHANGELOG.md)
+
+          # Write to file for gh release
+          echo "$NOTES" > release-notes.md
+
+      - name: 🚀 Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.notes.outputs.version }}"
+          TAG="expo-orbit-v${VERSION}"
+
+          gh release create "$TAG" \
+            --draft \
+            --title "v${VERSION}" \
+            --notes-file release-notes.md
+
+          # Upload artifacts individually to handle filenames with spaces
+          find artifacts -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*Setup.exe" -o -name "*.nupkg" -o -name "RELEASES" \) -print0 \
+            | xargs -0 -I {} gh release upload "$TAG" "{}"

@@ -11,7 +11,9 @@
     "lint": "lerna run lint",
     "watch": "lerna run watch --stream --parallel",
     "typecheck": "lerna run typecheck",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "release": "node scripts/release.mjs",
+    "release:metadata": "node scripts/release-metadata.mjs"
   },
   "dependencies": {
     "@tsconfig/node12": "1.0.7"
