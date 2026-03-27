@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Improve launching tarballs with multi apps. ([#324](https://github.com/expo/orbit/pull/324) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others

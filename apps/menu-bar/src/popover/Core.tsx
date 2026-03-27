@@ -215,7 +215,11 @@ function Core(props: Props) {
           (deviceType === 'device' && device.deviceType === deviceType) ||
           (deviceType !== 'device' && isVirtualDevice(device) && device.state === 'Booted')
         ) {
-          setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(device) }));
+          setSelectedDevicesIds((prev) => {
+            const newValue = { ...prev, [platform]: getDeviceId(device) };
+            saveSelectedDevicesIds(newValue);
+            return newValue;
+          });
           return device as PlatformToDevice<P>;
         }
       }
@@ -494,12 +498,20 @@ function Core(props: Props) {
           const selectedAppNameIndex = await MenuBarModule.showMultiOptionAlert(
             'Multiple apps where detected in the tarball',
             'Select which app to run:',
-            apps.map((app) => app.name)
+            apps.map((app) => {
+              let label = app.name;
+              if (app.osType) {
+                label += ` - ${app.osType}`;
+              }
+              if (app.deviceType) {
+                label += ` (${app.deviceType})`;
+              }
+              return label;
+            })
           );
 
           await installAppFromURI(apps[selectedAppNameIndex].path);
-        }
-        if (error instanceof InternalError && error.code === 'UNTRUSTED_SOURCE') {
+        } else if (error instanceof InternalError && error.code === 'UNTRUSTED_SOURCE') {
           Alert.alert(
             'Untrusted source',
             `${error.message}\n\nYou add custom trusted sources through the Settings window.`,
