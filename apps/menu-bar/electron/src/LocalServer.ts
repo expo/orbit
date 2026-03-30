@@ -1,5 +1,9 @@
 import { app as electronApp } from 'electron';
 import express, { Express } from 'express';
+import path from 'path';
+
+import { getUserSettingsJsonFile } from '../../modules/menu-bar/electron/main';
+import spawnCliAsync from '../../modules/menu-bar/electron/spawnCliAsync';
 
 const PORTS = [35783, 47909, 44171, 50799];
 const WHITELISTED_DOMAINS = ['expo.dev', 'expo.test', 'exp.host', 'localhost'];
@@ -44,6 +48,21 @@ export class LocalServer {
 
       electronApp.emit('open-url', null, deeplinkURL);
       res.json({ ok: true });
+    });
+
+    this.app.get('/orbit/devices', async (req, res) => {
+      const cliPath = path.join(__dirname, './cli/index.js');
+
+      const userSettingsJsonFile = getUserSettingsJsonFile();
+      const { envVars } = await userSettingsJsonFile.readAsync();
+
+      try {
+        const commandOutput = await spawnCliAsync(cliPath, 'list-devices', [], undefined, envVars);
+
+        res.json(JSON.parse(commandOutput));
+      } catch (error) {
+        res.json({ error: `Failed to run CLI: ${error instanceof Error ? error.message : error}` });
+      }
     });
   }
 
