@@ -1,0 +1,104 @@
+diff --git a/node_modules/react-native-macos/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm b/node_modules/react-native-macos/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
+index 8c309ad..4a80bdf 100644
+--- a/node_modules/react-native-macos/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
++++ b/node_modules/react-native-macos/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
+@@ -184,6 +184,30 @@ RCTSendScrollEventForNativeAnimations_DEPRECATED(RCTUIScrollView *scrollView, NS
+ #endif // [macOS]
+ }
+ 
++#if TARGET_OS_OSX // [macOS
++- (void)layoutSubviews
++{
++  [super layoutSubviews];
++
++  // On macOS, the _containerView is the NSScrollView's documentView and has autoresizingMask set so
++  // it fills the visible area before React's first layout pass. However, AppKit's autoresizing can
++  // corrupt the documentView's frame by adding the NSClipView's size delta to the container's
++  // dimensions (e.g., during initial tile or window resize), inflating it well beyond the correct
++  // content size. This produces massive horizontal and vertical overflow on first render.
++  //
++  // After React has set the content size via updateState:, we reset the documentView frame here to
++  // undo any autoresizing corruption. This runs after AppKit's layout (which triggers autoresizing),
++  // so it reliably corrects the frame.
++  if (!CGSizeEqualToSize(_contentSize, CGSizeZero)) {
++    CGRect containerFrame = _containerView.frame;
++    if (!CGSizeEqualToSize(containerFrame.size, _contentSize)) {
++      containerFrame.size = _contentSize;
++      _containerView.frame = containerFrame;
++    }
++  }
++}
++#endif // macOS]
++
+ #if TARGET_OS_IOS
+ - (void)_registerKeyboardListener
+ {
+diff --git a/node_modules/react-native-macos/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp b/node_modules/react-native-macos/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp
+index 2982e59..f042d94 100644
+--- a/node_modules/react-native-macos/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp
++++ b/node_modules/react-native-macos/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp
+@@ -178,7 +178,7 @@ TextAttributes TextAttributes::defaultTextAttributes() {
+   static auto textAttributes = [] {
+     auto textAttributes = TextAttributes{};
+     // Non-obvious (can be different among platforms) default text attributes.
+-    textAttributes.foregroundColor = blackColor();
++    textAttributes.foregroundColor = defaultForegroundTextColor(); // [macOS]
+     textAttributes.backgroundColor = clearColor();
+     textAttributes.fontSize = 14.0;
+     textAttributes.fontSizeMultiplier = 1.0;
+diff --git a/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/Color.h b/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/Color.h
+index 5c2dd9a..6fed98d 100644
+--- a/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/Color.h
++++ b/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/Color.h
+@@ -70,6 +70,7 @@ SharedColor colorFromRGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+ SharedColor clearColor();
+ SharedColor blackColor();
+ SharedColor whiteColor();
++SharedColor defaultForegroundTextColor(); // [macOS]
+ 
+ #ifdef RN_SERIALIZABLE_STATE
+ inline folly::dynamic toDynamic(const SharedColor& sharedColor) {
+diff --git a/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/HostPlatformColor.mm b/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/HostPlatformColor.mm
+index 2b78e8e..f54641e 100644
+--- a/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/HostPlatformColor.mm
++++ b/node_modules/react-native-macos/ReactCommon/react/renderer/graphics/platform/ios/react/renderer/graphics/HostPlatformColor.mm
+@@ -10,6 +10,7 @@
+ #import <Foundation/Foundation.h>
+ #import <React/RCTUIKit.h> // [macOS]
+ #import <objc/runtime.h>
++#import <react/renderer/graphics/Color.h> // [macOS]
+ #import <react/renderer/graphics/RCTPlatformColorUtils.h>
+ #import <react/utils/ManagedObjectWrapper.h>
+ #import <string>
+@@ -342,6 +343,16 @@ Color Color::createSemanticColor(std::vector<std::string> &semanticItems)
+   return Color(wrapManagedObject(semanticColor));
+ }
+ 
++// [macOS
++SharedColor defaultForegroundTextColor() {
++  static SharedColor color = [] {
++    std::vector<std::string> items = {"labelColor"};
++    return SharedColor(Color::createSemanticColor(items));
++  }();
++  return color;
++}
++// macOS]
++
+ } // namespace facebook::react
+ 
+ NS_ASSUME_NONNULL_END
+diff --git a/node_modules/react-native-macos/ReactCommon/react/renderer/textlayoutmanager/platform/ios/react/renderer/textlayoutmanager/RCTAttributedTextUtils.mm.rej b/node_modules/react-native-macos/ReactCommon/react/renderer/textlayoutmanager/platform/ios/react/renderer/textlayoutmanager/RCTAttributedTextUtils.mm.rej
+new file mode 100644
+index 0000000..f531bc1
+--- /dev/null
++++ b/node_modules/react-native-macos/ReactCommon/react/renderer/textlayoutmanager/platform/ios/react/renderer/textlayoutmanager/RCTAttributedTextUtils.mm.rej
+@@ -0,0 +1,9 @@
++@@ -144,7 +144,7 @@
++ 
++ inline static RCTPlatformColor *RCTEffectiveForegroundColorFromTextAttributes(const TextAttributes &textAttributes) // [macOS]
++ {
++-  RCTPlatformColor *effectiveForegroundColor = RCTUIColorFromSharedColor(textAttributes.foregroundColor) ? RCTUIColorFromSharedColor(textAttributes.foregroundColor) : [RCTPlatformColor blackColor]; // [macOS]
+++  RCTPlatformColor *effectiveForegroundColor = RCTUIColorFromSharedColor(textAttributes.foregroundColor) ?: [RCTPlatformColor labelColor]; // [macOS]
++ 
++   if (!isnan(textAttributes.opacity)) {
++     effectiveForegroundColor = [effectiveForegroundColor
