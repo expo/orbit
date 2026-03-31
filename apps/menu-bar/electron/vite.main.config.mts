@@ -44,5 +44,16 @@ export default defineConfig({
         },
       ],
     }),
+    // Copy native simulator-stream helper binary if it exists (macOS only)
+    viteStaticCopy({
+      targets: [
+        {
+          src: '../helpers/simulator-stream/.build/release/SimulatorStream',
+          dest: './',
+          rename: 'simulator-stream',
+        },
+      ],
+      silent: true,
+    }),
   ],
 });

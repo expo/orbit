@@ -1,4 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import WebSocket from 'ws';
 
 type Platform = 'ios' | 'android';
@@ -8,6 +11,22 @@ interface StreamSession {
   platform: Platform;
   process: ChildProcess;
   clients: Set<WebSocket>;
+}
+
+// Possible locations for the native simulator-stream helper binary
+const SIMULATOR_STREAM_PATHS = [
+  // Bundled alongside the app (production)
+  path.join(__dirname, './simulator-stream'),
+  // Development: built via Swift Package Manager
+  path.join(__dirname, '../../helpers/simulator-stream/.build/release/SimulatorStream'),
+];
+
+function findSimulatorStreamBinary(): string | null {
+  if (os.platform() !== 'darwin') return null;
+  for (const p of SIMULATOR_STREAM_PATHS) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
 }
 
 export class StreamManager {
@@ -108,9 +127,16 @@ export class StreamManager {
   }
 
   private spawnIosCapture(deviceId: string): ChildProcess {
-    // Continuous JPEG screenshot capture via xcrun simctl
-    // The shell loop captures screenshots at ~10fps and writes JPEG to stdout
-    // with a 4-byte length prefix for frame delimiting
+    const nativeBinary = findSimulatorStreamBinary();
+
+    if (nativeBinary) {
+      // Use native ScreenCaptureKit/CoreGraphics helper for high-performance capture (30-60fps)
+      console.log(`[stream:${deviceId}] Using native simulator-stream helper: ${nativeBinary}`);
+      return spawn(nativeBinary, ['--udid', deviceId, '--fps', '30', '--quality', '0.7']);
+    }
+
+    // Fallback: continuous JPEG screenshot capture via xcrun simctl (~10fps)
+    console.log(`[stream:${deviceId}] Native helper not found, falling back to xcrun simctl`);
     return spawn('bash', [
       '-c',
       `while true; do
