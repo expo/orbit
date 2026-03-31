@@ -6,18 +6,15 @@ import { StyleSheet, Pressable } from 'react-native';
 import Button from './Button';
 import { Text } from './Text';
 import { Row, View } from './View';
+import { SystemIconView } from '../../modules/system-icon-view';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
-import IphoneIcon from '../assets/icons/iphone.svg';
-import TvosIcon from '../assets/icons/tvos.svg';
-import WatchIcon from '../assets/icons/watch.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
 import Alert from '../modules/Alert';
 import { PlatformColor } from '../modules/PlatformColor';
 import { useTheme } from '../providers/ThemeProvider';
 import { isVirtualDevice } from '../utils/device';
 import { capitalize } from '../utils/helpers';
-import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const DEVICE_ITEM_HEIGHT = 42;
 
@@ -45,7 +42,6 @@ interface Props {
 }
 
 const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: Props) => {
-  const theme = useExpoTheme();
   const currentTheme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isDeviceLaunching, setDeviceLaunching] = useState(false);
@@ -86,40 +82,31 @@ const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: P
               },
             ]}>
             {device.osType === 'watchOS' ? (
-              <WatchIcon
-                height={30}
-                width={30}
-                fill={
-                  selected
-                    ? palette.dark.white
-                    : currentTheme === 'dark'
-                      ? palette.dark.gray['900']
-                      : theme.text.default
-                }
+              <SystemIconView
+                style={{
+                  height: 20,
+                  width: 20,
+                }}
+                systemIconName="applewatch"
+                tintColor={selected && currentTheme === 'light' ? palette.dark.white : undefined}
               />
             ) : device.osType === 'tvOS' ? (
-              <TvosIcon
-                height={30}
-                width={30}
-                fill={
-                  selected
-                    ? palette.dark.white
-                    : currentTheme === 'dark'
-                      ? palette.dark.gray['900']
-                      : theme.text.default
-                }
+              <SystemIconView
+                style={{
+                  height: 20,
+                  width: 20,
+                }}
+                systemIconName="tv"
+                tintColor={selected && currentTheme === 'light' ? palette.dark.white : undefined}
               />
             ) : (
-              <IphoneIcon
-                height={30}
-                width={30}
-                fill={
-                  selected
-                    ? palette.dark.white
-                    : currentTheme === 'dark'
-                      ? palette.dark.gray['900']
-                      : theme.text.default
-                }
+              <SystemIconView
+                style={{
+                  height: 24,
+                  width: 24,
+                }}
+                systemIconName="iphone"
+                tintColor={selected && currentTheme === 'light' ? palette.dark.white : undefined}
               />
             )}
           </View>
