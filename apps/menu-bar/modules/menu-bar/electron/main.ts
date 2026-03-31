@@ -7,7 +7,7 @@ import path from 'path';
 import spawnCliAsync from './spawnCliAsync';
 import { ElectronMainMenuBarModule } from '../src/types';
 
-function getUserSettingsJsonFile() {
+export function getUserSettingsJsonFile() {
   return new JsonFile<StorageUtils.UserSettingsData>(StorageUtils.userSettingsFile(os.homedir()), {
     jsonParseErrorDefault: {},
     cantReadFileDefault: {},

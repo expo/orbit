@@ -1,6 +1,7 @@
 import Foundation
 import Swifter
 import Dispatch
+import MenuBar
 
 private let PORTS = [35783, 47909, 44171, 50799]
 private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localhost"]
@@ -26,6 +27,44 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
     server.GET["/orbit/status"] = { request in
       let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
       return self.okJsonResponseWithCorsHeaders(json: ["ok": true, "version": version], request: request)
+    }
+
+    server.GET["/orbit/devices"] = { request in
+      let task = Process()
+      let pipe = Pipe()
+
+      task.executableURL = Bundle.main.url(forResource: getCliResourceNameForArch(), withExtension: nil)
+      task.arguments = ["list-devices"]
+      task.standardOutput = pipe
+      task.standardError = FileHandle.nullDevice
+
+      var environment = ProcessInfo.processInfo.environment
+      environment["EXPO_MENU_BAR"] = "true"
+      task.environment = environment
+
+      do {
+        try task.run()
+      } catch {
+        return self.okJsonResponseWithCorsHeaders(json: ["error": "Failed to run CLI: \(error.localizedDescription)"], request: request)
+      }
+
+      task.waitUntilExit()
+
+      let data = pipe.fileHandleForReading.readDataToEndOfFile()
+      let output = String(data: data, encoding: .utf8) ?? ""
+      let result = parseCliOutput(output)
+
+      if let error = result.error {
+        return self.okJsonResponseWithCorsHeaders(json: ["error": error], request: request)
+      }
+
+      guard let jsonString = result.returnOutput,
+            let jsonData = jsonString.data(using: .utf8),
+            let json = try? JSONSerialization.jsonObject(with: jsonData) else {
+        return self.okJsonResponseWithCorsHeaders(json: ["error": "Failed to parse device list"], request: request)
+      }
+
+      return self.okJsonResponseWithCorsHeaders(json: json, request: request)
     }
 
     server.GET["/orbit/open"] = { request in

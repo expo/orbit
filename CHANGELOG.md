@@ -11,6 +11,7 @@
 ### 💡 Others
 
 - Add release automation scripts. ([#327](https://github.com/expo/orbit/pull/327) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add `/devices` route to local servers. ([#326](https://github.com/expo/orbit/pull/326) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.4.0 — 2026-03-23
 
