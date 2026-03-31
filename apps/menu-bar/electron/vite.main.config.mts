@@ -36,5 +36,13 @@ export default defineConfig({
       ],
       structured: true,
     }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: './src/static/**/*',
+          dest: 'static/',
+        },
+      ],
+    }),
   ],
 });
