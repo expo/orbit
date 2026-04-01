@@ -23,7 +23,6 @@
 		C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C79D2A251E0C00A53D8D /* DevViewController.m */; };
 		C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A02A26B21C00A53D8D /* AutoResizerRootViewManager.m */; };
 		C061C7A42A26B50200A53D8D /* AutoResizerRootView.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */; };
-		C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */; };
 		C06B8F902AAB77D0009F2BB5 /* DragDropStatusItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = C06B8F8F2AAB77D0009F2BB5 /* DragDropStatusItemView.m */; };
 		C081507F2A610E9C00E8890F /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = C081507E2A610E9C00E8890F /* fonts */; };
 		C08E65212A5C411D0079E3A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08E65202A5C411D0079E3A9 /* AppDelegate.swift */; };
@@ -84,8 +83,6 @@
 		C061C7A22A26B27E00A53D8D /* AutoResizerRootViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoResizerRootViewManager.h; sourceTree = "<group>"; };
 		C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AutoResizerRootView.m; sourceTree = "<group>"; };
 		C061C7A52A26B55C00A53D8D /* AutoResizerRootView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoResizerRootView.h; sourceTree = "<group>"; };
-		C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemIconViewManager.h; sourceTree = "<group>"; };
-		C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SystemIconViewManager.m; sourceTree = "<group>"; };
 		C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RCTImageView+Private.h"; sourceTree = "<group>"; };
 		C06B8F8F2AAB77D0009F2BB5 /* DragDropStatusItemView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DragDropStatusItemView.m; sourceTree = "<group>"; };
 		C06B8F912AAB77EC009F2BB5 /* DragDropStatusItemView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DragDropStatusItemView.h; sourceTree = "<group>"; };
@@ -185,8 +182,6 @@
 				C0B36E9F2A65E25A004F2D8C /* Checkbox.m */,
 				C0B36EA02A65E25A004F2D8C /* CheckboxManager.h */,
 				C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */,
-				C061C7A62A26DD8C00A53D8D /* SystemIconViewManager.h */,
-				C061C7A72A26DD9A00A53D8D /* SystemIconViewManager.m */,
 				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
 				C0523ECB2A550983003371AF /* WindowManager.m */,
 				C0523ECD2A550A04003371AF /* WindowManager.h */,
@@ -518,7 +513,6 @@
 			files = (
 				C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */,
 				C0D4407A2DDB9B9E006B7C16 /* PopoverManager.swift in Sources */,
-				C061C7A82A26DD9A00A53D8D /* SystemIconViewManager.m in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C06B8F902AAB77D0009F2BB5 /* DragDropStatusItemView.m in Sources */,
 				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
