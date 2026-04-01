@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 // MARK: - Logging (to stderr so it doesn't interfere with frame output on stdout)
