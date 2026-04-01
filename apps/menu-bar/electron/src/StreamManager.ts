@@ -5,10 +5,12 @@ import path from 'path';
 import WebSocket from 'ws';
 
 type Platform = 'ios' | 'android';
+type CaptureMode = 'auto' | 'mjpeg' | 'h264';
 
 interface StreamSession {
   deviceId: string;
   platform: Platform;
+  captureMode: CaptureMode;
   process: ChildProcess;
   clients: Set<WebSocket>;
 }
@@ -32,15 +34,29 @@ function findSimulatorStreamBinary(): string | null {
 export class StreamManager {
   private sessions: Map<string, StreamSession> = new Map();
 
-  startStream(deviceId: string, platform: Platform, ws: WebSocket): void {
+  startStream(
+    deviceId: string,
+    platform: Platform,
+    ws: WebSocket,
+    captureMode: CaptureMode = 'auto'
+  ): void {
     const existing = this.sessions.get(deviceId);
     if (existing) {
       existing.clients.add(ws);
-      ws.send(JSON.stringify({ type: 'started', deviceId, platform }));
+      ws.send(
+        JSON.stringify({
+          type: 'started',
+          deviceId,
+          platform,
+          captureMode: existing.captureMode,
+        })
+      );
       return;
     }
 
-    const captureProcess = this.spawnCaptureProcess(deviceId, platform);
+    // Resolve 'auto': iOS always uses MJPEG, Android defaults to MJPEG for compatibility
+    const resolvedMode = captureMode === 'auto' ? 'mjpeg' : captureMode;
+    const captureProcess = this.spawnCaptureProcess(deviceId, platform, resolvedMode);
     if (!captureProcess) {
       ws.send(JSON.stringify({ type: 'error', message: 'Failed to start capture process' }));
       return;
@@ -49,14 +65,16 @@ export class StreamManager {
     const session: StreamSession = {
       deviceId,
       platform,
+      captureMode: resolvedMode,
       process: captureProcess,
       clients: new Set([ws]),
     };
 
     this.sessions.set(deviceId, session);
 
+    const usesFrameDelimiting = resolvedMode === 'mjpeg';
     captureProcess.stdout?.on('data', (chunk: Buffer) => {
-      if (platform === 'ios') {
+      if (usesFrameDelimiting) {
         this.broadcastJpegFrames(session, chunk);
       } else {
         this.broadcastRaw(session, chunk);
@@ -88,7 +106,7 @@ export class StreamManager {
       this.sessions.delete(deviceId);
     });
 
-    ws.send(JSON.stringify({ type: 'started', deviceId, platform }));
+    ws.send(JSON.stringify({ type: 'started', deviceId, platform, captureMode: resolvedMode }));
   }
 
   stopStream(deviceId: string, ws: WebSocket): void {
@@ -117,11 +135,15 @@ export class StreamManager {
     }
   }
 
-  private spawnCaptureProcess(deviceId: string, platform: Platform): ChildProcess | null {
+  private spawnCaptureProcess(
+    deviceId: string,
+    platform: Platform,
+    captureMode: CaptureMode
+  ): ChildProcess | null {
     if (platform === 'ios') {
       return this.spawnIosCapture(deviceId);
     } else if (platform === 'android') {
-      return this.spawnAndroidCapture(deviceId);
+      return this.spawnAndroidCapture(deviceId, captureMode);
     }
     return null;
   }
@@ -151,17 +173,36 @@ export class StreamManager {
     ]);
   }
 
-  private spawnAndroidCapture(deviceId: string): ChildProcess {
-    // Use adb screenrecord to stream h264 to stdout
-    return spawn('adb', [
-      '-s',
-      deviceId,
-      'shell',
-      'screenrecord',
-      '--output-format=h264',
-      '--size',
-      '720x1280',
-      '-',
+  private spawnAndroidCapture(deviceId: string, captureMode: CaptureMode): ChildProcess {
+    if (captureMode === 'h264') {
+      // H264 mode: use screenrecord with auto-restart to handle the 3-minute limit.
+      // The wrapper script restarts screenrecord when it exits (every ~180s).
+      console.log(`[stream:${deviceId}] Using adb screenrecord (h264 mode)`);
+      return spawn('bash', [
+        '-c',
+        `while true; do
+          adb -s '${deviceId}' shell screenrecord --output-format=h264 --size 720x1280 - 2>/dev/null
+          sleep 0.1
+        done`,
+      ]);
+    }
+
+    // MJPEG mode: capture individual frames using screencap, encode as JPEG.
+    // Uses length-prefixed framing (same protocol as iOS).
+    // Achieves ~10-15fps depending on device speed.
+    console.log(`[stream:${deviceId}] Using adb screencap (mjpeg mode)`);
+    return spawn('bash', [
+      '-c',
+      `while true; do
+        # Capture PNG from device, convert to JPEG on the fly using the raw framebuffer
+        frame=$(adb -s '${deviceId}' exec-out screencap -p 2>/dev/null)
+        if [ -n "$frame" ]; then
+          len=$(printf '%s' "$frame" | wc -c)
+          printf '%08x' "$len"
+          printf '%s' "$frame"
+        fi
+        sleep 0.05
+      done`,
     ]);
   }
 

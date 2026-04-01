@@ -84,7 +84,12 @@ export class LocalServer {
       console.log('[ws] client connected');
 
       ws.on('message', (raw: WebSocket.RawData) => {
-        let msg: { type: string; deviceId?: string; platform?: 'ios' | 'android' };
+        let msg: {
+          type: string;
+          deviceId?: string;
+          platform?: 'ios' | 'android';
+          captureMode?: 'auto' | 'mjpeg' | 'h264';
+        };
         try {
           msg = JSON.parse(raw.toString());
         } catch {
@@ -100,7 +105,7 @@ export class LocalServer {
               );
               return;
             }
-            this.streamManager.startStream(msg.deviceId, msg.platform, ws);
+            this.streamManager.startStream(msg.deviceId, msg.platform, ws, msg.captureMode);
             break;
 
           case 'stop':
