@@ -2,9 +2,8 @@ import Item from './Item';
 import SectionHeader from './SectionHeader';
 import * as FilePicker from '../../modules/file-picker';
 import { ProgressIndicator } from '../../modules/progress-indicator';
+import { SystemIconView } from '../../modules/system-icon-view';
 import { Analytics, Event } from '../analytics';
-import Earth02Icon from '../assets/icons/earth-02.svg';
-import File05Icon from '../assets/icons/file-05.svg';
 import { Text, View } from '../components';
 import MenuBarModule from '../modules/MenuBarModule';
 import { openProjectsSelectorURL } from '../utils/constants';
@@ -36,11 +35,11 @@ const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
       {tasks.size === 0 ? (
         <>
           <Item onPress={openProjectsSelectorURL}>
-            <Earth02Icon stroke={theme.text.default} />
+            <SystemIconView systemIconName="globe" tintColor={theme.text.default} />
             <Text>Select build from EAS…</Text>
           </Item>
           <Item onPress={openFilePicker}>
-            <File05Icon stroke={theme.text.default} />
+            <SystemIconView systemIconName="text.document" tintColor={theme.text.default} />
             <Text>Select build from local file…</Text>
           </Item>
         </>

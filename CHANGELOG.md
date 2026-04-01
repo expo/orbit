@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Use SF Symbols on macOS. ([#325](https://github.com/expo/orbit/pull/325) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
