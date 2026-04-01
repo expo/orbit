@@ -75,6 +75,11 @@ export class LocalServer {
     this.app.get('/orbit/stream', (_, res) => {
       res.sendFile(path.join(__dirname, './static/stream.html'));
     });
+
+    // WebSocket test page
+    this.app.get('/orbit/test-ws', (_, res) => {
+      res.sendFile(path.join(__dirname, './static/test-ws.html'));
+    });
   }
 
   setupWebSocket(server: http.Server) {
