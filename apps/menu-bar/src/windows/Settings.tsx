@@ -5,6 +5,7 @@ import { StyleSheet, TouchableOpacity, Platform, ScrollView } from 'react-native
 
 import { WindowsNavigator } from './index';
 import AutoUpdater from '../../modules/auto-updater';
+import { SystemIconView } from '../../modules/system-icon-view';
 import {
   openAuthSessionAsync,
   WebBrowserResultType,
@@ -17,7 +18,6 @@ import { Avatar } from '../components/Avatar';
 import Button, { getStylesForColor } from '../components/Button';
 import PathInput from '../components/PathInput';
 import { Switch } from '../components/Switch';
-import SystemIconView from '../components/SystemIconView';
 import TrustedSourcesInput from '../components/TrustedSourcesInput';
 import { useGetCurrentUserQuery } from '../generated/graphql';
 import Alert from '../modules/Alert';
