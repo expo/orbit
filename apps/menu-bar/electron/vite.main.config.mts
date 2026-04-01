@@ -16,6 +16,9 @@ export default defineConfig({
     commonjsOptions: {
       include: [/common-types/, /node_modules/],
     },
+    rollupOptions: {
+      external: ['bufferutil', 'utf-8-validate'],
+    },
   },
   plugins: [
     viteStaticCopy({
