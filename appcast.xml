@@ -7,6 +7,34 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.5.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Use SF Symbols on macOS. (<a href="https://github.com/expo/orbit/pull/325">#325</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Improve launching tarballs with multi apps. (<a href="https://github.com/expo/orbit/pull/324">#324</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Add release automation scripts. (<a href="https://github.com/expo/orbit/pull/327">#327</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add <code>/devices</code> route to local servers. (<a href="https://github.com/expo/orbit/pull/326">#326</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Migrate SystemIconView to Expo modules. (<a href="https://github.com/expo/orbit/pull/329">#329</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2026-04-02</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.5.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.5.0/expo-orbit.v2.5.0-macos.zip"
+        sparkle:version="42"
+        sparkle:shortVersionString="2.5.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.4.0</title>
       <description>
       <![CDATA[
