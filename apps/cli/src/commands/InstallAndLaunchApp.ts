@@ -108,6 +108,12 @@ async function installAndLaunchAndroidAppAsync(
     if (error instanceof Error && error.message.includes('INSTALL_FAILED_UPDATE_INCOMPATIBLE')) {
       await Emulator.uninstallAppAsync(device, packageName);
       await Emulator.installAppAsync(device, appPath);
+    } else if (error instanceof Error && error.message.includes('device unauthorized')) {
+      throw new Error(
+        'This device has not authorized USB debugging for this computer. ' +
+          'Please check for an authorization dialog on your device and tap "Allow", ' +
+          "then try again. If no dialog appears, try running 'adb kill-server' and reconnecting the device."
+      );
     } else {
       throw error;
     }
