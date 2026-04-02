@@ -6,10 +6,16 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 2.5.0 — 2026-04-02
+
+### 🎉 New features
+
 - Use SF Symbols on macOS. ([#325](https://github.com/expo/orbit/pull/325) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Improve launching tarballs with multi apps. ([#324](https://github.com/expo/orbit/pull/324) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-
-### 🐛 Bug fixes
 
 ### 💡 Others
 
