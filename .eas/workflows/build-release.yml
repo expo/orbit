@@ -1,14 +1,19 @@
 name: Build and notarize Orbit
 
+defaults:
+  tools:
+    node: 20
+
 on:
   push:
-    tags: ["expo-orbit-v*"]
+    tags: ['expo-orbit-v*']
   pull_request:
-    paths: [".eas/workflows/build-release.yml"]
+    paths: ['.eas/workflows/build-release.yml']
 
 jobs:
   build_and_notarize:
     runs_on: macos-large
+    image: macos-sequoia-15.6-xcode-16.4
     env:
       KEYCHAIN_NAME: orbit-keychain
       KEYCHAIN_PASSWORD: orbit-keychain-password
@@ -78,7 +83,14 @@ jobs:
 
       - name: Archive menu-bar
         working_directory: ./apps/menu-bar
-        run: yarn archive
+        run: |
+          yarn update-cli && xcodebuild archive \
+            -workspace macos/ExpoMenuBar.xcworkspace \
+            -scheme ExpoMenuBar-macOS \
+            -destination 'generic/platform=macOS,name=Any Mac' \
+            -archivePath build/ExpoOrbit.xcarchive \
+            ASSETCATALOG_COMPILER_SKIP_APP_STORE_DEPLOYMENT=YES \
+            ASSETCATALOG_COMPILER_OPTIMIZATION=nothing
 
       - name: Export archive menu-bar
         working_directory: ./apps/menu-bar
@@ -97,11 +109,13 @@ jobs:
           codesign -dvv build/Release/Expo\ Orbit.app/Contents/Frameworks/hermes.framework
 
       - name: Zip menu-bar export
+        id: zip
         working_directory: ./apps/menu-bar
         run: |
           VERSION=$(node -p "require('./package.json').version")
           ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
           ditto -c -k --keepParent build/Release/Expo\ Orbit.app "build/Release/${ZIP_NAME}"
+          set-output zip_path "build/Release/${ZIP_NAME}"
           echo "Created ${ZIP_NAME}"
 
       - name: Notarize menu-bar
@@ -116,3 +130,12 @@ jobs:
             xcrun notarytool log "$SUBMISSION_ID" --apple-id "$APPLE_ID_NOTARIZATION_EMAIL" --password "$APPLE_ID_NOTARIZATION_PASSWORD" --team-id "C8D8QTF339"
             exit 1
           fi
+
+      - name: Upload to GitHub Release
+        working_directory: ./apps/menu-bar
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="expo-orbit-v${VERSION}"
+          ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
+          echo "Uploading ${ZIP_NAME} to GitHub Release ${TAG}..."
+          gh release upload "$TAG" "build/Release/${ZIP_NAME}" --clobber || echo "No GitHub Release found for ${TAG}, skipping upload."
