@@ -1,0 +1,118 @@
+name: Build and notarize Orbit
+
+on:
+  push:
+    tags: ["expo-orbit-v*"]
+  pull_request:
+    paths: [".eas/workflows/build-release.yml"]
+
+jobs:
+  build_and_notarize:
+    runs_on: macos-large
+    env:
+      KEYCHAIN_NAME: orbit-keychain
+      KEYCHAIN_PASSWORD: orbit-keychain-password
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+
+      - name: Build packages
+        working_directory: ./
+        run: yarn build
+
+      - name: Configure macOS credentials
+        working_directory: ./apps/menu-bar
+        run: |
+          # Download Apple Developer ID intermediate certificate
+          curl -o DeveloperIDG2CA.cer https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+
+          # Write distribution certificate from environment variable
+          echo "$ORBIT_DIST_CERT_BASE64" | base64 --decode > dist_cert.p12
+
+          # Create a new keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+
+          # Add new keychain to search list
+          EXISTING=$(security list-keychains | tr -d '"' | tr '\n' ' ')
+          security list-keychains -s "$KEYCHAIN_NAME" $EXISTING
+
+          # Import Apple Developer ID intermediate certificate
+          security import DeveloperIDG2CA.cer -k "$KEYCHAIN_NAME" -T /usr/bin/codesign
+
+          # Import the distribution certificate
+          if [ -n "$ORBIT_DIST_CERT_PASSWORD" ]; then
+            security import dist_cert.p12 -P "$ORBIT_DIST_CERT_PASSWORD" -k "$KEYCHAIN_NAME" -T /usr/bin/codesign
+          else
+            security import dist_cert.p12 -k "$KEYCHAIN_NAME" -T /usr/bin/codesign
+          fi
+
+          # Set partition list to avoid interactive prompts
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+
+          # Set default keychain and unlock
+          security default-keychain -s "$KEYCHAIN_NAME"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_NAME"
+          security set-keychain-settings "$KEYCHAIN_NAME"
+
+          # Verify identity is available
+          echo "Available identities:"
+          security find-identity -v
+
+          # Install provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "$ORBIT_PROVISIONPROFILE_BASE64" | base64 --decode > "${ORBIT_PROVISIONPROFILE_UUID}.provisionprofile"
+          cp "${ORBIT_PROVISIONPROFILE_UUID}.provisionprofile" ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "Provisioning profile installed."
+
+      - name: Archive CLI
+        working_directory: ./apps/cli
+        run: yarn archive
+
+      - name: Codesign CLI
+        working_directory: ./apps/cli
+        run: yarn codesign
+
+      - name: Install menu-bar pods
+        working_directory: ./apps/menu-bar/macos
+        run: pod install
+
+      - name: Archive menu-bar
+        working_directory: ./apps/menu-bar
+        run: yarn archive
+
+      - name: Export archive menu-bar
+        working_directory: ./apps/menu-bar
+        run: yarn export-local-archive
+
+      - name: Verify signatures
+        working_directory: ./apps/menu-bar
+        run: |
+          echo "=== Verify app signature ==="
+          codesign --verify --deep --strict -vvv build/Release/Expo\ Orbit.app
+          echo "=== Main binary ==="
+          codesign -dvv build/Release/Expo\ Orbit.app/Contents/MacOS/Expo\ Orbit
+          echo "=== Sparkle ==="
+          codesign -dvv build/Release/Expo\ Orbit.app/Contents/Frameworks/Sparkle.framework
+          echo "=== Hermes ==="
+          codesign -dvv build/Release/Expo\ Orbit.app/Contents/Frameworks/hermes.framework
+
+      - name: Zip menu-bar export
+        working_directory: ./apps/menu-bar
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
+          ditto -c -k --keepParent build/Release/Expo\ Orbit.app "build/Release/${ZIP_NAME}"
+          echo "Created ${ZIP_NAME}"
+
+      - name: Notarize menu-bar
+        working_directory: ./apps/menu-bar
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
+          xcrun notarytool submit "build/Release/${ZIP_NAME}" --apple-id "$APPLE_ID_NOTARIZATION_EMAIL" --password "$APPLE_ID_NOTARIZATION_PASSWORD" --team-id "C8D8QTF339" --wait 2>&1 | tee notarize_output.txt
+          SUBMISSION_ID=$(grep "id:" notarize_output.txt | head -1 | awk '{print $2}')
+          if grep -q "status: Invalid" notarize_output.txt; then
+            echo "Notarization failed. Fetching log..."
+            xcrun notarytool log "$SUBMISSION_ID" --apple-id "$APPLE_ID_NOTARIZATION_EMAIL" --password "$APPLE_ID_NOTARIZATION_PASSWORD" --team-id "C8D8QTF339"
+            exit 1
+          fi
