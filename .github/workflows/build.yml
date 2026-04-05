@@ -72,6 +72,23 @@ jobs:
             apps/menu-bar/electron/out/make/squirrel.windows/x64/*.nupkg
             apps/menu-bar/electron/out/make/squirrel.windows/x64/RELEASES
 
+  build_on_macos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 👀 Checkout
+        uses: actions/checkout@v4
+      - name: ⬢ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 📦 Install EAS CLI
+        run: npm install -g eas-cli
+      - name: 🍎 Build and notarize macOS app
+        run: eas build --platform ios --profile production --non-interactive
+        working-directory: apps/menu-bar
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
   create_release:
     if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
     needs: [build_on_linux, build_on_win]

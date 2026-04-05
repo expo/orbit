@@ -34,28 +34,21 @@ build:
         command: |
           yarn export-local-archive
     - run:
-        name: Verify signatures
-        working_directory: ../../apps/menu-bar
-        command: |
-          echo "=== Verify app signature ==="
-          codesign --verify --deep --strict -vvv build/Release/Expo\ Orbit.app 2>&1 || true
-          echo "=== Main binary ==="
-          codesign -dvv build/Release/Expo\ Orbit.app/Contents/MacOS/Expo\ Orbit 2>&1 || true
-          echo "=== Sparkle ==="
-          codesign -dvv build/Release/Expo\ Orbit.app/Contents/Frameworks/Sparkle.framework 2>&1 || true
-          echo "=== Hermes ==="
-          codesign -dvv build/Release/Expo\ Orbit.app/Contents/Frameworks/hermes.framework 2>&1 || true
-    - run:
         name: zip menu-bar export
         working_directory: ../../apps/menu-bar
         command: |
-          ditto -c -k --keepParent build/Release/Expo\ Orbit.app build/Release/ExpoOrbit.zip
+          VERSION=$(node -p "require('./package.json').version")
+          ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
+          ditto -c -k --keepParent build/Release/Expo\ Orbit.app "build/Release/${ZIP_NAME}"
+          echo "Created ${ZIP_NAME}"
     - eas/find_and_upload_build_artifacts
     - run:
         name: Notarize menu-bar
         working_directory: ../../apps/menu-bar
         command: |
-          xcrun notarytool submit "build/Release/ExpoOrbit.zip" --apple-id $APPLE_ID_NOTARIZATION_EMAIL --password $APPLE_ID_NOTARIZATION_PASSWORD --team-id "C8D8QTF339" --wait 2>&1 | tee notarize_output.txt
+          VERSION=$(node -p "require('./package.json').version")
+          ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
+          xcrun notarytool submit "build/Release/${ZIP_NAME}" --apple-id $APPLE_ID_NOTARIZATION_EMAIL --password $APPLE_ID_NOTARIZATION_PASSWORD --team-id "C8D8QTF339" --wait 2>&1 | tee notarize_output.txt
           SUBMISSION_ID=$(grep "id:" notarize_output.txt | head -1 | awk '{print $2}')
           if grep -q "status: Invalid" notarize_output.txt; then
             echo "Notarization failed. Fetching log..."
