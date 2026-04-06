@@ -1,0 +1,12 @@
+diff --git a/node_modules/expo/ios/AppDelegates/ExpoAppDelegate.swift b/node_modules/expo/ios/AppDelegates/ExpoAppDelegate.swift
+index ab95b08..f7e4d09 100644
+--- a/node_modules/expo/ios/AppDelegates/ExpoAppDelegate.swift
++++ b/node_modules/expo/ios/AppDelegates/ExpoAppDelegate.swift
+@@ -33,7 +33,6 @@ open class ExpoAppDelegate: UIResponder, @preconcurrency ReactNativeFactoryProvi
+ 
+     if delegate.newArchEnabled() {
+       // chrfalch: rootViewFactory.reactHost is not available here in swift due to the underlying RCTHost type of the property. (todo: check)
+-      assert(rootViewFactory.value(forKey: "reactHost") == nil, "recreateRootViewWithBundleURL: does not support when react instance is created")
+     } else {
+       assert(rootViewFactory.bridge == nil, "recreateRootViewWithBundleURL: does not support when react instance is created")
+     }

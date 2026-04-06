@@ -1,5 +1,6 @@
 #import "DevViewController.h"
 #import "Expo_Orbit-Swift.h"
+#import "Expo-Swift.h"
 
 #import <React/RCTRootView.h>
 
@@ -7,8 +8,8 @@
 
 - (void)viewDidLoad {
   [super viewDidLoad];
-
-  RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
+ 
+  RCTReactNativeFactory *reactNativeFactory = [((EXExpoAppDelegate *)[NSApp delegate]) factory];
   RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:@"main"
                                                                   initialProperties:@{@"isDevWindow" : @YES}];
 

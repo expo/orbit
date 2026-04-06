@@ -1,22 +1,20 @@
 import Cocoa
-import React_RCTAppDelegate
+import React
 
 class PopoverManager: NSObject {
   @objc public static private(set) var shared: PopoverManager!
 
-  @objc public var delegate: RCTAppDelegate
   private var statusItem: NSStatusItem!
   @objc var popover: NSPopover!
 
-  @objc public static func initializeShared(delegate: RCTAppDelegate) -> PopoverManager {
+  @objc public static func initializeShared() -> PopoverManager {
     if shared == nil {
-      shared = PopoverManager(delegate: delegate)
+      shared = PopoverManager()
     }
     return shared
   }
 
-  init(delegate: RCTAppDelegate) {
-    self.delegate = delegate
+  override init() {
     super.init()
 
     self.setupPopover()
@@ -129,8 +127,8 @@ class PopoverManager: NSObject {
       "height": NSScreen.main?.frame.height ?? 0,
       "width": NSScreen.main?.frame.width ?? 0
     ]
-
-    delegate.bridge?.enqueueJSCall(
+ 
+    RCTBridge.current()?.enqueueJSCall(
       "RCTDeviceEventEmitter.emit", args: ["popoverFocused", ["screenSize": screenSize]])
   }
 

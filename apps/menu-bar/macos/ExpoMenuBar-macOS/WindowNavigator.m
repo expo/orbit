@@ -1,9 +1,11 @@
 #import <Cocoa/Cocoa.h>
 #import <React/RCTRootView.h>
+#import <React/RCTBridge+Private.h>
 
 #import "WindowWithDeallocCallback.h"
 #import "WindowNavigator.h"
 #import "Expo_Orbit-Swift.h"
+#import "Expo-Swift.h"
 
 @implementation WindowNavigator
 
@@ -59,7 +61,7 @@
         }
       };
 
-      RCTReactNativeFactory *reactNativeFactory = [((AppDelegate *)[NSApp delegate])reactNativeFactory];
+      RCTReactNativeFactory *reactNativeFactory = [((EXExpoAppDelegate *)[NSApp delegate]) factory];
       RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:moduleName
                                                                        initialProperties:@{}];
       newWindow.contentView = rootView;
@@ -98,7 +100,7 @@
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
-  RCTBridge *bridge = [((AppDelegate *)[NSApp delegate])bridge];
+  RCTBridge *bridge = [RCTBridge currentBridge];
   NSWindow *keyWindow = notification.object;
 
   for (NSString *moduleName in self->_windowsMap) {
