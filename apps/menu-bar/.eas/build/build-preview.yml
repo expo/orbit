@@ -2,9 +2,7 @@ build:
   name: Build Orbit preview
   steps:
     - eas/checkout
-    - configure_macos_credentials:
-        inputs:
-          buildCredentials: ${ eas.job.secrets.buildCredentials }
+    - configure_macos_credentials
     - eas/install_node_modules
     - run:
         name: Build packages
@@ -39,7 +37,4 @@ build:
 functions:
   configure_macos_credentials:
     name: Configure macOS Credentials
-    inputs:
-      - name: buildCredentials
-        type: json
     path: ./configureMacOSCredentials

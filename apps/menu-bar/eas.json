@@ -8,7 +8,7 @@
       "config": "build-preview.yml",
       "credentialsSource": "remote",
       "ios": {
-        "image": "latest",
+        "image": "macos-sequoia-15.6-xcode-26.2",
         "applicationArchivePath": "build/Release/*.app"
       }
     },
@@ -16,8 +16,8 @@
       "config": "build-release.yml",
       "credentialsSource": "remote",
       "ios": {
-        "image": "latest",
-        "applicationArchivePath": "build/Notarized/*.app"
+        "image": "macos-sequoia-15.6-xcode-26.2",
+        "applicationArchivePath": "build/Release/*.zip"
       }
     }
   },

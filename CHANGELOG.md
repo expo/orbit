@@ -10,6 +10,8 @@
 
 ### 💡 Others
 
+- Use EAS custom builds for macOS releases. ([#330](https://github.com/expo/orbit/pull/330) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 2.5.0 — 2026-04-02
 
 ### 🎉 New features

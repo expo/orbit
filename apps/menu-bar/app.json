@@ -11,7 +11,10 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "dev.expo.orbit"
+      "bundleIdentifier": "dev.expo.orbit",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "bundler": "metro"

@@ -20,26 +20,21 @@ This will:
 - Stamp the `CHANGELOG.md` Unpublished section with the new version and date
 - Commit, tag (`expo-orbit-vX.X.X`), and push
 
-This triggers a CI workflow that builds Linux and Windows artifacts and creates a **draft** GitHub Release.
+This triggers CI which:
 
-## 2. Archive and notarize the macOS app
+- Builds Linux (DEB/RPM) and Windows (EXE) artifacts
+- Builds and notarizes the macOS app via EAS Build
+- Creates a **draft** GitHub Release with Linux/Windows artifacts
 
-On your local machine:
+## 2. Publish the GitHub Release
 
-```bash
-cd apps/menu-bar
-yarn archive
-yarn export-local-archive
-yarn notarize
-```
+1. Wait for the EAS Build to complete (check on [expo.dev](https://expo.dev))
+2. Download the notarized macOS zip from EAS
+3. Upload it to the draft GitHub Release
+4. Review the release notes
+5. Publish the release (mark as latest)
 
-## 3. Publish the GitHub Release
-
-1. Upload the notarized macOS zip to the draft GitHub Release
-2. Review the release notes
-3. Publish the release (mark as latest)
-
-## 4. Update auto-update metadata
+## 3. Update auto-update metadata
 
 After the release is published:
 

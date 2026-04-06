@@ -2,9 +2,7 @@ build:
   name: Build and notarize Orbit
   steps:
     - eas/checkout
-    - configure_macos_credentials:
-        inputs:
-          buildCredentials: ${ eas.job.secrets.buildCredentials }
+    - configure_macos_credentials
     - eas/install_node_modules
     - run:
         name: Build packages
@@ -34,17 +32,30 @@ build:
         name: Export archive menu-bar
         working_directory: ../../apps/menu-bar
         command: |
-          yarn export-upload-archive
+          yarn export-local-archive
+    - run:
+        name: zip menu-bar export
+        working_directory: ../../apps/menu-bar
+        command: |
+          VERSION=$(node -p "require('./package.json').version")
+          ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
+          ditto -c -k --keepParent build/Release/Expo\ Orbit.app "build/Release/${ZIP_NAME}"
+          echo "Created ${ZIP_NAME}"
+    - eas/find_and_upload_build_artifacts
     - run:
         name: Notarize menu-bar
         working_directory: ../../apps/menu-bar
         command: |
-          yarn notarize
-    - eas/find_and_upload_build_artifacts
+          VERSION=$(node -p "require('./package.json').version")
+          ZIP_NAME="expo-orbit.v${VERSION}-macos.zip"
+          xcrun notarytool submit "build/Release/${ZIP_NAME}" --apple-id $APPLE_ID_NOTARIZATION_EMAIL --password $APPLE_ID_NOTARIZATION_PASSWORD --team-id "C8D8QTF339" --wait 2>&1 | tee notarize_output.txt
+          SUBMISSION_ID=$(grep "id:" notarize_output.txt | head -1 | awk '{print $2}')
+          if grep -q "status: Invalid" notarize_output.txt; then
+            echo "Notarization failed. Fetching log..."
+            xcrun notarytool log "$SUBMISSION_ID" --apple-id $APPLE_ID_NOTARIZATION_EMAIL --password $APPLE_ID_NOTARIZATION_PASSWORD --team-id "C8D8QTF339"
+            exit 1
+          fi
 functions:
   configure_macos_credentials:
     name: Configure macOS Credentials
-    inputs:
-      - name: buildCredentials
-        type: json
     path: ./configureMacOSCredentials

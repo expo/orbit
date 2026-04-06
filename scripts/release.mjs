@@ -166,15 +166,14 @@ async function main() {
   // Summary
   console.log('='.repeat(60));
   console.log('Release started successfully!\n');
-  console.log('CI will now build Linux/Windows and create a draft GitHub Release.\n');
+  console.log('CI will now:');
+  console.log('  - Build Linux/Windows artifacts');
+  console.log('  - Build and notarize macOS via EAS');
+  console.log('  - Create a draft GitHub Release\n');
   console.log('Next steps:');
-  console.log('  1. Build macOS locally:');
-  console.log('     cd apps/menu-bar && yarn archive');
-  console.log('     yarn export-local-archive');
-  console.log('     yarn notarize');
-  console.log('  2. Upload the macOS zip to the draft GitHub Release');
-  console.log('  3. Publish the GitHub Release');
-  console.log(`  4. Run: yarn release:metadata`);
+  console.log('  1. Download the notarized macOS zip from EAS and upload to the draft GitHub Release');
+  console.log('  2. Publish the GitHub Release');
+  console.log(`  3. Run: yarn release:metadata`);
   console.log('='.repeat(60));
 }
 
