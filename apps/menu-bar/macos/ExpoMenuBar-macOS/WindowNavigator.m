@@ -1,6 +1,6 @@
 #import <Cocoa/Cocoa.h>
 #import <React/RCTRootView.h>
-#import <React/RCTBridge+Private.h>
+#import <React/RCTBridgeModule.h>
 
 #import "WindowWithDeallocCallback.h"
 #import "WindowNavigator.h"
@@ -100,14 +100,14 @@
 }
 
 - (void)windowDidBecomeKey:(NSNotification *)notification {
-  RCTBridge *bridge = [RCTBridge currentBridge];
   NSWindow *keyWindow = notification.object;
 
   for (NSString *moduleName in self->_windowsMap) {
     NSWindow *window = self->_windowsMap[moduleName];
     if (window == keyWindow) {
-      [bridge enqueueJSCall:@"RCTDeviceEventEmitter.emit"
-                        args:@[@"windowFocused", moduleName]];
+      [self->_callableJSModules invokeModule:@"RCTDeviceEventEmitter"
+                                      method:@"emit"
+                                    withArgs:@[@"windowFocused", moduleName]];
        break;
     }
   }
