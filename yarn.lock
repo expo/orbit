@@ -3246,10 +3246,10 @@
   resolved "https://registry.yarnpkg.com/@react-native-clipboard/clipboard/-/clipboard-1.14.3.tgz#3596ade1d85b0accdd2585674fcea3ea185f0e20"
   integrity sha512-EVWxJfCSyBN2SH5b3JrA/w1qlYu3vihQOfdD7fs/BYp63xL6qy93CvbFDHzF8ooFpGM6f67hkAN+gxl1RfOKuw==
 
-"@react-native-macos/virtualized-lists@0.81.5":
-  version "0.81.5"
-  resolved "https://registry.yarnpkg.com/@react-native-macos/virtualized-lists/-/virtualized-lists-0.81.5.tgz#616a049d30026bb9fed081fa4caff41d57da46ab"
-  integrity sha512-1mXbxSF3JXnGyw/kr6FDwQD7P6zIyN2puQKvL0tfaI6BtA1LyrM/DXBb6vLg6we/29VJ1dQdg0Tp8rjSjPVwjA==
+"@react-native-macos/virtualized-lists@0.81.6":
+  version "0.81.6"
+  resolved "https://registry.yarnpkg.com/@react-native-macos/virtualized-lists/-/virtualized-lists-0.81.6.tgz#b648fb14748d765288e825bf35a17c3412be5e8a"
+  integrity sha512-zxRPKQCtrBoSXFrkVENmsx3VIzbVBrHphpNOuwn3acCZNBBmCwKE8HRlsnJqsq5rSR/Gq6/Pprv8bbJC3X3ZqQ==
   dependencies:
     invariant "^2.2.4"
     nullthrows "^1.1.1"
@@ -11356,13 +11356,13 @@ react-is@^19.1.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.2.3.tgz#eec2feb69c7fb31f77d0b5c08c10ae1c88886b29"
   integrity sha512-qJNJfu81ByyabuG7hPFEbXqNcWSU3+eVus+KJs+0ncpGfMyYdvSmxiJxbWR65lYi1I+/0HBcliO029gc4F+PnA==
 
-react-native-macos@0.81.5:
-  version "0.81.5"
-  resolved "https://registry.yarnpkg.com/react-native-macos/-/react-native-macos-0.81.5.tgz#e7d551a07a7d99b6f8d2c6bb0f4120aa81bab140"
-  integrity sha512-d8TvhBqolXsYr+GdneHroKVH0fRe/lpNcJEFo01rcjHu7zjPYO/YMPCsT9w3IlyNiaQzpo1iZKabQOwFMmS2XQ==
+react-native-macos@0.81.6:
+  version "0.81.6"
+  resolved "https://registry.yarnpkg.com/react-native-macos/-/react-native-macos-0.81.6.tgz#6f49bc717b564cf92a0a2d3cd69da0a70d7d9837"
+  integrity sha512-9pKDlNRjVBqhGt1Gl9WW1nNs9rv+HLHrn3fdWfttOafNCinhCuibQkkLejLoMHEae1x9mM5R65Zuy/kkzHtYtw==
   dependencies:
     "@jest/create-cache-key-function" "^29.7.0"
-    "@react-native-macos/virtualized-lists" "0.81.5"
+    "@react-native-macos/virtualized-lists" "0.81.6"
     "@react-native/assets-registry" "0.81.6"
     "@react-native/codegen" "0.81.6"
     "@react-native/community-cli-plugin" "0.81.6"
