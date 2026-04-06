@@ -31,6 +31,20 @@ const isValidDevice = (device: Device): boolean => {
     return false;
   }
 
+  if (
+    device.osType === 'Android' &&
+    device.deviceType === 'device' &&
+    device.authorized === false
+  ) {
+    Alert.alert(
+      'USB Debugging Unauthorized',
+      'This device has not authorized USB debugging for this computer. ' +
+        'Please check for an authorization dialog on your device and tap "Allow", ' +
+        "then try again. If no dialog appears, try running 'adb kill-server' and reconnecting the device."
+    );
+    return false;
+  }
+
   return true;
 };
 
@@ -125,7 +139,10 @@ const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: P
             ) : (
               <CableConnectorIcon height={24} width={24} fill={PlatformColor('text')} />
             )}
-            {device.osType === 'iOS' && device.developerModeStatus === 'disabled' ? (
+            {(device.osType === 'iOS' && device.developerModeStatus === 'disabled') ||
+            (device.osType === 'Android' &&
+              device.deviceType === 'device' &&
+              device.authorized === false) ? (
               <AlertIcon
                 height={15}
                 width={15}

@@ -54,6 +54,7 @@ export interface AndroidConnectedDevice {
   osType: 'Android';
   deviceType: 'device';
   connectionType?: 'USB' | 'Network';
+  authorized?: boolean;
 }
 
 export type Device =

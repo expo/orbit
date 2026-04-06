@@ -70,11 +70,8 @@ export async function getRunningDevicesAsync(): Promise<
   const attachedDevices = splitItems
     // First line is `"List of devices attached"`, remove it
     .slice(1, splitItems.length)
-    // Filter offline and unauthorized devices
-    .filter(
-      (line) =>
-        line.includes('emulator') || (!line.includes('offline') && !line.includes('unauthorized'))
-    )
+    // Filter offline devices
+    .filter((line) => line.includes('emulator') || !line.includes('offline'))
     .map((line) => {
       // unauthorized: ['FA8251A00719', 'unauthorized', 'usb:338690048X', 'transport_id:5']
       // authorized: ['FA8251A00719', 'device', 'usb:336592896X', 'product:walleye', 'model:Pixel_2', 'device:walleye', 'transport_id:4']
@@ -82,6 +79,7 @@ export async function getRunningDevicesAsync(): Promise<
       const [pid, ...remainder] = line.split(' ').filter(Boolean);
       const model = remainder.find((item) => item.startsWith('model:'))?.substring(6) || '';
       const deviceType: 'emulator' | 'device' = line.includes('emulator') ? 'emulator' : 'device';
+      const isUnauthorized = remainder.includes('unauthorized');
 
       if (deviceType === 'device') {
         const result: Omit<AndroidConnectedDevice, 'name'> = {
@@ -90,6 +88,7 @@ export async function getRunningDevicesAsync(): Promise<
           model,
           osType: 'Android',
           connectionType: line.includes('tcp') ? 'Network' : 'USB',
+          authorized: !isUnauthorized,
         };
 
         return result;
