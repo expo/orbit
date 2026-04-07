@@ -24,9 +24,11 @@ export async function tryLocalServer(path: string, search: string): Promise<bool
   if (!port) return false;
 
   try {
-    const openURL = `${path}${search}`;
+    // Build a full https URL that the local server will convert to an expo-orbit:// deeplink.
+    // The local server replaces https:// with expo-orbit:// in LocalServer.ts.
+    const deeplinkAsHttps = `https://orbit.expo.dev/${path}${search}`;
     const res = await fetch(
-      `http://localhost:${port}/orbit/open?url=${encodeURIComponent(`https://${openURL}`)}`,
+      `http://localhost:${port}/orbit/open?url=${encodeURIComponent(deeplinkAsHttps)}`,
       { signal: AbortSignal.timeout(3000) }
     );
     const data = (await res.json()) as { ok?: boolean };
@@ -38,24 +40,11 @@ export async function tryLocalServer(path: string, search: string): Promise<bool
 
 /**
  * Open the deeplink via the custom URL scheme.
+ * Uses window.location.href which will prompt the OS to open the registered handler.
  */
 export function openViaScheme(path: string, search: string): void {
   const deeplinkURL = `${SCHEME}/${path}${search}`;
-
-  // Use a hidden iframe to attempt scheme launch (avoids full page navigation)
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.src = deeplinkURL;
-  document.body.appendChild(iframe);
-
-  setTimeout(() => {
-    document.body.removeChild(iframe);
-  }, 2000);
-
-  // Backup: direct location change for browsers that block iframe schemes
-  setTimeout(() => {
-    window.location.href = deeplinkURL;
-  }, 300);
+  window.location.href = deeplinkURL;
 }
 
 /**
