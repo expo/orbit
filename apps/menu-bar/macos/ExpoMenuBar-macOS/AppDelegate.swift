@@ -84,6 +84,23 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
     RCTLinkingManager.getUrlEventHandler(event, withReplyEvent: replyEvent)
   }
 
+  // MARK: - Universal Links
+
+  func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void) -> Bool {
+    guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+          let url = userActivity.webpageURL else {
+      return false
+    }
+
+    popoverManager?.openPopover()
+    NotificationCenter.default.post(
+      name: Notification.Name("RCTOpenURLNotification"),
+      object: nil,
+      userInfo: ["url": url.absoluteString]
+    )
+    return true
+  }
+
   @IBAction func showHelp(_ sender: Any) {
     if let url = URL(string: "https://docs.expo.dev/build/orbit/") {
       NSWorkspace.shared.open(url)

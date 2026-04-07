@@ -156,6 +156,50 @@ describe('identifyAndParseDeeplinkURL', () => {
     });
   });
 
+  describe('Universal Link URLs (orbit.expo.dev)', () => {
+    it('Should parse /download from orbit.expo.dev universal link', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const universalLink = `https://orbit.expo.dev/download?url=${encodeURIComponent(artifactURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
+        urlType: URLType.EXPO_BUILD,
+        url: artifactURL,
+      });
+    });
+
+    it('Should parse /update from orbit.expo.dev universal link', () => {
+      const updateURL = 'https://u.expo.dev/update/addecbed-f477-4a75-bd88-0732dc928fe9';
+      const universalLink = `https://orbit.expo.dev/update?url=${encodeURIComponent(updateURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
+        urlType: URLType.EXPO_UPDATE,
+        url: updateURL,
+      });
+    });
+
+    it('Should parse /go from orbit.expo.dev universal link', () => {
+      const url =
+        'exp://staging-u.expo.dev/2dce2748-c51f-4865-bae0-392af794d60a?runtime-version=exposdk%3A50.0.0&channel-name=production';
+      const universalLink = `https://orbit.expo.dev/go?url=${encodeURIComponent(url)}`;
+
+      expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
+        urlType: URLType.GO,
+        url,
+        sdkVersion: null,
+      });
+    });
+
+    it('Should parse /auth from orbit.expo.dev universal link', () => {
+      const universalLink =
+        'https://orbit.expo.dev/auth?username_or_email=user&session_secret=secret';
+
+      expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
+        urlType: URLType.AUTH,
+        url: universalLink,
+      });
+    });
+  });
+
   describe('Unknown URLs', () => {
     it('Should throw for non-expo domains that are not using specific routes', () => {
       const unknownURL =
