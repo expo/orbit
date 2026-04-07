@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom';
 
-import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 
 export function App() {
@@ -10,7 +9,6 @@ export function App() {
       <main style={{ flex: 1 }}>
         <Outlet />
       </main>
-      <Footer />
     </>
   );
 }

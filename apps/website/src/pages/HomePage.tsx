@@ -1,5 +1,3 @@
-import { DownloadGrid } from '../components/DownloadGrid';
-import { Features } from '../components/Features';
 import styles from './HomePage.module.css';
 
 export function HomePage() {
@@ -12,8 +10,8 @@ export function HomePage() {
           simulator management for macOS, Windows, and Linux.
         </p>
       </section>
-      <DownloadGrid />
-      <Features />
+      {/* <DownloadGrid />
+      <Features /> */}
     </div>
   );
 }
