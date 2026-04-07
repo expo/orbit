@@ -35,7 +35,7 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
     let rootViewController = NSViewController()
     rootViewController.view = rootView
 
-    popoverManager = PopoverManager.initializeShared()
+    popoverManager = PopoverManager.initializeShared(factory: factory)
     popoverManager.setContentViewController(rootViewController)
 
 #if SHOW_DEV_WINDOW && RCT_DEV

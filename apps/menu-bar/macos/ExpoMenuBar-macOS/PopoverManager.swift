@@ -1,20 +1,23 @@
 import Cocoa
-import React
+import React_RCTAppDelegate
+import Expo
 
 class PopoverManager: NSObject {
   @objc public static private(set) var shared: PopoverManager!
 
+  private var reactNativeFactory: RCTReactNativeFactory
   private var statusItem: NSStatusItem!
   @objc var popover: NSPopover!
 
-  @objc public static func initializeShared() -> PopoverManager {
+  @objc public static func initializeShared(factory: RCTReactNativeFactory) -> PopoverManager {
     if shared == nil {
-      shared = PopoverManager()
+      shared = PopoverManager(factory: factory)
     }
     return shared
   }
 
-  override init() {
+  init(factory: RCTReactNativeFactory) {
+    self.reactNativeFactory = factory
     super.init()
 
     self.setupPopover()
@@ -127,9 +130,16 @@ class PopoverManager: NSObject {
       "height": NSScreen.main?.frame.height ?? 0,
       "width": NSScreen.main?.frame.width ?? 0
     ]
- 
-    RCTBridge.current()?.enqueueJSCall(
-      "RCTDeviceEventEmitter.emit", args: ["popoverFocused", ["screenSize": screenSize]])
+
+
+    if let reactHost = reactNativeFactory.rootViewFactory.value(forKey: "reactHost") {
+      let wrapper = RCTHostWrapper(host: reactHost)
+      wrapper?.callFunction(
+        onJSModule: "RCTDeviceEventEmitter",
+        method: "emit",
+        args: ["popoverFocused", ["screenSize": screenSize]]
+      )
+    }
   }
 
   @objc func closePopover() {
