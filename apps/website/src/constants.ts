@@ -3,20 +3,15 @@ export const SCHEME = 'expo-orbit://';
 export const LOCAL_SERVER_PORTS = [35783, 47909, 44171, 50799];
 
 export const GITHUB_RELEASES_URL = 'https://github.com/expo/orbit/releases/latest';
-
 export const DOCS_URL = 'https://docs.expo.dev/build/orbit/';
 
 export const GITHUB_URL = 'https://github.com/expo/orbit';
 
-export const DEEPLINK_PATHS = ['auth', 'download', 'update', 'go', 'snack'] as const;
+export const DEEPLINK_PATHS = ['download', 'update', 'go', 'snack'] as const;
 
 export type DeeplinkPath = (typeof DEEPLINK_PATHS)[number];
 
 export const DEEPLINK_META: Record<DeeplinkPath, { title: string; description: string }> = {
-  auth: {
-    title: 'Signing in with Expo Orbit...',
-    description: 'Completing authentication with Expo Orbit.',
-  },
   download: {
     title: 'Opening build in Expo Orbit...',
     description:
