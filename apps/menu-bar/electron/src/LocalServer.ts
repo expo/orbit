@@ -42,9 +42,18 @@ export class LocalServer {
         return;
       }
 
-      const deeplinkURL = urlParam
-        .replace('https://', 'expo-orbit://')
-        .replace('exp://', 'expo-orbit://');
+      // Extract the path and query from the URL to build a clean deeplink.
+      // This handles URLs from orbit.expo.dev and expo-orbit.expo.app,
+      // converting e.g. https://orbit.expo.dev/download?url=... to expo-orbit:///download?url=...
+      let deeplinkURL: string;
+      try {
+        const parsed = new URL(urlParam);
+        deeplinkURL = `expo-orbit://${parsed.pathname}${parsed.search}`;
+      } catch {
+        deeplinkURL = urlParam
+          .replace('https://', 'expo-orbit://')
+          .replace('exp://', 'expo-orbit://');
+      }
 
       electronApp.emit('open-url', null, deeplinkURL);
       res.json({ ok: true });
