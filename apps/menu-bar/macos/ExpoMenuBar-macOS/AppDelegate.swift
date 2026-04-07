@@ -86,7 +86,7 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
 
   // MARK: - Universal Links
 
-  func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void) -> Bool {
+  override func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void) -> Bool {
     guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
           let url = userActivity.webpageURL else {
       return false

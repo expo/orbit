@@ -156,7 +156,7 @@ describe('identifyAndParseDeeplinkURL', () => {
     });
   });
 
-  describe('Universal Link URLs (orbit.expo.dev)', () => {
+  describe('Universal Link URLs (orbit.expo.dev and expo-orbit.expo.app)', () => {
     it('Should parse /download from orbit.expo.dev universal link', () => {
       const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
       const universalLink = `https://orbit.expo.dev/download?url=${encodeURIComponent(artifactURL)}`;
@@ -196,6 +196,26 @@ describe('identifyAndParseDeeplinkURL', () => {
       expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
         urlType: URLType.AUTH,
         url: universalLink,
+      });
+    });
+
+    it('Should parse /download from expo-orbit.expo.app universal link', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const universalLink = `https://expo-orbit.expo.app/download?url=${encodeURIComponent(artifactURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
+        urlType: URLType.EXPO_BUILD,
+        url: artifactURL,
+      });
+    });
+
+    it('Should parse /update from expo-orbit.expo.app universal link', () => {
+      const updateURL = 'https://u.expo.dev/update/addecbed-f477-4a75-bd88-0732dc928fe9';
+      const universalLink = `https://expo-orbit.expo.app/update?url=${encodeURIComponent(updateURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
+        urlType: URLType.EXPO_UPDATE,
+        url: updateURL,
       });
     });
   });
