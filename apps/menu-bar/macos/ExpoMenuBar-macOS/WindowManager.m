@@ -6,11 +6,19 @@
 
 @implementation WindowsManager
 
+@synthesize callableJSModules = _callableJSModules;
+
 RCT_EXPORT_MODULE();
 
 + (BOOL)requiresMainQueueSetup
 {
   return YES;
+}
+
+- (void)setCallableJSModules:(RCTCallableJSModules *)callableJSModules
+{
+  _callableJSModules = callableJSModules;
+  [WindowNavigator shared].callableJSModules = callableJSModules;
 }
 
 - (NSDictionary *)constantsToExport

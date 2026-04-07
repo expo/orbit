@@ -34,6 +34,7 @@
 		C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */; };
 		C0D4407A2DDB9B9E006B7C16 /* PopoverManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D440792DDB9B9E006B7C16 /* PopoverManager.swift */; };
 		C0D4407C2DDBD86F006B7C16 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D4407B2DDBD86F006B7C16 /* AppDelegate.swift */; };
+		C0DA577B2F847C080063FF01 /* RCTHostWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = C0DA577A2F847C080063FF01 /* RCTHostWrapper.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -100,6 +101,8 @@
 		C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckboxManager.m; sourceTree = "<group>"; };
 		C0D440792DDB9B9E006B7C16 /* PopoverManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverManager.swift; sourceTree = "<group>"; };
 		C0D4407B2DDBD86F006B7C16 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C0DA57792F847C080063FF01 /* RCTHostWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTHostWrapper.h; sourceTree = "<group>"; };
+		C0DA577A2F847C080063FF01 /* RCTHostWrapper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = RCTHostWrapper.mm; sourceTree = "<group>"; };
 		CE0E74F571E1F48FF00A8324 /* Pods-Shared-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-macOS/Pods-Shared-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
@@ -160,6 +163,8 @@
 		5142014A2437B4B30078DB4F /* ExpoMenuBar-macOS */ = {
 			isa = PBXGroup;
 			children = (
+				C0DA57792F847C080063FF01 /* RCTHostWrapper.h */,
+				C0DA577A2F847C080063FF01 /* RCTHostWrapper.mm */,
 				C032EB592EBD116700D6F4A1 /* AppIconDebug.icon */,
 				C032EB572EBD108800D6F4A1 /* AppIcon.icon */,
 				C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */,
@@ -435,9 +440,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -495,9 +504,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -524,6 +537,7 @@
 				C061C79E2A251E0C00A53D8D /* DevViewController.m in Sources */,
 				C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */,
 				77818F2A6E488E8B68D317B2 /* ExpoModulesProvider.swift in Sources */,
+				C0DA577B2F847C080063FF01 /* RCTHostWrapper.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -570,10 +584,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -612,10 +623,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_CFLAGS = "$(inherited)  ";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

@@ -84,7 +84,7 @@ function migrateMMKVFromOldStoragePath() {
       oldStorage.getString(key) ??
       oldStorage.getBoolean(key) ??
       oldStorage.getNumber(key) ??
-      oldStorage.getBuffer(key);
+      (oldStorage.getBuffer(key) as ArrayBuffer);
 
     if (value != null) {
       storage.set(key, value);

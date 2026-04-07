@@ -1,0 +1,21 @@
+diff --git a/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm b/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm
+index d03d5c0..f970f8c 100644
+--- a/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm
++++ b/node_modules/react-native-svg/apple/Elements/RNSVGSvgView.mm
+@@ -34,6 +34,16 @@
+   bool rendered;
+ }
+ 
++#if TARGET_OS_OSX && defined(RCT_NEW_ARCH_ENABLED)
++// RCTViewComponentView returns YES for wantsUpdateLayer, which causes macOS
++// to call updateLayer instead of drawRect:. Since RNSVGSvgView relies on
++// drawRect: for rendering SVG content, we need to opt out of the update layer path.
++- (BOOL)wantsUpdateLayer
++{
++  return NO;
++}
++#endif
++
+ #ifdef RCT_NEW_ARCH_ENABLED
+ using namespace facebook::react;
+ #endif // RCT_NEW_ARCH_ENABLED
