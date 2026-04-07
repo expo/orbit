@@ -5,6 +5,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:orbit.expo.dev</string>
+		<string>applinks:expo-orbit.expo.app</string>
 	</array>
 </dict>
 </plist>
