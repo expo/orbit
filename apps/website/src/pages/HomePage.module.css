@@ -1,0 +1,36 @@
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.hero {
+  padding: 80px 0 48px;
+  text-align: center;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 32px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+  }
+}
