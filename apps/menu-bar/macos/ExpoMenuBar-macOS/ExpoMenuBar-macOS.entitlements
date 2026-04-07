@@ -6,6 +6,8 @@
 	<array>
 		<string>applinks:orbit.expo.dev</string>
 		<string>applinks:expo-orbit.expo.app</string>
+		<string>applinks:orbit.expo.dev?mode=developer</string>
+		<string>applinks:expo-orbit.expo.app?mode=developer</string>
 	</array>
 </dict>
 </plist>
