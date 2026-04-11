@@ -5,9 +5,8 @@ on:
   pull_request:
     paths:
       - apps/menu-bar/src/**
-      - apps/menu-bar/electron/**
       - apps/menu-bar/e2e/**
-      - apps/menu-bar/macos/ExpoMenuBarUITests/**
+      - apps/menu-bar/electron/**
       - .github/workflows/e2e-tests.yml
 
 concurrency:
@@ -43,23 +42,31 @@ jobs:
         run: yarn install --frozen-lockfile
         working-directory: apps/menu-bar/electron
 
+      - name: Export web bundle for Electron
+        run: npx expo export --platform web --output-dir electron/dist
+        working-directory: apps/menu-bar
+
       - name: Package electron app
         run: yarn package
         working-directory: apps/menu-bar/electron
 
+      - name: Install E2E dependencies
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+
       - name: Run E2E tests (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run --auto-servernum yarn wdio
-        working-directory: apps/menu-bar/electron
+        run: xvfb-run --auto-servernum yarn test:electron
+        working-directory: apps/menu-bar/e2e
 
       - name: Run E2E tests (Windows)
         if: runner.os == 'Windows'
-        run: yarn wdio
-        working-directory: apps/menu-bar/electron
+        run: yarn test:electron
+        working-directory: apps/menu-bar/e2e
 
   macos-e2e:
-    runs-on: macos-14
-    name: macOS XCUITest
+    runs-on: macos-15
+    name: macOS E2E (Appium mac2)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -77,22 +84,41 @@ jobs:
       - name: Build packages
         run: yarn build
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: apps/menu-bar
+
+      - name: 💎 Install Ruby gems
+        run: gem install cocoapods xcpretty
+
       - name: Install CocoaPods
-        run: |
-          cd apps/menu-bar/macos
-          bundle install
-          bundle exec pod install
+        working-directory: apps/menu-bar/macos
+        run: bundle exec pod install
 
-      - name: Setup UI test target
+      - name: Build macOS app
+        working-directory: apps/menu-bar
         run: |
-          gem install xcodeproj
-          ruby apps/menu-bar/macos/scripts/add_ui_test_target.rb
-
-      - name: Build and run UI tests
-        run: |
-          xcodebuild test \
-            -workspace apps/menu-bar/macos/ExpoMenuBar.xcworkspace \
+          xcodebuild build \
+            -workspace macos/ExpoMenuBar.xcworkspace \
             -scheme ExpoMenuBar-macOS \
+            -configuration Release \
             -destination 'platform=macOS' \
-            -only-testing:ExpoMenuBarUITests \
-            | xcpretty || true
+            -derivedDataPath macos/build \
+            | xcpretty
+
+      - name: Install E2E dependencies
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+
+      - name: Install Appium mac2 driver
+        working-directory: apps/menu-bar/e2e
+        run: npx appium driver install mac2
+
+      - name: Run macOS E2E tests
+        working-directory: apps/menu-bar/e2e
+        env:
+          MACOS_APP_PATH: ../macos/build/Build/Products/Release/Expo Orbit.app
+        run: yarn test:macos
