@@ -9,7 +9,7 @@ type Props = PropsWithChildren<PressableProps> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const Item = ({ children, onPress, shortcut, style }: Props) => {
+const Item = ({ children, onPress, shortcut, style, testID }: Props) => {
   const [isHovered, setHovered] = useState(false);
   const theme = useCurrentTheme();
 
@@ -18,6 +18,7 @@ const Item = ({ children, onPress, shortcut, style }: Props) => {
       onHoverIn={() => setHovered(true)}
       onHoverOut={() => setHovered(false)}
       onPress={onPress}
+      testID={testID}
       style={[
         styles.itemContainer,
         style,

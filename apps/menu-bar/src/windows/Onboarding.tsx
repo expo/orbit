@@ -67,7 +67,7 @@ const Onboarding = () => {
   );
 
   return (
-    <View flex="1" bg="default">
+    <View flex="1" bg="default" testID="onboarding-window">
       <Image source={Background} style={styles.background} />
       <ScrollView style={{ marginTop: -WINDOW_TITLE_HEIGHT }} alwaysBounceVertical={false}>
         <View style={styles.header}>

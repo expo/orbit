@@ -10,15 +10,15 @@ export const FOOTER_HEIGHT = 62;
 
 const Footer = () => {
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="popover-footer">
       <View px="medium">
         <Divider />
       </View>
       <View py="tiny" pb="1.5">
-        <Item onPress={() => WindowsNavigator.open('Settings')}>
+        <Item onPress={() => WindowsNavigator.open('Settings')} testID="settings-button">
           <Text>Settings…</Text>
         </Item>
-        <Item onPress={MenuBarModule.exitApp} shortcut="⌘ Q">
+        <Item onPress={MenuBarModule.exitApp} shortcut="⌘ Q" testID="quit-button">
           <Text>Quit</Text>
         </Item>
       </View>

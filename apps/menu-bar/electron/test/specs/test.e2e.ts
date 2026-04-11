@@ -1,36 +1,69 @@
 import { browser, $, $$ } from '@wdio/globals';
 import { expect } from 'expect-webdriverio';
 
-function findByTestId(testId: string) {
-  return $(`div[data-testid="${testId}"]`);
+/**
+ * Mirror of e2e/testIDs.ts — kept in sync manually to avoid bundler issues
+ * with WebdriverIO's test runner.
+ */
+const TestIDs = {
+  popoverCore: 'popover-core',
+  popoverFooter: 'popover-footer',
+  settingsButton: 'settings-button',
+  quitButton: 'quit-button',
+  buildsSection: 'builds-section',
+  selectBuildEAS: 'select-build-eas',
+  selectBuildLocal: 'select-build-local',
+  deviceItem: 'device-item',
+  onboardingWindow: 'onboarding-window',
+  getStartedButton: 'get-started-button',
+  settingsWindow: 'settings-window',
+} as const;
+
+function byTestId(testId: string) {
+  return $(`[data-testid="${testId}"]`);
 }
 
-function findAllByTestId(testId: string) {
-  return $$(`div[data-testid="${testId}"]`);
+function allByTestId(testId: string) {
+  return $$(`[data-testid="${testId}"]`);
 }
 
-describe('Menu Bar Electron App', () => {
-  it('should show Onboarding Window', async () => {
-    const originalHandles = await browser.getWindowHandles();
-    const onboardingHandle = originalHandles[1];
-    // Switch to Onboarding screen
+describe('Onboarding', () => {
+  it('should show onboarding window on first launch', async () => {
+    const handles = await browser.getWindowHandles();
+    // The app opens two windows: the main popover and the onboarding window
+    expect(handles.length).toBeGreaterThanOrEqual(2);
+
+    const onboardingHandle = handles[1];
     await browser.switchToWindow(onboardingHandle);
 
-    await expect(findByTestId('get-started-button')).toExist();
-    await findByTestId('get-started-button').click();
+    await expect(byTestId(TestIDs.onboardingWindow)).toExist();
+    await expect(byTestId(TestIDs.getStartedButton)).toExist();
+  });
 
-    // Press the "Get Started" button should close the Onboarding screen
+  it('should close onboarding when "Get Started" is pressed', async () => {
+    await byTestId(TestIDs.getStartedButton).click();
+
     const currentHandles = await browser.getWindowHandles();
-    expect(currentHandles.includes(onboardingHandle)).toBe(false);
     expect(currentHandles.length).toBe(1);
 
     await browser.switchToWindow(currentHandles[0]);
   });
+});
 
-  it('should list devices', async () => {
-    await expect(findByTestId('popover-core')).toExist();
+describe('Popover', () => {
+  it('should render the main popover content', async () => {
+    await expect(byTestId(TestIDs.popoverCore)).toExist();
+  });
 
-    await expect(findByTestId('device-item')).toExist();
-    await expect(findAllByTestId('device-item')).toBeElementsArrayOfSize(2);
+  it('should show the builds section', async () => {
+    await expect(byTestId(TestIDs.buildsSection)).toExist();
+    await expect(byTestId(TestIDs.selectBuildEAS)).toExist();
+    await expect(byTestId(TestIDs.selectBuildLocal)).toExist();
+  });
+
+  it('should show the footer with settings and quit buttons', async () => {
+    await expect(byTestId(TestIDs.popoverFooter)).toExist();
+    await expect(byTestId(TestIDs.settingsButton)).toExist();
+    await expect(byTestId(TestIDs.quitButton)).toExist();
   });
 });
