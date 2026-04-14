@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix OAauth with 3rd party providers on Windows and Linux. ([#335](https://github.com/expo/orbit/pull/335) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 - Use EAS custom builds for macOS releases. ([#330](https://github.com/expo/orbit/pull/330) by [@gabrieldonadel](https://github.com/gabrieldonadel))
