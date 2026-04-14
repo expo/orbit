@@ -7,7 +7,6 @@ import {
 } from '../src/WebAuthenticationSession.types';
 
 async function openAuthSessionAsync(urlString: string): Promise<WebBrowserResult> {
-  const url = new URL(urlString);
   const window = new BrowserWindow({
     width: 860,
     height: 740,
@@ -16,26 +15,48 @@ async function openAuthSessionAsync(urlString: string): Promise<WebBrowserResult
   window.loadURL(urlString);
 
   return new Promise((resolve, reject) => {
+    let resolved = false;
+
+    function completeWithSuccess(resultUrl: string) {
+      if (resolved) return;
+      resolved = true;
+      window.close();
+      resolve({ type: WebBrowserResultType.SUCCESS, url: resultUrl });
+    }
+
     function handleRedirect(
       event: Electron.Event<
         Electron.WebContentsWillRedirectEventParams | Electron.WebContentsWillNavigateEventParams
       >
     ) {
-      if (event.isSameDocument || url.origin === new URL(event.url).origin) {
+      if (event.isSameDocument) {
+        return;
+      }
+
+      const redirectProtocol = new URL(event.url).protocol;
+      if (redirectProtocol === 'https:' || redirectProtocol === 'http:') {
         return;
       }
 
       event.preventDefault();
-      window.close();
-
-      resolve({ type: WebBrowserResultType.SUCCESS, url: event.url });
+      completeWithSuccess(event.url);
     }
 
     window.webContents.on('will-redirect', handleRedirect);
     window.webContents.on('will-navigate', handleRedirect);
 
+    // Allow OAuth provider popups (e.g. Google sign-in) and monitor them for redirects
+    window.webContents.setWindowOpenHandler(() => ({ action: 'allow' }));
+    window.webContents.on('did-create-window', (childWindow) => {
+      childWindow.webContents.on('will-redirect', handleRedirect);
+      childWindow.webContents.on('will-navigate', handleRedirect);
+    });
+
     window.on('closed', () => {
-      resolve({ type: WebBrowserResultType.CANCEL });
+      if (!resolved) {
+        resolved = true;
+        resolve({ type: WebBrowserResultType.CANCEL });
+      }
     });
 
     window.webContents.on('render-process-gone', (event, details) => {
