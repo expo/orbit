@@ -10721,16 +10721,16 @@ export type GetAppsForPinnedListQueryVariables = Exact<{ [key: string]: never; }
 
 export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', meUserActor?: { __typename?: 'SSOUser', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | { __typename?: 'User', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, icon?: { __typename?: 'AppIcon', url: string, primaryColor?: string | null } | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
 
-type CurrentUserData_SsoUser_Fragment = { __typename?: 'SSOUser', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string };
+type CurrentUserData_SsoUser_Fragment = { __typename?: 'SSOUser', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, primaryAccountProfileImageUrl?: string | null };
 
-type CurrentUserData_User_Fragment = { __typename?: 'User', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string };
+type CurrentUserData_User_Fragment = { __typename?: 'User', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, primaryAccountProfileImageUrl?: string | null };
 
 export type CurrentUserDataFragment = CurrentUserData_SsoUser_Fragment | CurrentUserData_User_Fragment;
 
 export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentUserQuery = { __typename?: 'RootQuery', meUserActor?: { __typename?: 'SSOUser', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string } | { __typename?: 'User', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, profilePhoto: string } | null };
+export type GetCurrentUserQuery = { __typename?: 'RootQuery', meUserActor?: { __typename?: 'SSOUser', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, primaryAccountProfileImageUrl?: string | null } | { __typename?: 'User', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, primaryAccountProfileImageUrl?: string | null } | null };
 
 export const AppForPinnedListFragmentDoc = gql`
     fragment AppForPinnedList on App {
@@ -10755,7 +10755,7 @@ export const CurrentUserDataFragmentDoc = gql`
   firstName
   lastName
   bestContactEmail
-  profilePhoto
+  primaryAccountProfileImageUrl
 }
     `;
 export const GetAppsForPinnedListDocument = gql`

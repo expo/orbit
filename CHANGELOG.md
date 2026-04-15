@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Display user avatars uploaded on expo.dev. ([#336](https://github.com/expo/orbit/pull/336) by [@tomek-agent](https://github.com/tomek-agent))
+
 ### 🐛 Bug fixes
 
 - Fix OAauth with 3rd party providers on Windows and Linux. ([#335](https://github.com/expo/orbit/pull/335) by [@gabrieldonadel](https://github.com/gabrieldonadel))

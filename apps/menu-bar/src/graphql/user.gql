@@ -4,7 +4,7 @@ fragment CurrentUserData on UserActor {
   firstName
   lastName
   bestContactEmail
-  profilePhoto
+  primaryAccountProfileImageUrl
 }
 
 query GetCurrentUser {

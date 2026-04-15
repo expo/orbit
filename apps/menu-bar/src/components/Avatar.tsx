@@ -6,16 +6,14 @@ import { View } from './View';
 import { scale } from '../utils/theme';
 
 type Props = {
-  name?: string;
-  profilePhoto?: string;
+  profileImageUrl?: string | null;
   size?: React.ComponentProps<typeof Image>['size'];
 };
 
-export function Avatar({ profilePhoto, size = 'large', name = '' }: Props) {
-  const firstLetter = name?.charAt(0).toLowerCase();
+export function Avatar({ profileImageUrl, size = 'large' }: Props) {
   const viewSize = getViewSize(size);
 
-  if (!profilePhoto || !firstLetter) {
+  if (!profileImageUrl) {
     return (
       <View
         style={{ height: viewSize, width: viewSize }}
@@ -27,20 +25,12 @@ export function Avatar({ profilePhoto, size = 'large', name = '' }: Props) {
     );
   }
 
-  let _profilePhoto = profilePhoto;
-  if (profilePhoto.match('gravatar.com')) {
-    const defaultProfilePhoto = encodeURIComponent(
-      `https://storage.googleapis.com/expo-website-default-avatars-2023/${firstLetter}.png`
-    );
-    _profilePhoto = `${profilePhoto}&d=${defaultProfilePhoto}`;
-  }
-
   return (
     <View rounded="full" bg="secondary">
       <Image
         rounded="full"
         source={{
-          uri: _profilePhoto,
+          uri: profileImageUrl,
         }}
         size={size}
       />
