@@ -17,6 +17,8 @@
 - Use EAS custom builds for macOS releases. ([#330](https://github.com/expo/orbit/pull/330) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Enable react-native new architecture. ([#310](https://github.com/expo/orbit/pull/310) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
+- Migrate EAS custom builds to EAS Workflows. ([#234](https://github.com/expo/orbit/pull/234) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 2.5.0 — 2026-04-02
 
 ### 🎉 New features
