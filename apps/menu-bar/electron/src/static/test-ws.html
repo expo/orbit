@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Orbit Stream - WS Test</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #eee; padding: 20px; }
+    .row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+    input, select, button { font-family: monospace; font-size: 14px; padding: 6px 10px; border-radius: 4px; border: 1px solid #444; background: #222; color: #eee; }
+    button { cursor: pointer; }
+    button:hover { background: #333; }
+    #log { background: #000; padding: 12px; border-radius: 4px; height: 300px; overflow-y: auto; font-size: 13px; white-space: pre-wrap; word-break: break-all; }
+    .log-info { color: #3498db; }
+    .log-err { color: #e74c3c; }
+    .log-data { color: #2ecc71; }
+    .log-bin { color: #9b59b6; }
+    canvas { border: 1px solid #333; border-radius: 4px; margin-top: 12px; max-width: 100%; background: #000; }
+    h3 { margin: 16px 0 8px; color: #888; }
+  </style>
+</head>
+<body>
+  <h2>Orbit WebSocket Test</h2>
+
+  <div class="row">
+    <label>Host:</label>
+    <input id="host" value="localhost" size="15">
+    <label>Port:</label>
+    <input id="port" value="35783" size="6">
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+  </div>
+
+  <h3>REST</h3>
+  <div class="row">
+    <button onclick="fetchStatus()">GET /orbit/status</button>
+    <button onclick="fetchDevices()">GET /orbit/devices</button>
+  </div>
+
+  <h3>Stream Control</h3>
+  <div class="row">
+    <label>Device ID:</label>
+    <input id="deviceId" placeholder="emulator-5554 or UDID" size="30">
+    <label>Platform:</label>
+    <select id="platform"><option>ios</option><option>android</option></select>
+    <label>Mode:</label>
+    <select id="mode"><option>auto</option><option>mjpeg</option><option>h264</option></select>
+  </div>
+  <div class="row">
+    <button onclick="sendStart()">Send start</button>
+    <button onclick="sendStop()">Send stop</button>
+    <button onclick="sendRaw()">Send custom:</button>
+    <input id="rawMsg" placeholder='{"type":"..."}' size="40">
+  </div>
+
+  <h3>Log</h3>
+  <div id="log"></div>
+
+  <h3>Preview (MJPEG frames)</h3>
+  <canvas id="preview" width="360" height="640"></canvas>
+
+  <script>
+    const logEl = document.getElementById('log');
+    const canvas = document.getElementById('preview');
+    const ctx = canvas.getContext('2d');
+    let ws = null;
+    let frames = 0;
+
+    function log(msg, cls = '') {
+      const line = document.createElement('div');
+      line.className = cls;
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function baseUrl() {
+      return `http://${document.getElementById('host').value}:${document.getElementById('port').value}`;
+    }
+
+    function wsUrl() {
+      return `ws://${document.getElementById('host').value}:${document.getElementById('port').value}/orbit/ws`;
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch(`${baseUrl()}/orbit/status`, { headers: { Origin: location.origin } });
+        log(`Status: ${await res.text()}`, 'log-data');
+      } catch (e) { log(`Error: ${e.message}`, 'log-err'); }
+    }
+
+    async function fetchDevices() {
+      try {
+        const res = await fetch(`${baseUrl()}/orbit/devices`, { headers: { Origin: location.origin } });
+        const data = await res.json();
+        log(`Devices: ${JSON.stringify(data, null, 2)}`, 'log-data');
+      } catch (e) { log(`Error: ${e.message}`, 'log-err'); }
+    }
+
+    function connect() {
+      if (ws) { log('Already connected, disconnecting first...', 'log-info'); ws.close(); }
+      const url = wsUrl();
+      log(`Connecting to ${url}...`, 'log-info');
+      ws = new WebSocket(url);
+      ws.binaryType = 'arraybuffer';
+      frames = 0;
+
+      ws.onopen = () => log('Connected', 'log-info');
+      ws.onclose = (e) => { log(`Disconnected (code=${e.code})`, 'log-info'); ws = null; };
+      ws.onerror = () => log('WebSocket error', 'log-err');
+
+      ws.onmessage = (event) => {
+        if (typeof event.data === 'string') {
+          log(`<< ${event.data}`, 'log-data');
+        } else {
+          frames++;
+          const bytes = event.data.byteLength;
+          log(`<< binary frame #${frames}: ${bytes} bytes`, 'log-bin');
+          // Try to render as image
+          const blob = new Blob([event.data], { type: 'image/png' });
+          createImageBitmap(blob).then(bmp => {
+            if (canvas.width !== bmp.width || canvas.height !== bmp.height) {
+              canvas.width = bmp.width;
+              canvas.height = bmp.height;
+            }
+            ctx.drawImage(bmp, 0, 0);
+            bmp.close();
+          }).catch(() => {});
+        }
+      };
+    }
+
+    function disconnect() {
+      if (ws) { ws.close(); } else { log('Not connected', 'log-err'); }
+    }
+
+    function send(obj) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) { log('Not connected', 'log-err'); return; }
+      const msg = JSON.stringify(obj);
+      log(`>> ${msg}`, 'log-info');
+      ws.send(msg);
+    }
+
+    function sendStart() {
+      send({
+        type: 'start',
+        deviceId: document.getElementById('deviceId').value,
+        platform: document.getElementById('platform').value,
+        captureMode: document.getElementById('mode').value,
+      });
+    }
+
+    function sendStop() {
+      send({ type: 'stop', deviceId: document.getElementById('deviceId').value });
+    }
+
+    function sendRaw() {
+      const raw = document.getElementById('rawMsg').value;
+      try {
+        send(JSON.parse(raw));
+      } catch { log('Invalid JSON', 'log-err'); }
+    }
+  </script>
+</body>
+</html>

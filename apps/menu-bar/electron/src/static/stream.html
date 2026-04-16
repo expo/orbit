@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orbit - Device Stream</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      width: 100%;
+      padding: 16px 24px;
+      background: #16213e;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid #2a2a4a;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+    select, button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #3a3a5a;
+      background: #2a2a4a;
+      color: #e0e0e0;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    select:disabled, button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:hover:not(:disabled) { background: #3a3a6a; }
+    button.stop { background: #c0392b; border-color: #e74c3c; }
+    button.stop:hover:not(:disabled) { background: #e74c3c; }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #888;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #555;
+    }
+    .status-dot.connected { background: #2ecc71; }
+    .status-dot.streaming { background: #3498db; animation: pulse 1s infinite; }
+    .status-dot.error { background: #e74c3c; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      width: 100%;
+    }
+    .canvas-container {
+      position: relative;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    }
+    canvas {
+      display: block;
+      max-width: 90vw;
+      max-height: calc(100vh - 120px);
+      object-fit: contain;
+    }
+    .overlay {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .overlay-badge {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+      color: #2ecc71;
+    }
+    .overlay-badge.mode { color: #3498db; }
+    .placeholder {
+      text-align: center;
+      color: #666;
+    }
+    .placeholder p { margin-top: 8px; font-size: 14px; }
+    label { font-size: 13px; color: #999; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Orbit Stream</h1>
+    <div class="controls">
+      <select id="deviceSelect">
+        <option value="">Select a device...</option>
+      </select>
+      <div>
+        <label for="modeSelect">Mode:</label>
+        <select id="modeSelect">
+          <option value="auto">Auto</option>
+          <option value="mjpeg">MJPEG</option>
+          <option value="h264">H.264</option>
+        </select>
+      </div>
+      <button id="refreshBtn" title="Refresh devices">Refresh</button>
+      <button id="startBtn" disabled>Start</button>
+      <button id="stopBtn" class="stop" disabled>Stop</button>
+    </div>
+    <div class="status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Disconnected</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="canvas-container" id="canvasContainer" style="display:none;">
+      <canvas id="screen"></canvas>
+      <div class="overlay">
+        <div class="overlay-badge mode" id="modeOverlay"></div>
+        <div class="overlay-badge" id="fpsOverlay">0 fps</div>
+      </div>
+    </div>
+    <div class="placeholder" id="placeholder">
+      <p>Select a booted device and click Start to begin streaming.</p>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = `http://${location.hostname}:${location.port}`;
+    const WS_URL = `ws://${location.hostname}:${location.port}/orbit/ws`;
+
+    const deviceSelect = document.getElementById('deviceSelect');
+    const modeSelect = document.getElementById('modeSelect');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const canvas = document.getElementById('screen');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const placeholder = document.getElementById('placeholder');
+    const fpsOverlay = document.getElementById('fpsOverlay');
+    const modeOverlay = document.getElementById('modeOverlay');
+    const ctx = canvas.getContext('2d');
+
+    let ws = null;
+    let streaming = false;
+    let activeCaptureMode = null;
+    let activePlatform = null;
+    let frameCount = 0;
+    let lastFpsUpdate = performance.now();
+
+    // FPS counter
+    function updateFps() {
+      const now = performance.now();
+      const elapsed = now - lastFpsUpdate;
+      if (elapsed >= 1000) {
+        const fps = Math.round((frameCount * 1000) / elapsed);
+        fpsOverlay.textContent = `${fps} fps`;
+        frameCount = 0;
+        lastFpsUpdate = now;
+      }
+      if (streaming) requestAnimationFrame(updateFps);
+    }
+
+    function setStatus(state, text) {
+      statusDot.className = 'status-dot ' + state;
+      statusText.textContent = text;
+    }
+
+    async function fetchDevices() {
+      try {
+        const res = await fetch(`${API_BASE}/orbit/devices`, {
+          headers: { Origin: location.origin },
+        });
+        const data = await res.json();
+        deviceSelect.innerHTML = '<option value="">Select a device...</option>';
+
+        if (data.error || !Array.isArray(data)) {
+          console.error('Device fetch error:', data.error || 'unexpected response');
+          return;
+        }
+
+        for (const device of data) {
+          // Only show booted devices
+          if (device.state !== 'Booted') continue;
+
+          const opt = document.createElement('option');
+          const platform = device.osType === 'Android' ? 'android' : 'ios';
+          const id = device.udid || device.pid || device.name;
+          opt.value = JSON.stringify({ deviceId: id, platform });
+          opt.textContent = `${device.name} (${device.osType}${device.osVersion ? ' ' + device.osVersion : ''})`;
+          deviceSelect.appendChild(opt);
+        }
+      } catch (err) {
+        console.error('Failed to fetch devices:', err);
+      }
+    }
+
+    deviceSelect.addEventListener('change', () => {
+      startBtn.disabled = !deviceSelect.value;
+      // Show/hide h264 option based on platform
+      if (deviceSelect.value) {
+        const { platform } = JSON.parse(deviceSelect.value);
+        const h264Opt = modeSelect.querySelector('option[value="h264"]');
+        // H264 only available for Android
+        h264Opt.disabled = platform === 'ios';
+        if (platform === 'ios' && modeSelect.value === 'h264') {
+          modeSelect.value = 'auto';
+        }
+      }
+    });
+
+    refreshBtn.addEventListener('click', fetchDevices);
+
+    startBtn.addEventListener('click', () => {
+      const selected = JSON.parse(deviceSelect.value);
+      startStreaming(selected.deviceId, selected.platform, modeSelect.value);
+    });
+
+    stopBtn.addEventListener('click', () => {
+      stopStreaming();
+    });
+
+    function startStreaming(deviceId, platform, captureMode) {
+      if (ws) ws.close();
+
+      ws = new WebSocket(WS_URL);
+      ws.binaryType = 'arraybuffer';
+
+      ws.onopen = () => {
+        setStatus('connected', 'Connected');
+        ws.send(JSON.stringify({ type: 'start', deviceId, platform, captureMode }));
+      };
+
+      ws.onmessage = (event) => {
+        if (typeof event.data === 'string') {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'started') {
+            streaming = true;
+            activeCaptureMode = msg.captureMode || 'mjpeg';
+            activePlatform = msg.platform;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            deviceSelect.disabled = true;
+            modeSelect.disabled = true;
+            canvasContainer.style.display = 'block';
+            placeholder.style.display = 'none';
+            const modeLabel = activeCaptureMode === 'h264' ? 'H.264' : 'MJPEG';
+            const platformLabel = activePlatform === 'ios' ? 'iOS' : 'Android';
+            modeOverlay.textContent = `${platformLabel} ${modeLabel}`;
+            setStatus('streaming', `Streaming ${platformLabel}`);
+            frameCount = 0;
+            lastFpsUpdate = performance.now();
+            requestAnimationFrame(updateFps);
+          } else if (msg.type === 'stopped') {
+            handleStopped();
+          } else if (msg.type === 'error') {
+            setStatus('error', msg.message);
+          }
+          return;
+        }
+
+        // Binary frame
+        if (activeCaptureMode === 'h264') {
+          handleH264Frame(event.data);
+        } else {
+          handleImageFrame(event.data);
+        }
+      };
+
+      ws.onclose = () => {
+        if (streaming) handleStopped();
+        setStatus('', 'Disconnected');
+      };
+
+      ws.onerror = () => {
+        setStatus('error', 'Connection error');
+      };
+    }
+
+    function stopStreaming() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const selected = JSON.parse(deviceSelect.value);
+        ws.send(JSON.stringify({ type: 'stop', deviceId: selected.deviceId }));
+      }
+      handleStopped();
+    }
+
+    function handleStopped() {
+      streaming = false;
+      activeCaptureMode = null;
+      activePlatform = null;
+      startBtn.disabled = !deviceSelect.value;
+      stopBtn.disabled = true;
+      deviceSelect.disabled = false;
+      modeSelect.disabled = false;
+      setStatus('', 'Stopped');
+      cleanupH264Decoder();
+    }
+
+    // MJPEG / PNG image frame handler
+    function handleImageFrame(data) {
+      const blob = new Blob([data], { type: 'image/png' });
+      createImageBitmap(blob).then((bmp) => {
+        if (canvas.width !== bmp.width || canvas.height !== bmp.height) {
+          canvas.width = bmp.width;
+          canvas.height = bmp.height;
+        }
+        ctx.drawImage(bmp, 0, 0);
+        bmp.close();
+        frameCount++;
+      }).catch(() => {
+        // Corrupted frame, skip
+      });
+    }
+
+    // H264 decoding for Android streams via WebCodecs
+    let videoDecoder = null;
+
+    function cleanupH264Decoder() {
+      if (videoDecoder && videoDecoder.state !== 'closed') {
+        try { videoDecoder.close(); } catch {}
+      }
+      videoDecoder = null;
+    }
+
+    function handleH264Frame(data) {
+      if (!('VideoDecoder' in window)) {
+        console.warn('WebCodecs API not available - H.264 mode requires a Chromium-based browser');
+        return;
+      }
+
+      if (!videoDecoder || videoDecoder.state === 'closed') {
+        videoDecoder = new VideoDecoder({
+          output: (frame) => {
+            if (canvas.width !== frame.displayWidth || canvas.height !== frame.displayHeight) {
+              canvas.width = frame.displayWidth;
+              canvas.height = frame.displayHeight;
+            }
+            ctx.drawImage(frame, 0, 0);
+            frame.close();
+            frameCount++;
+          },
+          error: (err) => {
+            console.error('VideoDecoder error:', err);
+            cleanupH264Decoder();
+          },
+        });
+        videoDecoder.configure({
+          codec: 'avc1.42E01E',
+          optimizeForLatency: true,
+        });
+      }
+
+      // Parse NAL units and detect keyframes
+      const view = new Uint8Array(data);
+      const nalUnits = parseNALUnits(view);
+
+      for (const nal of nalUnits) {
+        const nalType = nal[0] & 0x1f;
+        // Skip SPS (7) and PPS (8) - they're part of the keyframe
+        // Types: 5=IDR (keyframe), 1=non-IDR (delta), 7=SPS, 8=PPS
+        const isKeyframe = nalType === 5 || nalType === 7;
+
+        try {
+          const chunk = new EncodedVideoChunk({
+            type: isKeyframe ? 'key' : 'delta',
+            timestamp: performance.now() * 1000,
+            data: nal.buffer,
+          });
+          if (videoDecoder.state === 'configured') {
+            videoDecoder.decode(chunk);
+          }
+        } catch (e) {
+          // Skip malformed chunks
+        }
+      }
+    }
+
+    // Parse Annex B byte stream into individual NAL units
+    function parseNALUnits(data) {
+      const nals = [];
+      let i = 0;
+
+      while (i < data.length - 3) {
+        // Find start code (0x000001 or 0x00000001)
+        let startCodeLen = 0;
+        if (data[i] === 0 && data[i+1] === 0 && data[i+2] === 1) {
+          startCodeLen = 3;
+        } else if (data[i] === 0 && data[i+1] === 0 && data[i+2] === 0 && i+3 < data.length && data[i+3] === 1) {
+          startCodeLen = 4;
+        } else {
+          i++;
+          continue;
+        }
+
+        const nalStart = i + startCodeLen;
+        i = nalStart;
+
+        // Find next start code
+        while (i < data.length - 2) {
+          if (data[i] === 0 && data[i+1] === 0 &&
+              (data[i+2] === 1 || (data[i+2] === 0 && i+3 < data.length && data[i+3] === 1))) {
+            break;
+          }
+          i++;
+        }
+
+        const nalEnd = (i < data.length - 2) ? i : data.length;
+        if (nalEnd > nalStart) {
+          nals.push(data.subarray(nalStart, nalEnd));
+        }
+      }
+
+      return nals;
+    }
+
+    // Initial device load
+    fetchDevices();
+  </script>
+</body>
+</html>

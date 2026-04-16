@@ -1,7 +1,10 @@
 import { app as electronApp } from 'electron';
 import express, { Express } from 'express';
+import http from 'http';
 import path from 'path';
+import WebSocket, { WebSocketServer } from 'ws';
 
+import { StreamManager } from './StreamManager';
 import { getUserSettingsJsonFile } from '../../modules/menu-bar/electron/main';
 import spawnCliAsync from '../../modules/menu-bar/electron/spawnCliAsync';
 
@@ -10,9 +13,11 @@ const WHITELISTED_DOMAINS = ['expo.dev', 'expo.test', 'exp.host', 'localhost'];
 
 export class LocalServer {
   app: Express;
+  streamManager: StreamManager;
 
   constructor() {
     this.app = express();
+    this.streamManager = new StreamManager();
     this.setupMiddlewares();
     this.setupRoutes();
   }
@@ -50,6 +55,7 @@ export class LocalServer {
       res.json({ ok: true });
     });
 
+    // List available devices using the CLI with proper env vars from user settings
     this.app.get('/orbit/devices', async (req, res) => {
       const cliPath = path.join(__dirname, './cli/index.js');
 
@@ -64,10 +70,72 @@ export class LocalServer {
         res.json({ error: `Failed to run CLI: ${error instanceof Error ? error.message : error}` });
       }
     });
+
+    // Serve the stream viewer page
+    this.app.get('/orbit/stream', (_, res) => {
+      res.sendFile(path.join(__dirname, './static/stream.html'));
+    });
+
+    // WebSocket test page
+    this.app.get('/orbit/test-ws', (_, res) => {
+      res.sendFile(path.join(__dirname, './static/test-ws.html'));
+    });
+  }
+
+  setupWebSocket(server: http.Server) {
+    const wss = new WebSocketServer({ server, path: '/orbit/ws' });
+
+    wss.on('connection', (ws: WebSocket) => {
+      console.log('[ws] client connected');
+
+      ws.on('message', (raw: WebSocket.RawData) => {
+        let msg: {
+          type: string;
+          deviceId?: string;
+          platform?: 'ios' | 'android';
+          captureMode?: 'auto' | 'mjpeg' | 'h264';
+        };
+        try {
+          msg = JSON.parse(raw.toString());
+        } catch {
+          ws.send(JSON.stringify({ type: 'error', message: 'Invalid JSON' }));
+          return;
+        }
+
+        switch (msg.type) {
+          case 'start':
+            if (!msg.deviceId || !msg.platform) {
+              ws.send(
+                JSON.stringify({ type: 'error', message: 'deviceId and platform are required' })
+              );
+              return;
+            }
+            this.streamManager.startStream(msg.deviceId, msg.platform, ws, msg.captureMode);
+            break;
+
+          case 'stop':
+            if (msg.deviceId) {
+              this.streamManager.stopStream(msg.deviceId, ws);
+            }
+            break;
+
+          default:
+            ws.send(JSON.stringify({ type: 'error', message: `Unknown message type: ${msg.type}` }));
+        }
+      });
+
+      ws.on('close', () => {
+        console.log('[ws] client disconnected');
+        this.streamManager.removeClient(ws);
+      });
+    });
   }
 
   start(port: number = PORTS[0]) {
-    this.app
+    const server = http.createServer(this.app);
+    this.setupWebSocket(server);
+
+    server
       .listen(port, () => {
         console.log(`Local server running on port ${port}`);
       })
