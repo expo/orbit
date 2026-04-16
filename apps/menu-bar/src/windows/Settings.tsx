@@ -224,10 +224,7 @@ const Settings = () => {
                 <Row align="center" mt="1" gap="2" flex="1">
                   {currentUser ? (
                     <Row align="center" flex="1">
-                      <Avatar
-                        name={getCurrentUserDisplayName(currentUser)}
-                        profilePhoto={currentUser.profilePhoto}
-                      />
+                      <Avatar profileImageUrl={currentUser.primaryAccountProfileImageUrl} />
                       <View mx="2" flex="1">
                         <Text weight="medium" numberOfLines={1}>
                           {getCurrentUserDisplayName(currentUser)}
