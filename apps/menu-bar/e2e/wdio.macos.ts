@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 
 import { sharedConfig } from './wdio.shared';
@@ -12,6 +13,25 @@ const MACOS_APP_PATH = process.env.MACOS_APP_PATH
   ? path.resolve(process.env.MACOS_APP_PATH)
   : DEFAULT_APP_PATH;
 
+const appExists = fs.existsSync(MACOS_APP_PATH);
+
+if (appExists) {
+  console.log(`[e2e] Launching macOS app from: ${MACOS_APP_PATH}`);
+} else {
+  console.warn(
+    `[e2e] ${MACOS_APP_PATH} does not exist — falling back to installed app ` +
+      `with bundleId 'dev.expo.orbit'. Set MACOS_APP_PATH to a built .app, or ` +
+      `build the Release configuration from apps/menu-bar/macos.`
+  );
+}
+
+// If the requested .app is missing, fall back to activating an already installed
+// app via bundleId. Never set both simultaneously — when both are present, the
+// driver prefers the installed app with that bundle ID and ignores `appium:app`.
+const appCap: WebdriverIO.Capabilities = appExists
+  ? ({ 'appium:app': MACOS_APP_PATH } as WebdriverIO.Capabilities)
+  : ({ 'appium:bundleId': 'dev.expo.orbit' } as WebdriverIO.Capabilities);
+
 export const config: WebdriverIO.Config = {
   ...sharedConfig,
 
@@ -19,10 +39,7 @@ export const config: WebdriverIO.Config = {
     {
       platformName: 'mac',
       'appium:automationName': 'Mac2',
-      // Only pass `appium:app` (absolute path). If we also pass `appium:bundleId`,
-      // the driver will launch whichever app with that bundle ID is already
-      // installed (e.g. in /Applications) instead of the local build.
-      'appium:app': MACOS_APP_PATH,
+      ...appCap,
     } as WebdriverIO.Capabilities,
   ],
 
