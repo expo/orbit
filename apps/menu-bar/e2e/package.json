@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "reset-state": "bash ./scripts/reset-state.sh",
+    "pretest:electron": "yarn reset-state",
     "test:electron": "wdio run ./wdio.electron.ts",
+    "pretest:macos": "yarn reset-state",
     "test:macos": "wdio run ./wdio.macos.ts"
   },
   "devDependencies": {
