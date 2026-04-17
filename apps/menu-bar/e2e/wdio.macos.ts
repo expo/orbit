@@ -19,7 +19,9 @@ export const config: WebdriverIO.Config = {
     {
       platformName: 'mac',
       'appium:automationName': 'Mac2',
-      'appium:bundleId': 'dev.expo.orbit',
+      // Only pass `appium:app` (absolute path). If we also pass `appium:bundleId`,
+      // the driver will launch whichever app with that bundle ID is already
+      // installed (e.g. in /Applications) instead of the local build.
       'appium:app': MACOS_APP_PATH,
     } as WebdriverIO.Capabilities,
   ],
