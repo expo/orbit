@@ -29,7 +29,7 @@ if (appExists) {
 // app via bundleId. Never set both simultaneously — when both are present, the
 // driver prefers the installed app with that bundle ID and ignores `appium:app`.
 const appCap: WebdriverIO.Capabilities = appExists
-  ? ({ 'appium:app': MACOS_APP_PATH } as WebdriverIO.Capabilities)
+  ? ({ 'appium:appPath': MACOS_APP_PATH } as WebdriverIO.Capabilities)
   : ({ 'appium:bundleId': 'dev.expo.orbit' } as WebdriverIO.Capabilities);
 
 export const config: WebdriverIO.Config = {
