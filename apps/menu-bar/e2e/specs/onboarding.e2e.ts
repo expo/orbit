@@ -1,5 +1,4 @@
-import { browser } from '@wdio/globals';
-import { expect } from 'expect-webdriverio';
+import { browser, expect } from '@wdio/globals';
 
 import { byTestId } from '../helpers';
 import { TestIDs } from '../testIDs';
