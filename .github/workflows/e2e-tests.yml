@@ -74,6 +74,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Switch to Xcode 26.2
+        run: sudo xcode-select --switch /Applications/Xcode_26.2.app
+
       - name: Install workspace dependencies
         run: yarn install --frozen-lockfile
 
