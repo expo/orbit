@@ -91,15 +91,6 @@ jobs:
         working-directory: apps/menu-bar/macos
         run: bundle exec pod install
 
-      - name: Bundle JS for macOS
-        working-directory: apps/menu-bar
-        run: |
-          npx react-native bundle \
-            --platform macos \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output macos/main.jsbundle
-
       - name: Build macOS app
         working-directory: apps/menu-bar
         run: |
