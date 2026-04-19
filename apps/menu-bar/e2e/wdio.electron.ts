@@ -26,6 +26,15 @@ function getAppBinaryPath(): string {
 // stable path so state matches a normal Orbit launch; reset-state.sh clears it.
 export const USER_DATA_DIR = path.resolve(os.tmpdir(), 'orbit-e2e-user-data');
 
+// Linux CI runners (GitHub Actions) don't have Chromium's SUID sandbox helper
+// set up (chrome-sandbox must be root-owned with the setuid bit), so the
+// renderer fails to spawn and Chromedriver reports "DevToolsActivePort file
+// doesn't exist". Safe to disable for test builds.
+const appArgs = [
+  `--user-data-dir=${USER_DATA_DIR}`,
+  ...(os.platform() === 'linux' ? ['--no-sandbox'] : []),
+];
+
 export const config: WebdriverIO.Config = {
   ...sharedConfig,
 
@@ -38,7 +47,7 @@ export const config: WebdriverIO.Config = {
       browserVersion: '33.2.0',
       'wdio:electronServiceOptions': {
         appBinaryPath: getAppBinaryPath(),
-        appArgs: [`--user-data-dir=${USER_DATA_DIR}`],
+        appArgs,
       },
     },
   ],
