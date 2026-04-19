@@ -6,24 +6,23 @@
 set -euo pipefail
 
 ORBIT_DATA_DIR="$HOME/.expo/orbit"
-ELECTRON_APP_NAME="expo-orbit"
+# Must match USER_DATA_DIR in wdio.electron.ts. Chromedriver launches Electron
+# with this --user-data-dir so localStorage-backed MMKV persists across runs.
+E2E_USER_DATA_DIR="${TMPDIR:-/tmp}"
+E2E_USER_DATA_DIR="${E2E_USER_DATA_DIR%/}/orbit-e2e-user-data"
 
 echo "[e2e] Resetting Orbit state..."
 
-# MMKV storage used by both macOS native and Electron builds.
+# MMKV storage used by the macOS native build (Electron uses the pinned
+# user-data-dir below instead, since Platform.OS is 'web' in the renderer).
 if [ -d "$ORBIT_DATA_DIR" ]; then
   rm -rf "$ORBIT_DATA_DIR"
   echo "[e2e] Cleared $ORBIT_DATA_DIR"
 fi
 
-case "$(uname -s)" in
-  Darwin)
-    # electron-store / userData for the Electron build.
-    rm -rf "$HOME/Library/Application Support/$ELECTRON_APP_NAME" 2>/dev/null || true
-    ;;
-  Linux)
-    rm -rf "$HOME/.config/$ELECTRON_APP_NAME" 2>/dev/null || true
-    ;;
-esac
+if [ -d "$E2E_USER_DATA_DIR" ]; then
+  rm -rf "$E2E_USER_DATA_DIR"
+  echo "[e2e] Cleared $E2E_USER_DATA_DIR"
+fi
 
 echo "[e2e] Orbit state reset."

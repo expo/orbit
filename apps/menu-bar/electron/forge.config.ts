@@ -34,29 +34,35 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   hooks: {
     generateAssets: async () => {
-      // Is running electron forge make command
-      if (process.argv.some((a) => a.includes('electron-forge-make.js'))) {
-        console.log('Running custom pre-make command: yarn export-web');
-
-        const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
-        return new Promise((resolve, reject) => {
-          const command =
-            process.platform === 'win32' && process.env.GITHUB_ACTIONS ? 'yarn.cmd' : 'yarn';
-          const child = spawn(command, ['export-web'], {
-            shell: process.platform === 'win32' ? true : undefined,
-            stdio: 'inherit',
-            cwd: parentDir, // Set the working directory to the parent directory
-          });
-
-          child.on('close', (code) => {
-            if (code === 0) {
-              resolve();
-            } else {
-              reject(new Error(`preMake hook failed with exit code ${code}`));
-            }
-          });
-        });
+      // Run for both `electron-forge make` and `electron-forge package`. Skipping
+      // it for `package` used to bundle a stale `electron/dist/` web export into
+      // the .app, which broke E2E tests whenever the renderer changed.
+      const isMakeOrPackage = process.argv.some(
+        (a) => a.includes('electron-forge-make.js') || a.includes('electron-forge-package.js')
+      );
+      if (!isMakeOrPackage) {
+        return;
       }
+      console.log('Running custom pre-make command: yarn export-web');
+
+      const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
+      return new Promise((resolve, reject) => {
+        const command =
+          process.platform === 'win32' && process.env.GITHUB_ACTIONS ? 'yarn.cmd' : 'yarn';
+        const child = spawn(command, ['export-web'], {
+          shell: process.platform === 'win32' ? true : undefined,
+          stdio: 'inherit',
+          cwd: parentDir, // Set the working directory to the parent directory
+        });
+
+        child.on('close', (code) => {
+          if (code === 0) {
+            resolve();
+          } else {
+            reject(new Error(`preMake hook failed with exit code ${code}`));
+          }
+        });
+      });
     },
   },
   makers: [

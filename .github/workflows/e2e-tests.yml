@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     name: Electron E2E (${{ matrix.os }})
     steps:
@@ -41,10 +41,6 @@ jobs:
       - name: Install electron dependencies
         run: yarn install --frozen-lockfile
         working-directory: apps/menu-bar/electron
-
-      - name: Export web bundle for Electron
-        run: npx expo export --platform web --output-dir electron/dist
-        working-directory: apps/menu-bar
 
       - name: Package electron app
         run: yarn package

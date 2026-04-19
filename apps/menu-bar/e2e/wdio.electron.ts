@@ -1,5 +1,6 @@
 /// <reference types="wdio-electron-service" />
 import os from 'os';
+import path from 'path';
 
 import { sharedConfig } from './wdio.shared';
 
@@ -20,6 +21,11 @@ function getAppBinaryPath(): string {
   return `../electron/out/Expo Orbit-linux-${arch}/expo-orbit`;
 }
 
+// Chromedriver defaults to a throwaway --user-data-dir per session, which wipes
+// MMKV-on-web state (has-seen-onboarding, etc.) between wdio runs. Pin it to a
+// stable path so state matches a normal Orbit launch; reset-state.sh clears it.
+export const USER_DATA_DIR = path.resolve(os.tmpdir(), 'orbit-e2e-user-data');
+
 export const config: WebdriverIO.Config = {
   ...sharedConfig,
 
@@ -32,9 +38,13 @@ export const config: WebdriverIO.Config = {
       browserVersion: '33.2.0',
       'wdio:electronServiceOptions': {
         appBinaryPath: getAppBinaryPath(),
+        appArgs: [`--user-data-dir=${USER_DATA_DIR}`],
       },
     },
   ],
 
-  services: ['electron'],
+  // We don't use browser.electron.{execute,mock,...}, so skip the CDP bridge.
+  // It adds ~10–40s of startup latency (Runtime.executionContextCreated wait +
+  // retries) and produces spurious "Timeout exceeded to get the ContextId" logs.
+  services: [['electron', { useCdpBridge: false }]],
 };
