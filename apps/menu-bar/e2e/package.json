@@ -16,7 +16,6 @@
     "@wdio/spec-reporter": "^9.12.6",
     "@wdio/appium-service": "^9.12.7",
     "appium": "^2.17.1",
-    "appium-mac2-driver": "^1.20.0",
     "ts-node": "^10.0.0",
     "typescript": "^5.3.0",
     "wdio-electron-service": "^8.1.0"
