@@ -14,6 +14,7 @@
 
 ### 💡 Others
 
+- Add cross-platform E2E testing with WebdriverIO for Electron and Appium mac2 for macOS. ([#334](https://github.com/expo/orbit/pull/334) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Use EAS custom builds for macOS releases. ([#330](https://github.com/expo/orbit/pull/330) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Enable react-native new architecture. ([#310](https://github.com/expo/orbit/pull/310) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 

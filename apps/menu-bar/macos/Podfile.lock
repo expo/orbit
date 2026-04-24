@@ -84,9 +84,9 @@ PODS:
     - ExpoModulesCore
   - fmt (11.0.2)
   - glog (0.3.5)
-  - hermes-engine (0.81.5):
-    - hermes-engine/Pre-built (= 0.81.5)
-  - hermes-engine/Pre-built (0.81.5)
+  - hermes-engine (0.81.6):
+    - hermes-engine/Pre-built (= 0.81.6)
+  - hermes-engine/Pre-built (0.81.6)
   - MenuBar (1.0.0):
     - ExpoModulesCore
   - ProgressIndicator (1.0.0):
@@ -2761,7 +2761,7 @@ SPEC CHECKSUMS:
   FilePicker: 0661f1ffbadd52ea79b2f23f5e89beae9767d02e
   fmt: 24e7591456deb60b4a77518f83d9a916ac84223f
   glog: 0b31c25149b9d350b2666c7d459229861a00ec07
-  hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
+  hermes-engine: 7219f6e751ad6ec7f3d7ec121830ee34dae40749
   MenuBar: 5986d3736166dc022b970e61baefc9de9adbdd60
   ProgressIndicator: 542bea1889c04508f35bebe4ec5fb3409e84dc3f
   RCT-Folly: c803cf33238782d5fd21a5e02d44f64068e0e130

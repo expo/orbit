@@ -81,6 +81,13 @@ jobs:
         run: yarn tsc --noEmit
         working-directory: apps/menu-bar/electron
 
+      - name: 🧶 Install E2E node modules
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+      - name: 🏗️ TSC "Orbit" e2e files
+        run: yarn tsc --noEmit
+        working-directory: apps/menu-bar/e2e
+
       - name: 🏗️ TSC "CLI" app files
         run: yarn tsc --noEmit
         working-directory: apps/cli

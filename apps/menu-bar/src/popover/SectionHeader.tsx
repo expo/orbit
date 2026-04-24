@@ -9,9 +9,10 @@ export const SECTION_HEADER_HEIGHT = 20;
 type Props = {
   label: string;
   accessoryRight?: React.ReactNode;
+  testID?: string;
 };
 
-const SectionHeader = ({ accessoryRight, label }: Props) => {
+const SectionHeader = ({ accessoryRight, label, testID }: Props) => {
   const theme = useTheme();
   return (
     <Row px="medium" justify="between" style={styles.row}>

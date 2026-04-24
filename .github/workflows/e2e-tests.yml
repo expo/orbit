@@ -1,0 +1,123 @@
+name: E2E Tests
+
+# Linux Electron E2E runs on EAS Workflows; see .eas/workflows/e2e-linux.yml.
+# Windows and macOS stay on GitHub Actions:
+#   - EAS has no Windows runners.
+#   - EAS macOS workers don't expose an active Aqua/Console session, so
+#     xcodebuild test (which Appium mac2 relies on) can't reach testmanagerd.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - apps/menu-bar/src/**
+      - apps/menu-bar/e2e/**
+      - apps/menu-bar/electron/**
+      - apps/menu-bar/macos/**
+      - .github/workflows/e2e-tests.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  electron-e2e-windows:
+    runs-on: windows-latest
+    name: Electron E2E (Windows)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install workspace dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build packages
+        run: yarn build
+
+      - name: Install electron dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: apps/menu-bar/electron
+
+      - name: Package electron app
+        run: yarn package
+        working-directory: apps/menu-bar/electron
+
+      - name: Install E2E dependencies
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+
+      - name: Run E2E tests
+        run: yarn test:electron
+        working-directory: apps/menu-bar/e2e
+
+  macos-e2e:
+    runs-on: macos-15
+    name: macOS E2E (Appium mac2)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Switch to Xcode 26.2
+        run: sudo xcode-select --switch /Applications/Xcode_26.2.app
+
+      - name: Install workspace dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build packages
+        run: yarn build
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: apps/menu-bar
+
+      - name: Install CocoaPods
+        working-directory: apps/menu-bar/macos
+        run: bundle exec pod install
+
+      - name: Build macOS app (unsigned — E2E only)
+        working-directory: apps/menu-bar
+        # Skip codesigning: the E2E job has no Developer ID Application cert,
+        # and Appium mac2 launches the .app by path in the same user session,
+        # so Gatekeeper isn't in the picture. Production builds are still
+        # signed/notarized via apps/menu-bar/.eas/build/build-release.yml.
+        run: |
+          xcodebuild build \
+            -workspace macos/ExpoMenuBar.xcworkspace \
+            -scheme ExpoMenuBar-macOS \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath macos/build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Install E2E dependencies
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+
+      - name: Install Appium mac2 driver
+        working-directory: apps/menu-bar/e2e
+        run: npx appium driver install mac2
+
+      - name: Run macOS E2E tests
+        working-directory: apps/menu-bar/e2e
+        env:
+          MACOS_APP_PATH: ../macos/build/Build/Products/Release/Expo Orbit.app
+        run: yarn test:macos
