@@ -48,6 +48,27 @@ describe('identifyAndParseDeeplinkURL', () => {
 
       expect(result.launchURL).toBeUndefined();
     });
+
+    it('Should parse deviceId parameter from /download route', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const deviceId = '00008101-001964A22629003A';
+      const artifactDeeplinkURL = `expo-orbit:///download/?url=${encodeURIComponent(artifactURL)}&deviceId=${encodeURIComponent(deviceId)}`;
+
+      expect(identifyAndParseDeeplinkURL(artifactDeeplinkURL)).toEqual({
+        urlType: URLType.EXPO_BUILD,
+        url: artifactURL,
+        deviceId,
+      });
+    });
+
+    it('Should return undefined deviceId when not provided in /download route', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const artifactDeeplinkURL = `expo-orbit:///download/?url=${encodeURIComponent(artifactURL)}`;
+
+      const result = identifyAndParseDeeplinkURL(artifactDeeplinkURL) as DowndloadDeeplinkURLType;
+
+      expect(result.deviceId).toBeUndefined();
+    });
   });
 
   describe('Update URLs', () => {
@@ -65,6 +86,18 @@ describe('identifyAndParseDeeplinkURL', () => {
       const updateDeeplinkURL = `expo-orbit:///update`;
 
       expect(() => identifyAndParseDeeplinkURL(updateDeeplinkURL)).toThrowError();
+    });
+
+    it('Should parse deviceId parameter from /update route', () => {
+      const updateURL = 'https://u.expo.dev/update/addecbed-f477-4a75-bd88-0732dc928fe9';
+      const deviceId = 'Pixel_5_API_30';
+      const updateDeeplinkURL = `expo-orbit:///update?url=${encodeURIComponent(updateURL)}&deviceId=${encodeURIComponent(deviceId)}`;
+
+      expect(identifyAndParseDeeplinkURL(updateDeeplinkURL)).toEqual({
+        urlType: URLType.EXPO_UPDATE,
+        url: updateURL,
+        deviceId,
+      });
     });
   });
 
@@ -91,6 +124,20 @@ describe('identifyAndParseDeeplinkURL', () => {
         urlType: URLType.GO,
         url,
         sdkVersion,
+      });
+    });
+
+    it('Should parse deviceId parameter from /go route', () => {
+      const deviceId = '00008101-001964A22629003A';
+      const url =
+        'exp://staging-u.expo.dev/2dce2748-c51f-4865-bae0-392af794d60a?runtime-version=exposdk%3A50.0.0&channel-name=production&snack-channel=Hhhqw6NhFw';
+      const deeplinkURL = `expo-orbit:///go?url=${encodeURIComponent(url)}&deviceId=${encodeURIComponent(deviceId)}`;
+
+      expect(identifyAndParseDeeplinkURL(deeplinkURL)).toEqual({
+        urlType: URLType.GO,
+        url,
+        sdkVersion: null,
+        deviceId,
       });
     });
   });

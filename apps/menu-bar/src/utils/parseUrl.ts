@@ -16,24 +16,36 @@ export function handleAuthUrl(url: string) {
 
   saveSessionSecret(sessionSecret);
 }
-export type BaseDeeplinkURLType = {
-  urlType: Exclude<URLType, URLType.GO | URLType.EXPO_BUILD>;
+export type AuthDeeplinkURLType = {
+  urlType: URLType.AUTH;
   url: string;
+};
+
+export type BaseDeeplinkURLType = {
+  urlType: Exclude<URLType, URLType.AUTH | URLType.GO | URLType.EXPO_BUILD>;
+  url: string;
+  deviceId?: string;
 };
 
 export type GoDeeplinkURLType = {
   urlType: URLType.GO;
   url: string;
   sdkVersion: string | null;
+  deviceId?: string;
 };
 
 export type DowndloadDeeplinkURLType = {
   urlType: URLType.EXPO_BUILD;
   url: string;
   launchURL?: string;
+  deviceId?: string;
 };
 
-type DeeplinkURLType = BaseDeeplinkURLType | GoDeeplinkURLType | DowndloadDeeplinkURLType;
+type DeeplinkURLType =
+  | AuthDeeplinkURLType
+  | BaseDeeplinkURLType
+  | GoDeeplinkURLType
+  | DowndloadDeeplinkURLType;
 
 export function identifyAndParseDeeplinkURL(deeplinkURLString: string): DeeplinkURLType {
   // Replace double slash URLs with triple slash to support Slack and other deeplink previews
@@ -65,6 +77,7 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
     return {
       urlType: URLType.EXPO_UPDATE,
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
+      deviceId: deeplinkURL.searchParams.get('deviceId') ?? undefined,
     };
   }
   if (pathname.startsWith('/download')) {
@@ -72,6 +85,7 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
       urlType: URLType.EXPO_BUILD,
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
       launchURL: deeplinkURL.searchParams.get('launchURL') ?? undefined,
+      deviceId: deeplinkURL.searchParams.get('deviceId') ?? undefined,
     };
   }
   if (pathname.startsWith('/go')) {
@@ -79,6 +93,7 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
       urlType: URLType.GO,
       url: getUrlFromSearchParams(deeplinkURL.searchParams),
       sdkVersion: deeplinkURL.searchParams.get('sdkVersion'),
+      deviceId: deeplinkURL.searchParams.get('deviceId') ?? undefined,
     };
   }
   // Deprecate in future versions

@@ -132,6 +132,41 @@ function Core(props: Props) {
       ? heightOfAllDevices
       : estimatedAvailableSizeForDevices;
 
+  const persistSelectedDevice = useCallback((device: Device) => {
+    const platform = getDeviceOS(device);
+    setSelectedDevicesIds((prev) => {
+      const newValue = { ...prev, [platform]: getDeviceId(device) };
+      saveSelectedDevicesIds(newValue);
+      return newValue;
+    });
+  }, []);
+
+  const findDeviceById = useCallback(
+    (deviceId: string): Device | undefined => {
+      for (const { devices } of Object.values(devicesPerPlatform)) {
+        const device = devices.get(deviceId);
+        if (device) return device;
+      }
+      return undefined;
+    },
+    [devicesPerPlatform]
+  );
+
+  const warnDeviceIdNotFound = useCallback(
+    (deviceId: string) => {
+      createTask({
+        id: 'device-not-found',
+        status: MenuBarStatus.WARNING,
+        progress: 0,
+        message: `Device "${deviceId}" not found. Auto-selecting another device.`,
+      });
+      setTimeout(() => {
+        deleteTask('device-not-found');
+      }, 8000);
+    },
+    [createTask, deleteTask]
+  );
+
   const getAvailableDeviceForExpoGo = useCallback(() => {
     const selectedIosDevice = devicesPerPlatform.ios.devices.get(selectedDevicesIds.ios ?? '');
     const selectedAndroidDevice = devicesPerPlatform.android.devices.get(
@@ -238,8 +273,21 @@ function Core(props: Props) {
   );
 
   const handleExpoGoUrl = useCallback(
-    async (url: string, sdkVersion?: string | null) => {
-      const device = getAvailableDeviceForExpoGo();
+    async (url: string, sdkVersion?: string | null, deviceId?: string) => {
+      let device: PlatformToDevice<'ios' | 'android'> | undefined;
+      if (deviceId) {
+        const requested = findDeviceById(deviceId);
+        const requestedPlatform = requested ? getDeviceOS(requested) : undefined;
+        if (requested && (requestedPlatform === 'ios' || requestedPlatform === 'android')) {
+          device = requested as PlatformToDevice<'ios' | 'android'>;
+          persistSelectedDevice(requested);
+        } else {
+          warnDeviceIdNotFound(deviceId);
+        }
+      }
+      if (!device) {
+        device = getAvailableDeviceForExpoGo();
+      }
       if (!device) {
         return;
       }
@@ -269,11 +317,20 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getAvailableDeviceForExpoGo, createTask, deleteTask, updateTask]
+    [
+      ensureDeviceIsRunning,
+      getAvailableDeviceForExpoGo,
+      findDeviceById,
+      warnDeviceIdNotFound,
+      persistSelectedDevice,
+      createTask,
+      deleteTask,
+      updateTask,
+    ]
   );
 
   const handleUpdateUrl = useCallback(
-    async (url: string) => {
+    async (url: string, deviceId?: string) => {
       if (!storage.getString(sessionSecretStorageKey)) {
         Alert.alert(
           'You need to be logged in to launch updates.',
@@ -293,7 +350,19 @@ function Core(props: Props) {
         return;
       }
 
-      const device = getDeviceByPlatform(platform);
+      let device: PlatformToDevice<typeof platform> | undefined;
+      if (deviceId) {
+        const requested = findDeviceById(deviceId);
+        if (!requested || getDeviceOS(requested) !== platform) {
+          warnDeviceIdNotFound(deviceId);
+        } else {
+          device = requested as PlatformToDevice<typeof platform>;
+          persistSelectedDevice(requested);
+        }
+      }
+      if (!device) {
+        device = getDeviceByPlatform(platform);
+      }
       if (!device) {
         Alert.alert(
           `You don't have any ${platform} devices available to open this update, please make sure your environment is configured correctly and try again.`
@@ -384,11 +453,20 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getDeviceByPlatform, createTask, deleteTask, updateTask]
+    [
+      ensureDeviceIsRunning,
+      getDeviceByPlatform,
+      findDeviceById,
+      warnDeviceIdNotFound,
+      persistSelectedDevice,
+      createTask,
+      deleteTask,
+      updateTask,
+    ]
   );
 
   const installAppFromURI = useCallback(
-    async (appURI: string, launchURL?: string) => {
+    async (appURI: string, launchURL?: string, deviceId?: string) => {
       if (tasks.has(appURI)) {
         return;
       }
@@ -448,14 +526,30 @@ function Core(props: Props) {
           }
         }
 
-        const device = getDeviceByPlatform(devicePlatform, appType);
+        let device: PlatformToDevice<typeof devicePlatform> | undefined;
+        if (deviceId) {
+          const requested = findDeviceById(deviceId);
+          if (
+            !requested ||
+            getDeviceOS(requested) !== devicePlatform ||
+            (appType && requested.deviceType !== appType)
+          ) {
+            warnDeviceIdNotFound(deviceId);
+          } else {
+            device = requested as PlatformToDevice<typeof devicePlatform>;
+            persistSelectedDevice(requested);
+          }
+        }
+        if (!device) {
+          device = getDeviceByPlatform(devicePlatform, appType);
+        }
         if (!device) {
           Alert.alert(
             `You don't have any ${devicePlatform} device available to run this build, please make sure your environment is configured correctly and try again.`
           );
           return;
         }
-        const deviceId = getDeviceId(device);
+        const resolvedDeviceId = getDeviceId(device);
 
         if (tasks.get(appURI)) {
           updateTask({ id: appURI, status: MenuBarStatus.BOOTING_DEVICE });
@@ -470,7 +564,11 @@ function Core(props: Props) {
 
         try {
           updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
-          await installAndLaunchAppAsync({ appPath: localFilePath, deviceId, launchURL });
+          await installAndLaunchAppAsync({
+            appPath: localFilePath,
+            deviceId: resolvedDeviceId,
+            launchURL,
+          });
         } catch (error) {
           if (error instanceof InternalError) {
             if (error.code === 'APPLE_DEVICE_LOCKED') {
@@ -533,7 +631,17 @@ function Core(props: Props) {
         }, 2000);
       }
     },
-    [ensureDeviceIsRunning, getDeviceByPlatform, createTask, deleteTask, updateTask, tasks]
+    [
+      ensureDeviceIsRunning,
+      getDeviceByPlatform,
+      findDeviceById,
+      warnDeviceIdNotFound,
+      persistSelectedDevice,
+      createTask,
+      deleteTask,
+      updateTask,
+      tasks,
+    ]
   );
 
   useFileHandler({ onOpenFile: installAppFromURI });
@@ -552,7 +660,7 @@ function Core(props: Props) {
                 break;
               case URLType.GO:
                 Analytics.track(Event.LAUNCH_EXPO_GO);
-                handleExpoGoUrl(url, deeplinkInfo.sdkVersion);
+                handleExpoGoUrl(url, deeplinkInfo.sdkVersion, deeplinkInfo.deviceId);
                 break;
               case URLType.SNACK:
                 Analytics.track(Event.LAUNCH_SNACK);
@@ -560,11 +668,11 @@ function Core(props: Props) {
                 break;
               case URLType.EXPO_UPDATE:
                 Analytics.track(Event.LAUNCH_EXPO_UPDATE);
-                handleUpdateUrl(url);
+                handleUpdateUrl(url, deeplinkInfo.deviceId);
                 break;
               case URLType.EXPO_BUILD:
                 Analytics.track(Event.LAUNCH_BUILD);
-                installAppFromURI(url, deeplinkInfo.launchURL);
+                installAppFromURI(url, deeplinkInfo.launchURL, deeplinkInfo.deviceId);
                 break;
             }
           } catch (error) {
