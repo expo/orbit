@@ -81,6 +81,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: 🧶 Install workspace node modules
+        run: yarn install --frozen-lockfile
+      - name: 📦️ Build packages
+        run: yarn build
       - name: 📦 Install EAS CLI
         run: npm install -g eas-cli
       - name: 🍎 Build and notarize macOS app

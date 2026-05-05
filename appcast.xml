@@ -7,6 +7,37 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.6.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Display user avatars uploaded on expo.dev. (<a href="https://github.com/expo/orbit/pull/336">#336</a> by <a href="https://github.com/tomek-agent">@tomek-agent</a>)</li>
+        <li>Add deviceId support to deep-link routes. (<a href="https://github.com/expo/orbit/pull/337">#337</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix OAauth with 3rd party providers on Windows and Linux. (<a href="https://github.com/expo/orbit/pull/335">#335</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Use EAS custom builds for macOS releases. (<a href="https://github.com/expo/orbit/pull/330">#330</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Enable react-native new architecture. (<a href="https://github.com/expo/orbit/pull/310">#310</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2026-05-05</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.6.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.6.0/expo-orbit.v2.6.0-macos.zip"
+        sparkle:version="44"
+        sparkle:shortVersionString="2.6.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.5.0</title>
       <description>
       <![CDATA[

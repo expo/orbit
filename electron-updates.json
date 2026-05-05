@@ -3,6 +3,22 @@
   "link": "https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json",
   "versions": [
     {
+      "version": "2.6.0",
+      "pub_date": "2026-05-05",
+      "release_notes": "      <h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Display user avatars uploaded on expo.dev. (<a href=\"https://github.com/expo/orbit/pull/336\">#336</a> by <a href=\"https://github.com/tomek-agent\">@tomek-agent</a>)</li>\n        <li>Add deviceId support to deep-link routes. (<a href=\"https://github.com/expo/orbit/pull/337\">#337</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>Fix OAauth with 3rd party providers on Windows and Linux. (<a href=\"https://github.com/expo/orbit/pull/335\">#335</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-others\">💡 Others</h3>\n      <ul>\n        <li>Use EAS custom builds for macOS releases. (<a href=\"https://github.com/expo/orbit/pull/330\">#330</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Enable react-native new architecture. (<a href=\"https://github.com/expo/orbit/pull/310\">#310</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
+      "builds": {
+        "win32-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.6.0/"
+        },
+        "linux-deb-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.6.0/expo-orbit_2.6.0_amd64.deb"
+        },
+        "linux-rpm-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.6.0/expo-orbit-2.6.0-1.x86_64.rpm"
+        }
+      }
+    },
+    {
       "version": "2.5.0",
       "pub_date": "2026-04-02",
       "release_notes": "      <h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Use SF Symbols on macOS. (<a href=\"https://github.com/expo/orbit/pull/325\">#325</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Improve launching tarballs with multi apps. (<a href=\"https://github.com/expo/orbit/pull/324\">#324</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-others\">💡 Others</h3>\n      <ul>\n        <li>Add release automation scripts. (<a href=\"https://github.com/expo/orbit/pull/327\">#327</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Add <code>/devices</code> route to local servers. (<a href=\"https://github.com/expo/orbit/pull/326\">#326</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Migrate SystemIconView to Expo modules. (<a href=\"https://github.com/expo/orbit/pull/329\">#329</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
