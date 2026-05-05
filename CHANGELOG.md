@@ -6,6 +6,14 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 2.6.0 — 2026-05-05
+
+### 🎉 New features
+
 - Display user avatars uploaded on expo.dev. ([#336](https://github.com/expo/orbit/pull/336) by [@tomek-agent](https://github.com/tomek-agent))
 - Add deviceId support to deep-link routes. ([#337](https://github.com/expo/orbit/pull/337) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
