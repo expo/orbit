@@ -177,3 +177,20 @@ expo-orbit-cli detect-apple-app-type <app-path>
   Inspects an iOS app bundle and reports whether it’s a simulator build, App Store build, etc.
 
 ---
+
+### mcp
+
+```bash
+expo-orbit-cli mcp [--port <number>] [--token <string>]
+```
+
+- **Options**
+  `--port <number>`
+  : Port to listen on. _Default_: `8765`.
+  `--token <string>`
+  : Override the bearer token. _Default_: persisted in `~/.config/expo/user-settings.json`.
+
+- **Description**
+  Starts the Model Context Protocol server so AI coding agents (Cursor, Claude Code, Claude Desktop) can drive simulators, emulators, and devices through Orbit. See [mcp/README.md](./mcp/README.md) for the full setup, client config snippets, and tool reference.
+
+---
