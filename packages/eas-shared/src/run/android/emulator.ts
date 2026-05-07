@@ -77,12 +77,12 @@ export async function bootEmulatorAsync(
   {
     timeout = EMULATOR_MAX_WAIT_TIMEOUT_MS,
     interval = 1000,
-    noAudio = false,
+    audio = true,
   }: {
     /** Time in milliseconds to wait before asserting a timeout error. */
     timeout?: number;
     interval?: number;
-    noAudio?: boolean;
+    audio?: boolean;
   } = {}
 ): Promise<AndroidEmulator> {
   Log.newLine();
@@ -90,7 +90,7 @@ export async function bootEmulatorAsync(
 
   const emulatorExecutable = await getEmulatorExecutableAsync();
   const spawnArgs = [`@${emulator.name}`];
-  if (noAudio) {
+  if (!audio) {
     spawnArgs.push('-no-audio');
   }
 
