@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix Run Android emulator without audio option. ([#340](https://github.com/expo/orbit/pull/340) by [@lklima](https://github.com/lklima))
+
 ### 💡 Others
 
 ## 2.6.0 — 2026-05-05
