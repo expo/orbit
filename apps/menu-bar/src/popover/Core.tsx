@@ -214,7 +214,7 @@ function Core(props: Props) {
       await bootDeviceAsync({
         platform: getDeviceOS(device),
         id: deviceId,
-        noAudio: emulatorWithoutAudio,
+        audio: !emulatorWithoutAudio,
       });
     },
     [emulatorWithoutAudio]
@@ -728,7 +728,7 @@ function Core(props: Props) {
                   onPress={() => onSelectDevice(device)}
                   onPressLaunch={async () => {
                     Analytics.track(Event.LAUNCH_SIMULATOR);
-                    await bootDeviceAsync({ platform, id });
+                    await bootDeviceAsync({ platform, id, audio: !emulatorWithoutAudio });
                     refetch();
                   }}
                   selected={selectedDevicesIds[platform] === id}
