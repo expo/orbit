@@ -4,10 +4,10 @@ import { DevicePlatform } from '../utils/device';
 type BootDeviceAsyncOptions = {
   platform: DevicePlatform;
   id: string;
-  noAudio?: boolean;
+  audio?: boolean;
 };
 
-export const bootDeviceAsync = async ({ platform, id, noAudio }: BootDeviceAsyncOptions) => {
+export const bootDeviceAsync = async ({ platform, id, audio }: BootDeviceAsyncOptions) => {
   /**
    * Maps a DevicePlatform to the CLI boot-device platform parameter.
    * The CLI only supports 'ios' and 'android' for now — tvOS and watchOS simulators boot via the 'ios' path.
@@ -15,7 +15,7 @@ export const bootDeviceAsync = async ({ platform, id, noAudio }: BootDeviceAsync
   const bootPlatform = platform === 'android' ? 'android' : 'ios';
 
   const args = ['-p', bootPlatform, '--id', id];
-  if (noAudio) {
+  if (!audio) {
     args.push('--no-audio');
   }
   await MenuBarModule.runCli('boot-device', args, console.log);
