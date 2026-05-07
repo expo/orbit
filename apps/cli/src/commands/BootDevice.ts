@@ -4,10 +4,10 @@ import { Emulator, Simulator } from 'eas-shared';
 type BootDeviceAsyncOptions = {
   platform: 'android' | 'ios';
   id: string;
-  noAudio?: boolean;
+  audio?: boolean;
 };
 
-export async function bootDeviceAsync({ platform, id, noAudio }: BootDeviceAsyncOptions) {
+export async function bootDeviceAsync({ platform, id, audio }: BootDeviceAsyncOptions) {
   if (platform === 'ios') {
     await Simulator.ensureSimulatorBootedAsync({
       udid: id,
@@ -25,6 +25,6 @@ export async function bootDeviceAsync({ platform, id, noAudio }: BootDeviceAsync
     {
       name: id,
     } as AndroidEmulator,
-    { noAudio }
+    { audio }
   );
 }
