@@ -208,6 +208,109 @@ Files touched would be limited to `packages/eas-shared/src/run/ios/`.
 
 ---
 
+## 6. Update — evaluating SideImpactor / `webmuxd`
+
+After the first pass of this doc, the team asked whether
+[lbr77/SideImpactor](https://github.com/lbr77/SideImpactor) could be reused.
+SideImpactor is a browser-based IPA signing/installer; the interesting piece
+for us is a vendored TypeScript library under
+`dependencies/webmuxd/` (MIT license).
+
+### What `webmuxd` is
+
+A from-scratch TypeScript implementation of the libimobiledevice protocol
+stack on top of **WebUSB**. The public surface includes
+`DirectUsbMuxClient` (`usbmux + lockdownd + AFC + installation_proxy`
+lifecycle) and a high-level `installIpaViaInstProxy(...)` helper. Pairing,
+pair-record (de)serialization, and TLS via OpenSSL-compiled-to-WASM are all
+included.
+
+Files under `dependencies/webmuxd/src/core/`:
+`afc-client.ts`, `browser-usbmux-client.ts`, `imobiledevice-client.ts`,
+`lockdown-client.ts`, `openssl-wasm*.ts`, `pairing-store.ts`, `plist.ts`,
+`transport.ts`, `usbmux-protocol.ts`, `usbmux-session.ts`,
+`webusb-transport.ts`.
+
+### Why it's interesting
+
+It **eliminates the `usbmuxd` daemon entirely**. Today, our custom path
+needs `/var/run/usbmuxd` on Linux or a TCP shim on port 27015 on Windows
+(blocker 2.1 above). WebUSB talks to the device's USB interface directly,
+so the daemon disappears as a dependency. That single change resolves the
+"how do we tell Windows users to install AMDS / set up WSL2" question.
+
+It also matches our preferred minimal approach (section 2, Option B): the
+core list has no `mobile-image-mounter` module, so the implementation
+clearly installs **without** mounting the Developer Disk Image. No
+launch-via-debugserver either, but that was already the trade-off we were
+willing to make.
+
+License is **MIT** — compatible with Orbit.
+
+### Where it would and wouldn't fit in the Orbit codebase
+
+| Surface | Fit? | Why |
+|---|---|---|
+| `apps/menu-bar` (Electron renderer) | Good | Chromium exposes `navigator.usb`. WebUSB calls from a renderer require a `select-usb-device` handler in main — solved, well-documented. |
+| `apps/menu-bar` (main / Node side) | Awkward | `webmuxd` imports `navigator.usb`. Needs a polyfill — `usb`/`webusb` npm packages (libusb-backed). Adds a native dep, has to be prebuilt per arch. |
+| `apps/cli` (pure Node) | Awkward | Same as above — CLI runs without Electron, so it would need the libusb polyfill. Bundling via `pkg` (already used by CLI) plus a native module is non-trivial. |
+| `packages/eas-shared` | Awkward | Currently platform-agnostic Node. Pulling in a WebUSB dependency here forces every consumer to ship libusb. |
+
+So `webmuxd` slots cleanly into the **menu-bar renderer** but is harder to
+adopt in the CLI. Right now the menu-bar app calls into the CLI for device
+operations — adopting webmuxd would mean moving install logic up into the
+menu-bar renderer, or duplicating it.
+
+### Blockers / open risks
+
+1. **No iOS 17+ / RemoteXPC support.** `imobiledevice-client.ts` has no
+   version-gating, no RemoteXPC, no tunneld. Same ceiling as our existing
+   custom path — does **not** help with iOS 26.
+2. **Windows USB driver conflict.** WebUSB on Windows requires the device
+   to expose a WinUSB-compatible interface. iTunes / Apple Mobile Device
+   Service binds the "Apple Mobile Device USB Driver" instead. SideImpactor
+   itself is a web app so it presumably either (a) instructs the user to
+   uninstall AMDS / use Zadig, or (b) targets a specific composite-interface
+   exposed by recovery/DFU only. We need to verify against a real Windows
+   box before promising this works — likely the actual deal-breaker for
+   normal-mode devices on Windows.
+3. **Linux udev rules.** Reading/writing the iPhone via WebUSB on Linux
+   requires udev rules (`05ac:12a8` etc.) so non-root users can claim the
+   interface. Manageable, but documentation + a postinstall script would
+   be needed.
+4. **Trust dialog UX.** First-time pairing pops the "Trust this computer?"
+   dialog on the device. Same as today — not a webmuxd-specific issue, just
+   noting.
+5. **WASM TLS bundle size.** OpenSSL-compiled-to-WASM is sizable. Acceptable
+   in an Electron app, but worth measuring.
+6. **Maintenance signal.** Single-author repo, no published npm package — we
+   would be vendoring the source. Acceptable given MIT license, but
+   commits us to maintaining it ourselves.
+
+### Recommendation
+
+`webmuxd` is **plausibly useful but does not change our iOS 17+/26 story**.
+It's an alternative implementation of the same pre-iOS-17 protocol surface
+we already have in `appleDevice/`, with the upside that it removes the
+`usbmuxd` daemon dependency on Linux/Windows.
+
+Two reasonable paths forward:
+
+- **Path A — keep our existing client, fix Win/Linux gracefully (section 4
+  plan).** Cheapest. Users on Linux install `usbmuxd`, users on Windows
+  install AMDS. We don't take on a native USB dependency.
+- **Path B — adopt `webmuxd` (vendored) for the menu-bar app's device
+  install flow.** No daemon dependency, but adds a native libusb-backed
+  module to the CLI if we want parity there, plus Windows driver
+  shenanigans. Larger surface to test.
+
+I'd start with Path A (one-day change, well-understood) and revisit Path B
+if Linux/Windows adoption proves friction-heavy and we don't yet have iOS
+17+ support landing. Either way, this branch only contains research; the
+next branch should pick one.
+
+---
+
 ## Sources
 
 - pymobiledevice3 — RemoteXPC protocol notes:
@@ -221,3 +324,7 @@ Files touched would be limited to `packages/eas-shared/src/run/ios/`.
   https://github.com/libimobiledevice/ideviceinstaller
 - Community evidence of pymobiledevice3 working with iOS 26:
   https://gist.github.com/lucasrod/52b8375d0b8a8212092c2440f0400fa3
+- SideImpactor (where `webmuxd` is vendored):
+  https://github.com/lbr77/SideImpactor
+- `webmuxd` README (vendored library inside SideImpactor):
+  https://github.com/lbr77/SideImpactor/tree/main/dependencies/webmuxd
