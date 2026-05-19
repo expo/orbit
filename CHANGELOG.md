@@ -9,6 +9,7 @@
 ### 🐛 Bug fixes
 
 - Fix Run Android emulator without audio option. ([#340](https://github.com/expo/orbit/pull/340) by [@lklima](https://github.com/lklima))
+- Fix opening APKs/tar from finder. ([#341](https://github.com/expo/orbit/pull/341) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 💡 Others
 
