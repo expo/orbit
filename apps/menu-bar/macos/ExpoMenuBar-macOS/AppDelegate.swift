@@ -52,13 +52,16 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
     NSApp.activate(ignoringOtherApps: true)
   }
 
-   func application(_ sender: NSApplication, openFile filename: String) -> Bool {
+  // Need to use this instead of `application(_ sender: NSApplication, openFile filename: String)` because of ExpoAppDelegate
+  override func application(_ application: NSApplication, open urls: [URL]) {
+    super.application(application, open: urls)
     popoverManager?.openPopover()
-    NotificationCenter.default.post(
-      name: Notification.Name("ExpoOrbit_OnOpenFile"),
-      object: filename
-    )
-    return true
+    for url in urls {
+      NotificationCenter.default.post(
+        name: Notification.Name("ExpoOrbit_OnOpenFile"),
+        object: url.path
+      )
+    }
   }
 
   override func applicationWillFinishLaunching(_ notification: Notification) {
