@@ -7,6 +7,7 @@ import path from 'path';
 import * as CoreSimulator from './CoreSimulator';
 import { EXPO_GO_BUNDLE_IDENTIFIER } from './constants';
 import { simctlAsync } from './simctl';
+import { getSimulatorAppInfoAsync, getSimulatorAppNameAsync } from './simulatorApp';
 import { xcrunAsync } from './xcrun';
 import { downloadAppAsync } from '../../downloadAppAsync';
 import Log from '../../log';
@@ -100,7 +101,7 @@ export async function ensureSimulatorBootedAsync(simulator: IosSimulator): Promi
 }
 
 export async function openSimulatorAppAsync(simulatorUdid: string): Promise<void> {
-  const args = ['-a', 'Simulator'];
+  const args = ['-a', await getSimulatorAppNameAsync()];
   if (simulatorUdid) {
     // This has no effect if the app is already running.
     args.push('--args', '-CurrentDeviceUDID', simulatorUdid);
@@ -140,17 +141,18 @@ async function waitForSimulatorAppToStartAsync(
 
 export async function activateSimulatorWindowAsync(): Promise<void> {
   try {
+    const appName = await getSimulatorAppNameAsync();
     await osascript.execAsync(`
     tell application "System Events"
       set assistiveAccess to UI elements enabled
     end tell
 
     if assistiveAccess then
-      tell application "System Events" to tell process "Simulator"
+      tell application "System Events" to tell process "${appName}"
         perform action "AXRaise" of window 0
       end tell
     else
-      tell application "Simulator"
+      tell application "${appName}"
         activate
       end tell
     end if
@@ -165,8 +167,9 @@ export async function activateSimulatorWindowAsync(): Promise<void> {
 
 async function isSimulatorAppRunningAsync(): Promise<boolean> {
   try {
+    const appName = await getSimulatorAppNameAsync();
     const result = await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
+      `tell app "System Events" to count processes whose name is "${appName}"`
     );
 
     if (result.trim() === '0') {
@@ -232,11 +235,7 @@ async function simctlInstallWithRetryAsync(deviceId: string, filePath: string): 
 }
 
 export async function getSimulatorAppIdAsync(): Promise<string | undefined> {
-  try {
-    return (await osascript.execAsync('id of app "Simulator"')).trim();
-  } catch {
-    return undefined;
-  }
+  return (await getSimulatorAppInfoAsync())?.bundleId;
 }
 
 export async function getAppBundleIdentifierAsync(appPath: string): Promise<string> {
