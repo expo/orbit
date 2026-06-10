@@ -45,6 +45,31 @@ use_frameworks! :linkage => :static
 post_install do |installer|
   react_native_post_install(installer, relative_rn_macos_path)
 
+  # Xcode 27 only supports macOS deployment targets >= 12.0, but some pods
+  # still declare 10.x/11.x and fail to build.
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if config.build_settings['MACOSX_DEPLOYMENT_TARGET'].to_f < 12.0
+        config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '12.0'
+      end
+    end
+  end
+
+  # Xcode 27's clang rejects fmt 11.0.2's consteval compile-time format-string
+  # checking ("call to consteval function ... is not a constant expression").
+  # fmt 11.0.2 ignores externally defined FMT_USE_CONSTEVAL/FMT_CONSTEVAL
+  # (no #ifndef guard), so patch the header to disable consteval. Format
+  # strings are then validated at runtime instead of compile time.
+  fmt_base_h = File.join(__dir__, 'Pods/fmt/include/fmt/base.h')
+  if File.exist?(fmt_base_h)
+    content = File.read(fmt_base_h)
+    patched = content.gsub('#  define FMT_USE_CONSTEVAL 1', '#  define FMT_USE_CONSTEVAL 0')
+    if patched != content
+      File.chmod(0644, fmt_base_h)
+      File.write(fmt_base_h, patched)
+    end
+  end
+
   project = installer.generated_aggregate_targets.first.user_project
   project.targets.each do |target|
     if target.name == 'ExpoMenuBar-macOS'
