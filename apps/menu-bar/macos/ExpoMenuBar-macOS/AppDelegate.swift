@@ -112,4 +112,8 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
     return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
 #endif
   }
+
+  override func customize(_ rootView: RCTRootView) {
+    rootView.backgroundColor = NSColor.clear
+  }
 }
