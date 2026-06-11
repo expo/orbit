@@ -80,6 +80,80 @@ export async function connectAndroidDeviceAsync(address: string): Promise<void> 
   }
 }
 
+export type AdbMdnsService = {
+  /** Service instance name, e.g. `adb-RZ8RA1057HK-QnTpKE` or the name embedded in a pairing QR code */
+  name: string;
+  /** e.g. `_adb-tls-pairing._tcp` */
+  serviceType: string;
+  /** `ipAddress:port` */
+  address: string;
+};
+
+const ADB_MDNS_SERVICE_TYPES = {
+  pairing: '_adb-tls-pairing',
+  connect: '_adb-tls-connect',
+};
+
+/**
+ * List the wireless debugging services advertised by Android devices on the
+ * local network, using adb's built-in mDNS discovery.
+ */
+export async function getAdbMdnsServicesAsync(): Promise<AdbMdnsService[]> {
+  const { stdout } = await adbAsync('mdns', 'services');
+
+  return (
+    stdout
+      .trim()
+      .split(/[\r\n]+/)
+      // First line is `List of discovered mdns services`
+      .filter((line) => line.includes('_adb'))
+      .map((line) => {
+        const [name, serviceType, address] = line.split(/\s+/).filter(Boolean);
+        return { name, serviceType, address };
+      })
+      .filter(({ name, serviceType, address }) => name && serviceType && address)
+  );
+}
+
+/**
+ * Wait until a wireless debugging service matching the given filters is
+ * advertised on the local network. When pairing with a QR code, the device
+ * advertises a `pairing` service named after the QR code contents once the
+ * code is scanned.
+ *
+ * @returns the matching service, or `null` if none was found within `timeoutMs`
+ */
+export async function waitForAdbMdnsServiceAsync({
+  serviceType,
+  serviceName,
+  ipAddress,
+  timeoutMs,
+  intervalMs = 1000,
+}: {
+  serviceType: keyof typeof ADB_MDNS_SERVICE_TYPES;
+  serviceName?: string;
+  ipAddress?: string;
+  timeoutMs: number;
+  intervalMs?: number;
+}): Promise<AdbMdnsService | null> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    const services = await getAdbMdnsServicesAsync();
+    const match = services.find(
+      (service) =>
+        service.serviceType.startsWith(ADB_MDNS_SERVICE_TYPES[serviceType]) &&
+        (!serviceName || service.name === serviceName) &&
+        (!ipAddress || service.address.split(':')[0] === ipAddress)
+    );
+    if (match) {
+      return match;
+    }
+    await sleepAsync(intervalMs);
+  }
+
+  return null;
+}
+
 /**
  * Return the Emulator name for an emulator ID, this can be used to determine if an emulator is booted.
  *

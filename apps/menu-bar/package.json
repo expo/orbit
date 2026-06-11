@@ -34,6 +34,7 @@
     "expo": "~54.0.33",
     "expo-web-browser": "~15.0.10",
     "graphql": "^16.8.0",
+    "qrcode-generator": "^1.4.4",
     "react": "19.1.4",
     "react-dom": "19.1.4",
     "react-native": "0.81.5",

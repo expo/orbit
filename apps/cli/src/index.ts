@@ -4,7 +4,10 @@ import { returnLoggerMiddleware } from './utils';
 import { downloadBuildAsync } from './commands/DownloadBuild';
 import { listDevicesAsync } from './commands/ListDevices';
 import { bootDeviceAsync } from './commands/BootDevice';
-import { pairAndroidDeviceAsync } from './commands/PairAndroidDevice';
+import {
+  pairAndroidDeviceAsync,
+  pairAndroidDeviceWithQRCodeAsync,
+} from './commands/PairAndroidDevice';
 import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
 import { installAppleDeviceSupportAsync } from './commands/InstallAppleDeviceSupport';
 import { launchExpoGoURLAsync } from './commands/LaunchExpoGo';
@@ -50,6 +53,14 @@ program
     'IP address and port used to connect to the device after pairing'
   )
   .action(returnLoggerMiddleware(pairAndroidDeviceAsync));
+
+program
+  .command('pair-android-device-qr')
+  .description('Pair a physical Android device over Wi-Fi after it scans a pairing QR code')
+  .requiredOption('--service-name  <string>', 'mDNS service name embedded in the QR code')
+  .requiredOption('--pairing-code  <string>', 'Pairing code embedded in the QR code')
+  .option('--timeout  <number>', 'Time to wait for the device to scan the QR code, in milliseconds')
+  .action(returnLoggerMiddleware(pairAndroidDeviceWithQRCodeAsync));
 
 program
   .command('install-and-launch')
