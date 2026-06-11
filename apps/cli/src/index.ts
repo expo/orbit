@@ -43,6 +43,20 @@ program
   });
 
 program
+  .command('pair-android-device')
+  .description('Pair a physical Android device over Wi-Fi using a pairing code')
+  .requiredOption('--pairing-address  <string>', 'IP address and port shown on the pairing dialog')
+  .requiredOption('--pairing-code  <string>', 'Six digit pairing code shown on the pairing dialog')
+  .option(
+    '--connect-address  <string>',
+    'IP address and port used to connect to the device after pairing'
+  )
+  .action(async (...args) => {
+    const { pairAndroidDeviceAsync } = await import('./commands/PairAndroidDevice');
+    return returnLoggerMiddleware(pairAndroidDeviceAsync)(...args);
+  });
+
+program
   .command('install-and-launch')
   .requiredOption('--app-path  <string>', 'Local path of the app')
   .option('--device-id  <string>', 'UDID or name of the device')
