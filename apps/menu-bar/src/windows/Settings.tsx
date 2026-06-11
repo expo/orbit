@@ -16,6 +16,7 @@ import { setTrustedSourcesAsync } from '../commands/setTrustedSourcesAsync';
 import { Checkbox, View, Row, Text, Divider } from '../components';
 import { Avatar } from '../components/Avatar';
 import Button, { getStylesForColor } from '../components/Button';
+import PairAndroidDeviceForm from '../components/PairAndroidDeviceForm';
 import PathInput from '../components/PathInput';
 import { Switch } from '../components/Switch';
 import TrustedSourcesInput from '../components/TrustedSourcesInput';
@@ -341,6 +342,24 @@ const Settings = () => {
                 value={trustedSources}
                 placeholder="Enter trusted sources, separated by commas (e.g. https://expo.dev/**)"
               />
+            </View>
+          </View>
+          <View mb="3">
+            <Text size="medium" weight="semibold" style={[headerStyle, styles.headerSpacing]}>
+              Pair Android Device
+            </Text>
+            <Text size="tiny" color="secondary" style={[styles.headerSpacing, styles.subheader]}>
+              Connect a physical Android device over Wi-Fi
+            </Text>
+            <View
+              mt="2"
+              rounded="medium"
+              style={groupWrapperStyle}
+              border="light"
+              px="2.5"
+              pt="2"
+              pb="2.5">
+              <PairAndroidDeviceForm />
             </View>
           </View>
           <View>

@@ -4,6 +4,7 @@ import { returnLoggerMiddleware } from './utils';
 import { downloadBuildAsync } from './commands/DownloadBuild';
 import { listDevicesAsync } from './commands/ListDevices';
 import { bootDeviceAsync } from './commands/BootDevice';
+import { pairAndroidDeviceAsync } from './commands/PairAndroidDevice';
 import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
 import { installAppleDeviceSupportAsync } from './commands/InstallAppleDeviceSupport';
 import { launchExpoGoURLAsync } from './commands/LaunchExpoGo';
@@ -38,6 +39,17 @@ program
   .requiredOption('--id  <string>', 'UDID or name of the device')
   .option('--no-audio', 'Launch Android emulator without audio')
   .action(returnLoggerMiddleware(bootDeviceAsync));
+
+program
+  .command('pair-android-device')
+  .description('Pair a physical Android device over Wi-Fi using a pairing code')
+  .requiredOption('--pairing-address  <string>', 'IP address and port shown on the pairing dialog')
+  .requiredOption('--pairing-code  <string>', 'Six digit pairing code shown on the pairing dialog')
+  .option(
+    '--connect-address  <string>',
+    'IP address and port used to connect to the device after pairing'
+  )
+  .action(returnLoggerMiddleware(pairAndroidDeviceAsync));
 
 program
   .command('install-and-launch')

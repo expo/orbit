@@ -44,6 +44,43 @@ export function sanitizeAdbDeviceName(deviceName: string): string | undefined {
 }
 
 /**
+ * Pair a physical Android device over Wi-Fi using the pairing code shown under
+ * the device's "Wireless debugging > Pair device with pairing code" screen.
+ *
+ * @param pairingAddress the `ipAddress:port` shown on the pairing dialog (this
+ * port differs from the one used to connect to the device afterwards)
+ * @param pairingCode the six digit code shown on the pairing dialog
+ */
+export async function pairAndroidDeviceAsync({
+  pairingAddress,
+  pairingCode,
+}: {
+  pairingAddress: string;
+  pairingCode: string;
+}): Promise<void> {
+  const { stdout } = await adbAsync('pair', pairingAddress, pairingCode);
+  // A successful pairing prints `Successfully paired to <address> [guid=...]`.
+  if (!/successfully paired/i.test(stdout)) {
+    throw new Error(sanitizeAdbDeviceName(stdout) ?? `Failed to pair with ${pairingAddress}.`);
+  }
+}
+
+/**
+ * Connect to a physical Android device over Wi-Fi. The device must have been
+ * paired beforehand (see {@link pairAndroidDeviceAsync}).
+ *
+ * @param address the `ipAddress:port` shown on the "Wireless debugging" screen
+ */
+export async function connectAndroidDeviceAsync(address: string): Promise<void> {
+  const { stdout } = await adbAsync('connect', address);
+  // adb prints `connected to <address>` or `already connected to <address>` on
+  // success and `failed to connect to <address>` (or `cannot connect ...`) on failure.
+  if (!/connected to/i.test(stdout) || /failed|cannot|unable/i.test(stdout)) {
+    throw new Error(sanitizeAdbDeviceName(stdout) ?? `Failed to connect to ${address}.`);
+  }
+}
+
+/**
  * Return the Emulator name for an emulator ID, this can be used to determine if an emulator is booted.
  *
  * @param devicePid a value like `emulator-5554` from `abd devices`
