@@ -26,6 +26,8 @@ export {
   getRunningDeviceAsync,
   pairAndroidDeviceAsync,
   connectAndroidDeviceAsync,
+  getAdbMdnsServicesAsync,
+  waitForAdbMdnsServiceAsync,
 } from './adb';
 export { getAptParametersAsync } from './aapt';
 

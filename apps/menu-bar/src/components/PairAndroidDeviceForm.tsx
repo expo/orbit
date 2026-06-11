@@ -1,20 +1,141 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import Button from './Button';
+import QRCode from './QRCode';
 import { Text, TextInput } from './Text';
 import { Row, View } from './View';
-import { pairAndroidDeviceAsync } from '../commands/pairAndroidDeviceAsync';
+import {
+  pairAndroidDeviceAsync,
+  pairAndroidDeviceWithQRCodeAsync,
+} from '../commands/pairAndroidDeviceAsync';
 import Alert from '../modules/Alert';
 import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
 const ADDRESS_REGEX = /^[^\s:]+:\d+$/;
+const QR_CODE_SIZE = 180;
+
+type PairingMode = 'qrCode' | 'pairingCode';
+
+function randomAlphanumeric(length: number): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
 
 const PairAndroidDeviceForm = () => {
   const theme = useCurrentTheme();
+  const [mode, setMode] = useState<PairingMode>('qrCode');
+
+  return (
+    <View>
+      <Row gap="1">
+        <Button
+          title="QR code"
+          color={mode === 'qrCode' ? 'default' : 'primary'}
+          onPress={() => setMode('qrCode')}
+          style={styles.modeButton}
+        />
+        <Button
+          title="Pairing code"
+          color={mode === 'pairingCode' ? 'default' : 'primary'}
+          onPress={() => setMode('pairingCode')}
+          style={styles.modeButton}
+        />
+      </Row>
+      <View mt="2">
+        {mode === 'qrCode' ? <QRCodePairing /> : <PairingCodeForm theme={theme} />}
+      </View>
+    </View>
+  );
+};
+
+const QRCodePairing = () => {
+  const [qrCodeContent, setQrCodeContent] = useState<string>();
+  const [statusMessage, setStatusMessage] = useState<string>();
+  // Identifies the pairing session currently shown, so that results from a
+  // previous session (e.g. a timed out CLI invocation) are ignored.
+  const sessionRef = useRef(0);
+
+  const startPairingSession = async () => {
+    const session = ++sessionRef.current;
+    const serviceName = `expo-orbit-${randomAlphanumeric(10)}`;
+    const pairingCode = randomAlphanumeric(8);
+
+    setQrCodeContent(`WIFI:T:ADB;S:${serviceName};P:${pairingCode};;`);
+    setStatusMessage('Waiting for the device to scan the QR code…');
+
+    try {
+      const result = await pairAndroidDeviceWithQRCodeAsync(
+        { serviceName, pairingCode },
+        (status) => {
+          if (session === sessionRef.current && status.trim()) {
+            setStatusMessage(status.trim());
+          }
+        }
+      );
+
+      if (session !== sessionRef.current) {
+        return;
+      }
+
+      if (result.success) {
+        Alert.alert('Device paired', 'Your Android device was paired and connected over Wi-Fi.');
+      } else {
+        Alert.alert(
+          'Unable to pair device',
+          result.error?.message ??
+            'Make sure the device and your computer are on the same network and try again.'
+        );
+      }
+    } catch (error) {
+      if (session !== sessionRef.current) {
+        return;
+      }
+      Alert.alert(
+        'Unable to pair device',
+        error instanceof Error ? error.message : 'Something went wrong while pairing the device.'
+      );
+    } finally {
+      if (session === sessionRef.current) {
+        setQrCodeContent(undefined);
+        setStatusMessage(undefined);
+      }
+    }
+  };
+
+  return (
+    <View>
+      <Text size="tiny" color="secondary" style={styles.description}>
+        Enable "Wireless debugging" in your device's developer options, then choose "Pair device
+        with QR code" and scan the code below.
+      </Text>
+      {qrCodeContent ? (
+        <View align="centered" mt="2" gap="2">
+          <View rounded="medium" style={styles.qrCodeContainer}>
+            <QRCode value={qrCodeContent} size={QR_CODE_SIZE} />
+          </View>
+          <Text size="tiny" color="secondary">
+            {statusMessage}
+          </Text>
+        </View>
+      ) : (
+        <Row justify="end" mt="2">
+          <Button
+            title="Generate QR code"
+            color="primary"
+            onPress={startPairingSession}
+            style={styles.button}
+          />
+        </Row>
+      )}
+    </View>
+  );
+};
+
+const PairingCodeForm = ({ theme }: { theme: ReturnType<typeof useCurrentTheme> }) => {
   const [pairingAddress, setPairingAddress] = useState('');
   const [pairingCode, setPairingCode] = useState('');
   const [connectAddress, setConnectAddress] = useState('');
@@ -141,5 +262,13 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 28,
+  },
+  modeButton: {
+    height: 24,
+  },
+  qrCodeContainer: {
+    overflow: 'hidden',
+    padding: 8,
+    backgroundColor: '#ffffff',
   },
 });

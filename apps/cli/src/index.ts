@@ -57,6 +57,17 @@ program
   });
 
 program
+  .command('pair-android-device-qr')
+  .description('Pair a physical Android device over Wi-Fi after it scans a pairing QR code')
+  .requiredOption('--service-name  <string>', 'mDNS service name embedded in the QR code')
+  .requiredOption('--pairing-code  <string>', 'Pairing code embedded in the QR code')
+  .option('--timeout  <number>', 'Time to wait for the device to scan the QR code, in milliseconds')
+  .action(async (...args) => {
+    const { pairAndroidDeviceWithQRCodeAsync } = await import('./commands/PairAndroidDevice');
+    return returnLoggerMiddleware(pairAndroidDeviceWithQRCodeAsync)(...args);
+  });
+
+program
   .command('install-and-launch')
   .requiredOption('--app-path  <string>', 'Local path of the app')
   .option('--device-id  <string>', 'UDID or name of the device')
