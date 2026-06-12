@@ -6,10 +6,13 @@
 
 ### 🎉 New features
 
+- Add support for DeviceHub.app on Xcode 27, which replaces Simulator.app. ([#343](https://github.com/expo/orbit/pull/343) by [@GersonRocha9](https://github.com/GersonRocha9))
+
 ### 🐛 Bug fixes
 
 - Fix Run Android emulator without audio option. ([#340](https://github.com/expo/orbit/pull/340) by [@lklima](https://github.com/lklima))
 - Fix opening APKs/tar from finder. ([#341](https://github.com/expo/orbit/pull/341) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix building the menu-bar macOS app with Xcode 26.4. ([#343](https://github.com/expo/orbit/pull/343) by [@GersonRocha9](https://github.com/GersonRocha9))
 
 ### 💡 Others
 

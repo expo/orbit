@@ -4,6 +4,7 @@ import { InternalError } from 'common-types';
 import semver from 'semver';
 
 import { getSimulatorAppIdAsync } from './simulator';
+import { KNOWN_SIMULATOR_APP_IDS } from './simulatorApp';
 import * as xcode from './xcode';
 import { isXcrunInstalledAsync } from './xcrun';
 import Log from '../../log';
@@ -45,15 +46,12 @@ async function assertSimulatorAppInstalledAsync(): Promise<void> {
   if (!simulatorAppId) {
     throw new InternalError(
       'TOOL_CHECK_FAILED',
-      `Can't determine id of Simulator app; the Simulator is most likely not installed on this machine. Run 'sudo xcode-select -s /Applications/Xcode.app'`,
+      `Can't determine id of the simulator app (Simulator.app, or DeviceHub.app on Xcode 27+); it is most likely not installed on this machine. Run 'sudo xcode-select -s /Applications/Xcode.app'`,
       { command: 'sudo xcode-select -s /Applications/Xcode.app' }
     );
   }
 
-  if (
-    simulatorAppId !== 'com.apple.iphonesimulator' &&
-    simulatorAppId !== 'com.apple.CoreSimulator.SimulatorTrampoline'
-  ) {
+  if (!KNOWN_SIMULATOR_APP_IDS.includes(simulatorAppId)) {
     throw new Error(
       `Simulator is installed but is identified as '${simulatorAppId}', can't recognize what that is`
     );

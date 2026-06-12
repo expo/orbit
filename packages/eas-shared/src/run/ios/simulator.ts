@@ -7,6 +7,11 @@ import path from 'path';
 import * as CoreSimulator from './CoreSimulator';
 import { EXPO_GO_BUNDLE_IDENTIFIER } from './constants';
 import { simctlAsync } from './simctl';
+import {
+  DEVICE_HUB_APP_NAME,
+  getSimulatorAppInfoAsync,
+  getSimulatorAppNameAsync,
+} from './simulatorApp';
 import { xcrunAsync } from './xcrun';
 import { downloadAppAsync } from '../../downloadAppAsync';
 import Log from '../../log';
@@ -100,7 +105,19 @@ export async function ensureSimulatorBootedAsync(simulator: IosSimulator): Promi
 }
 
 export async function openSimulatorAppAsync(simulatorUdid: string): Promise<void> {
-  const args = ['-a', 'Simulator'];
+  const appName = await getSimulatorAppNameAsync();
+
+  // DeviceHub.app (Xcode 27+) registers the `devices://` URL scheme,
+  // which can be used to focus the right device by its UDID.
+  if (appName === DEVICE_HUB_APP_NAME) {
+    const args = simulatorUdid
+      ? [`devices://device/open?id=${simulatorUdid}`]
+      : ['-a', DEVICE_HUB_APP_NAME];
+    await spawnAsync('open', args);
+    return;
+  }
+
+  const args = ['-a', appName];
   if (simulatorUdid) {
     // This has no effect if the app is already running.
     args.push('--args', '-CurrentDeviceUDID', simulatorUdid);
@@ -114,7 +131,7 @@ export async function launchAppAsync(
 ): Promise<void> {
   Log.newLine();
   Log.log('Launching your app...');
-  await activateSimulatorWindowAsync();
+  await activateSimulatorWindowAsync(simulatorUdid);
   await simctlAsync(['launch', simulatorUdid, bundleIdentifier]);
 
   Log.succeed('Successfully launched your app!');
@@ -138,7 +155,23 @@ async function waitForSimulatorAppToStartAsync(
   throw new Error('Timed out waiting for the iOS simulator to start.');
 }
 
-export async function activateSimulatorWindowAsync(): Promise<void> {
+export async function activateSimulatorWindowAsync(simulatorUdid?: string): Promise<void> {
+  const appName = await getSimulatorAppNameAsync();
+
+  if (appName === DEVICE_HUB_APP_NAME) {
+    try {
+      const args = simulatorUdid
+        ? [`devices://device/open?id=${simulatorUdid}`]
+        : ['-a', DEVICE_HUB_APP_NAME];
+      await spawnAsync('open', args);
+      return;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.warn(error.message);
+      }
+    }
+  }
+
   try {
     await osascript.execAsync(`
     tell application "System Events"
@@ -146,11 +179,11 @@ export async function activateSimulatorWindowAsync(): Promise<void> {
     end tell
 
     if assistiveAccess then
-      tell application "System Events" to tell process "Simulator"
+      tell application "System Events" to tell process "${appName}"
         perform action "AXRaise" of window 0
       end tell
     else
-      tell application "Simulator"
+      tell application "${appName}"
         activate
       end tell
     end if
@@ -165,8 +198,9 @@ export async function activateSimulatorWindowAsync(): Promise<void> {
 
 async function isSimulatorAppRunningAsync(): Promise<boolean> {
   try {
+    const appName = await getSimulatorAppNameAsync();
     const result = await osascript.execAsync(
-      'tell app "System Events" to count processes whose name is "Simulator"'
+      `tell app "System Events" to count processes whose name is "${appName}"`
     );
 
     if (result.trim() === '0') {
@@ -183,10 +217,6 @@ async function isSimulatorAppRunningAsync(): Promise<boolean> {
 }
 
 export async function ensureSimulatorAppOpenedAsync(simulatorUuid: string): Promise<void> {
-  if (await isSimulatorAppRunningAsync()) {
-    return;
-  }
-
   await openSimulatorAppAsync(simulatorUuid);
   await waitForSimulatorAppToStartAsync(60 * 1000, 1000);
 }
@@ -232,11 +262,7 @@ async function simctlInstallWithRetryAsync(deviceId: string, filePath: string): 
 }
 
 export async function getSimulatorAppIdAsync(): Promise<string | undefined> {
-  try {
-    return (await osascript.execAsync('id of app "Simulator"')).trim();
-  } catch {
-    return undefined;
-  }
+  return (await getSimulatorAppInfoAsync())?.bundleId;
 }
 
 export async function getAppBundleIdentifierAsync(appPath: string): Promise<string> {
@@ -258,7 +284,7 @@ export async function getAppBundleIdentifierAsync(appPath: string): Promise<stri
 }
 
 export async function openURLAsync(options: { udid: string; url: string }): Promise<void> {
-  await activateSimulatorWindowAsync();
+  await activateSimulatorWindowAsync(options.udid);
   console.log(`Opening url ${options.url}...`);
   await xcrunAsync(['simctl', 'openurl', options.udid, options.url]);
 }

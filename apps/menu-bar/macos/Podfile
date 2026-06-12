@@ -45,6 +45,22 @@ use_frameworks! :linkage => :static
 post_install do |installer|
   react_native_post_install(installer, relative_rn_macos_path)
 
+  installer.pods_project.targets.each do |target|
+    # TODO: remove this when bumping react-native-macos
+    if target.name == 'fmt'
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+      end
+    end
+    # Xcode 27 only supports macOS deployment targets >= 12.0, but some pods
+    # TODO: investigate which pods still declare old deployment targets
+    target.build_configurations.each do |config|
+      if config.build_settings['MACOSX_DEPLOYMENT_TARGET'].to_f < 12.0
+        config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '12.0'
+      end
+    end
+  end
+
   project = installer.generated_aggregate_targets.first.user_project
   project.targets.each do |target|
     if target.name == 'ExpoMenuBar-macOS'
