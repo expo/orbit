@@ -1,4 +1,4 @@
-import * as osascript from '@expo/osascript';
+import { safeIdOfAppAsync } from '@expo/osascript';
 import semver from 'semver';
 
 import * as xcode from './xcode';
@@ -25,38 +25,29 @@ const FIRST_DEVICE_HUB_XCODE_VERSION = '27.0.0';
 let cachedSimulatorAppInfo: SimulatorAppInfo | null | undefined;
 
 async function resolveAppInfoAsync(name: string): Promise<SimulatorAppInfo | null> {
-  try {
-    const bundleId = (await osascript.execAsync(`id of app "${name}"`)).trim();
-    return bundleId ? { name, bundleId } : null;
-  } catch {
-    return null;
-  }
+  const bundleId = await safeIdOfAppAsync(name);
+  return bundleId ? { name, bundleId } : null;
 }
 
 /**
- * Resolves which simulator UI app is available on this machine.
- *
- * When the selected Xcode is 27 or newer, DeviceHub.app is preferred since
- * Simulator.app no longer ships with Xcode. Older Xcode versions resolve to
- * Simulator.app first, so machines with multiple Xcodes installed keep using
- * the app that matches the active toolchain.
+ * Resolves which simulator UI app is registered with Launch Services. Xcode 27+
+ * ships DeviceHub.app instead of Simulator.app, so on those toolchains DeviceHub
+ * is preferred. The other app is still considered as a fallback so machines with
+ * multiple Xcodes installed continue to work.
  */
 export async function getSimulatorAppInfoAsync(): Promise<SimulatorAppInfo | null> {
   if (cachedSimulatorAppInfo === undefined) {
-    const xcodeVersion = await xcode.getXcodeVersionAsync();
-    const candidates =
-      xcodeVersion && semver.gte(xcodeVersion, FIRST_DEVICE_HUB_XCODE_VERSION)
-        ? [DEVICE_HUB_APP_NAME, SIMULATOR_APP_NAME]
-        : [SIMULATOR_APP_NAME, DEVICE_HUB_APP_NAME];
+    const [xcodeVersion, simulatorInfo, deviceHubInfo] = await Promise.all([
+      xcode.getXcodeVersionAsync(),
+      resolveAppInfoAsync(SIMULATOR_APP_NAME),
+      resolveAppInfoAsync(DEVICE_HUB_APP_NAME),
+    ]);
 
-    cachedSimulatorAppInfo = null;
-    for (const name of candidates) {
-      const info = await resolveAppInfoAsync(name);
-      if (info) {
-        cachedSimulatorAppInfo = info;
-        break;
-      }
-    }
+    const preferDeviceHub =
+      !!xcodeVersion && semver.gte(xcodeVersion, FIRST_DEVICE_HUB_XCODE_VERSION);
+    cachedSimulatorAppInfo = preferDeviceHub
+      ? (deviceHubInfo ?? simulatorInfo)
+      : (simulatorInfo ?? deviceHubInfo);
   }
 
   return cachedSimulatorAppInfo;
