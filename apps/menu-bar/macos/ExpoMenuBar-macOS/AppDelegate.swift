@@ -32,11 +32,6 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
       initialProperties: [:],
       launchOptions: notification.userInfo
     )
-    // Transparent background. Previously done in ReactNativeDelegate.customize(_:),
-    // but that override no longer type-checks with Xcode 27, which resolves
-    // RCTRootView to the 'React' module instead of 'React_RCTAppDelegate'.
-    rootView.wantsLayer = true
-    rootView.layer?.backgroundColor = NSColor.clear.cgColor
     let rootViewController = NSViewController()
     rootViewController.view = rootView
 
