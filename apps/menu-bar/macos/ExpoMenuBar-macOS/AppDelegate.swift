@@ -1,5 +1,5 @@
 import Cocoa
-import Expo
+internal import Expo
 import React
 import ReactAppDependencyProvider
 
@@ -9,7 +9,7 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
   var popoverManager: PopoverManager!
 
   var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
-  var reactNativeFactory: RCTReactNativeFactory?
+  @objc var reactNativeFactory: RCTReactNativeFactory?
 #if RCT_DEV
   var devWindowController: NSWindowController?
 #endif
@@ -27,8 +27,7 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
     delegate.dependencyProvider = RCTAppDependencyProvider()
 
     reactNativeDelegate = delegate
-    reactNativeFactory = factory
-    bindReactNativeFactory(factory)
+    reactNativeFactory = factory 
 
     let rootView =  factory.rootViewFactory.view(
       withModuleName: "main",

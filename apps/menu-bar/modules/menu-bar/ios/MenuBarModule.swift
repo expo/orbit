@@ -14,7 +14,7 @@ public class MenuBarModule: Module {
 
     Constants([
       "appVersion": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-      "buildVersion": self.appContext?.constants?.buildVersion(),
+      "buildVersion": Bundle.main.infoDictionary?["CFBundleVersion"] as? String,
       "initialScreenSize": [
         "width": NSScreen.main?.frame.width,
         "height": NSScreen.main?.frame.height
