@@ -7,6 +7,33 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.7.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add support for DeviceHub.app on Xcode 27, which replaces Simulator.app. (<a href="https://github.com/expo/orbit/pull/343">#343</a> by <a href="https://github.com/GersonRocha9">@GersonRocha9</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix Run Android emulator without audio option. (<a href="https://github.com/expo/orbit/pull/340">#340</a> by <a href="https://github.com/lklima">@lklima</a>)</li>
+        <li>Fix opening APKs/tar from finder. (<a href="https://github.com/expo/orbit/pull/341">#341</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix building the menu-bar macOS app with Xcode 26.4. (<a href="https://github.com/expo/orbit/pull/343">#343</a> by <a href="https://github.com/GersonRocha9">@GersonRocha9</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2026-06-15</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.7.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.7.0/expo-orbit.v2.7.0-macos.zip"
+        sparkle:version="45"
+        sparkle:shortVersionString="2.7.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.6.0</title>
       <description>
       <![CDATA[
