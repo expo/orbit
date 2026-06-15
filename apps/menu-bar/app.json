@@ -21,10 +21,9 @@
     },
     "experiments": {
       "baseUrl": "./",
-      "reactCompiler": true
+      "reactCompiler": true,
+      "outOfTreePlatforms": true
     },
-    "plugins": [
-      "expo-web-browser"
-    ]
+    "plugins": ["expo-web-browser"]
   }
 }
