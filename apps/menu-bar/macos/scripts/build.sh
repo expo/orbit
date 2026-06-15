@@ -5,6 +5,12 @@ WORKSPACE_PATH='./macos/ExpoMenuBar.xcworkspace'
 CONFIGURATION='Debug'
 SCHEME='ExpoMenuBar-macOS'
 
+# Build the native simulator-stream helper
+echo "[build] Building simulator-stream helper..."
+if [ -f "./helpers/simulator-stream/build.sh" ]; then
+  bash ./helpers/simulator-stream/build.sh || echo "[build] simulator-stream build failed (non-fatal, will use xcrun fallback)"
+fi
+
 # Build
 xcodebuild -workspace "$WORKSPACE_PATH" -scheme "$SCHEME" -configuration "$CONFIGURATION"
 

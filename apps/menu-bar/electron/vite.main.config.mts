@@ -16,6 +16,9 @@ export default defineConfig({
     commonjsOptions: {
       include: [/common-types/, /node_modules/],
     },
+    rollupOptions: {
+      external: ['bufferutil', 'utf-8-validate'],
+    },
   },
   plugins: [
     viteStaticCopy({
@@ -35,6 +38,25 @@ export default defineConfig({
         },
       ],
       structured: true,
+    }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: './src/static/**/*',
+          dest: 'static/',
+        },
+      ],
+    }),
+    // Copy native simulator-stream helper binary if it exists (macOS only)
+    viteStaticCopy({
+      targets: [
+        {
+          src: '../helpers/simulator-stream/.build/release/SimulatorStream',
+          dest: './',
+          rename: 'simulator-stream',
+        },
+      ],
+      silent: true,
     }),
   ],
 });
