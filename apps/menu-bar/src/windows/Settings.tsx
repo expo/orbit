@@ -203,7 +203,7 @@ const Settings = () => {
   };
 
   return (
-    <View flex="1" px="medium" pb="medium">
+    <View flex="1" px="medium" pb="medium" testID="settings-window">
       <ScrollView alwaysBounceVertical={false}>
         <View flex="1">
           <View mb="3">

@@ -28,17 +28,17 @@ const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
   }
 
   return (
-    <View style={{ minHeight: BUILDS_SECTION_HEIGHT }}>
+    <View style={{ minHeight: BUILDS_SECTION_HEIGHT }} testID="builds-section">
       <View pt="2.5" pb="tiny">
         <SectionHeader label="Builds" />
       </View>
       {tasks.size === 0 ? (
         <>
-          <Item onPress={openProjectsSelectorURL}>
+          <Item onPress={openProjectsSelectorURL} testID="select-build-eas">
             <SystemIconView systemIconName="globe" tintColor={theme.text.default} />
             <Text>Select build from EAS…</Text>
           </Item>
-          <Item onPress={openFilePicker}>
+          <Item onPress={openFilePicker} testID="select-build-local">
             <SystemIconView systemIconName="text.document" tintColor={theme.text.default} />
             <Text>Select build from local file…</Text>
           </Item>

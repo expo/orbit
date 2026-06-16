@@ -10,6 +10,8 @@
 
 ### 💡 Others
 
+- Add cross-platform E2E testing with WebdriverIO for Electron and Appium mac2 for macOS. ([#334](https://github.com/expo/orbit/pull/334) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ## 2.7.0 — 2026-06-14
 
 ### 🎉 New features
