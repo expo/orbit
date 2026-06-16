@@ -15,7 +15,7 @@ export async function listDevicesAsync<P extends Platform>({
   };
 
   if (platform === Platform.Ios || platform === Platform.All) {
-    // Physical Apple device discovery is cross-platform (macOS, Windows, Linux).
+    // Physical Apple device discovery is cross-platform
     try {
       const connectedDevices = await AppleDevice.getConnectedDevicesAsync();
       for (const connectedDevice of connectedDevices) {
@@ -43,8 +43,7 @@ export async function listDevicesAsync<P extends Platform>({
       }
     }
 
-    // Simulators only exist on macOS. Listing them shells out to `simctl`, so we
-    // skip it elsewhere to avoid poisoning the iOS section with a tooling error.
+    // Simulators are only supported on macOS
     if (process.platform === 'darwin') {
       try {
         const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
@@ -64,7 +63,6 @@ export async function listDevicesAsync<P extends Platform>({
             code: error instanceof InternalError ? error.code : 'UNKNOWN_ERROR',
             message: error.message,
           };
-          // Preserve any connected-device error already set on the iOS section.
           result.ios.error = result.ios.error ?? errorInfo;
           result.tvos.error = errorInfo;
           result.watchos.error = errorInfo;

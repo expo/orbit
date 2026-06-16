@@ -2,13 +2,13 @@ import spawnAsync from '@expo/spawn-async';
 
 /**
  * Best-effort install of the helper software needed to talk to a physical iPhone
- * over USB. None of this requires an Apple account.
+ * over USB.
  *
  * - Linux: installs the open-source `usbmuxd` daemon via the system package
  *   manager, using `pkexec` for the privilege prompt.
  * - Windows: installs the Apple Devices app via winget (it bundles the Apple USB
  *   drivers and the Apple Mobile Device Service).
- * - macOS: no-op — usbmuxd ships with the OS.
+ * - macOS: no-op — natively supported.
  */
 export async function installAppleDeviceSupportAsync(): Promise<void> {
   if (process.platform === 'darwin') {
@@ -31,8 +31,6 @@ export async function installAppleDeviceSupportAsync(): Promise<void> {
     ]);
     return;
   }
-
-  throw new Error(`Installing Apple device support is not supported on ${process.platform}.`);
 }
 
 async function installOnLinuxAsync(): Promise<void> {
