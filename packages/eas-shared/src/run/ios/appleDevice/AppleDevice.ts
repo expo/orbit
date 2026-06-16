@@ -51,16 +51,22 @@ export async function getConnectedDevicesAsync(): Promise<AppleConnectedDevice[]
     devices.push(...customResult.value);
   } else {
     // The usbmux-based custom tooling is the only cross-platform discovery path.
-    // If it failed because the helper service isn't running, surface a friendly
-    // error so the UI can guide the user to install the Apple helper software.
-    if (isUsbmuxdNotRunningError(customResult.reason)) {
+    const reason = customResult.reason;
+    // It may already have wrapped a connection failure as a user-facing
+    // InternalError (e.g. APPLE_DEVICE_USBMUXD_NOT_RUNNING) — surface it so the
+    // UI/CLI can guide the user to install the Apple helper software.
+    if (reason instanceof InternalError) {
+      throw reason;
+    }
+    // A raw socket error means the helper service isn't running.
+    if (isUsbmuxdNotRunningError(reason)) {
       throw createUsbmuxdNotRunningError();
     }
     // If the native tools also couldn't list anything, surface the original error.
     if (nativeResult.status !== 'fulfilled') {
-      throw customResult.reason;
+      throw reason;
     }
-    log('Failed to list Apple devices using custom tooling: %O', customResult.reason);
+    log('Failed to list Apple devices using custom tooling: %O', reason);
   }
 
   return uniqBy(devices, (device) => device.udid);
