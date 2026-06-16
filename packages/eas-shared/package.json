@@ -41,6 +41,7 @@
     "debug": "^4.3.4",
     "env-paths": "2.2.0",
     "exec-async": "2.2.0",
+    "extract-zip": "^2.0.1",
     "getenv": "^1.0.0",
     "lodash": "^4.17.21",
     "node-fetch": "2.6.7",

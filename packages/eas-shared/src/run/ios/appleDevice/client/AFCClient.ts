@@ -150,7 +150,8 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
       const promises: Promise<void>[] = [];
       for (const file of fs.readdirSync(dirPath)) {
         const filePath = path.join(dirPath, file);
-        const remotePath = path.join(destPath, path.relative(srcPath, filePath));
+        const relativePosix = path.relative(srcPath, filePath).split(path.sep).join('/');
+        const remotePath = path.posix.join(destPath, relativePosix);
         if (fs.lstatSync(filePath).isDirectory()) {
           promises.push(_this.makeDirectory(remotePath).then(() => uploadDir(filePath)));
         } else {

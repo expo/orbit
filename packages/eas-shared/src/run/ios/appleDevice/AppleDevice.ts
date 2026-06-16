@@ -174,7 +174,7 @@ export async function runOnDevice({
     }
 
     const packageName = path.basename(appPath);
-    const destPackagePath = path.join('PublicStaging', packageName);
+    const destPackagePath = path.posix.join('PublicStaging', packageName);
 
     await uploadApp(clientManager, {
       appBinaryPath: appPath,

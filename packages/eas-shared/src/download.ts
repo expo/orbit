@@ -302,12 +302,10 @@ async function filterNestedDuplicateAppsAsync(
 
 export async function tarExtractAsync(input: string, output: string): Promise<void> {
   try {
-    if (process.platform !== 'win32') {
-      await spawnAsync('tar', ['-xf', input, '-C', output], {
-        stdio: 'inherit',
-      });
-      return;
-    }
+    await spawnAsync('tar', ['-xf', input, '-C', output], {
+      stdio: 'inherit',
+    });
+    return;
   } catch (error: any) {
     Log.warn(
       `Failed to extract tar using native tools, falling back on JS tar module. ${error.message}`
