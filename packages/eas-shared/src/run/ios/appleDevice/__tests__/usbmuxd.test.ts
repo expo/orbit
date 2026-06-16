@@ -1,4 +1,5 @@
 import { InternalError } from 'common-types';
+import fs from 'fs';
 
 import {
   createUsbmuxdNotRunningError,
@@ -27,12 +28,27 @@ describe('getUsbmuxdHelperGuidance', () => {
     });
   });
 
-  it('points Linux users to usbmuxd via the package manager', () => {
+  it('points Linux users to usbmuxd via the package manager when not installed', () => {
+    const existsSpy = jest.spyOn(fs, 'existsSync').mockReturnValue(false);
     withPlatform('linux', () => {
       const guidance = getUsbmuxdHelperGuidance();
       expect(guidance.label).toBe('usbmuxd');
       expect(guidance.installCommand).toContain('usbmuxd');
+      expect(guidance.startCommand).toBeUndefined();
     });
+    existsSpy.mockRestore();
+  });
+
+  it('tells Linux users to start usbmuxd when it is already installed', () => {
+    const existsSpy = jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    withPlatform('linux', () => {
+      const guidance = getUsbmuxdHelperGuidance();
+      expect(guidance.label).toBe('usbmuxd');
+      expect(guidance.installCommand).toBeUndefined();
+      expect(guidance.startCommand).toContain('usbmuxd');
+      expect(guidance.description).toMatch(/not running/i);
+    });
+    existsSpy.mockRestore();
   });
 
   it('tells macOS users no extra software is required', () => {

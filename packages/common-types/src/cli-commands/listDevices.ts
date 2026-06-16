@@ -25,6 +25,8 @@ export type DeviceListErrorHelper = {
   installUrl?: string;
   /** Shell command that installs the helper software. */
   installCommand?: string;
+  /** Shell command that starts the (already installed) helper service. */
+  startCommand?: string;
 };
 
 export type DeviceListError = {

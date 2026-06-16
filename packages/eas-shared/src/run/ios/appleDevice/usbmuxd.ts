@@ -6,6 +6,7 @@
  */
 import { InternalError } from 'common-types';
 import Debug from 'debug';
+import fs from 'fs';
 import { Socket } from 'net';
 
 import { UsbmuxdClient } from './client/UsbmuxdClient';
@@ -26,11 +27,28 @@ export type UsbmuxdHelperGuidance = {
   installUrl?: string;
   /** Optional shell command that installs the helper software. */
   installCommand?: string;
+  /** Optional shell command that starts the (already installed) helper service. */
+  startCommand?: string;
 };
 
+// Known locations of the usbmuxd daemon binary on Linux.
+const LINUX_USBMUXD_BINARY_PATHS = [
+  '/usr/sbin/usbmuxd',
+  '/usr/local/sbin/usbmuxd',
+  '/sbin/usbmuxd',
+  '/usr/bin/usbmuxd',
+  '/bin/usbmuxd',
+];
+
+/** Whether the usbmuxd daemon binary is installed (Linux only). */
+export function isUsbmuxdInstalled(): boolean {
+  return LINUX_USBMUXD_BINARY_PATHS.some((binaryPath) => fs.existsSync(binaryPath));
+}
+
 /**
- * Per-platform guidance for installing the helper software required to talk to a
- * physical iPhone over USB. None of this requires an Apple account.
+ * Per-platform guidance for getting the helper software required to talk to a
+ * physical iPhone over USB into a working state. None of this requires an Apple
+ * account.
  */
 export function getUsbmuxdHelperGuidance(): UsbmuxdHelperGuidance {
   switch (process.platform) {
@@ -43,12 +61,22 @@ export function getUsbmuxdHelperGuidance(): UsbmuxdHelperGuidance {
         installCommand: 'winget install --id Apple.AppleDevices -e',
       };
     case 'linux':
-      return {
-        label: 'usbmuxd',
-        description:
-          'To connect to an iPhone over USB on Linux, install the usbmuxd daemon from the libimobiledevice project.',
-        installCommand: 'sudo apt-get install -y usbmuxd',
-      };
+      // usbmuxd is socket/udev-activated: it only runs while an Apple device is
+      // attached and exits afterwards. If the binary is present but unreachable,
+      // it just needs starting — telling the user to reinstall would be wrong.
+      return isUsbmuxdInstalled()
+        ? {
+            label: 'usbmuxd',
+            description:
+              'usbmuxd is installed but not running. Connect and unlock your iPhone and tap "Trust" — usbmuxd starts automatically when a device is attached. If it still does not appear, run `sudo systemctl start usbmuxd`.',
+            startCommand: 'sudo systemctl start usbmuxd',
+          }
+        : {
+            label: 'usbmuxd',
+            description:
+              'To connect to an iPhone over USB on Linux, install the usbmuxd daemon from the libimobiledevice project.',
+            installCommand: 'sudo apt-get install -y usbmuxd',
+          };
     default:
       return {
         label: 'Apple Mobile Device Service',
@@ -73,6 +101,9 @@ export function createUsbmuxdNotRunningError(): InternalError {
   }
   if (guidance.installCommand) {
     details.installCommand = guidance.installCommand;
+  }
+  if (guidance.startCommand) {
+    details.startCommand = guidance.startCommand;
   }
   return new InternalError('APPLE_DEVICE_USBMUXD_NOT_RUNNING', guidance.description, details);
 }

@@ -50,6 +50,9 @@ To talk to the device over USB, Orbit relies on Apple's device service. If it is
 Connect your iPhone, unlock it, and tap **Trust** when prompted. The device then appears under **iOS** in Orbit, ready to install to.
 
 > [!note]
+> On Linux, `usbmuxd` starts automatically when an Apple device is attached and stops shortly after it's unplugged, so you'll only see the device while it's connected. If a connected iPhone still isn't detected (and no Trust prompt appears), make sure the daemon is running with `sudo systemctl start usbmuxd`.
+
+> [!note]
 > On Windows and Linux, Orbit installs the app but cannot launch it automatically (that requires Xcode). After installing, open the app from your iPhone's Home Screen. On macOS the app is launched for you.
 
 ## 👏 Contributing

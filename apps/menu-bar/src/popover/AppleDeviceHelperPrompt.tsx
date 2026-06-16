@@ -20,6 +20,11 @@ const AppleDeviceHelperPrompt = ({ error }: Props) => {
   const [isInstalling, setIsInstalling] = useState(false);
   const { helper } = error;
 
+  // Only offer an install action when there's actually something to install. When
+  // the helper is installed but not running (e.g. usbmuxd on Linux), the message
+  // itself explains how to start it.
+  const canInstall = Boolean(helper && (helper.installUrl || helper.installCommand));
+
   const onPressInstall = async () => {
     if (!helper) {
       return;
@@ -52,9 +57,9 @@ const AppleDeviceHelperPrompt = ({ error }: Props) => {
       <Text color="secondary" size="small">
         {error.message}
       </Text>
-      {helper ? (
+      {canInstall ? (
         <Button
-          title={isInstalling ? 'Installing…' : `Install ${helper.label}`}
+          title={isInstalling ? 'Installing…' : `Install ${helper!.label}`}
           color="primary"
           disabled={isInstalling}
           onPress={onPressInstall}

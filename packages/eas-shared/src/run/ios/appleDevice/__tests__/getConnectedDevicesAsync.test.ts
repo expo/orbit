@@ -16,7 +16,9 @@ jest.mock('../../devicectl', () => ({
   getConnectedAppleDevicesAsync: jest.fn(() => Promise.resolve([])),
 }));
 
+// eslint-disable-next-line import/first -- imports must follow the jest.mock calls above.
 import { getConnectedDevicesAsync } from '../AppleDevice';
+// eslint-disable-next-line import/first
 import { createUsbmuxdNotRunningError } from '../usbmuxd';
 
 describe('getConnectedDevicesAsync', () => {
