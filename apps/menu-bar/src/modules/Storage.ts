@@ -14,7 +14,6 @@ export type UserPreferences = {
   emulatorWithoutAudio: boolean;
   customSdkPath?: string;
   showIosSimulators: boolean;
-  showIosDevices: boolean;
   showTvosSimulators: boolean;
   showWatchosSimulators: boolean;
   showAndroidEmulators: boolean;
@@ -23,9 +22,9 @@ export type UserPreferences = {
 export const defaultUserPreferences: UserPreferences = {
   launchOnLogin: false,
   emulatorWithoutAudio: false,
-  showIosSimulators: Platform.OS === 'macos',
-  // Physical iPhones can be used from macOS, Windows, and Linux.
-  showIosDevices: true,
+  // Controls the whole iOS section (simulators on macOS, physical iPhones on all
+  // platforms). Enabled everywhere so connected iPhones are discoverable.
+  showIosSimulators: true,
   showTvosSimulators: false,
   showWatchosSimulators: Platform.OS === 'macos',
   showAndroidEmulators: true,
