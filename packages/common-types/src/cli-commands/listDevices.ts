@@ -18,9 +18,25 @@ export type Device<P> = P extends Platform.Ios
         ? AndroidConnectedDevice | AndroidEmulator
         : never;
 
+export type DeviceListErrorHelper = {
+  /** Short, human-readable name of the helper software to install. */
+  label: string;
+  /** URL to open so the user can install the helper software. */
+  installUrl?: string;
+  /** Shell command that installs the helper software. */
+  installCommand?: string;
+};
+
+export type DeviceListError = {
+  code: string;
+  message: string;
+  /** Present when the error is actionable by installing helper software. */
+  helper?: DeviceListErrorHelper;
+};
+
 export type DevicesPerPlatform = {
   [P in Exclude<Platform, Platform.All>]: {
     devices: Device<P>[];
-    error?: { code: string; message: string };
+    error?: DeviceListError;
   };
 };

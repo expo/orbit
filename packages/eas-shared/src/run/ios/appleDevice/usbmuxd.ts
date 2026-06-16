@@ -1,0 +1,151 @@
+/**
+ * Copyright © 2024 650 Industries.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+import { InternalError } from 'common-types';
+import Debug from 'debug';
+import { Socket } from 'net';
+
+import { UsbmuxdClient } from './client/UsbmuxdClient';
+
+const debug = Debug('expo:apple-device:usbmuxd');
+
+// Socket/connection error codes that indicate the usbmux service (the Apple
+// Mobile Device Service on Windows, or the usbmuxd daemon on macOS/Linux) is not
+// installed or not running.
+const NOT_RUNNING_SOCKET_ERROR_CODES = ['ECONNREFUSED', 'ENOENT', 'ECONNRESET', 'EPIPE'];
+
+export type UsbmuxdHelperGuidance = {
+  /** Short, human-readable name of the helper software. */
+  label: string;
+  /** User-facing explanation of what to install and why. */
+  description: string;
+  /** Optional URL to open so the user can install the helper software. */
+  installUrl?: string;
+  /** Optional shell command that installs the helper software. */
+  installCommand?: string;
+};
+
+/**
+ * Per-platform guidance for installing the helper software required to talk to a
+ * physical iPhone over USB. None of this requires an Apple account.
+ */
+export function getUsbmuxdHelperGuidance(): UsbmuxdHelperGuidance {
+  switch (process.platform) {
+    case 'win32':
+      return {
+        label: 'Apple Devices',
+        description:
+          'To connect to an iPhone over USB on Windows, install the Apple Devices app (or iTunes). It includes the Apple USB drivers and the Apple Mobile Device Service.',
+        installUrl: 'https://apps.microsoft.com/detail/9np83lwlpz9k',
+        installCommand: 'winget install --id Apple.AppleDevices -e',
+      };
+    case 'linux':
+      return {
+        label: 'usbmuxd',
+        description:
+          'To connect to an iPhone over USB on Linux, install the usbmuxd daemon from the libimobiledevice project.',
+        installCommand: 'sudo apt-get install -y usbmuxd',
+      };
+    default:
+      return {
+        label: 'Apple Mobile Device Service',
+        description:
+          'usbmuxd ships with macOS, so no additional software is required. Make sure your iPhone is unlocked and that you have tapped "Trust" on it.',
+      };
+  }
+}
+
+/** Whether a socket/connection error indicates the usbmux service is not reachable. */
+export function isUsbmuxdNotRunningError(error: unknown): boolean {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  return typeof code === 'string' && NOT_RUNNING_SOCKET_ERROR_CODES.includes(code);
+}
+
+/** Build the InternalError surfaced to the CLI/menu-bar when the service is down. */
+export function createUsbmuxdNotRunningError(): InternalError {
+  const guidance = getUsbmuxdHelperGuidance();
+  const details: Record<string, string> = { label: guidance.label };
+  if (guidance.installUrl) {
+    details.installUrl = guidance.installUrl;
+  }
+  if (guidance.installCommand) {
+    details.installCommand = guidance.installCommand;
+  }
+  return new InternalError('APPLE_DEVICE_USBMUXD_NOT_RUNNING', guidance.description, details);
+}
+
+/**
+ * Connect to the usbmux socket (the Apple Mobile Device Service on Windows, or the
+ * usbmuxd daemon socket on macOS/Linux), resolving only once the connection is
+ * established. Rejects with a friendly InternalError when the service is not
+ * running so callers can guide the user to install the helper software.
+ *
+ * Using this instead of the raw, synchronous `connectUsbmuxdSocket()` for the
+ * initial connection avoids an uncaught exception: the protocol layer's `error`
+ * handler throws, so a connection that fails after a `sendMessage` call would
+ * otherwise crash the process instead of rejecting a promise.
+ */
+export function connectUsbmuxdSocketAsync(timeoutMs = 5000): Promise<Socket> {
+  return new Promise<Socket>((resolve, reject) => {
+    const socket = UsbmuxdClient.connectUsbmuxdSocket();
+    let settled = false;
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      socket.removeListener('connect', onConnect);
+      socket.removeListener('error', onError);
+    };
+    const onConnect = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve(socket);
+    };
+    const onError = (error: NodeJS.ErrnoException) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      try {
+        socket.destroy();
+      } catch {}
+      if (isUsbmuxdNotRunningError(error)) {
+        debug('usbmux service not reachable: %O', error);
+        reject(createUsbmuxdNotRunningError());
+      } else {
+        reject(error);
+      }
+    };
+    const timer = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      try {
+        socket.destroy();
+      } catch {}
+      reject(createUsbmuxdNotRunningError());
+    }, timeoutMs);
+
+    socket.once('connect', onConnect);
+    socket.once('error', onError);
+  });
+}
+
+/** Lightweight check used by doctor/UX flows — never throws. */
+export async function isUsbmuxdAvailableAsync(): Promise<boolean> {
+  try {
+    const socket = await connectUsbmuxdSocketAsync(2000);
+    socket.end();
+    return true;
+  } catch {
+    return false;
+  }
+}

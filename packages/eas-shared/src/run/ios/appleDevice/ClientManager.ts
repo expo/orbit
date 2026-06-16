@@ -5,6 +5,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import { InternalError } from 'common-types';
 import { Socket } from 'net';
 import { Duplex } from 'stream';
 import * as tls from 'tls';
@@ -16,6 +17,7 @@ import { LockdowndClient } from './client/LockdowndClient';
 import { MobileImageMounterClient } from './client/MobileImageMounterClient';
 import { ServiceClient } from './client/ServiceClient';
 import { UsbmuxdClient, UsbmuxdDevice, UsbmuxdPairRecord } from './client/UsbmuxdClient';
+import { connectUsbmuxdSocketAsync, isUsbmuxdNotRunningError } from './usbmuxd';
 import { CommandError } from '../../../utils/errors';
 
 export class ClientManager {
@@ -29,7 +31,9 @@ export class ClientManager {
   }
 
   static async create(udid?: string) {
-    const usbmuxClient = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
+    // Connect up front so a missing/stopped usbmux service rejects cleanly with a
+    // friendly InternalError instead of crashing the protocol layer.
+    const usbmuxClient = new UsbmuxdClient(await connectUsbmuxdSocketAsync());
     try {
       const device = await usbmuxClient.getDevice(udid);
       const pairRecord = await usbmuxClient.readPairRecord(device.Properties.SerialNumber);
@@ -39,6 +43,20 @@ export class ClientManager {
       return new ClientManager(pairRecord, device, lockdownClient);
     } catch (error) {
       usbmuxClient.socket.end();
+      if (isUsbmuxdNotRunningError(error)) {
+        throw new InternalError(
+          'APPLE_DEVICE_USBMUXD_NOT_RUNNING',
+          'Lost connection to the Apple device service. Make sure the helper software is installed and running.'
+        );
+      }
+      // A missing/invalid pair record means the device hasn't been trusted yet.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!(error instanceof InternalError) && /pair|InvalidHostID|trust/i.test(message)) {
+        throw new InternalError(
+          'APPLE_DEVICE_NOT_PAIRED',
+          'This iPhone is not paired with this computer. Unlock the device, connect it over USB, and tap "Trust" when prompted, then try again.'
+        );
+      }
       throw error;
     }
   }

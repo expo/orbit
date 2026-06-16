@@ -18,5 +18,6 @@
     "target": "ES2022",
     "typeRoots": ["../../ts-declarations", "src/ts-declarations", "./node_modules/@types"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["**/__mocks__/*", "**/__tests__/*"]
 }

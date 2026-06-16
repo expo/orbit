@@ -4,6 +4,7 @@ import { Device } from 'common-types/build/devices';
 import React, { memo, useCallback, useState } from 'react';
 import { SectionList } from 'react-native';
 
+import AppleDeviceHelperPrompt from './AppleDeviceHelperPrompt';
 import BuildsSection, { BUILDS_SECTION_HEIGHT } from './BuildsSection';
 import DeviceListSectionHeader from './DeviceListSectionHeader';
 import DevicesListError from './DevicesListError';
@@ -718,6 +719,11 @@ function Core(props: Props) {
             renderSectionHeader={({ section: { label, error } }) => (
               <DeviceListSectionHeader label={label} errorMessage={error?.message} />
             )}
+            renderSectionFooter={({ section: { key, error } }) =>
+              key === 'ios' && error?.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING' ? (
+                <AppleDeviceHelperPrompt error={error} />
+              ) : null
+            }
             renderItem={({ item: device }: { item: Device }) => {
               const platform = getDeviceOS(device);
               const id = getDeviceId(device);

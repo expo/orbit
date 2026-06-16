@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { InternalError } from 'common-types';
 import semver from 'semver';
 
+import { createUsbmuxdNotRunningError, isUsbmuxdAvailableAsync } from './appleDevice/usbmuxd';
 import { getSimulatorAppIdAsync } from './simulator';
 import { KNOWN_SIMULATOR_APP_IDS } from './simulatorApp';
 import * as xcode from './xcode';
@@ -77,4 +78,16 @@ export async function validateSystemRequirementsAsync(): Promise<void> {
   await assertCorrectXcodeVersionInstalledAsync();
   await ensureXcrunInstalledAsync();
   await assertSimulatorAppInstalledAsync();
+}
+
+/**
+ * Requirements for installing apps on a physical Apple device. Unlike the
+ * simulator requirements above, this is cross-platform (macOS, Windows, Linux)
+ * and does not depend on Xcode — it only needs the usbmux helper service to be
+ * reachable.
+ */
+export async function validateAppleDeviceRequirementsAsync(): Promise<void> {
+  if (!(await isUsbmuxdAvailableAsync())) {
+    throw createUsbmuxdNotRunningError();
+  }
 }

@@ -44,11 +44,15 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
 
   const updateDevicesList = useCallback(async () => {
     const {
-      showIosSimulators: showIos,
+      showIosSimulators: showIosSims,
+      showIosDevices,
       showTvosSimulators: showTvos,
       showWatchosSimulators: showWatchos,
       showAndroidEmulators: showAndroid,
     } = getUserPreferences();
+
+    // Anything in the iOS section (physical devices and/or simulators).
+    const showIos = showIosSims || showIosDevices;
 
     const iosDevices = new Map<string, CliCommands.ListDevices.Device<CliCommands.Platform.Ios>>();
     const tvosDevices = new Map<
@@ -80,7 +84,11 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
 
       if (showIos) {
         devicesList.ios.devices.forEach((device) => {
-          iosDevices.set(getDeviceId(device), device);
+          // Physical devices and simulators are toggled independently.
+          const isPhysicalDevice = device.deviceType === 'device';
+          if (isPhysicalDevice ? showIosDevices : showIosSims) {
+            iosDevices.set(getDeviceId(device), device);
+          }
         });
       }
 

@@ -15,6 +15,7 @@ export async function listDevicesAsync<P extends Platform>({
   };
 
   if (platform === Platform.Ios || platform === Platform.All) {
+    // Physical Apple device discovery is cross-platform (macOS, Windows, Linux).
     try {
       const connectedDevices = await AppleDevice.getConnectedDevicesAsync();
       for (const connectedDevice of connectedDevices) {
@@ -22,27 +23,52 @@ export async function listDevicesAsync<P extends Platform>({
           result.ios.devices.push(connectedDevice);
         }
       }
-
-      const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
-      for (const simulator of simulators) {
-        if (simulator.osType === 'watchOS') {
-          result.watchos.devices.push(simulator);
-        } else if (simulator.osType === 'tvOS') {
-          result.tvos.devices.push(simulator);
-        } else {
-          result.ios.devices.push(simulator);
-        }
-      }
     } catch (error) {
-      console.warn('Unable to get Apple devices', error);
+      console.warn('Unable to get connected Apple devices', error);
       if (error instanceof Error) {
-        const errorInfo = {
-          code: error instanceof InternalError ? error.code : 'UNKNOWN_ERROR',
+        const code = error instanceof InternalError ? error.code : 'UNKNOWN_ERROR';
+        result.ios.error = {
+          code,
           message: error.message,
+          // Surface install guidance so the menu bar can offer an assist action.
+          helper:
+            code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING'
+              ? (() => {
+                  const { description: _description, ...helper } =
+                    AppleDevice.getUsbmuxdHelperGuidance();
+                  return helper;
+                })()
+              : undefined,
         };
-        result.ios.error = errorInfo;
-        result.tvos.error = errorInfo;
-        result.watchos.error = errorInfo;
+      }
+    }
+
+    // Simulators only exist on macOS. Listing them shells out to `simctl`, so we
+    // skip it elsewhere to avoid poisoning the iOS section with a tooling error.
+    if (process.platform === 'darwin') {
+      try {
+        const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
+        for (const simulator of simulators) {
+          if (simulator.osType === 'watchOS') {
+            result.watchos.devices.push(simulator);
+          } else if (simulator.osType === 'tvOS') {
+            result.tvos.devices.push(simulator);
+          } else {
+            result.ios.devices.push(simulator);
+          }
+        }
+      } catch (error) {
+        console.warn('Unable to get Apple simulators', error);
+        if (error instanceof Error) {
+          const errorInfo = {
+            code: error instanceof InternalError ? error.code : 'UNKNOWN_ERROR',
+            message: error.message,
+          };
+          // Preserve any connected-device error already set on the iOS section.
+          result.ios.error = result.ios.error ?? errorInfo;
+          result.tvos.error = errorInfo;
+          result.watchos.error = errorInfo;
+        }
       }
     }
   }

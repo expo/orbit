@@ -35,7 +35,11 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
 async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string, launchURL?: string) {
   const appInfo = await detectAppleAppType(appPath);
 
-  if (await Simulator.isSimulatorAsync(deviceId)) {
+  // Simulators only exist on macOS, and `isSimulatorAsync` shells out to `simctl`
+  // (macOS only). On Windows/Linux a device id always refers to a physical device.
+  const isSimulator = process.platform === 'darwin' && (await Simulator.isSimulatorAsync(deviceId));
+
+  if (isSimulator) {
     if (appInfo.deviceType === 'device') {
       throw new Error(
         "Apps built to target physical devices can't be installed on simulators. Either use a physical device or generate a new simulator build."

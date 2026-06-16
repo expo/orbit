@@ -17,22 +17,53 @@ import { IPLookupResult, OnInstallProgressCallback } from './client/Installation
 import { LockdowndClient } from './client/LockdowndClient';
 import { UsbmuxdClient } from './client/UsbmuxdClient';
 import { AFC_STATUS, AFCError } from './protocol/AFCProtocol';
+import {
+  connectUsbmuxdSocketAsync,
+  createUsbmuxdNotRunningError,
+  isUsbmuxdNotRunningError,
+} from './usbmuxd';
 import { delayAsync } from '../../../utils/delayAsync';
 import { CommandError } from '../../../utils/errors';
 import { installExitHooks } from '../../../utils/exit';
 import { uniqBy } from '../../../utils/fn';
 import { parseBinaryPlistAsync } from '../../../utils/parseBinaryPlistAsync';
 
+const log = debug('expo:apple-device');
+
 /** @returns a list of connected Apple devices. */
 export async function getConnectedDevicesAsync(): Promise<AppleConnectedDevice[]> {
-  const devices = await Promise.all([
+  const [nativeResult, customResult] = await Promise.allSettled([
     // Prioritize native tools since they can provide more accurate information.
     // NOTE: xcrun is substantially slower than custom tooling. +1.5s vs 9ms.
+    // `devicectl` is macOS + Xcode only and gracefully resolves to [] elsewhere.
     getConnectedDevicesUsingNativeToolsAsync(),
     getConnectedDevicesUsingCustomToolingAsync(),
   ]);
 
-  return uniqBy(devices.flat(), (device) => device.udid);
+  const devices: AppleConnectedDevice[] = [];
+  if (nativeResult.status === 'fulfilled') {
+    devices.push(...nativeResult.value);
+  } else {
+    log('Failed to list Apple devices using native tools: %O', nativeResult.reason);
+  }
+
+  if (customResult.status === 'fulfilled') {
+    devices.push(...customResult.value);
+  } else {
+    // The usbmux-based custom tooling is the only cross-platform discovery path.
+    // If it failed because the helper service isn't running, surface a friendly
+    // error so the UI can guide the user to install the Apple helper software.
+    if (isUsbmuxdNotRunningError(customResult.reason)) {
+      throw createUsbmuxdNotRunningError();
+    }
+    // If the native tools also couldn't list anything, surface the original error.
+    if (nativeResult.status !== 'fulfilled') {
+      throw customResult.reason;
+    }
+    log('Failed to list Apple devices using custom tooling: %O', customResult.reason);
+  }
+
+  return uniqBy(devices, (device) => device.udid);
 }
 
 async function getConnectedDevicesUsingNativeToolsAsync(): Promise<AppleConnectedDevice[]> {
@@ -66,7 +97,9 @@ async function getConnectedDevicesUsingNativeToolsAsync(): Promise<AppleConnecte
 export async function getConnectedDevicesUsingCustomToolingAsync(): Promise<
   AppleConnectedDevice[]
 > {
-  const client = new UsbmuxdClient(UsbmuxdClient.connectUsbmuxdSocket());
+  // Establish the initial connection up front so a missing/stopped usbmux service
+  // rejects cleanly (as an InternalError) instead of crashing the protocol layer.
+  const client = new UsbmuxdClient(await connectUsbmuxdSocketAsync());
   try {
     const devices = await client.getDevices();
 
@@ -122,7 +155,17 @@ export async function runOnDevice({
   const clientManager = await ClientManager.create(udid);
 
   try {
-    await mountDeveloperDiskImage(clientManager);
+    // The developer disk image is only required to launch/debug the app, not to
+    // install it. It can only be mounted on macOS (it ships with Xcode), so on
+    // Windows/Linux this is best-effort: if it fails, we still install the app and
+    // the user launches it by tapping its icon on the device.
+    let ddiMounted = false;
+    try {
+      await mountDeveloperDiskImage(clientManager);
+      ddiMounted = true;
+    } catch (error) {
+      log('Could not mount the developer disk image, continuing install only: %O', error);
+    }
 
     const packageName = path.basename(appPath);
     const destPackagePath = path.join('PublicStaging', packageName);
@@ -160,7 +203,13 @@ export async function runOnDevice({
       [bundleId]: appInfo,
     } = await installer.lookupApp([bundleId]);
 
-    if (appInfo) {
+    if (appInfo && !ddiMounted) {
+      // Without the developer disk image we cannot start the debugserver, so the
+      // app can't be launched programmatically. Installation still succeeded.
+      console.log(
+        `App "${bundleId}" installed. Open it from the Home Screen on your device to launch it.`
+      );
+    } else if (appInfo) {
       // launch fails with EBusy or ENotFound if you try to launch immediately after install
       await delayAsync(200);
       const debugServerClient = await launchApp(clientManager, {

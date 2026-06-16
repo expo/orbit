@@ -7,7 +7,8 @@
     "build": "tsc --project tsconfig.json & tsc --project tsconfig.cjs.json",
     "watch": "yarn build --watch --preserveWatchOutput",
     "lint": "eslint .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test": "jest"
   },
   "exports": {
     ".": {
