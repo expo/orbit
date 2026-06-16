@@ -1,14 +1,17 @@
 import { palette } from '@expo/styleguide-native';
 import { Device } from 'common-types/build/devices';
+import { SymbolView } from 'expo-symbols';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Pressable } from 'react-native';
 
 import Button from './Button';
 import { Text } from './Text';
 import { Row, View } from './View';
-import { SystemIconView } from '../../modules/system-icon-view';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
+import IphoneIcon from '../assets/icons/iphone.svg';
+import TvosIcon from '../assets/icons/tvos.svg';
+import WatchIcon from '../assets/icons/watch.svg';
 import WifiIcon from '../assets/icons/wifi.svg';
 import Alert from '../modules/Alert';
 import { PlatformColor } from '../modules/PlatformColor';
@@ -83,31 +86,25 @@ const DeviceItem = ({ device, onPress: propOnPress, onPressLaunch, selected }: P
               },
             ]}>
             {device.osType === 'watchOS' ? (
-              <SystemIconView
-                style={{
-                  height: 20,
-                  width: 20,
-                }}
-                systemIconName="applewatch"
+              <SymbolView
+                name="applewatch"
+                size={20}
                 tintColor={selected && currentTheme === 'light' ? palette.dark.white : undefined}
+                fallback={<WatchIcon width={20} height={20} />}
               />
             ) : device.osType === 'tvOS' ? (
-              <SystemIconView
-                style={{
-                  height: 20,
-                  width: 20,
-                }}
-                systemIconName="tv"
+              <SymbolView
+                name="tv"
+                size={20}
                 tintColor={selected && currentTheme === 'light' ? palette.dark.white : undefined}
+                fallback={<TvosIcon width={20} height={20} />}
               />
             ) : (
-              <SystemIconView
-                style={{
-                  height: 24,
-                  width: 24,
-                }}
-                systemIconName="iphone"
+              <SymbolView
+                name="iphone"
+                size={24}
                 tintColor={selected && currentTheme === 'light' ? palette.dark.white : undefined}
+                fallback={<IphoneIcon width={24} height={24} />}
               />
             )}
           </View>
