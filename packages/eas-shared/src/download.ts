@@ -1,6 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import { InternalError } from 'common-types';
 import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
+import extractZip from 'extract-zip';
 import glob from 'fast-glob';
 import fs from 'fs-extra';
 import path from 'path';
@@ -311,6 +312,13 @@ export async function tarExtractAsync(input: string, output: string): Promise<vo
       `Failed to extract tar using native tools, falling back on JS tar module. ${error.message}`
     );
   }
+
+  if (/\.(zip|ipa)$/i.test(input)) {
+    Log.debug(`Extracting ${input} to ${output} using JS unzip module`);
+    await extractZip(input, { dir: output });
+    return;
+  }
+
   Log.debug(`Extracting ${input} to ${output} using JS tar module`);
   // tar node module has previously had problems with big files, and seems to
   // be slower, so only use it as a backup.

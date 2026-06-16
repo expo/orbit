@@ -209,9 +209,13 @@ export async function runOnDevice({
       [bundleId]: appInfo,
     } = await installer.lookupApp([bundleId]);
 
-    if (appInfo && !ddiMounted) {
-      // Without the developer disk image we cannot start the debugserver, so the
-      // app can't be launched programmatically. Installation still succeeded.
+    // Programmatic launch needs either the debugserver (requires DDI) or
+    // `xcrun devicectl` (macOS + Xcode only) — both are unavailable on
+    // Windows/Linux, so skip the launch attempt there even if iOS reports a
+    // DDI as already mounted (e.g. an auto-mounted personalized image).
+    const canAttemptLaunch = ddiMounted && process.platform === 'darwin';
+    if (appInfo && !canAttemptLaunch) {
+      // Installation still succeeded; the user can tap the icon to launch.
       console.log(
         `App "${bundleId}" installed. Open it from the Home Screen on your device to launch it.`
       );
@@ -341,6 +345,10 @@ async function launchApp(
   try {
     return await launchAppWithUsbmux(clientManager, { appInfo, detach });
   } catch (error) {
+    // The devicectl fallback ships with Xcode and only exists on macOS.
+    if (process.platform !== 'darwin') {
+      throw error;
+    }
     debug(`Failed to launch app with Usbmuxd, falling back to xcrun... ${error}`);
 
     // Get the device UDID and close the connection, to allow `xcrun devicectl` to connect
