@@ -1,0 +1,241 @@
+name: E2E Tests
+
+# All three platforms run on GitHub Actions:
+#   - Linux Electron E2E previously ran on EAS Workflows, but EAS has no
+#     generic artifact-upload mechanism, so the screenshot/AX-tree pipeline
+#     we use to debug failures wouldn't carry over. The `electron-e2e-linux`
+#     job below exercises the same Electron build on `ubuntu-latest`.
+#   - EAS has no Windows runners.
+#   - EAS macOS workers don't expose an active Aqua/Console session, so
+#     xcodebuild test (which Appium mac2 relies on) can't reach testmanagerd.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - apps/menu-bar/src/**
+      - apps/menu-bar/e2e/**
+      - apps/menu-bar/electron/**
+      - apps/menu-bar/macos/**
+      - .github/workflows/e2e-tests.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  electron-e2e-windows:
+    runs-on: windows-latest
+    name: Electron E2E (Windows)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install workspace dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build packages
+        run: yarn build
+
+      - name: Install electron dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: apps/menu-bar/electron
+
+      - name: Package electron app
+        run: yarn package
+        working-directory: apps/menu-bar/electron
+        env:
+          # Pull in wdio-electron-service main/preload hooks so the E2E IPC
+          # bridge is reachable. Vite tree-shakes them out without this flag.
+          WDIO_E2E: "1"
+
+      - name: Install E2E dependencies
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+
+      - name: Create Android AVD (not booted)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager.bat" --licenses >/dev/null || true
+          "$sdk/sdkmanager.bat" --install "system-images;android-33;default;x86_64"
+          echo no | "$sdk/avdmanager.bat" create avd \
+            --name e2e --abi default/x86_64 \
+            --package "system-images;android-33;default;x86_64" --force
+
+      - name: Run E2E tests
+        run: yarn test:electron
+        working-directory: apps/menu-bar/e2e
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-e2e-artifacts
+          path: apps/menu-bar/e2e/artifacts/
+          if-no-files-found: ignore
+
+  electron-e2e-linux:
+    runs-on: ubuntu-latest
+    name: Electron E2E (Linux)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The ubuntu-latest image is barebones for desktop work; Electron needs
+      # a virtual display (xvfb) and a handful of runtime libs that aren't
+      # preinstalled. Without these, Chromium exits immediately and
+      # Chromedriver reports "DevToolsActivePort file doesn't exist".
+      - name: Install xvfb and Electron runtime libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb \
+            libgbm1 libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 \
+            libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2
+          # libasound2 on Ubuntu 22.04, libasound2t64 on 24.04; try both.
+          sudo apt-get install -y --no-install-recommends libasound2 \
+            || sudo apt-get install -y --no-install-recommends libasound2t64
+
+      - name: Install workspace dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build packages
+        run: yarn build
+
+      - name: Install electron dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: apps/menu-bar/electron
+
+      - name: Package electron app
+        run: yarn package
+        working-directory: apps/menu-bar/electron
+        env:
+          # Pull in wdio-electron-service main/preload hooks so the E2E IPC
+          # bridge is reachable. Vite tree-shakes them out without this flag.
+          WDIO_E2E: "1"
+
+      - name: Install E2E dependencies
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+
+      - name: Create Android AVD (not booted)
+        run: |
+          set -euo pipefail
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses >/dev/null || true
+          "$sdk/sdkmanager" --install "system-images;android-33;default;x86_64"
+          echo no | "$sdk/avdmanager" create avd \
+            --name e2e --abi default/x86_64 \
+            --package "system-images;android-33;default;x86_64" --force
+
+      - name: Run E2E tests
+        run: xvfb-run --auto-servernum yarn test:electron
+        working-directory: apps/menu-bar/e2e
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-e2e-linux-artifacts
+          path: apps/menu-bar/e2e/artifacts/
+          if-no-files-found: ignore
+
+  macos-e2e:
+    runs-on: macos-26
+    name: macOS E2E (Appium mac2)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Switch to Xcode 26.2
+        run: sudo xcode-select --switch /Applications/Xcode_26.2.app
+
+      - name: Install workspace dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build packages
+        run: yarn build
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+          working-directory: apps/menu-bar
+
+      - name: Install CocoaPods
+        working-directory: apps/menu-bar/macos
+        run: bundle exec pod install
+
+      - name: Build macOS app (unsigned — E2E only)
+        working-directory: apps/menu-bar
+        # Skip codesigning: the E2E job has no Developer ID Application cert,
+        # and Appium mac2 launches the .app by path in the same user session,
+        # so Gatekeeper isn't in the picture. Production builds are still
+        # signed/notarized via apps/menu-bar/.eas/build/build-release.yml.
+        run: |
+          xcodebuild build \
+            -workspace macos/ExpoMenuBar.xcworkspace \
+            -scheme ExpoMenuBar-macOS \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath macos/build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Install E2E dependencies
+        run: yarn install
+        working-directory: apps/menu-bar/e2e
+
+      - name: Install Appium mac2 driver
+        working-directory: apps/menu-bar/e2e
+        # Pin to the last 2.x line
+        run: npx appium driver install --source=npm appium-mac2-driver@2.2.2
+
+      - name: Create Android AVD (not booted)
+        run: |
+          set -euo pipefail
+          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+          yes | "$sdk/sdkmanager" --licenses >/dev/null || true
+          "$sdk/sdkmanager" --install "system-images;android-33;default;arm64-v8a"
+          echo no | "$sdk/avdmanager" create avd \
+            --name e2e --abi default/arm64-v8a \
+            --package "system-images;android-33;default;arm64-v8a" --force
+
+      - name: Run macOS E2E tests
+        working-directory: apps/menu-bar/e2e
+        env:
+          MACOS_APP_PATH: ../macos/build/Build/Products/Release/Expo Orbit.app
+        run: yarn test:macos
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-e2e-artifacts
+          path: apps/menu-bar/e2e/artifacts/
+          if-no-files-found: ignore
