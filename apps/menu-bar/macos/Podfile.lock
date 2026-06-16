@@ -40,6 +40,8 @@ PODS:
     - Yoga
   - ExpoAsset (56.0.16-canary-20260606-4d4666c):
     - ExpoModulesCore
+  - ExpoClipboard (56.0.4-canary-20260606-4d4666c):
+    - ExpoModulesCore
   - ExpoFileSystem (56.0.8-canary-20260606-4d4666c):
     - ExpoModulesCore
   - ExpoFont (56.0.6-canary-20260606-4d4666c):
@@ -84,6 +86,8 @@ PODS:
   - ExpoModulesWorklets (56.0.14-canary-20260606-4d4666c):
     - ExpoModulesCore
     - ExpoModulesJSI
+  - ExpoSymbols (56.0.6-canary-20260606-4d4666c):
+    - ExpoModulesCore
   - ExpoWebBrowser (56.0.5):
     - ExpoModulesCore
   - fast_float (8.0.0)
@@ -2478,6 +2482,7 @@ DEPENDENCIES:
   - EXConstants (from `../../../node_modules/expo-constants/ios`)
   - Expo (from `../../../node_modules/expo`)
   - ExpoAsset (from `../../../node_modules/expo-asset/ios`)
+  - ExpoClipboard (from `../../../node_modules/expo-clipboard/ios`)
   - ExpoFileSystem (from `../../../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../../../node_modules/expo-font/ios`)
   - ExpoKeepAwake (from `../../../node_modules/expo-keep-awake/ios`)
@@ -2485,6 +2490,7 @@ DEPENDENCIES:
   - ExpoModulesCore (from `../../../node_modules/expo-modules-core`)
   - ExpoModulesJSI (from `../../../node_modules/expo-modules-jsi/apple`)
   - ExpoModulesWorklets (from `../../../node_modules/expo-modules-core`)
+  - ExpoSymbols (from `../../../node_modules/expo-symbols/ios`)
   - ExpoWebBrowser (from `../../../node_modules/expo-web-browser/ios`)
   - fast_float (from `../../../node_modules/react-native-macos/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../../../node_modules/react-native-macos/Libraries/FBLazyVector`)
@@ -2588,6 +2594,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo"
   ExpoAsset:
     :path: "../../../node_modules/expo-asset/ios"
+  ExpoClipboard:
+    :path: "../../../node_modules/expo-clipboard/ios"
   ExpoFileSystem:
     :path: "../../../node_modules/expo-file-system/ios"
   ExpoFont:
@@ -2602,6 +2610,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-modules-jsi/apple"
   ExpoModulesWorklets:
     :path: "../../../node_modules/expo-modules-core"
+  ExpoSymbols:
+    :path: "../../../node_modules/expo-symbols/ios"
   ExpoWebBrowser:
     :path: "../../../node_modules/expo-web-browser/ios"
   fast_float:
@@ -2769,6 +2779,7 @@ SPEC CHECKSUMS:
   EXConstants: 15a16b1eef3f52d8f8d87053122d66247b485a5e
   Expo: 0a44033ec46fca82f5a8c6d3a6ef23a80e0837f6
   ExpoAsset: 252c4ebddf004c6ab86df13e6e364a02cebebd6c
+  ExpoClipboard: 72193a815a3dc05afcef3cac4b1ace28d1ee9297
   ExpoFileSystem: b2685eca9dce052d38b3bc92eea8ce6b8f7ff0c7
   ExpoFont: fab71872482a8b665d557d6d199aa9d2c7418e3a
   ExpoKeepAwake: 09009184fc80bc2b3242ae7b5e1c9bb50e81b835
@@ -2776,6 +2787,7 @@ SPEC CHECKSUMS:
   ExpoModulesCore: 61ea5e961868bc5712718474d17985f8a85e64f7
   ExpoModulesJSI: fb514c74979352ad91c43c456afd089fc0e1b820
   ExpoModulesWorklets: da05b1df919c838601322af30b0835d1b5d01f0b
+  ExpoSymbols: 4774d07be98190fa228e0590599f0b873546775c
   ExpoWebBrowser: 6e3d90e3fe1952d21a8494872b1e1a485cd50e2f
   fast_float: 20817c22759af6ac8d4d67e6e059b8b499953656
   FBLazyVector: 63d2ab5b273d131609255f4a5441460f8b56cc5a

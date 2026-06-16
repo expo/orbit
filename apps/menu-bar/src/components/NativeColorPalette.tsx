@@ -1,4 +1,4 @@
-import { useClipboard } from '@react-native-clipboard/clipboard';
+import { setStringAsync } from 'expo-clipboard';
 import { useState } from 'react';
 import { FlatList, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 
@@ -9,7 +9,6 @@ const NUMBER_OF_COLUMNS = 9;
 
 const NativeColorPalette = () => {
   const [selectedColor, setSelectedColor] = useState<string>();
-  const [, setClipboardString] = useClipboard();
   return (
     <View style={styles.container}>
       <View style={{ alignItems: 'flex-start' }}>
@@ -44,7 +43,7 @@ const NativeColorPalette = () => {
           />
           <TouchableOpacity
             style={styles.selectedColorText}
-            onPress={() => setClipboardString(selectedColor)}>
+            onPress={() => setStringAsync(selectedColor)}>
             <Text>{selectedColor}</Text>
           </TouchableOpacity>
         </View>

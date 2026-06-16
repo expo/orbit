@@ -1496,6 +1496,11 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.57.1.tgz#de633db3ec2ef6a3c89e2f19038063e8a122e2c2"
   integrity sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==
 
+"@expo-google-fonts/material-symbols@^0.4.1":
+  version "0.4.38"
+  resolved "https://registry.yarnpkg.com/@expo-google-fonts/material-symbols/-/material-symbols-0.4.38.tgz#88982312fb1a2ff18cd002874aaa9bbee0157727"
+  integrity sha512-IJkBtN1o8u9BW5fvSii1MyHPQ7Q0HxbWcVBvOrOzgMLpVtZw7R2w94wBTVR7kZwv3w1JNTESMmLA5Sqn1+Z36A==
+
 "@expo/cli@56.1.13-canary-20260606-4d4666c":
   version "56.1.13-canary-20260606-4d4666c"
   resolved "https://registry.yarnpkg.com/@expo/cli/-/cli-56.1.13-canary-20260606-4d4666c.tgz#ba7736775d2c3c3faa59e86d6ea5b2b8be51f7f8"
@@ -3474,11 +3479,6 @@
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/@pkgr/core/-/core-0.2.4.tgz#d897170a2b0ba51f78a099edccd968f7b103387c"
   integrity sha512-ROFF39F6ZrnzSUEmQQZUar0Jt4xVoP9WnDRdWwF4NNcXs3xBTLgBUDoOwW141y1jP+S8nahIbdxbFC7IShw9Iw==
-
-"@react-native-clipboard/clipboard@^1.13.1":
-  version "1.14.3"
-  resolved "https://registry.yarnpkg.com/@react-native-clipboard/clipboard/-/clipboard-1.14.3.tgz#3596ade1d85b0accdd2585674fcea3ea185f0e20"
-  integrity sha512-EVWxJfCSyBN2SH5b3JrA/w1qlYu3vihQOfdD7fs/BYp63xL6qy93CvbFDHzF8ooFpGM6f67hkAN+gxl1RfOKuw==
 
 "@react-native-macos/virtualized-lists@0.81.6":
   version "0.81.6"
@@ -6901,6 +6901,11 @@ expo-asset@56.0.16-canary-20260606-4d4666c:
     "@expo/image-utils" "0.10.2-canary-20260606-4d4666c"
     expo-constants "56.0.17-canary-20260606-4d4666c"
 
+expo-clipboard@56.0.4-canary-20260606-4d4666c:
+  version "56.0.4-canary-20260606-4d4666c"
+  resolved "https://registry.yarnpkg.com/expo-clipboard/-/expo-clipboard-56.0.4-canary-20260606-4d4666c.tgz#898f3b62a501fa1d24d7a7830fd5180c292b97e8"
+  integrity sha512-A3adJuzAiFGRcT1Dl4HAvXTsQYQMWJeWH3gdLA0FxrgKNrC0RNW7FdF1vdVdouhcLMW5Rzm0FHnvPLPcXG5a2Q==
+
 expo-constants@56.0.17-canary-20260606-4d4666c:
   version "56.0.17-canary-20260606-4d4666c"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-56.0.17-canary-20260606-4d4666c.tgz#2c67386dc5b3e74a030a467ef6445de45dd8da5e"
@@ -6966,6 +6971,14 @@ expo-server@56.0.5-canary-20260606-4d4666c:
   version "56.0.5-canary-20260606-4d4666c"
   resolved "https://registry.yarnpkg.com/expo-server/-/expo-server-56.0.5-canary-20260606-4d4666c.tgz#3b286f55bf5a58bae0c5a45b4d8db28606763196"
   integrity sha512-FL3EJzXUlZGL3lPNzdkPvBO/+GsVcDvQ2LSxUpu0e+3xFnIm1eE5Q2I7LbRfzD4NLWud5FyInBTTc2caegDWFQ==
+
+expo-symbols@56.0.6-canary-20260606-4d4666c:
+  version "56.0.6-canary-20260606-4d4666c"
+  resolved "https://registry.yarnpkg.com/expo-symbols/-/expo-symbols-56.0.6-canary-20260606-4d4666c.tgz#d7b184374b76a280a6a05645d97366d81a371150"
+  integrity sha512-zcQkDJahJq+KlzQuqhJtShhNY3sYeOXYGshxtGWmcxOzLWSnZ51KJYXM8blhyaMHwEE48xaWFNCEdqf2aT4aFQ==
+  dependencies:
+    "@expo-google-fonts/material-symbols" "^0.4.1"
+    sf-symbols-typescript "^2.0.0"
 
 expo-web-browser@~56.0.5:
   version "56.0.5"
@@ -12614,6 +12627,11 @@ setprototypeof@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.2.0.tgz#66c9a24a73f9fc28cbe66b09fed3d33dcaf1b424"
   integrity sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==
+
+sf-symbols-typescript@^2.0.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/sf-symbols-typescript/-/sf-symbols-typescript-2.2.0.tgz#926d6e0715e3d8784cadf7658431e36581254208"
+  integrity sha512-TPbeg0b7ylrswdGCji8FRGFAKuqbpQlLbL8SOle3j1iHSs5Ob5mhvMAxWN2UItOjgALAB5Zp3fmMfj8mbWvXKw==
 
 shallow-clone@^3.0.0:
   version "3.0.1"
