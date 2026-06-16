@@ -73,4 +73,14 @@ app.on('ready', () => {
 
   const server = new LocalServer();
   server.start();
+
+  // wdio-electron-service IPC-Bridge hook. Required by the E2E worker's
+  // copyOriginalApi step. Loaded AFTER the BrowserWindow is created so the
+  // hook's `app.whenReady().then(...)` fast-copy iteration of every Electron
+  // API doesn't sit in front of window creation on the ready-event queue and
+  // starve Chromium of the time it needs to write DevToolsActivePort.
+  // See wdio-hook.ts for why this goes through a static-import shim.
+  if (process.env.WDIO_E2E === '1') {
+    import('./wdio-hook');
+  }
 });

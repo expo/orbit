@@ -11,6 +11,9 @@ public class RudderModule: Module {
     ])
 
     AsyncFunction("load") { (writeKey: String, dataPlaneUrl:String) in
+      if ProcessInfo.processInfo.environment["EXPO_ORBIT_E2E"] == "1" {
+        return
+      }
       let config = RSConfig(writeKey: writeKey)
         .dataPlaneURL(dataPlaneUrl)
         .trackLifecycleEvents(false)
@@ -19,6 +22,9 @@ public class RudderModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("track") { (event: String, properties: [String: Any], context: [String: [String: Any]]?) in
+      if ProcessInfo.processInfo.environment["EXPO_ORBIT_E2E"] == "1" {
+        return
+      }
       let option = RSOption()
 
       if let context = context, !context.isEmpty {

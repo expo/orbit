@@ -15,7 +15,10 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
 #endif
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
-    httpServer = SwifterWrapper()
+    // CI runners can't dismiss "find devices on local networks" TCC prompt
+    if ProcessInfo.processInfo.environment["EXPO_ORBIT_E2E"] != "1" {
+      httpServer = SwifterWrapper()
+    }
 
     super.applicationDidFinishLaunching(notification)
 

@@ -36,6 +36,7 @@ const Onboarding = () => {
   const closeOnboarding = () => {
     storage.set(hasSeenOnboardingStorageKey, true);
     WindowsNavigator.close('Onboarding');
+    MenuBarModule.openPopover();
   };
 
   useWindowFocusEffect(
@@ -66,7 +67,7 @@ const Onboarding = () => {
   );
 
   return (
-    <View flex="1" bg="default">
+    <View flex="1" bg="default" testID="onboarding-window">
       <Image source={Background} style={styles.background} />
       <ScrollView style={{ marginTop: -WINDOW_TITLE_HEIGHT }} alwaysBounceVertical={false}>
         <View style={styles.header}>
@@ -112,7 +113,7 @@ const Onboarding = () => {
         py="medium"
         bg="default"
         style={[styles.footer, { borderTopColor: theme.border.default }]}>
-        <Button title="Get Started" onPress={closeOnboarding} />
+        <Button title="Get Started" onPress={closeOnboarding} testID="get-started-button" />
       </View>
     </View>
   );
