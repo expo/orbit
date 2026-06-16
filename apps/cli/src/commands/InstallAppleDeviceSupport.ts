@@ -6,8 +6,9 @@ import spawnAsync from '@expo/spawn-async';
  *
  * - Linux: installs the open-source `usbmuxd` daemon via the system package
  *   manager, using `pkexec` for the privilege prompt.
- * - Windows: installs the Apple Devices app via winget (it bundles the Apple USB
- *   drivers and the Apple Mobile Device Service).
+ * - Windows: installs Apple Mobile Device Support via winget — the lightweight
+ *   official package with just the Apple USB driver and the Apple Mobile Device
+ *   Service (no full iTunes/Apple Devices app).
  * - macOS: no-op — natively supported.
  */
 export async function installAppleDeviceSupportAsync(): Promise<void> {
@@ -21,15 +22,31 @@ export async function installAppleDeviceSupportAsync(): Promise<void> {
   }
 
   if (process.platform === 'win32') {
+    await installOnWindowsAsync();
+    return;
+  }
+}
+
+async function installOnWindowsAsync(): Promise<void> {
+  try {
     await spawnAsync('winget', [
       'install',
       '--id',
-      'Apple.AppleDevices',
+      'Apple.AppleMobileDeviceSupport',
       '-e',
+      '--silent',
       '--accept-package-agreements',
       '--accept-source-agreements',
     ]);
-    return;
+  } catch (error: any) {
+    // `winget` itself is missing (App Installer not present) — let the caller fall
+    // back to opening the official download page.
+    if (error?.code === 'ENOENT') {
+      throw new Error(
+        'winget is not available on this machine. Install Apple Mobile Device Support (or the Apple Devices app) manually.'
+      );
+    }
+    throw error;
   }
 }
 

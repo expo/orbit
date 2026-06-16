@@ -54,11 +54,13 @@ export function getUsbmuxdHelperGuidance(): UsbmuxdHelperGuidance {
   switch (process.platform) {
     case 'win32':
       return {
-        label: 'Apple Devices',
+        label: 'Apple Mobile Device Support',
         description:
-          'To connect to an iPhone over USB on Windows, install the Apple Devices app (or iTunes). It includes the Apple USB drivers and the Apple Mobile Device Service.',
+          'To connect to an iPhone over USB on Windows, Orbit can install Apple Mobile Device Support — the official Apple USB driver and device service. No Apple account or full iTunes install is required.',
+        // Manual fallback if winget isn't available: the Apple Devices app on the
+        // Microsoft Store also bundles Apple Mobile Device Support.
         installUrl: 'https://apps.microsoft.com/detail/9np83lwlpz9k',
-        installCommand: 'winget install --id Apple.AppleDevices -e',
+        installCommand: 'winget install --id Apple.AppleMobileDeviceSupport -e',
       };
     case 'linux':
       // usbmuxd is socket/udev-activated: it only runs while an Apple device is

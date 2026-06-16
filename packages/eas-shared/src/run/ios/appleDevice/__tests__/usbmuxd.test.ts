@@ -20,10 +20,11 @@ function withPlatform(platform: NodeJS.Platform, fn: () => void) {
 }
 
 describe('getUsbmuxdHelperGuidance', () => {
-  it('points Windows users to the Apple Devices app', () => {
+  it('installs Apple Mobile Device Support on Windows via winget, with a manual fallback URL', () => {
     withPlatform('win32', () => {
       const guidance = getUsbmuxdHelperGuidance();
-      expect(guidance.label).toBe('Apple Devices');
+      expect(guidance.label).toBe('Apple Mobile Device Support');
+      expect(guidance.installCommand).toContain('Apple.AppleMobileDeviceSupport');
       expect(guidance.installUrl).toBeDefined();
     });
   });
@@ -82,7 +83,7 @@ describe('createUsbmuxdNotRunningError', () => {
       const error = createUsbmuxdNotRunningError();
       expect(error).toBeInstanceOf(InternalError);
       expect(error.code).toBe('APPLE_DEVICE_USBMUXD_NOT_RUNNING');
-      expect(error.details?.label).toBe('Apple Devices');
+      expect(error.details?.label).toBe('Apple Mobile Device Support');
       expect(error.details?.installUrl).toBeDefined();
     });
   });

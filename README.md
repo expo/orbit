@@ -44,7 +44,7 @@ To talk to the device over USB, Orbit relies on Apple's device service. If it is
 | Platform | Helper software |
 | --- | --- |
 | macOS | Built in — nothing to install. |
-| Windows | The [Apple Devices app](https://apps.microsoft.com/detail/9np83lwlpz9k) (or iTunes), which installs the Apple USB drivers and the Apple Mobile Device Service. |
+| Windows | Apple Mobile Device Support — the official Apple USB driver and device service. Orbit can install it for you (via `winget`); the [Apple Devices app](https://apps.microsoft.com/detail/9np83lwlpz9k) or iTunes also include it. |
 | Linux | The open-source `usbmuxd` daemon (e.g. `sudo apt-get install usbmuxd`). |
 
 Connect your iPhone, unlock it, and tap **Trust** when prompted. The device then appears under **iOS** in Orbit, ready to install to.

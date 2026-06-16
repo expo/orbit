@@ -9,14 +9,16 @@ import { Linking } from '../modules/Linking';
 
 type Props = {
   error: CliCommands.ListDevices.DeviceListError;
+  /** Called after the helper software is installed so the device list can refresh. */
+  onInstalled?: () => void;
 };
 
 /**
  * Rendered in the iOS section when the usbmux helper service isn't reachable. It
  * explains what's needed and offers a one-click assist to install the helper
- * software (the Apple Devices app on Windows, usbmuxd on Linux).
+ * software (Apple Mobile Device Support on Windows, usbmuxd on Linux).
  */
-const AppleDeviceHelperPrompt = ({ error }: Props) => {
+const AppleDeviceHelperPrompt = ({ error, onInstalled }: Props) => {
   const [isInstalling, setIsInstalling] = useState(false);
   const { helper } = error;
 
@@ -30,23 +32,28 @@ const AppleDeviceHelperPrompt = ({ error }: Props) => {
       return;
     }
 
-    // Prefer opening the installer page (most reliable on Windows). Otherwise run
-    // the install command on the host (usbmuxd on Linux, via pkexec).
-    if (helper.installUrl) {
-      Linking.openURL(helper.installUrl);
-      return;
-    }
-
+    // Install the helper software for the user (winget on Windows, pkexec on
+    // Linux). Only fall back to the manual download page if that fails — e.g.
+    // winget isn't available.
     setIsInstalling(true);
     try {
       await installAppleDeviceSupportAsync();
-    } catch (e) {
       Alert.alert(
-        `Unable to install ${helper.label}`,
-        helper.installCommand
-          ? `Please run the following command manually:\n\n${helper.installCommand}`
-          : (e as Error).message
+        `${helper.label} installed`,
+        'Reconnect your iPhone over USB and tap "Trust" if prompted.'
       );
+      onInstalled?.();
+    } catch (e) {
+      if (helper.installUrl) {
+        Linking.openURL(helper.installUrl);
+      } else {
+        Alert.alert(
+          `Unable to install ${helper.label}`,
+          helper.installCommand
+            ? `Please run the following command manually:\n\n${helper.installCommand}`
+            : (e as Error).message
+        );
+      }
     } finally {
       setIsInstalling(false);
     }

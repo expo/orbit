@@ -721,7 +721,7 @@ function Core(props: Props) {
             )}
             renderSectionFooter={({ section: { key, error } }) =>
               key === 'ios' && error?.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING' ? (
-                <AppleDeviceHelperPrompt error={error} />
+                <AppleDeviceHelperPrompt error={error} onInstalled={refetch} />
               ) : null
             }
             renderItem={({ item: device }: { item: Device }) => {
