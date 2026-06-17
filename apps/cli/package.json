@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@types/picomatch": "^4.0.0",
-    "apple-resign": "file:../../../apple-resign",
+    "apple-resign": "link:../../../apple-resign",
     "commander": "^10.0.1",
     "common-types": "1.0.0",
     "eas-shared": "*",
