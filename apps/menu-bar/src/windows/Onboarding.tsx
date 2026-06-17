@@ -14,7 +14,6 @@ import CommandCheckItem from '../components/CommandCheckItem';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { useWindowFocusEffect } from '../modules/WindowManager/useWindowFocus';
-import AppleDeviceHelperPrompt from '../popover/AppleDeviceHelperPrompt';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
@@ -110,27 +109,18 @@ const Onboarding = () => {
                 loading={platformToolsCheck?.ios?.success === undefined}
               />
             )}
-          </View>
-          {/* On Windows/Linux, let the user opt in to installing the device support
-              needed to install apps on a physical iPhone over USB. */}
-          {Platform.OS !== 'macos' && platformToolsCheck?.appleDevice?.success === false ? (
-            <View px="large" pb="large" style={styles.container}>
-              <View>
-                <Text weight="bold">Install apps on a physical iPhone?</Text>
-                <Text size="small" color="secondary">
-                  Connect an iPhone over USB. Orbit can install the required device support for you.
-                </Text>
-              </View>
-              <AppleDeviceHelperPrompt
-                error={{
-                  code: 'APPLE_DEVICE_USBMUXD_NOT_RUNNING',
-                  message: platformToolsCheck.appleDevice.reason?.message ?? '',
-                  helper: platformToolsCheck.appleDevice.helper,
-                }}
-                onInstalled={() => runChecks({ force: true })}
+            {/* Only emitted by the CLI on Windows. macOS and Linux already ship with usbmuxd. */}
+            {platformToolsCheck?.appleDevice ? (
+              <CommandCheckItem
+                title="Apple Mobile Device Support"
+                description="Install to connect a physical iPhone over USB"
+                icon={Xcode}
+                success={platformToolsCheck.appleDevice.success}
+                reason={platformToolsCheck.appleDevice.reason}
+                loading={platformToolsCheck.appleDevice.success === undefined}
               />
-            </View>
-          ) : null}
+            ) : null}
+          </View>
         </View>
       </ScrollView>
       <View

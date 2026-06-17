@@ -35,26 +35,6 @@ brew install expo-orbit
 > [!note]
 > If you want Orbit to automatically start when you log in, click on the Orbit icon in the menu bar or task bar, then select "Settings" and check the "Launch on Login" option.
 
-## 📱 Installing apps on a physical iPhone
-
-Orbit can install builds onto a physical iPhone connected over USB from macOS, Windows, and Linux. This installs an already-signed build (for example, an internal-distribution or development build from EAS) — **no paid Apple Developer account is required**, and the device just needs to be included in the build's provisioning profile (a free Apple account works).
-
-To talk to the device over USB, Orbit relies on Apple's device service. If it isn't available yet, Orbit detects this and offers to install the required helper software for you:
-
-| Platform | Helper software |
-| --- | --- |
-| macOS | Built in — nothing to install. |
-| Windows | Apple Mobile Device Support — the official Apple USB driver and device service. Orbit can install it for you (via `winget`); the [Apple Devices app](https://apps.microsoft.com/detail/9np83lwlpz9k) or iTunes also include it. |
-| Linux | The open-source `usbmuxd` daemon (e.g. `sudo apt-get install usbmuxd`). |
-
-Connect your iPhone, unlock it, and tap **Trust** when prompted. The device then appears under **iOS** in Orbit, ready to install to.
-
-> [!note]
-> On Linux, `usbmuxd` starts automatically when an Apple device is attached and stops shortly after it's unplugged, so you'll only see the device while it's connected. If a connected iPhone still isn't detected (and no Trust prompt appears), make sure the daemon is running with `sudo systemctl start usbmuxd`.
-
-> [!note]
-> On Windows and Linux, Orbit installs the app but cannot launch it automatically (that requires Xcode). After installing, open the app from your iPhone's Home Screen. On macOS the app is launched for you.
-
 ## 👏 Contributing
 
 If you like Expo Orbit and want to help make it better then check out our [contributing guide](./CONTRIBUTING.md)!
