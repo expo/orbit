@@ -9,7 +9,12 @@ const logs = new Logs();
 
 let hasShownCliErrorAlert = false;
 let listenerCounter = 0;
-async function runCli(command: string, args: string[], callback?: (status: string) => void) {
+async function runCli(
+  command: string,
+  args: string[],
+  callback?: (status: string) => void,
+  transientEnvVars?: Record<string, string>
+) {
   const id = listenerCounter++;
   const filteredCallback = (event: { listenerId: number; output: string }) => {
     if (event.listenerId !== id) {
@@ -20,7 +25,7 @@ async function runCli(command: string, args: string[], callback?: (status: strin
   };
   const listener = emitter.addListener('onCLIOutput', filteredCallback);
   try {
-    const result = await MenuBarModule.runCli(command, args, id);
+    const result = await MenuBarModule.runCli(command, args, id, transientEnvVars);
     logs.push({ command, info: result });
     return result;
   } catch (error) {

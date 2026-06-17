@@ -20,6 +20,7 @@ import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
+import { resignAndRetryAsync } from '../commands/resignAndRetryAsync';
 import { Spacer, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import { useDeepLinking } from '../hooks/useDeepLinking';
@@ -578,10 +579,42 @@ function Core(props: Props) {
                 'We were unable to launch your app because the device is currently locked.'
               );
             } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
-              Alert.alert(
-                error.message,
-                'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
-              );
+              if (getDeviceOS(device) !== 'ios' || isVirtualDevice(device)) {
+                Alert.alert(
+                  error.message,
+                  'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
+                );
+              } else {
+                const deviceName = device.name ?? 'iPhone';
+                const ipaPath = localFilePath!;
+                Alert.alert(
+                  "This build isn't signed for your device",
+                  'Orbit can resign it with your Apple ID and retry.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Resign and install',
+                      style: 'default',
+                      onPress: async () => {
+                        try {
+                          await resignAndRetryAsync({
+                            localFilePath: ipaPath,
+                            deviceId: resolvedDeviceId,
+                            deviceName,
+                            launchURL,
+                          });
+                        } catch (resignError) {
+                          const message =
+                            resignError instanceof Error
+                              ? resignError.message
+                              : String(resignError);
+                          Alert.alert('Resign failed', message);
+                        }
+                      },
+                    },
+                  ]
+                );
+              }
             }
           } else {
             throw error;
