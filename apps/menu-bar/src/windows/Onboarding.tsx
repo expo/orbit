@@ -14,6 +14,7 @@ import CommandCheckItem from '../components/CommandCheckItem';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { useWindowFocusEffect } from '../modules/WindowManager/useWindowFocus';
+import AppleDeviceHelperPrompt from '../popover/AppleDeviceHelperPrompt';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
 export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
@@ -39,31 +40,35 @@ const Onboarding = () => {
     MenuBarModule.openPopover();
   };
 
-  useWindowFocusEffect(
-    useCallback(async () => {
-      if (checkStatus.current === Status.SUCCESS) {
-        return;
-      }
+  const runChecks = useCallback(async ({ force = false }: { force?: boolean } = {}) => {
+    if (!force && checkStatus.current === Status.SUCCESS) {
+      return;
+    }
 
-      setPlatformToolsCheck({});
-      checkStatus.current = Status.RUNNING;
-      try {
-        const output = await MenuBarModule.runCli('check-tools', []);
-        // eslint-disable-next-line no-eval
-        const result: CliCommands.CheckTools.PlatformToolsCheck = eval(`(${output})`);
-        checkStatus.current =
-          result?.android?.success && result?.ios?.success ? Status.SUCCESS : Status.FAILED;
-        setPlatformToolsCheck(result);
-      } catch (err) {
-        checkStatus.current = Status.FAILED;
-        if (err instanceof Error) {
-          setPlatformToolsCheck({
-            android: { success: false, reason: { message: err.message } },
-            ios: { success: false, reason: { message: err.message } },
-          });
-        }
+    setPlatformToolsCheck({});
+    checkStatus.current = Status.RUNNING;
+    try {
+      const output = await MenuBarModule.runCli('check-tools', []);
+      // eslint-disable-next-line no-eval
+      const result: CliCommands.CheckTools.PlatformToolsCheck = eval(`(${output})`);
+      checkStatus.current =
+        result?.android?.success && result?.ios?.success ? Status.SUCCESS : Status.FAILED;
+      setPlatformToolsCheck(result);
+    } catch (err) {
+      checkStatus.current = Status.FAILED;
+      if (err instanceof Error) {
+        setPlatformToolsCheck({
+          android: { success: false, reason: { message: err.message } },
+          ios: { success: false, reason: { message: err.message } },
+        });
       }
-    }, [])
+    }
+  }, []);
+
+  useWindowFocusEffect(
+    useCallback(() => {
+      runChecks();
+    }, [runChecks])
   );
 
   return (
@@ -106,6 +111,26 @@ const Onboarding = () => {
               />
             )}
           </View>
+          {/* On Windows/Linux, let the user opt in to installing the device support
+              needed to install apps on a physical iPhone over USB. */}
+          {Platform.OS !== 'macos' && platformToolsCheck?.appleDevice?.success === false ? (
+            <View px="large" pb="large" style={styles.container}>
+              <View>
+                <Text weight="bold">Install apps on a physical iPhone?</Text>
+                <Text size="small" color="secondary">
+                  Connect an iPhone over USB. Orbit can install the required device support for you.
+                </Text>
+              </View>
+              <AppleDeviceHelperPrompt
+                error={{
+                  code: 'APPLE_DEVICE_USBMUXD_NOT_RUNNING',
+                  message: platformToolsCheck.appleDevice.reason?.message ?? '',
+                  helper: platformToolsCheck.appleDevice.helper,
+                }}
+                onInstalled={() => runChecks({ force: true })}
+              />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
       <View

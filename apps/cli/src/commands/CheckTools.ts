@@ -1,7 +1,9 @@
 import { InternalError } from 'common-types';
 import { FailureReason, PlatformToolsCheck } from 'common-types/build/cli-commands/checkTools';
 import {
+  AppleDevice,
   validateAndroidSystemRequirementsAsync,
+  validateAppleDeviceRequirementsAsync,
   validateIOSSystemRequirementsAsync,
 } from 'eas-shared';
 import stripAnsi from 'strip-ansi';
@@ -23,6 +25,7 @@ export async function checkToolsAsync({ platform = 'all' }: CheckToolsOptions) {
     new Promise(async (resolve) => {
       if (platform === 'ios' || platform === 'all') {
         result.ios = await checkIosToolsAsync();
+        result.appleDevice = await checkAppleDeviceToolsAsync();
       }
       resolve(null);
     }),
@@ -56,5 +59,17 @@ async function checkIosToolsAsync(): Promise<PlatformToolsCheck['ios']> {
     }
 
     return { reason, success: false };
+  }
+}
+
+async function checkAppleDeviceToolsAsync(): Promise<PlatformToolsCheck['appleDevice']> {
+  try {
+    await validateAppleDeviceRequirementsAsync();
+    return { success: true };
+  } catch (error: any) {
+    const reason: FailureReason = { message: stripAnsi(error.message) };
+    // Surface install guidance so the onboarding can offer a one-click setup.
+    const { description: _description, ...helper } = AppleDevice.getUsbmuxdHelperGuidance();
+    return { reason, helper, success: false };
   }
 }
