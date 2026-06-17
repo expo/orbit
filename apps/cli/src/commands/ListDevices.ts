@@ -27,19 +27,26 @@ export async function listDevicesAsync<P extends Platform>({
       console.warn('Unable to get connected Apple devices', error);
       if (error instanceof Error) {
         const code = error instanceof InternalError ? error.code : 'UNKNOWN_ERROR';
-        result.ios.error = {
-          code,
-          message: error.message,
-          // Surface install guidance so the menu bar can offer an assist action.
-          helper:
-            code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING'
-              ? (() => {
-                  const { description: _description, ...helper } =
-                    AppleDevice.getUsbmuxdHelperGuidance();
-                  return helper;
-                })()
-              : undefined,
-        };
+        // Only show the error on Windows when an iPhone is plugged in.
+        const suppress =
+          process.platform === 'win32' &&
+          code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING' &&
+          !(await AppleDevice.isAppleUsbDeviceConnectedAsync());
+        if (!suppress) {
+          result.ios.error = {
+            code,
+            message: error.message,
+            // Surface install guidance so the menu bar can offer an assist action.
+            helper:
+              code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING'
+                ? (() => {
+                    const { description: _description, ...helper } =
+                      AppleDevice.getUsbmuxdHelperGuidance();
+                    return helper;
+                  })()
+                : undefined,
+          };
+        }
       }
     }
 

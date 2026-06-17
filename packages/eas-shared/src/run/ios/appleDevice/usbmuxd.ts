@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import spawnAsync from '@expo/spawn-async';
 import { InternalError } from 'common-types';
 import Debug from 'debug';
 import fs from 'fs';
@@ -170,6 +171,28 @@ export function connectUsbmuxdSocketAsync(timeoutMs = 5000): Promise<Socket> {
     socket.once('connect', onConnect);
     socket.once('error', onError);
   });
+}
+
+/**
+ * Whether any USB device with Apple's vendor ID (0x05AC) is currently attached.
+ * Windows only — used to avoid pestering the user about installing the Apple
+ * Mobile Device Service when no iPhone is plugged in to use it with.
+ */
+export async function isAppleUsbDeviceConnectedAsync(): Promise<boolean> {
+  if (process.platform !== 'win32') {
+    return false;
+  }
+  try {
+    const { stdout } = await spawnAsync('powershell', [
+      '-NoProfile',
+      '-Command',
+      "Get-PnpDevice -PresentOnly -Status OK | Where-Object { $_.InstanceId -like 'USB\\VID_05AC*' } | Select-Object -First 1 -ExpandProperty InstanceId",
+    ]);
+    return stdout.trim().length > 0;
+  } catch (error) {
+    debug('Apple USB device check failed: %O', error);
+    return false;
+  }
 }
 
 /** Lightweight check used by doctor/UX flows — never throws. */

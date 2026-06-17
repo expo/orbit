@@ -7,7 +7,11 @@ import {
   checkIfAppIsInstalled,
 } from './appleDevice/AppleDevice';
 import { getAppDeltaDirectory, installOnDeviceAsync } from './appleDevice/installOnDeviceAsync';
-import { getUsbmuxdHelperGuidance, isUsbmuxdAvailableAsync } from './appleDevice/usbmuxd';
+import {
+  getUsbmuxdHelperGuidance,
+  isAppleUsbDeviceConnectedAsync,
+  isUsbmuxdAvailableAsync,
+} from './appleDevice/usbmuxd';
 import { installOnMacOSAsync, launchOnMacOSAsync } from './macOS';
 
 const AppleDevice = {
@@ -23,6 +27,7 @@ const AppleDevice = {
   launchOnMacOSAsync,
   isUsbmuxdAvailableAsync,
   getUsbmuxdHelperGuidance,
+  isAppleUsbDeviceConnectedAsync,
 };
 
 export default AppleDevice;
