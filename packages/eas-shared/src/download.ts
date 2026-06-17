@@ -313,7 +313,9 @@ export async function tarExtractAsync(input: string, output: string): Promise<vo
     );
   }
 
-  if (/\.(zip|ipa)$/i.test(input)) {
+  // Detect format by magic bytes since the filename can be misleading
+  // (e.g. an IPA downloaded into a uuid.tar.gz placeholder).
+  if ((await isZipFileAsync(input)) || /\.(zip|ipa)$/i.test(input)) {
     Log.debug(`Extracting ${input} to ${output} using JS unzip module`);
     await extractZip(input, { dir: output });
     return;
@@ -323,4 +325,19 @@ export async function tarExtractAsync(input: string, output: string): Promise<vo
   // tar node module has previously had problems with big files, and seems to
   // be slower, so only use it as a backup.
   await extract({ file: input, cwd: output });
+}
+
+async function isZipFileAsync(filePath: string): Promise<boolean> {
+  let fd: fs.promises.FileHandle | undefined;
+  try {
+    fd = await fs.promises.open(filePath, 'r');
+    const buffer = Buffer.alloc(4);
+    await fd.read(buffer, 0, 4, 0);
+    // ZIP local file header signature: PK\x03\x04
+    return buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04;
+  } catch {
+    return false;
+  } finally {
+    await fd?.close();
+  }
 }
