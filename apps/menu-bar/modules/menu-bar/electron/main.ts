@@ -18,7 +18,8 @@ const runCli = async (
   command: string,
   args: string[],
   listenerId: number,
-  event: Electron.IpcMainInvokeEvent
+  event: Electron.IpcMainInvokeEvent,
+  transientEnvVars?: Record<string, string>
 ) => {
   const webContents = BrowserWindow.getAllWindows().find(
     (window) => window.webContents === event.sender
@@ -28,12 +29,13 @@ const runCli = async (
 
   const userSettingsJsonFile = getUserSettingsJsonFile();
   const { envVars } = await userSettingsJsonFile.readAsync();
+  const mergedEnvVars = { ...envVars, ...(transientEnvVars ?? {}) };
   const commandOutput = await spawnCliAsync(
     cliPath,
     command,
     args,
     listenerId,
-    envVars,
+    mergedEnvVars,
     (event) => {
       webContents?.postMessage('onCLIOutput', event);
     }

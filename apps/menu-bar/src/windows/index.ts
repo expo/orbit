@@ -1,3 +1,4 @@
+import AppleIdAuth from './AppleIdAuth';
 import DebugMenu from './DebugMenu';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
@@ -48,6 +49,18 @@ export const WindowsNavigator = createWindowsNavigator({
       windowStyle: {
         height: 600,
         width: 800,
+      },
+    },
+  },
+  AppleIdAuth: {
+    component: AppleIdAuth,
+    options: {
+      title: 'Sign in with Apple ID',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        height: 420,
+        width: 440,
       },
     },
   },
