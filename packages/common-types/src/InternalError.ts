@@ -23,9 +23,15 @@ export default class InternalError extends Error {
 
 export type InternalErrorCode =
   | 'APPLE_APP_VERIFICATION_FAILED'
+  | 'APPLE_AUTH_REQUIRED'
+  | 'APPLE_BAD_CREDENTIALS'
   | 'APPLE_DEVICE_LOCKED'
   | 'APPLE_DEVICE_USBMUXD_NOT_RUNNING'
   | 'APPLE_DEVICE_NOT_PAIRED'
+  | 'APPLE_RESIGN_FAILED'
+  | 'APPLE_RESIGN_QUOTA_EXCEEDED'
+  | 'APPLE_RESIGN_UNSUPPORTED_IPA'
+  | 'APPLE_TWO_FACTOR_REQUIRED'
   | 'EXPO_GO_NOT_INSTALLED_ON_DEVICE'
   | 'INVALID_VERSION'
   | 'MULTIPLE_APPS_IN_TARBALL'
@@ -46,4 +52,15 @@ export type MultipleAppsInTarballErrorDetails = {
     osType?: string;
     deviceType?: 'simulator' | 'device';
   }[];
+};
+
+export type AppleTwoFactorRequiredErrorDetails = {
+  trustedPhoneNumbers?: string[];
+  trustedDevices?: string[];
+  authMode: 'trustedDevice' | 'sms';
+};
+
+export type AppleResignUnsupportedIpaErrorDetails = {
+  reason: 'extensions' | 'watchapp' | 'multiple-apps';
+  paths: string[];
 };
