@@ -8,9 +8,12 @@ import Background from '../assets/images/onboarding/background.png';
 import ExpoOrbitText from '../assets/images/onboarding/expo-orbit-text.svg';
 import Logo from '../assets/images/onboarding/logo.svg';
 import Xcode from '../assets/images/xcode.png';
+import { installAppleDeviceSupportAsync } from '../commands/installAppleDeviceSupportAsync';
 import { Text, View } from '../components';
 import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
+import Alert from '../modules/Alert';
+import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { useWindowFocusEffect } from '../modules/WindowManager/useWindowFocus';
@@ -118,6 +121,30 @@ const Onboarding = () => {
                 success={platformToolsCheck.appleDevice.success}
                 reason={platformToolsCheck.appleDevice.reason}
                 loading={platformToolsCheck.appleDevice.success === undefined}
+                fixLabel={`Install ${platformToolsCheck.appleDevice.helper?.label ?? ''}`.trim()}
+                onPressFix={async () => {
+                  const helper = platformToolsCheck.appleDevice?.helper;
+                  try {
+                    await installAppleDeviceSupportAsync();
+                    Alert.alert(
+                      `${helper?.label ?? 'Apple Mobile Device Support'} installed`,
+                      'Reconnect your iPhone over USB and tap "Trust" if prompted.'
+                    );
+                    runChecks({ force: true });
+                  } catch (e) {
+                    // Fall back to the Store page if the silent install failed (e.g. winget missing).
+                    if (helper?.installUrl) {
+                      Linking.openURL(helper.installUrl);
+                    } else {
+                      Alert.alert(
+                        `Unable to install ${helper?.label ?? 'Apple Mobile Device Support'}`,
+                        helper?.installCommand
+                          ? `Please run the following command manually:\n\n${helper.installCommand}`
+                          : (e as Error).message
+                      );
+                    }
+                  }
+                }}
               />
             ) : null}
           </View>

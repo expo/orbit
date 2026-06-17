@@ -1,6 +1,7 @@
 import { spacing } from '@expo/styleguide-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { CliCommands } from 'common-types';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   AlertButton,
@@ -21,13 +22,44 @@ type Props = {
   description: string;
   icon: ImageSourcePropType;
   loading: boolean;
+  onPressFix?: () => Promise<void>;
+  fixLabel?: string;
 } & CliCommands.CheckTools.PlatformToolsCheck[keyof CliCommands.CheckTools.PlatformToolsCheck];
 
-const CommandCheckItem = ({ description, icon, title, reason, success, loading }: Props) => {
+const CommandCheckItem = ({
+  description,
+  icon,
+  title,
+  reason,
+  success,
+  loading,
+  onPressFix,
+  fixLabel,
+}: Props) => {
+  const [isFixing, setIsFixing] = useState(false);
+
+  const runFix = async () => {
+    if (!onPressFix || isFixing) {
+      return;
+    }
+    setIsFixing(true);
+    try {
+      await onPressFix();
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
   const showWarningAlert = () => {
     const buttons: AlertButton[] = [{ text: 'OK', style: 'default' }];
-    const command = reason?.command;
-    if (command) {
+    if (onPressFix) {
+      buttons.unshift({
+        text: fixLabel ?? 'Install',
+        style: 'default',
+        onPress: runFix,
+      });
+    } else if (reason?.command) {
+      const command = reason.command;
       buttons.unshift({
         text: 'Copy command',
         style: 'default',
@@ -63,7 +95,7 @@ const CommandCheckItem = ({ description, icon, title, reason, success, loading }
           </TouchableOpacity>
         ) : null}
       </View>
-      {loading ? (
+      {loading || isFixing ? (
         <ActivityIndicator />
       ) : success ? (
         <CheckIcon />
