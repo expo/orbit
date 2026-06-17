@@ -40,8 +40,8 @@ export interface ElectronMainMenuBarModule
     command: string,
     args: string[],
     listenerId: number,
-    event: Electron.IpcMainInvokeEvent,
-    transientEnvVars?: Record<string, string>
+    transientEnvVars: Record<string, string> | undefined,
+    event: Electron.IpcMainInvokeEvent
   ) => Promise<string>;
 }
 

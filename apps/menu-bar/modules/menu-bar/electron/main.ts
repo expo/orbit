@@ -18,8 +18,8 @@ const runCli = async (
   command: string,
   args: string[],
   listenerId: number,
-  event: Electron.IpcMainInvokeEvent,
-  transientEnvVars?: Record<string, string>
+  transientEnvVars: Record<string, string> | undefined,
+  event: Electron.IpcMainInvokeEvent
 ) => {
   const webContents = BrowserWindow.getAllWindows().find(
     (window) => window.webContents === event.sender
