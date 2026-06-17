@@ -56,7 +56,7 @@ export function getUsbmuxdHelperGuidance(): UsbmuxdHelperGuidance {
       return {
         label: 'Apple Mobile Device Support',
         description:
-          'To connect to an iPhone over USB on Windows, Orbit can install Apple Mobile Device Support — the official Apple USB driver and device service. No Apple account or full iTunes install is required.',
+          'To connect to an iPhone over USB on Windows, Orbit requires Apple Mobile Device Support.',
         // Manual fallback if winget isn't available: the Apple Devices app on the
         // Microsoft Store also bundles Apple Mobile Device Support.
         installUrl: 'https://apps.microsoft.com/detail/9np83lwlpz9k',
@@ -70,7 +70,7 @@ export function getUsbmuxdHelperGuidance(): UsbmuxdHelperGuidance {
         ? {
             label: 'usbmuxd',
             description:
-              'usbmuxd is installed but not running. Connect and unlock your iPhone and tap "Trust" — usbmuxd starts automatically when a device is attached. If it still does not appear, run `sudo systemctl start usbmuxd`.',
+              'usbmuxd is installed but not running. Connect and unlock your iPhone and tap "Trust". Usbmuxd should start automatically when a device is attached. If it still does not appear, run `sudo systemctl start usbmuxd`.',
             startCommand: 'sudo systemctl start usbmuxd',
           }
         : {
