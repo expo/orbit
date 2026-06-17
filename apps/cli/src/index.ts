@@ -143,6 +143,34 @@ program
   .argument('<string>', 'Trusted sources')
   .action(returnLoggerMiddleware(setCustomTrustedSourcesAsync));
 
+program
+  .command('apple-id-auth')
+  .description('Sign in / verify 2FA / sign out for the Apple ID used by IPA resigning')
+  .requiredOption('--mode <string>', 'sign-in | verify-2fa | sign-out')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .option('--code <string>', '2FA code (when --mode verify-2fa)')
+  .action(async (...args) => {
+    const { appleIdAuthAsync } = await import('./commands/AppleIdAuth');
+    return returnLoggerMiddleware(appleIdAuthAsync)(...args);
+  });
+
+program
+  .command('resign-ipa')
+  .description('Resign an IPA with a free Apple ID-issued certificate for the given device')
+  .requiredOption('--ipa <string>', 'Path to the input IPA')
+  .requiredOption('--udid <string>', 'UDID of the target physical iPhone / iPad')
+  .requiredOption('--device-name <string>', 'Friendly name for the device (used in Apple portal)')
+  .requiredOption('--apple-id <string>', 'Apple ID that owns the signing identity')
+  .option('--output <string>', 'Path to the resigned IPA (default: alongside the input)')
+  .option(
+    '--strip-extensions',
+    'Remove PlugIns/*.appex and Watch/* before signing (free-account App ID limit)'
+  )
+  .action(async (...args) => {
+    const { resignIpaCommandAsync } = await import('./commands/ResignIpa');
+    return returnLoggerMiddleware(resignIpaCommandAsync)(...args);
+  });
+
 if (process.argv.length < 3) {
   program.help();
 }
