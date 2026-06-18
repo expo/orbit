@@ -6,8 +6,23 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import path from 'path';
+
+// `electron-forge make` aborts entirely if a maker's external tool is missing
+// (e.g. `rpmbuild` for the RPM maker, which isn't installed by default on most
+// Linux dev machines or on GitHub's ubuntu-latest). Only register makers whose
+// prerequisites exist so a local `yarn make` still produces the other targets.
+function hasBinary(bin: string): boolean {
+  try {
+    execSync(process.platform === 'win32' ? `where ${bin}` : `command -v ${bin}`, {
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type CommonParams<T, U> = {
   [K in keyof T & keyof U]?: T[K] extends U[K] ? T[K] : never;
@@ -81,12 +96,16 @@ const config: ForgeConfig = {
         'https://raw.githubusercontent.com/expo/orbit/main/apps/menu-bar/electron/assets/images/icon-windows.ico',
     }),
     new MakerZIP({}, ['darwin']),
-    new MakerRpm({
-      options: {
-        ...linuxOptions,
-        license: 'MIT',
-      },
-    }),
+    ...(hasBinary('rpmbuild')
+      ? [
+          new MakerRpm({
+            options: {
+              ...linuxOptions,
+              license: 'MIT',
+            },
+          }),
+        ]
+      : []),
     new MakerDeb({
       options: {
         ...linuxOptions,
