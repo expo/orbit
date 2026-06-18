@@ -2,6 +2,7 @@ import { Registry } from 'react-native-electron-modules';
 
 import AlertModule from './Alert/main';
 import AutoResizerRootViewManager from './AutoResizerRootViewManager/main';
+import DeviceEventEmitter from './DeviceEventEmitter/main';
 import Linking from './Linking/main';
 import WindowManager from './WindowManager/main';
 import AutoUpdater from '../../modules/auto-updater/electron/main';
@@ -15,6 +16,7 @@ export const MainModules: Registry = [
   MenuBarModule,
   Linking,
   AutoResizerRootViewManager,
+  DeviceEventEmitter,
   WindowManager,
   RudderModule,
   FilePickerModule,
