@@ -38,6 +38,36 @@ export enum MenuBarStatus {
   OPENING_PROJECT_IN_EXPO_GO,
   OPENING_UPDATE,
   WARNING,
+  RESIGNING_APP,
+}
+
+// Maps a resign progress step (emitted by the `resign-ipa` CLI command) to a
+// user-facing message shown on the resign task in the popover.
+export function describeResignStep(step: string): string {
+  switch (step) {
+    case 'waiting-for-auth':
+      return 'Waiting for Apple ID sign-in…';
+    case 'inspecting':
+      return 'Inspecting app…';
+    case 'authenticating':
+      return 'Signing in to Apple…';
+    case 'registering-device':
+      return 'Registering device…';
+    case 'minting-certificate':
+      return 'Creating signing certificate…';
+    case 'creating-app-id':
+      return 'Registering App ID…';
+    case 'downloading-profile':
+      return 'Downloading provisioning profile…';
+    case 'codesigning':
+      return 'Code signing…';
+    case 'repacking':
+      return 'Repacking app…';
+    case 'done':
+      return 'Finishing up…';
+    default:
+      return 'Re-signing app…';
+  }
 }
 
 export function extractDownloadProgress(string: string) {

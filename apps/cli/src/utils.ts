@@ -1,7 +1,20 @@
-import { InternalError } from 'common-types';
 import { Platform } from 'common-types/build/cli-commands';
 import { Env } from 'eas-shared';
 import util from 'util';
+
+type InternalErrorLike = Error & { code: string; details?: unknown };
+
+// Both common-types' and apple-resign's InternalError set `name = 'InternalError'`
+// and carry a string `code`. Match on that shape so either class serializes with
+// its `code`/`details` intact, while plain errors carrying an unrelated `code`
+// (e.g. Node's `ENOENT`) are left to the generic Error branch.
+function isInternalErrorLike(error: unknown): error is InternalErrorLike {
+  return (
+    error instanceof Error &&
+    error.name === 'InternalError' &&
+    typeof (error as { code?: unknown }).code === 'string'
+  );
+}
 
 export function returnLoggerMiddleware(fn: (...args: any[]) => any | Promise<any>) {
   return async function (...args: any[]) {
@@ -34,10 +47,14 @@ export function returnLoggerMiddleware(fn: (...args: any[]) => any | Promise<any
       );
     } catch (error) {
       console.log('---- thrown error ----');
-      if (error instanceof InternalError) {
+      // Detect InternalError structurally rather than with `instanceof`: some
+      // dependencies (e.g. apple-resign) ship their own binary-compatible
+      // InternalError class, so a strict `instanceof` against common-types'
+      // class misses those and would drop `code`/`details` on serialization.
+      if (isInternalErrorLike(error)) {
         console.log(
           JSON.stringify({
-            name: error.name,
+            name: 'InternalError',
             code: error.code,
             message: error.message,
             details: error.details,
