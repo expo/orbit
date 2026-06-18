@@ -10,6 +10,7 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "build:helpers": "bash scripts/build-helpers.sh",
     "lint": "eslint --ext .ts,.tsx .",
     "typecheck": "tsc --noEmit"
   },
@@ -39,8 +40,13 @@
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^8.2.0",
     "express": "^4.18.2",
+    "keytar": "^7.9.0",
     "react-native-electron-modules": "../../../packages/react-native-electron-modules",
+    "system-ca": "^2.0.1",
     "wdio-electron-service": "^8.1.0"
+  },
+  "resolutions": {
+    "node-abi": "^3.92.0"
   },
   "config": {
     "forge": "./forge.config.ts"

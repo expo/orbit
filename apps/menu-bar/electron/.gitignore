@@ -90,3 +90,6 @@ typings/
 # Electron-Forge
 out/
 dist/
+
+# Generated native helper binaries (anisette/zsign) — built via `yarn build:helpers`
+/bin/
