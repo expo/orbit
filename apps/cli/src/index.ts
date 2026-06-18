@@ -2,6 +2,7 @@ import { Command } from 'commander';
 
 import { returnLoggerMiddleware } from './utils';
 import { appleIdAuthAsync } from './commands/AppleIdAuth';
+import { listAppIdsAsync, deleteAppIdAsync } from './commands/AppleAppIds';
 import { downloadBuildAsync } from './commands/DownloadBuild';
 import { listDevicesAsync } from './commands/ListDevices';
 import { bootDeviceAsync } from './commands/BootDevice';
@@ -121,6 +122,19 @@ program
     'Remove PlugIns/*.appex and Watch/* before signing (free-account App ID limit)'
   )
   .action(returnLoggerMiddleware(resignIpaCommandAsync));
+
+program
+  .command('list-app-ids')
+  .description('List the App IDs registered to the Apple ID (free accounts cap at 10 per 7 days)')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .action(returnLoggerMiddleware(listAppIdsAsync));
+
+program
+  .command('delete-app-id')
+  .description('Delete an App ID by its portal id (from list-app-ids) to free a slot')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .requiredOption('--app-id-id <string>', 'Portal App ID id (the appIdId from list-app-ids)')
+  .action(returnLoggerMiddleware(deleteAppIdAsync));
 
 if (process.argv.length < 3) {
   program.help();
