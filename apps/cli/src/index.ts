@@ -171,6 +171,25 @@ program
     return returnLoggerMiddleware(resignIpaCommandAsync)(...args);
   });
 
+program
+  .command('list-app-ids')
+  .description('List the App IDs registered to the Apple ID (free accounts cap at 10 per 7 days)')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .action(async (...args) => {
+    const { listAppIdsAsync } = await import('./commands/AppleAppIds');
+    return returnLoggerMiddleware(listAppIdsAsync)(...args);
+  });
+
+program
+  .command('delete-app-id')
+  .description('Delete an App ID by its portal id (from list-app-ids) to free a slot')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .requiredOption('--app-id-id <string>', 'Portal App ID id (the appIdId from list-app-ids)')
+  .action(async (...args) => {
+    const { deleteAppIdAsync } = await import('./commands/AppleAppIds');
+    return returnLoggerMiddleware(deleteAppIdAsync)(...args);
+  });
+
 if (process.argv.length < 3) {
   program.help();
 }
