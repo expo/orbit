@@ -97,6 +97,8 @@ function getDescription(task: Task): string {
       return 'Opening project in Expo Go...';
     case MenuBarStatus.OPENING_UPDATE:
       return 'Opening update...';
+    case MenuBarStatus.RESIGNING_APP:
+      return task.message ?? 'Re-signing app...';
     case MenuBarStatus.WARNING:
       return task.message ?? '';
     default:

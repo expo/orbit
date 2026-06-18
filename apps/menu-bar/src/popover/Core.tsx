@@ -46,7 +46,7 @@ import {
   getDeviceOS,
   isVirtualDevice,
 } from '../utils/device';
-import { MenuBarStatus, Task } from '../utils/helpers';
+import { MenuBarStatus, Task, describeResignStep } from '../utils/helpers';
 import {
   URLType,
   getPlatformFromURI,
@@ -596,12 +596,26 @@ function Core(props: Props) {
                       text: 'Resign and install',
                       style: 'default',
                       onPress: async () => {
+                        const resignTaskId = `resign:${ipaPath}`;
+                        createTask({
+                          id: resignTaskId,
+                          status: MenuBarStatus.RESIGNING_APP,
+                          progress: 0,
+                          message: describeResignStep('inspecting'),
+                        });
                         try {
                           await resignAndRetryAsync({
                             localFilePath: ipaPath,
                             deviceId: resolvedDeviceId,
                             deviceName,
                             launchURL,
+                            onProgress: (step) => {
+                              updateTask({
+                                id: resignTaskId,
+                                status: MenuBarStatus.RESIGNING_APP,
+                                message: describeResignStep(step),
+                              });
+                            },
                           });
                         } catch (resignError) {
                           const message =
@@ -609,6 +623,8 @@ function Core(props: Props) {
                               ? resignError.message
                               : String(resignError);
                           Alert.alert('Resign failed', message);
+                        } finally {
+                          deleteTask(resignTaskId);
                         }
                       },
                     },

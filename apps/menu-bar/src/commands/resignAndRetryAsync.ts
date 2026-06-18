@@ -33,20 +33,31 @@ async function runResignAsync(
   udid: string,
   deviceName: string,
   appleId: string,
-  outputPath: string
+  outputPath: string,
+  onProgress?: (step: string) => void
 ): Promise<string> {
-  const result = await MenuBarModule.runCli('resign-ipa', [
-    '--ipa',
-    ipaPath,
-    '--udid',
-    udid,
-    '--device-name',
-    deviceName,
-    '--apple-id',
-    appleId,
-    '--output',
-    outputPath,
-  ]);
+  const result = await MenuBarModule.runCli(
+    'resign-ipa',
+    [
+      '--ipa',
+      ipaPath,
+      '--udid',
+      udid,
+      '--device-name',
+      deviceName,
+      '--apple-id',
+      appleId,
+      '--output',
+      outputPath,
+    ],
+    (output: string) => {
+      // The resign-ipa command streams `step: <name>[ (detail)]` lines.
+      const match = output.match(/^step:\s*([a-z-]+)/);
+      if (match) {
+        onProgress?.(match[1]);
+      }
+    }
+  );
   const parsed = JSON.parse(result) as { resignedIpaPath: string };
   return parsed.resignedIpaPath;
 }
@@ -56,8 +67,9 @@ export async function resignAndRetryAsync(opts: {
   deviceId: string;
   deviceName: string;
   launchURL?: string;
+  onProgress?: (step: string) => void;
 }): Promise<void> {
-  const { localFilePath, deviceId, deviceName, launchURL } = opts;
+  const { localFilePath, deviceId, deviceName, launchURL, onProgress } = opts;
   const outputPath = localFilePath.replace(/\.ipa$/, '-resigned.ipa');
 
   // Try sign-in iteratively: first attempt with whatever is in Keychain;
@@ -65,6 +77,7 @@ export async function resignAndRetryAsync(opts: {
   let appleId = loadAppleId();
   for (let attempt = 0; attempt < 2; attempt++) {
     if (!appleId) {
+      onProgress?.('waiting-for-auth');
       WindowsNavigator.open('AppleIdAuth');
       const event = await waitForAuthAsync();
       if (event.status === 'cancelled') return;
@@ -77,7 +90,8 @@ export async function resignAndRetryAsync(opts: {
         deviceId,
         deviceName,
         appleId,
-        outputPath
+        outputPath,
+        onProgress
       );
       await installAndLaunchAppAsync({
         appPath: resignedPath,
