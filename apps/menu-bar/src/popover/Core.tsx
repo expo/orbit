@@ -587,48 +587,64 @@ function Core(props: Props) {
               } else {
                 const deviceName = device.name ?? 'iPhone';
                 const ipaPath = localFilePath!;
+                const runResign = async () => {
+                  MenuBarModule.openPopover();
+                  const resignTaskId = `resign:${ipaPath}`;
+                  createTask({
+                    id: resignTaskId,
+                    status: MenuBarStatus.RESIGNING_APP,
+                    progress: 0,
+                    message: describeResignStep('inspecting'),
+                  });
+                  try {
+                    await resignAndRetryAsync({
+                      localFilePath: ipaPath,
+                      deviceId: resolvedDeviceId,
+                      deviceName,
+                      launchURL,
+                      onProgress: (step) => {
+                        updateTask({
+                          id: resignTaskId,
+                          status: MenuBarStatus.RESIGNING_APP,
+                          message: describeResignStep(step),
+                        });
+                      },
+                    });
+                  } catch (resignError) {
+                    if (
+                      resignError instanceof InternalError &&
+                      resignError.code === 'APPLE_DEVICE_LOCKED'
+                    ) {
+                      Alert.alert(
+                        'Unlock your device and try again',
+                        'Your iPhone needs to be unlocked so the developer ' +
+                          'tooling can mount and install the resigned app.',
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Retry',
+                            style: 'default',
+                            onPress: () => {
+                              runResign();
+                            },
+                          },
+                        ]
+                      );
+                    } else {
+                      const message =
+                        resignError instanceof Error ? resignError.message : String(resignError);
+                      Alert.alert('Resign failed', message);
+                    }
+                  } finally {
+                    deleteTask(resignTaskId);
+                  }
+                };
                 Alert.alert(
                   "This build isn't signed for your device",
                   'Orbit can resign it with your Apple ID and retry.',
                   [
                     { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Resign and install',
-                      style: 'default',
-                      onPress: async () => {
-                        MenuBarModule.openPopover();
-                        const resignTaskId = `resign:${ipaPath}`;
-                        createTask({
-                          id: resignTaskId,
-                          status: MenuBarStatus.RESIGNING_APP,
-                          progress: 0,
-                          message: describeResignStep('inspecting'),
-                        });
-                        try {
-                          await resignAndRetryAsync({
-                            localFilePath: ipaPath,
-                            deviceId: resolvedDeviceId,
-                            deviceName,
-                            launchURL,
-                            onProgress: (step) => {
-                              updateTask({
-                                id: resignTaskId,
-                                status: MenuBarStatus.RESIGNING_APP,
-                                message: describeResignStep(step),
-                              });
-                            },
-                          });
-                        } catch (resignError) {
-                          const message =
-                            resignError instanceof Error
-                              ? resignError.message
-                              : String(resignError);
-                          Alert.alert('Resign failed', message);
-                        } finally {
-                          deleteTask(resignTaskId);
-                        }
-                      },
-                    },
+                    { text: 'Resign and install', style: 'default', onPress: runResign },
                   ]
                 );
               }
