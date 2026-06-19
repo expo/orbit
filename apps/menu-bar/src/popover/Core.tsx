@@ -596,6 +596,7 @@ function Core(props: Props) {
                       text: 'Resign and install',
                       style: 'default',
                       onPress: async () => {
+                        MenuBarModule.openPopover();
                         const resignTaskId = `resign:${ipaPath}`;
                         createTask({
                           id: resignTaskId,
