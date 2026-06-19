@@ -1,9 +1,10 @@
-import { InternalError } from 'common-types';
+import { AppleResignUnsupportedIpaErrorDetails, InternalError } from 'common-types';
 
 import { appleIdSignOutAsync } from './appleIdAuthAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { WindowsNavigator } from '../windows';
 import { AppleAuthEmitter, AppleAuthCompletedEvent } from '../utils/appleAuthEvents';
+import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 
@@ -43,38 +44,50 @@ function waitForAuthAsync(): Promise<AppleAuthCompletedEvent> {
   });
 }
 
+type ResignCliResult = {
+  resignedIpaPath: string;
+  strippedEntitlements?: string[];
+};
+
 async function runResignAsync(
   ipaPath: string,
   udid: string,
   deviceName: string,
   appleId: string,
   outputPath: string,
+  stripExtensions: boolean,
   onProgress?: (step: string) => void
-): Promise<string> {
-  const result = await MenuBarModule.runCli(
-    'resign-ipa',
-    [
-      '--ipa',
-      ipaPath,
-      '--udid',
-      udid,
-      '--device-name',
-      deviceName,
-      '--apple-id',
-      appleId,
-      '--output',
-      outputPath,
-    ],
-    (output: string) => {
-      // The resign-ipa command streams `step: <name>[ (detail)]` lines.
-      const match = output.match(/^step:\s*([a-z-]+)/);
-      if (match) {
-        onProgress?.(match[1]);
-      }
+): Promise<ResignCliResult> {
+  const args = [
+    '--ipa',
+    ipaPath,
+    '--udid',
+    udid,
+    '--device-name',
+    deviceName,
+    '--apple-id',
+    appleId,
+    '--output',
+    outputPath,
+  ];
+  if (stripExtensions) args.push('--strip-extensions');
+  const result = await MenuBarModule.runCli('resign-ipa', args, (output: string) => {
+    // The resign-ipa command streams `step: <name>[ (detail)]` lines.
+    const match = output.match(/^step:\s*([a-z-]+)/);
+    if (match) {
+      onProgress?.(match[1]);
     }
-  );
-  const parsed = JSON.parse(result) as { resignedIpaPath: string };
-  return parsed.resignedIpaPath;
+  });
+  return JSON.parse(result) as ResignCliResult;
+}
+
+function confirmAsync(title: string, message: string, confirmLabel: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+      { text: confirmLabel, style: 'default', onPress: () => resolve(true) },
+    ]);
+  });
 }
 
 export async function resignAndRetryAsync(opts: {
@@ -90,7 +103,8 @@ export async function resignAndRetryAsync(opts: {
   // Try sign-in iteratively: first attempt with whatever is in Keychain;
   // on APPLE_AUTH_REQUIRED, open the auth window, then retry.
   let appleId = loadAppleId();
-  for (let attempt = 0; attempt < 2; attempt++) {
+  let stripExtensions = false;
+  for (let attempt = 0; attempt < 3; attempt++) {
     if (!appleId) {
       onProgress?.('waiting-for-auth');
       WindowsNavigator.open('AppleIdAuth');
@@ -100,24 +114,54 @@ export async function resignAndRetryAsync(opts: {
       rememberAppleId(appleId);
     }
     try {
-      const resignedPath = await runResignAsync(
+      const resignResult = await runResignAsync(
         localFilePath,
         deviceId,
         deviceName,
         appleId,
         outputPath,
+        stripExtensions,
         onProgress
       );
       await installAndLaunchAppAsync({
-        appPath: resignedPath,
+        appPath: resignResult.resignedIpaPath,
         deviceId,
         launchURL,
       });
+      if (resignResult.strippedEntitlements && resignResult.strippedEntitlements.length > 0) {
+        Alert.alert(
+          'Some capabilities won’t work',
+          'Free Apple IDs can’t carry these entitlements, so the app installed but ' +
+            'features depending on them are inert:\n\n' +
+            resignResult.strippedEntitlements.map((e) => `  • ${e}`).join('\n')
+        );
+      }
       return;
     } catch (error) {
       if (error instanceof InternalError && error.code === 'APPLE_AUTH_REQUIRED' && attempt === 0) {
         appleId = null; // force the auth window on the next pass
         continue;
+      }
+      if (
+        error instanceof InternalError &&
+        error.code === 'APPLE_RESIGN_UNSUPPORTED_IPA' &&
+        !stripExtensions
+      ) {
+        const details = error.details as AppleResignUnsupportedIpaErrorDetails | undefined;
+        if (details?.reason === 'extensions' || details?.reason === 'watchapp') {
+          const proceed = await confirmAsync(
+            details.reason === 'extensions'
+              ? 'This app has extensions (PlugIns)'
+              : 'This app has a Watch app',
+            'Free Apple IDs can’t sign extensions or Watch apps yet. Orbit can ' +
+              'install the main app without them — extensions and the Watch app ' +
+              'won’t appear on your device.',
+            'Install without them'
+          );
+          if (!proceed) return;
+          stripExtensions = true;
+          continue;
+        }
       }
       throw error;
     }
