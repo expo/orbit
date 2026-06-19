@@ -25,5 +25,6 @@ export async function resignIpaCommandAsync(options: ResignIpaOptions) {
     resignedIpaPath: result.resignedIpaPath,
     bundleId: result.bundleId,
     profileExpiresAt: result.profileExpiresAt.toISOString(),
+    strippedEntitlements: result.strippedEntitlements,
   };
 }
