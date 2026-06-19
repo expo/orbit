@@ -1,5 +1,6 @@
 import { InternalError } from 'common-types';
 
+import { appleIdSignOutAsync } from './appleIdAuthAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { WindowsNavigator } from '../windows';
 import { AppleAuthEmitter, AppleAuthCompletedEvent } from '../utils/appleAuthEvents';
@@ -14,6 +15,20 @@ function rememberAppleId(appleId: string) {
 
 function loadAppleId(): string | null {
   return storage.getString(LAST_APPLE_ID_KEY) ?? null;
+}
+
+/**
+ * Clear the saved Apple ID login: revoke the persisted GSA session (keychain)
+ * and forget the remembered Apple ID, so the next resign starts a fresh sign-in.
+ * Returns the Apple ID that was signed out, or null if none was stored.
+ */
+export async function clearAppleIdLoginAsync(): Promise<string | null> {
+  const appleId = loadAppleId();
+  if (appleId) {
+    await appleIdSignOutAsync(appleId);
+  }
+  storage.delete(LAST_APPLE_ID_KEY);
+  return appleId;
 }
 
 function waitForAuthAsync(): Promise<AppleAuthCompletedEvent> {
@@ -100,11 +115,7 @@ export async function resignAndRetryAsync(opts: {
       });
       return;
     } catch (error) {
-      if (
-        error instanceof InternalError &&
-        error.code === 'APPLE_AUTH_REQUIRED' &&
-        attempt === 0
-      ) {
+      if (error instanceof InternalError && error.code === 'APPLE_AUTH_REQUIRED' && attempt === 0) {
         appleId = null; // force the auth window on the next pass
         continue;
       }
