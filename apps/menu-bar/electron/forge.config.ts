@@ -44,13 +44,23 @@ const config: ForgeConfig = {
     icon: './assets/images/icon-windows',
     executableName: 'expo-orbit',
     name: 'Expo Orbit',
-    extraResource: './assets',
+    // `./bin` holds the native helper binaries (anisette/zsign) produced by
+    // `yarn build:helpers`. Ship them as resources (copied to `<resources>/bin`,
+    // outside the asar) so they stay directly executable; the bundled CLI is
+    // pointed there via ORBIT_HELPER_BIN_DIR (see src/main.ts).
+    extraResource: ['./assets', './bin'],
     // `wdio-electron-service` has to live in `dependencies` (not devDeps) so
     // electron-packager keeps it in the asar's node_modules — the runtime
     // require in src/main.ts needs it. But it's a test-only dep; strip it
-    // from production builds where WDIO_E2E isn't set.
-    ignore:
-      process.env.WDIO_E2E === '1' ? undefined : [/^\/node_modules\/wdio-electron-service(\/|$)/],
+    // from production builds where WDIO_E2E isn't set. Always keep `/bin` out of
+    // the asar — it's shipped via extraResource above, so the asar copy would be
+    // dead weight (and unexecutable).
+    ignore: [
+      /^\/bin(\/|$)/,
+      ...(process.env.WDIO_E2E === '1'
+        ? []
+        : [/^\/node_modules\/wdio-electron-service(\/|$)/]),
+    ],
   },
   rebuildConfig: {},
   hooks: {
