@@ -79,7 +79,7 @@ public class MenuBarModule: Module {
       return returnOutput
     }
     
-    AsyncFunction("runCli") { (command: String, arguments: [String], listenerId: Int, promise: Promise) in
+    AsyncFunction("runCli") { (command: String, arguments: [String], listenerId: Int, transientEnvVars: [String: String]?, promise: Promise) in
       let task = Process()
       let pipe = Pipe()
       
@@ -94,6 +94,12 @@ public class MenuBarModule: Module {
           environment = environment.merging(envVars) { _, new in
             new
           }
+        }
+      }
+
+      if let transientEnvVars = transientEnvVars {
+        environment = environment.merging(transientEnvVars) { _, new in
+          new
         }
       }
 
