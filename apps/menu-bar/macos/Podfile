@@ -45,6 +45,29 @@ use_frameworks! :linkage => :static
 post_install do |installer|
   react_native_post_install(installer, relative_rn_macos_path)
 
+  # In CI we route the C/C++/ObjC compiler through ccache so unchanged pod
+  # sources (RN core, folly, hermes, fmt, …) come back from cache instead of
+  # recompiling — the bulk of the macOS E2E build time. Gated behind USE_CCACHE
+  # so a plain local `pod install` is unaffected. Xcode honors these CC/CXX/LD
+  # build settings; the wrappers shell out to `ccache clang(++)`.
+  use_ccache = ENV['USE_CCACHE'] == '1'
+  if use_ccache
+    ccache_clang = File.expand_path('scripts/ccache-clang.sh', __dir__)
+    ccache_clangpp = File.expand_path('scripts/ccache-clang++.sh', __dir__)
+    apply_ccache = lambda do |config|
+      config.build_settings['CC'] = ccache_clang
+      config.build_settings['LD'] = ccache_clang
+      config.build_settings['CXX'] = ccache_clangpp
+      config.build_settings['LDPLUSPLUS'] = ccache_clangpp
+      # ccache can't reuse output when the compiler also writes an index store.
+      config.build_settings['COMPILER_INDEX_STORE_ENABLE'] = 'NO'
+    end
+    installer.pods_project.build_configurations.each(&apply_ccache)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each(&apply_ccache)
+    end
+  end
+
   installer.pods_project.targets.each do |target|
     # TODO: remove this when bumping react-native-macos
     if target.name == 'fmt'
@@ -66,6 +89,7 @@ post_install do |installer|
     if target.name == 'ExpoMenuBar-macOS'
       target.build_configurations.each do |config|
         config.build_settings['OTHER_CFLAGS'] = other_cflags
+        apply_ccache.call(config) if use_ccache
       end
     end
   end

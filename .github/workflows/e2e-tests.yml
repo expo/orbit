@@ -186,12 +186,45 @@ jobs:
           bundler-cache: true
           working-directory: apps/menu-bar
 
+      # Pods are derived from the (already installed) node_modules and pinned by
+      # Podfile.lock, so restoring them across runs is safe — `pod install` below
+      # still reconciles and re-applies the post_install hooks. Keyed on the
+      # lockfile so a dependency bump invalidates the cache.
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/menu-bar/macos/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods-${{ hashFiles('apps/menu-bar/macos/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      # Installs ccache and persists its compilation cache across runs. The
+      # Podfile routes the pod/app compiler through it when USE_CCACHE=1.
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-xcode-ccache
+          max-size: 1500M
+
       - name: Install CocoaPods
         working-directory: apps/menu-bar/macos
+        env:
+          USE_CCACHE: "1"
         run: bundle exec pod install
 
       - name: Build macOS app (unsigned — E2E only)
         working-directory: apps/menu-bar
+        env:
+          USE_CCACHE: "1"
+          # clang writes absolute paths and timestamps that would otherwise bust
+          # the cache on every run; loosen the checks ccache is strict about so
+          # Xcode-generated builds actually hit.
+          CCACHE_SLOPPINESS: "clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros"
+          CCACHE_FILECLONE: "true"
+          CCACHE_DEPEND: "true"
+          CCACHE_INODECACHE: "true"
         # Skip codesigning: the E2E job has no Developer ID Application cert,
         # and Appium mac2 launches the .app by path in the same user session,
         # so Gatekeeper isn't in the picture. Production builds are still
