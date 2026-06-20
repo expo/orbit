@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix error message when launching updates on iOS physical devices. ([#348](https://github.com/expo/orbit/pull/348) by [@patrickwehbe](https://github.com/patrickwehbe))
+
 ### 💡 Others
 
 - Add cross-platform E2E testing with WebdriverIO for Electron and Appium mac2 for macOS. ([#334](https://github.com/expo/orbit/pull/334) by [@gabrieldonadel](https://github.com/gabrieldonadel))
