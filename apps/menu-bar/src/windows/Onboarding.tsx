@@ -8,9 +8,12 @@ import Background from '../assets/images/onboarding/background.png';
 import ExpoOrbitText from '../assets/images/onboarding/expo-orbit-text.svg';
 import Logo from '../assets/images/onboarding/logo.svg';
 import Xcode from '../assets/images/xcode.png';
+import { installAppleDeviceSupportAsync } from '../commands/installAppleDeviceSupportAsync';
 import { Text, View } from '../components';
 import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
+import Alert from '../modules/Alert';
+import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { useWindowFocusEffect } from '../modules/WindowManager/useWindowFocus';
@@ -39,31 +42,35 @@ const Onboarding = () => {
     MenuBarModule.openPopover();
   };
 
-  useWindowFocusEffect(
-    useCallback(async () => {
-      if (checkStatus.current === Status.SUCCESS) {
-        return;
-      }
+  const runChecks = useCallback(async ({ force = false }: { force?: boolean } = {}) => {
+    if (!force && checkStatus.current === Status.SUCCESS) {
+      return;
+    }
 
-      setPlatformToolsCheck({});
-      checkStatus.current = Status.RUNNING;
-      try {
-        const output = await MenuBarModule.runCli('check-tools', []);
-        // eslint-disable-next-line no-eval
-        const result: CliCommands.CheckTools.PlatformToolsCheck = eval(`(${output})`);
-        checkStatus.current =
-          result?.android?.success && result?.ios?.success ? Status.SUCCESS : Status.FAILED;
-        setPlatformToolsCheck(result);
-      } catch (err) {
-        checkStatus.current = Status.FAILED;
-        if (err instanceof Error) {
-          setPlatformToolsCheck({
-            android: { success: false, reason: { message: err.message } },
-            ios: { success: false, reason: { message: err.message } },
-          });
-        }
+    setPlatformToolsCheck({});
+    checkStatus.current = Status.RUNNING;
+    try {
+      const output = await MenuBarModule.runCli('check-tools', []);
+      // eslint-disable-next-line no-eval
+      const result: CliCommands.CheckTools.PlatformToolsCheck = eval(`(${output})`);
+      checkStatus.current =
+        result?.android?.success && result?.ios?.success ? Status.SUCCESS : Status.FAILED;
+      setPlatformToolsCheck(result);
+    } catch (err) {
+      checkStatus.current = Status.FAILED;
+      if (err instanceof Error) {
+        setPlatformToolsCheck({
+          android: { success: false, reason: { message: err.message } },
+          ios: { success: false, reason: { message: err.message } },
+        });
       }
-    }, [])
+    }
+  }, []);
+
+  useWindowFocusEffect(
+    useCallback(() => {
+      runChecks();
+    }, [runChecks])
   );
 
   return (
@@ -105,6 +112,41 @@ const Onboarding = () => {
                 loading={platformToolsCheck?.ios?.success === undefined}
               />
             )}
+            {/* Only emitted by the CLI on Windows. macOS and Linux already ship with usbmuxd. */}
+            {platformToolsCheck?.appleDevice ? (
+              <CommandCheckItem
+                title="Apple Mobile Device Support"
+                description="Install to connect a physical iPhone over USB"
+                icon={Xcode}
+                success={platformToolsCheck.appleDevice.success}
+                reason={platformToolsCheck.appleDevice.reason}
+                loading={platformToolsCheck.appleDevice.success === undefined}
+                fixLabel={`Install ${platformToolsCheck.appleDevice.helper?.label ?? ''}`.trim()}
+                onPressFix={async () => {
+                  const helper = platformToolsCheck.appleDevice?.helper;
+                  try {
+                    await installAppleDeviceSupportAsync();
+                    Alert.alert(
+                      `${helper?.label ?? 'Apple Mobile Device Support'} installed`,
+                      'Reconnect your iPhone over USB and tap "Trust" if prompted.'
+                    );
+                    runChecks({ force: true });
+                  } catch (e) {
+                    // Fall back to the Store page if the silent install failed (e.g. winget missing).
+                    if (helper?.installUrl) {
+                      Linking.openURL(helper.installUrl);
+                    } else {
+                      Alert.alert(
+                        `Unable to install ${helper?.label ?? 'Apple Mobile Device Support'}`,
+                        helper?.installCommand
+                          ? `Please run the following command manually:\n\n${helper.installCommand}`
+                          : (e as Error).message
+                      );
+                    }
+                  }
+                }}
+              />
+            ) : null}
           </View>
         </View>
       </ScrollView>

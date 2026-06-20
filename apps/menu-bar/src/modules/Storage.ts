@@ -22,7 +22,9 @@ export type UserPreferences = {
 export const defaultUserPreferences: UserPreferences = {
   launchOnLogin: false,
   emulatorWithoutAudio: false,
-  showIosSimulators: Platform.OS === 'macos',
+  // Controls the whole iOS section (simulators on macOS, physical iPhones on all
+  // platforms). Enabled everywhere so connected iPhones are discoverable.
+  showIosSimulators: true,
   showTvosSimulators: false,
   showWatchosSimulators: Platform.OS === 'macos',
   showAndroidEmulators: true,

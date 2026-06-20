@@ -1,6 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import { InternalError } from 'common-types';
 import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
+import extractZip from 'extract-zip';
 import glob from 'fast-glob';
 import fs from 'fs-extra';
 import path from 'path';
@@ -302,19 +303,41 @@ async function filterNestedDuplicateAppsAsync(
 
 export async function tarExtractAsync(input: string, output: string): Promise<void> {
   try {
-    if (process.platform !== 'win32') {
-      await spawnAsync('tar', ['-xf', input, '-C', output], {
-        stdio: 'inherit',
-      });
-      return;
-    }
+    await spawnAsync('tar', ['-xf', input, '-C', output], {
+      stdio: 'inherit',
+    });
+    return;
   } catch (error: any) {
     Log.warn(
       `Failed to extract tar using native tools, falling back on JS tar module. ${error.message}`
     );
   }
+
+  // Detect format by magic bytes since the filename can be misleading
+  // (e.g. an IPA downloaded into a uuid.tar.gz placeholder).
+  if ((await isZipFileAsync(input)) || /\.(zip|ipa)$/i.test(input)) {
+    Log.debug(`Extracting ${input} to ${output} using JS unzip module`);
+    await extractZip(input, { dir: output });
+    return;
+  }
+
   Log.debug(`Extracting ${input} to ${output} using JS tar module`);
   // tar node module has previously had problems with big files, and seems to
   // be slower, so only use it as a backup.
   await extract({ file: input, cwd: output });
+}
+
+async function isZipFileAsync(filePath: string): Promise<boolean> {
+  let fd: fs.promises.FileHandle | undefined;
+  try {
+    fd = await fs.promises.open(filePath, 'r');
+    const buffer = Buffer.alloc(4);
+    await fd.read(buffer, 0, 4, 0);
+    // ZIP local file header signature: PK\x03\x04
+    return buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04;
+  } catch {
+    return false;
+  } finally {
+    await fd?.close();
+  }
 }

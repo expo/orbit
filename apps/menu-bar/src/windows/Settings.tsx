@@ -43,12 +43,7 @@ type OsListItem = {
 };
 const osList: OsListItem[] = [
   { label: 'Android', key: 'showAndroidEmulators', supported: true },
-  {
-    label: 'iOS',
-    key: 'showIosSimulators',
-    supported: Platform.OS === 'macos',
-    unsupportedMessage: 'macOS only',
-  },
+  { label: 'iOS', key: 'showIosSimulators', supported: true },
   {
     label: 'tvOS',
     key: 'showTvosSimulators',

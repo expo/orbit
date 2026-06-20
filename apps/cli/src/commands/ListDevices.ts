@@ -15,6 +15,7 @@ export async function listDevicesAsync<P extends Platform>({
   };
 
   if (platform === Platform.Ios || platform === Platform.All) {
+    // Physical Apple device discovery is cross-platform
     try {
       const connectedDevices = await AppleDevice.getConnectedDevicesAsync();
       for (const connectedDevice of connectedDevices) {
@@ -22,27 +23,57 @@ export async function listDevicesAsync<P extends Platform>({
           result.ios.devices.push(connectedDevice);
         }
       }
-
-      const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
-      for (const simulator of simulators) {
-        if (simulator.osType === 'watchOS') {
-          result.watchos.devices.push(simulator);
-        } else if (simulator.osType === 'tvOS') {
-          result.tvos.devices.push(simulator);
-        } else {
-          result.ios.devices.push(simulator);
+    } catch (error) {
+      console.warn('Unable to get connected Apple devices', error);
+      if (error instanceof Error) {
+        const code = error instanceof InternalError ? error.code : 'UNKNOWN_ERROR';
+        // Only show the error on Windows when an iPhone is plugged in.
+        const suppress =
+          process.platform === 'win32' &&
+          code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING' &&
+          !(await AppleDevice.isAppleUsbDeviceConnectedAsync());
+        if (!suppress) {
+          result.ios.error = {
+            code,
+            message: error.message,
+            // Surface install guidance so the menu bar can offer an assist action.
+            helper:
+              code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING'
+                ? (() => {
+                    const { description: _description, ...helper } =
+                      AppleDevice.getUsbmuxdHelperGuidance();
+                    return helper;
+                  })()
+                : undefined,
+          };
         }
       }
-    } catch (error) {
-      console.warn('Unable to get Apple devices', error);
-      if (error instanceof Error) {
-        const errorInfo = {
-          code: error instanceof InternalError ? error.code : 'UNKNOWN_ERROR',
-          message: error.message,
-        };
-        result.ios.error = errorInfo;
-        result.tvos.error = errorInfo;
-        result.watchos.error = errorInfo;
+    }
+
+    // Simulators are only supported on macOS
+    if (process.platform === 'darwin') {
+      try {
+        const simulators = await Simulator.getAvailableAppleSimulatorsListAsync();
+        for (const simulator of simulators) {
+          if (simulator.osType === 'watchOS') {
+            result.watchos.devices.push(simulator);
+          } else if (simulator.osType === 'tvOS') {
+            result.tvos.devices.push(simulator);
+          } else {
+            result.ios.devices.push(simulator);
+          }
+        }
+      } catch (error) {
+        console.warn('Unable to get Apple simulators', error);
+        if (error instanceof Error) {
+          const errorInfo = {
+            code: error instanceof InternalError ? error.code : 'UNKNOWN_ERROR',
+            message: error.message,
+          };
+          result.ios.error = result.ios.error ?? errorInfo;
+          result.tvos.error = errorInfo;
+          result.watchos.error = errorInfo;
+        }
       }
     }
   }

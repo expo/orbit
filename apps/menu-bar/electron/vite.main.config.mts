@@ -5,7 +5,7 @@ import path from 'node:path';
 // normalizePath(path.resolve(__dirname, './foo')); // C:/project/foo
 
 // https://vitejs.dev/config
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   resolve: {
     mainFields: ['module', 'jsnext:main', 'jsnext'],
   },
@@ -32,14 +32,21 @@ export default defineConfig({
       ],
       structured: true,
     }),
-    viteStaticCopy({
-      targets: [
-        {
-          src: './dist/**/*',
-          dest: 'renderer/',
-        },
-      ],
-      structured: true,
-    }),
+    // Only copy the renderer's built output into the packaged main bundle;
+    // in dev mode the renderer is served from the Vite dev server and
+    // ./dist doesn't exist.
+    ...(command === 'build'
+      ? [
+          viteStaticCopy({
+            targets: [
+              {
+                src: './dist/**/*',
+                dest: 'renderer/',
+              },
+            ],
+            structured: true,
+          }),
+        ]
+      : []),
   ],
-});
+}));

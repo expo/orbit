@@ -5,6 +5,7 @@ import { downloadBuildAsync } from './commands/DownloadBuild';
 import { listDevicesAsync } from './commands/ListDevices';
 import { bootDeviceAsync } from './commands/BootDevice';
 import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
+import { installAppleDeviceSupportAsync } from './commands/InstallAppleDeviceSupport';
 import { launchExpoGoURLAsync } from './commands/LaunchExpoGo';
 import { checkToolsAsync } from './commands/CheckTools';
 import { setSessionAsync } from './commands/SetSession';
@@ -55,6 +56,11 @@ program
     'Version of the Expo SDK that should be used by Expo Go. E.g. 52.0.0'
   )
   .action(returnLoggerMiddleware(trustedSourcesValidatorMiddleware(launchExpoGoURLAsync)));
+
+program
+  .command('install-apple-device-support')
+  .description('Install the helper software required to connect to a physical iPhone over USB')
+  .action(returnLoggerMiddleware(installAppleDeviceSupportAsync));
 
 program
   .command('check-tools')

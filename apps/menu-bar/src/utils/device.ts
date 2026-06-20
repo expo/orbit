@@ -13,7 +13,7 @@ import { SectionListData } from 'react-native';
 export type DevicesPerPlatform = {
   [P in Exclude<CliCommands.Platform, CliCommands.Platform.All>]: {
     devices: Map<string, CliCommands.ListDevices.Device<P>>;
-    error?: { code: string; message: string };
+    error?: CliCommands.ListDevices.DeviceListError;
   };
 };
 
