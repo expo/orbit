@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add support for physical iPhones on Windows and Linux. ([#347](https://github.com/expo/orbit/pull/347) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
