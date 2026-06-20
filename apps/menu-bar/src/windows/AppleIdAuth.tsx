@@ -6,14 +6,9 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 import { WindowsNavigator } from './index';
 import { TextInput, Text, View, Row, Divider } from '../components';
 import Button from '../components/Button';
-import {
-  appleIdSignInAsync,
-  appleIdVerifyTwoFactorAsync,
-} from '../commands/appleIdAuthAsync';
-import {
-  AppleAuthCompletedEvent,
-  AppleAuthEmitter,
-} from '../utils/appleAuthEvents';
+import { appleIdSignInAsync, appleIdVerifyTwoFactorAsync } from '../commands/appleIdAuthAsync';
+import MenuBarModule from '../modules/MenuBarModule';
+import { AppleAuthCompletedEvent, AppleAuthEmitter } from '../utils/appleAuthEvents';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
 type Stage = 'credentials' | 'two-factor' | 'busy';
@@ -31,6 +26,9 @@ const AppleIdAuth: React.FC = () => {
 
   const finish = (event: AppleAuthCompletedEvent) => {
     AppleAuthEmitter.emit('apple-id-auth:complete', event);
+    if (event.status === 'success') {
+      MenuBarModule.openPopover();
+    }
     WindowsNavigator.close('AppleIdAuth');
   };
 
@@ -73,9 +71,8 @@ const AppleIdAuth: React.FC = () => {
         Sign in with Apple ID
       </Text>
       <Text size="small" color="secondary" style={styles.subtitle}>
-        Orbit uses your Apple ID to issue a free 7-day signing certificate so
-        downloaded IPAs can install on your iPhone. Your password is never
-        stored.
+        Orbit uses your Apple ID to issue a free 7-day signing certificate so downloaded IPAs can
+        install on your iPhone. Your password is never stored.
       </Text>
       <Divider style={styles.divider} />
 
@@ -176,9 +173,7 @@ function humanizeError(error: unknown): string {
   return 'Something went wrong.';
 }
 
-function describeTwoFactorChannel(
-  details: AppleTwoFactorRequiredErrorDetails | null
-): string {
+function describeTwoFactorChannel(details: AppleTwoFactorRequiredErrorDetails | null): string {
   if (!details) return 'Enter the verification code Apple sent to your trusted device.';
   if (details.authMode === 'sms') {
     const numbers = details.trustedPhoneNumbers?.join(', ');
