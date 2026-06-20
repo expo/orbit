@@ -12,6 +12,7 @@
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc",
     "archive": "yarn build && pkg build/index.js --config pkg.config.json -o dist/orbit-cli",
+    "archive:full": "bash scripts/build-with-helpers.sh",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "watch": "tsc --watch --preserveWatchOutput",
