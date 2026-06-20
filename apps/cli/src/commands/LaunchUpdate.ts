@@ -148,7 +148,7 @@ async function launchUpdateOnIOSAsync(
 ) {
   const isSimulator = await Simulator.isSimulatorAsync(deviceId);
   if (!isSimulator) {
-    throw new Error('Launching updates on iOS physical is not supported yet');
+    throw new Error('Launching updates on iOS physical devices is not supported yet');
   }
 
   await downloadAndInstallLatestDevBuildAsync({
