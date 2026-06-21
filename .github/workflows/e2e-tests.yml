@@ -200,31 +200,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
-      # Installs ccache and persists its compilation cache across runs. The
-      # Podfile routes the pod/app compiler through it when USE_CCACHE=1.
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ runner.os }}-xcode-ccache
-          max-size: 1500M
-
       - name: Install CocoaPods
         working-directory: apps/menu-bar/macos
-        env:
-          USE_CCACHE: "1"
         run: bundle exec pod install
 
       - name: Build macOS app (unsigned — E2E only)
         working-directory: apps/menu-bar
-        env:
-          USE_CCACHE: "1"
-          # clang writes absolute paths and timestamps that would otherwise bust
-          # the cache on every run; loosen the checks ccache is strict about so
-          # Xcode-generated builds actually hit.
-          CCACHE_SLOPPINESS: "clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros"
-          CCACHE_FILECLONE: "true"
-          CCACHE_DEPEND: "true"
-          CCACHE_INODECACHE: "true"
         # Skip codesigning: the E2E job has no Developer ID Application cert,
         # and Appium mac2 launches the .app by path in the same user session,
         # so Gatekeeper isn't in the picture. Production builds are still
