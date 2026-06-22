@@ -68,6 +68,14 @@ program
   });
 
 program
+  .command('list-android-pairing-services')
+  .description('List Android devices advertising a Wi-Fi pairing service over mDNS')
+  .action(async (...args) => {
+    const { listAndroidPairingServicesAsync } = await import('./commands/PairAndroidDevice');
+    return returnLoggerMiddleware(listAndroidPairingServicesAsync)(...args);
+  });
+
+program
   .command('install-and-launch')
   .requiredOption('--app-path  <string>', 'Local path of the app')
   .option('--device-id  <string>', 'UDID or name of the device')

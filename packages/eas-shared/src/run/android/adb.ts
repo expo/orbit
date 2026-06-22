@@ -58,11 +58,41 @@ export async function pairAndroidDeviceAsync({
   pairingAddress: string;
   pairingCode: string;
 }): Promise<void> {
-  const { stdout } = await adbAsync('pair', pairingAddress, pairingCode);
-  // A successful pairing prints `Successfully paired to <address> [guid=...]`.
-  if (!/successfully paired/i.test(stdout)) {
-    throw new Error(sanitizeAdbDeviceName(stdout) ?? `Failed to pair with ${pairingAddress}.`);
+  // Make sure the daemon is up first. Otherwise `adb pair` starts it itself and
+  // the in-flight pairing connection can die mid-handshake ("write failure
+  // during connection"), which is the same transient we retry on below.
+  await adbAsync('start-server');
+
+  let lastError: unknown;
+  // ponytail: 2 attempts covers the daemon cold-start race the user hit; bump if it still flakes.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const { stdout } = await adbAsync('pair', pairingAddress, pairingCode);
+      // A successful pairing prints `Successfully paired to <address> [guid=...]`.
+      if (!/successfully paired/i.test(stdout)) {
+        throw new Error(sanitizeAdbDeviceName(stdout) ?? `Failed to pair with ${pairingAddress}.`);
+      }
+      return;
+    } catch (error: any) {
+      lastError = error;
+      if (!isTransientAdbConnectionError(error)) {
+        throw error;
+      }
+      await sleepAsync(500);
+    }
   }
+  throw lastError;
+}
+
+/**
+ * Transient errors seen when `adb pair` runs before the daemon is fully up.
+ * The connection is dropped mid-handshake, so retrying once succeeds.
+ */
+function isTransientAdbConnectionError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /write failure during connection|daemon not running|Undefined error: 0|connection reset|closed/i.test(
+    message
+  );
 }
 
 /**
