@@ -8,20 +8,22 @@ type PairAndroidDeviceAsyncOptions = {
   connectAddress?: string;
 };
 
-export const pairAndroidDeviceAsync = async ({
-  pairingAddress,
-  pairingCode,
-  connectAddress,
-}: PairAndroidDeviceAsyncOptions) => {
+export const pairAndroidDeviceAsync = async (
+  { pairingAddress, pairingCode, connectAddress }: PairAndroidDeviceAsyncOptions,
+  onStatusUpdate?: (status: string) => void
+) => {
   const args = ['--pairing-address', pairingAddress, '--pairing-code', pairingCode];
   if (connectAddress) {
     args.push('--connect-address', connectAddress);
   }
 
-  const stringResult = await MenuBarModule.runCli('pair-android-device', args, undefined);
+  const stringResult = await MenuBarModule.runCli('pair-android-device', args, onStatusUpdate);
 
   return JSON.parse(stringResult) as PairAndroidDeviceResult;
 };
+
+/** Substring the CLI logs once pairing succeeds, before the connect step. */
+export const DEVICE_PAIRED_LOG = '[orbit] device paired';
 
 type PairAndroidDeviceWithQRCodeAsyncOptions = {
   serviceName: string;

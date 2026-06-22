@@ -14,6 +14,13 @@ type PairAndroidDeviceOptions = {
 
 const CONNECT_DISCOVERY_TIMEOUT_MS = 15 * 1000;
 
+/**
+ * Logged the instant pairing succeeds, before the (slow) connect-discovery
+ * step. The menu bar app watches for this to show "paired" right away while the
+ * connect finishes in the background.
+ */
+const DEVICE_PAIRED_LOG = '[orbit] device paired';
+
 export async function pairAndroidDeviceAsync({
   pairingAddress,
   pairingCode,
@@ -21,6 +28,7 @@ export async function pairAndroidDeviceAsync({
 }: PairAndroidDeviceOptions): Promise<PairAndroidDeviceResult> {
   try {
     await Emulator.pairAndroidDeviceAsync({ pairingAddress, pairingCode });
+    console.log(DEVICE_PAIRED_LOG);
     await connectAfterPairingAsync({ pairingAddress, connectAddress });
 
     return { success: true };
@@ -100,6 +108,7 @@ export async function pairAndroidDeviceWithQRCodeAsync({
       pairingAddress: pairingService.address,
       pairingCode,
     });
+    console.log(DEVICE_PAIRED_LOG);
     await connectAfterPairingAsync({ pairingAddress: pairingService.address });
 
     return { success: true };

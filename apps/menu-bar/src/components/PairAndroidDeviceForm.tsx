@@ -1,26 +1,40 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TextInput as RNTextInput,
+  TouchableOpacity,
+} from 'react-native';
 
 import Button from './Button';
 import QRCode from './QRCode';
-import { Text, TextInput } from './Text';
-import { Row, View } from './View';
+import { Text } from './Text';
+import { Row, Spacer, View } from './View';
 import {
   AndroidPairingService,
+  DEVICE_PAIRED_LOG,
   listAndroidPairingServicesAsync,
   pairAndroidDeviceAsync,
   pairAndroidDeviceWithQRCodeAsync,
 } from '../commands/pairAndroidDeviceAsync';
-import Alert from '../modules/Alert';
+import MenuBarModule from '../modules/MenuBarModule';
 import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
+import { WindowsNavigator } from '../windows';
 
-const QR_CODE_SIZE = 180;
+const QR_CODE_SIZE = 160;
 const DISCOVERY_INTERVAL_MS = 2000;
 
-type PairingMode = 'qrCode' | 'pairingCode';
+type Tab = 'qr' | 'code';
+type Status = 'idle' | 'connecting' | 'success' | 'error';
+
+type PairingCallbacks = {
+  onStart: (deviceName: string) => void;
+  onSuccess: (deviceName: string) => void;
+  onError: (message?: string) => void;
+};
 
 function randomAlphanumeric(length: number): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -29,126 +43,204 @@ function randomAlphanumeric(length: number): string {
 
 const PairAndroidDeviceForm = () => {
   const theme = useCurrentTheme();
-  const [mode, setMode] = useState<PairingMode>('qrCode');
+  const [tab, setTab] = useState<Tab>('qr');
+  const [status, setStatus] = useState<Status>('idle');
+  const [deviceName, setDeviceName] = useState('your device');
+  const [errorMessage, setErrorMessage] = useState<string>();
+
+  const onStart = useCallback((name: string) => {
+    setDeviceName(name);
+    setStatus('connecting');
+  }, []);
+  const onSuccess = useCallback((name: string) => {
+    setDeviceName(name);
+    setStatus('success');
+  }, []);
+  const onError = useCallback((message?: string) => {
+    setErrorMessage(message);
+    setStatus('error');
+  }, []);
+  const callbacks: PairingCallbacks = { onStart, onSuccess, onError };
+
+  const reset = () => {
+    setErrorMessage(undefined);
+    setStatus('idle');
+  };
+
+  if (status === 'connecting') {
+    return <ConnectingState deviceName={deviceName} />;
+  }
+  if (status === 'success') {
+    return (
+      <SuccessState
+        deviceName={deviceName}
+        onDone={() => {
+          WindowsNavigator.close('PairAndroidDevice');
+          MenuBarModule.openPopover();
+        }}
+      />
+    );
+  }
+  if (status === 'error') {
+    return (
+      <ErrorState
+        message={errorMessage}
+        onRetry={reset}
+        onUseQr={() => {
+          setTab('qr');
+          reset();
+        }}
+      />
+    );
+  }
 
   return (
     <View>
-      <Row gap="1">
-        <Button
-          title="QR code"
-          color={mode === 'qrCode' ? 'default' : 'primary'}
-          onPress={() => setMode('qrCode')}
-          style={styles.modeButton}
-        />
-        <Button
-          title="Pairing code"
-          color={mode === 'pairingCode' ? 'default' : 'primary'}
-          onPress={() => setMode('pairingCode')}
-          style={styles.modeButton}
-        />
-      </Row>
-      <View mt="2">
-        {mode === 'qrCode' ? <QRCodePairing /> : <PairingCodeForm theme={theme} />}
+      <Segmented tab={tab} onChange={setTab} theme={theme} />
+      <View mt="3">
+        {tab === 'qr' ? (
+          <QRCodePairing {...callbacks} />
+        ) : (
+          <PairingCodeForm theme={theme} {...callbacks} />
+        )}
       </View>
+      {/* <HelpDisclosure theme={theme} /> */}
     </View>
   );
 };
 
-const QRCodePairing = () => {
-  const [qrCodeContent, setQrCodeContent] = useState<string>();
-  const [statusMessage, setStatusMessage] = useState<string>();
-  // Identifies the pairing session currently shown, so that results from a
-  // previous session (e.g. a timed out CLI invocation) are ignored.
-  const sessionRef = useRef(0);
+const Segmented = ({
+  tab,
+  onChange,
+  theme,
+}: {
+  tab: Tab;
+  onChange: (tab: Tab) => void;
+  theme: ReturnType<typeof useCurrentTheme>;
+}) => {
+  const trackColor = theme === 'light' ? addOpacity('#000000', 0.08) : addOpacity('#ffffff', 0.08);
+  // Raised "selected" surface, lighter than the track it sits on.
+  const activeColor = theme === 'light' ? '#ffffff' : '#2b2f37';
 
-  const startPairingSession = async () => {
-    const session = ++sessionRef.current;
-    const serviceName = `expo-orbit-${randomAlphanumeric(10)}`;
-    const pairingCode = randomAlphanumeric(8);
-
-    setQrCodeContent(`WIFI:T:ADB;S:${serviceName};P:${pairingCode};;`);
-    setStatusMessage('Waiting for the device to scan the QR code…');
-
-    try {
-      const result = await pairAndroidDeviceWithQRCodeAsync(
-        { serviceName, pairingCode },
-        (status) => {
-          if (session === sessionRef.current && status.trim()) {
-            setStatusMessage(status.trim());
-          }
-        }
-      );
-
-      if (session !== sessionRef.current) {
-        return;
-      }
-
-      if (result.success) {
-        Alert.alert('Device paired', 'Your Android device was paired and connected over Wi-Fi.');
-      } else {
-        Alert.alert(
-          'Unable to pair device',
-          result.error?.message ??
-            'Make sure the device and your computer are on the same network and try again.'
-        );
-      }
-    } catch (error) {
-      if (session !== sessionRef.current) {
-        return;
-      }
-      Alert.alert(
-        'Unable to pair device',
-        error instanceof Error ? error.message : 'Something went wrong while pairing the device.'
-      );
-    } finally {
-      if (session === sessionRef.current) {
-        setQrCodeContent(undefined);
-        setStatusMessage(undefined);
-      }
-    }
+  const renderSegment = (value: Tab, label: string) => {
+    const active = tab === value;
+    return (
+      <TouchableOpacity
+        onPress={() => onChange(value)}
+        activeOpacity={0.8}
+        style={[
+          styles.segment,
+          active && [styles.segmentActive, { backgroundColor: activeColor }],
+        ]}>
+        <Text size="tiny" weight="semibold" color={active ? 'default' : 'secondary'}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
   };
 
   return (
+    <Row gap="1" rounded="medium" px="0.5" py="0.5" style={{ backgroundColor: trackColor }}>
+      {renderSegment('qr', 'Scan QR code')}
+      {renderSegment('code', 'Pairing code')}
+    </Row>
+  );
+};
+
+const QRCodePairing = ({ onSuccess, onError }: PairingCallbacks) => {
+  const [qrCodeContent, setQrCodeContent] = useState<string>();
+
+  useEffect(() => {
+    // Ignore results once the component unmounts (e.g. user switches tabs).
+    let active = true;
+    const serviceName = `expo-orbit-${randomAlphanumeric(10)}`;
+    const pairingCode = randomAlphanumeric(8);
+    setQrCodeContent(`WIFI:T:ADB;S:${serviceName};P:${pairingCode};;`);
+
+    pairAndroidDeviceWithQRCodeAsync({ serviceName, pairingCode }, (statusMessage) => {
+      // Show success the moment pairing lands; the CLI connects in the
+      // background (discovering the connect service can take ~15s).
+      if (active && statusMessage.includes(DEVICE_PAIRED_LOG)) {
+        onSuccess('your device');
+      }
+    })
+      .then((result) => {
+        // Only surface failures here — success is driven by the log above so
+        // the user isn't kept waiting on the background connect step.
+        if (active && !result.success) {
+          onError(result.error?.message);
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          onError(error instanceof Error ? error.message : undefined);
+        }
+      });
+
+    // ponytail: this abandons the in-flight CLI wait, but the process keeps
+    // running until it times out (no cancellation hook exists).
+    return () => {
+      active = false;
+    };
+  }, [onSuccess, onError]);
+
+  return (
     <View>
-      <Text size="tiny" color="secondary" style={styles.description}>
-        Enable "Wireless debugging" in your device's developer options, then choose "Pair device
-        with QR code" and scan the code below.
-      </Text>
-      {qrCodeContent ? (
-        <View align="centered" mt="2" gap="2">
-          <View rounded="medium" style={styles.qrCodeContainer}>
-            <QRCode value={qrCodeContent} size={QR_CODE_SIZE} />
-          </View>
-          <Text size="tiny" color="secondary">
-            {statusMessage}
-          </Text>
+      <Row gap="3" align="center">
+        <View rounded="medium" style={styles.qrCodeContainer}>
+          {qrCodeContent ? <QRCode value={qrCodeContent} size={QR_CODE_SIZE} /> : null}
         </View>
-      ) : (
-        <Row justify="end" mt="2">
-          <Button
-            title="Generate QR code"
-            color="primary"
-            onPress={startPairingSession}
-            style={styles.button}
-          />
-        </Row>
-      )}
+        <View flex="1" gap="2.5">
+          <NumberedStep number={1}>
+            On your phone, open Wireless debugging and tap "Pair device with QR code".
+          </NumberedStep>
+          <NumberedStep number={2}>
+            Point the camera at this code to pair automatically.
+          </NumberedStep>
+        </View>
+      </Row>
+      <Row
+        align="center"
+        justify="center"
+        gap="2"
+        mt="3"
+        rounded="medium"
+        py="2"
+        style={styles.waitingBox}>
+        <ActivityIndicator size="small" />
+        <Text size="tiny" color="secondary">
+          Waiting for your device to scan…
+        </Text>
+      </Row>
     </View>
   );
 };
 
-const PairingCodeForm = ({ theme }: { theme: ReturnType<typeof useCurrentTheme> }) => {
-  const [pairingCode, setPairingCode] = useState('');
+const NumberedStep = ({ number, children }: { number: number; children: React.ReactNode }) => (
+  <Row gap="2" align="start">
+    <View rounded="large" align="centered" style={styles.stepBadge}>
+      <Text size="tiny" weight="semibold" color="secondary">
+        {number}
+      </Text>
+    </View>
+    <Text size="tiny" color="secondary" style={styles.flex}>
+      {children}
+    </Text>
+  </Row>
+);
+
+const PairingCodeForm = ({
+  theme,
+  onStart,
+  onSuccess,
+  onError,
+}: PairingCallbacks & { theme: ReturnType<typeof useCurrentTheme> }) => {
+  const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const [services, setServices] = useState<AndroidPairingService[]>([]);
-  const [pairingAddress, setPairingAddress] = useState<string>();
+  const code = digits.join('');
 
-  const backgroundColor =
-    theme === 'light'
-      ? addOpacity(lightTheme.background.default, 0.6)
-      : addOpacity(darkTheme.background.default, 0.2);
-
-  // Continuously discover devices sitting on the "Pair device with pairing
-  // code" screen, the same way Android Studio lists them.
+  // Continuously discover devices on the "Pair device with pairing code" screen,
+  // the way Android Studio lists them, so the user only types the code.
   useEffect(() => {
     let cancelled = false;
     const poll = async () => {
@@ -158,7 +250,7 @@ const PairingCodeForm = ({ theme }: { theme: ReturnType<typeof useCurrentTheme> 
           setServices(discovered);
         }
       } catch {
-        // Ignore transient discovery failures; the next poll will retry.
+        // Ignore transient discovery failures; the next poll retries.
       }
     };
     poll();
@@ -170,63 +262,42 @@ const PairingCodeForm = ({ theme }: { theme: ReturnType<typeof useCurrentTheme> 
   }, []);
 
   const handlePair = async (service: AndroidPairingService) => {
-    const code = pairingCode.trim();
-    if (!code || pairingAddress) {
+    if (code.length !== 6) {
       return;
     }
-
-    setPairingAddress(service.address);
+    const name = `Device at ${service.address}`;
+    onStart(name);
     try {
-      const result = await pairAndroidDeviceAsync({
-        pairingAddress: service.address,
-        pairingCode: code,
-      });
-
-      if (result.success) {
-        Alert.alert('Device paired', 'Your Android device was paired and connected over Wi-Fi.');
-        setPairingCode('');
-      } else {
-        Alert.alert(
-          'Unable to pair device',
-          result.error?.message ??
-            'Make sure the pairing code is still valid and that your computer is on the same network.'
-        );
+      const result = await pairAndroidDeviceAsync(
+        { pairingAddress: service.address, pairingCode: code },
+        (statusMessage) => {
+          // Show success as soon as pairing lands; connect runs in the
+          // background (the runCli listener outlives this unmounted form).
+          if (statusMessage.includes(DEVICE_PAIRED_LOG)) {
+            onSuccess(name);
+          }
+        }
+      );
+      // Pairing itself failed (sentinel never logged) — surface the error.
+      if (!result.success) {
+        onError(result.error?.message);
       }
     } catch (error) {
-      Alert.alert(
-        'Unable to pair device',
-        error instanceof Error ? error.message : 'Something went wrong while pairing the device.'
-      );
-    } finally {
-      setPairingAddress(undefined);
+      onError(error instanceof Error ? error.message : undefined);
     }
   };
 
+  const backgroundColor =
+    theme === 'light'
+      ? addOpacity(lightTheme.background.default, 0.6)
+      : addOpacity(darkTheme.background.default, 0.2);
+
   return (
     <View>
-      <Text size="tiny" color="secondary" style={styles.description}>
-        Enable "Wireless debugging" in your device's developer options, then choose "Pair device
-        with pairing code". Enter the code below and pick your device once it appears.
+      <Text size="tiny" weight="semibold" color="secondary" style={styles.label}>
+        Wi-Fi pairing code
       </Text>
-
-      <Row
-        border="light"
-        rounded="medium"
-        align="center"
-        mt="2"
-        style={[styles.inputContainer, { backgroundColor }]}>
-        <TextInput
-          value={pairingCode}
-          onChangeText={setPairingCode}
-          placeholder="Pairing code (e.g. 123456)"
-          keyboardType="number-pad"
-          shadow="input"
-          style={styles.input}
-          placeholderTextColor={PlatformColor('placeholderTextColor')}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      </Row>
+      <CodeInput digits={digits} onChange={setDigits} backgroundColor={backgroundColor} />
 
       <Row align="center" justify="between" mt="3" mb="1">
         <Text size="tiny" weight="semibold" color="secondary">
@@ -257,50 +328,222 @@ const PairingCodeForm = ({ theme }: { theme: ReturnType<typeof useCurrentTheme> 
                 Device at {service.address}
               </Text>
               <Text size="tiny" color="secondary">
-                {pairingAddress === service.address ? 'Pairing…' : 'Available to pair'}
+                Available to pair
               </Text>
             </View>
             <Button
               title="Pair"
               color="primary"
-              disabled={pairingCode.trim().length === 0 || pairingAddress !== undefined}
+              disabled={code.length !== 6}
               onPress={() => handlePair(service)}
               style={styles.button}
             />
           </Row>
         ))
       )}
+
+      <Text size="tiny" color="secondary" style={[styles.description, styles.hint]}>
+        Tap "Pair device with pairing code" on your phone to reveal the code.
+      </Text>
     </View>
   );
 };
 
+const CodeInput = ({
+  digits,
+  onChange,
+  backgroundColor,
+}: {
+  digits: string[];
+  onChange: (digits: string[]) => void;
+  backgroundColor: string;
+}) => {
+  const refs = useRef<(RNTextInput | null)[]>([]);
+
+  const setDigit = (index: number, raw: string) => {
+    // ponytail: take the last digit typed; multi-char paste lands in one box.
+    const value = raw.replace(/\D/g, '').slice(-1);
+    const next = digits.slice();
+    next[index] = value;
+    onChange(next);
+    if (value && index < digits.length - 1) {
+      refs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyPress = (index: number, key: string) => {
+    if (key === 'Backspace' && !digits[index] && index > 0) {
+      refs.current[index - 1]?.focus();
+    }
+  };
+
+  return (
+    <Row gap="2" align="center" justify="center" style={{ backgroundColor }}>
+      {digits.map((digit, index) => (
+        <RNTextInput
+          key={index}
+          ref={(ref) => {
+            refs.current[index] = ref;
+          }}
+          value={digit}
+          onChangeText={(text) => setDigit(index, text)}
+          onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
+          keyboardType="number-pad"
+          maxLength={1}
+          placeholder="•"
+          placeholderTextColor={PlatformColor('placeholderTextColor')}
+          style={[styles.codeBox, { backgroundColor }]}
+        />
+      ))}
+    </Row>
+  );
+};
+
+const ConnectingState = ({ deviceName }: { deviceName: string }) => (
+  <View align="centered" py="6" gap="3">
+    <ActivityIndicator size="large" />
+    <Text size="medium" weight="semibold" align="center">
+      Pairing with {deviceName}…
+    </Text>
+    <Text size="tiny" color="secondary" align="center" style={styles.stateSubtitle}>
+      Establishing a secure connection over your local network.
+    </Text>
+  </View>
+);
+
+const SuccessState = ({ deviceName, onDone }: { deviceName: string; onDone: () => void }) => (
+  <View align="centered" pt="2" gap="1">
+    <StatusBadge glyph="✓" color={lightTheme.text.success} />
+    <Spacer.Vertical size="tiny" />
+    <Text size="medium" weight="semibold">
+      Device paired
+    </Text>
+    <Text size="tiny" color="secondary" align="center" style={styles.stateSubtitle}>
+      {deviceName} is now available in your device list.
+    </Text>
+    <Button title="Done" color="primary" onPress={onDone} style={[styles.wideButton, styles.mt3]} />
+  </View>
+);
+
+const ErrorState = ({
+  message,
+  onRetry,
+  onUseQr,
+}: {
+  message?: string;
+  onRetry: () => void;
+  onUseQr: () => void;
+}) => (
+  <View align="centered" pt="2" gap="1">
+    <StatusBadge glyph="✕" color={lightTheme.text.error} />
+    <Spacer.Vertical size="tiny" />
+    <Text size="medium" weight="semibold">
+      Pairing failed
+    </Text>
+    <Text size="tiny" color="secondary" align="center" style={styles.stateSubtitle}>
+      {message ??
+        "Couldn't reach the device. Make sure both are on the same Wi-Fi network and the code hasn't expired."}
+    </Text>
+    <Button
+      title="Try again"
+      color="primary"
+      onPress={onRetry}
+      style={[styles.wideButton, styles.mt3]}
+    />
+    <TouchableOpacity onPress={onUseQr} style={styles.linkButton}>
+      <Text size="tiny" color="secondary">
+        Pair with a QR code instead
+      </Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const StatusBadge = ({ glyph, color }: { glyph: string; color: string }) => (
+  <View align="centered" style={[styles.statusBadge, { backgroundColor: addOpacity(color, 0.14) }]}>
+    <Text style={{ color, fontSize: 28, lineHeight: 32 }}>{glyph}</Text>
+  </View>
+);
+
 export default PairAndroidDeviceForm;
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   description: {
     lineHeight: 15,
   },
-  inputContainer: {
-    overflow: 'hidden',
+  hint: {
+    marginTop: 12,
   },
-  input: {
-    padding: 6,
-    flex: 1,
-    textAlignVertical: 'center',
-    justifyContent: 'center',
-    textAlign: 'left',
-    verticalAlign: 'middle',
-    fontSize: 13,
+  label: {
+    marginBottom: 7,
   },
   button: {
     height: 28,
   },
-  modeButton: {
-    height: 24,
+  segment: {
+    flex: 1,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 7,
+  },
+  segmentActive: {
+    shadowColor: '#000000',
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  wideButton: {
+    alignSelf: 'stretch',
+    height: 36,
+  },
+  mt3: {
+    marginTop: 12,
+  },
+  linkButton: {
+    marginTop: 8,
+    paddingVertical: 6,
   },
   qrCodeContainer: {
     overflow: 'hidden',
     padding: 8,
     backgroundColor: '#ffffff',
+  },
+  waitingBox: {
+    backgroundColor: addOpacity(lightTheme.button.secondary.background, 0.08),
+  },
+  stepBadge: {
+    width: 18,
+    height: 18,
+    backgroundColor: addOpacity(lightTheme.text.default, 0.07),
+  },
+  codeBox: {
+    flex: 1,
+    // Height comes from padding so the digit/placeholder stays vertically
+    // centered — a fixed height top-aligns the text on macOS.
+    paddingVertical: 13,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontSize: 22,
+    fontWeight: '600',
+    borderWidth: 1,
+    borderColor: addOpacity(lightTheme.border.default, 0.5),
+    borderRadius: 9,
+    color: PlatformColor('labelColor') as unknown as string,
+  },
+  statusBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  stateSubtitle: {
+    lineHeight: 16,
+    maxWidth: 280,
+  },
+  helpDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: addOpacity(lightTheme.border.default, 0.3),
   },
 });
