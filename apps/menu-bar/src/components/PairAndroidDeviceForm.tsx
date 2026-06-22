@@ -104,7 +104,6 @@ const PairAndroidDeviceForm = () => {
           <PairingCodeForm theme={theme} {...callbacks} />
         )}
       </View>
-      {/* <HelpDisclosure theme={theme} /> */}
     </View>
   );
 };
