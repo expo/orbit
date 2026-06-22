@@ -1,40 +1,36 @@
-import { darkTheme, lightTheme } from '@expo/styleguide-native';
+import { lightTheme } from '@expo/styleguide-native';
 import React from 'react';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
-import { Text, View } from '../components';
+import WifiIcon from '../assets/icons/wifi.svg';
+import { Row, Text, View } from '../components';
 import PairAndroidDeviceForm from '../components/PairAndroidDeviceForm';
 import { addOpacity } from '../utils/theme';
-import { useCurrentTheme } from '../utils/useExpoTheme';
 
 const PairAndroidDevice = () => {
-  const theme = useCurrentTheme();
-
-  const groupWrapperStyle = {
-    backgroundColor:
-      theme === 'light'
-        ? addOpacity(lightTheme.background.default, 0.6)
-        : addOpacity(darkTheme.background.default, 0.2),
-  };
-
   return (
     <View flex="1" px="medium" pb="medium" testID="pair-android-device-window">
-      <Text size="medium" weight="semibold">
-        Pair Android Device
-      </Text>
       <ScrollView alwaysBounceVertical={false}>
-        <Text size="tiny" color="secondary" style={styles.subheader}>
-          Connect a physical Android device over Wi-Fi
-        </Text>
-        <View
-          mt="2"
-          rounded="medium"
-          style={groupWrapperStyle}
-          border="light"
-          px="2.5"
-          pt="2"
-          pb="2.5">
-          <PairAndroidDeviceForm />
+        <Row align="center" gap="2.5" mb="3">
+          <View rounded="medium" align="centered" style={styles.iconBadge}>
+            <WifiIcon width={20} height={20} fill={lightTheme.button.secondary.background} />
+          </View>
+          <View flex="1">
+            <Text size="medium" weight="semibold">
+              Pair Android over Wi-Fi
+            </Text>
+            <Text size="tiny" color="secondary">
+              Connect a physical Android device
+            </Text>
+          </View>
+        </Row>
+
+        <PairAndroidDeviceForm />
+
+        <View mt="4">
+          <Text size="tiny" color="warning" align="center">
+            The device stays paired until you turn off Wireless debugging.
+          </Text>
         </View>
       </ScrollView>
     </View>
@@ -44,8 +40,9 @@ const PairAndroidDevice = () => {
 export default PairAndroidDevice;
 
 const styles = StyleSheet.create({
-  subheader: Platform.select({
-    macos: { fontFamily: 'SF Pro Rounded', letterSpacing: 0.33 },
-    default: {},
-  }),
+  iconBadge: {
+    width: 36,
+    height: 36,
+    backgroundColor: addOpacity(lightTheme.button.secondary.background, 0.14),
+  },
 });
