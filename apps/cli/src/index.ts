@@ -7,6 +7,7 @@ import { bootDeviceAsync } from './commands/BootDevice';
 import {
   pairAndroidDeviceAsync,
   pairAndroidDeviceWithQRCodeAsync,
+  listAndroidPairingServicesAsync,
 } from './commands/PairAndroidDevice';
 import { installAndLaunchAppAsync } from './commands/InstallAndLaunchApp';
 import { installAppleDeviceSupportAsync } from './commands/InstallAppleDeviceSupport';
@@ -61,6 +62,11 @@ program
   .requiredOption('--pairing-code  <string>', 'Pairing code embedded in the QR code')
   .option('--timeout  <number>', 'Time to wait for the device to scan the QR code, in milliseconds')
   .action(returnLoggerMiddleware(pairAndroidDeviceWithQRCodeAsync));
+
+program
+  .command('list-android-pairing-services')
+  .description('List Android devices advertising a Wi-Fi pairing service over mDNS')
+  .action(returnLoggerMiddleware(listAndroidPairingServicesAsync));
 
 program
   .command('install-and-launch')
