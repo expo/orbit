@@ -186,6 +186,20 @@ jobs:
           bundler-cache: true
           working-directory: apps/menu-bar
 
+      # Pods are derived from the (already installed) node_modules and pinned by
+      # Podfile.lock, so restoring them across runs is safe — `pod install` below
+      # still reconciles and re-applies the post_install hooks. Keyed on the
+      # lockfile so a dependency bump invalidates the cache.
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/menu-bar/macos/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods-${{ hashFiles('apps/menu-bar/macos/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
       - name: Install CocoaPods
         working-directory: apps/menu-bar/macos
         run: bundle exec pod install
