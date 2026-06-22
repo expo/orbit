@@ -6,6 +6,7 @@ import {
   detectAppleAppType,
 } from 'eas-shared';
 import { Platform } from 'common-types/build/cli-commands';
+import { InternalError } from 'common-types';
 
 import { getPlatformFromURI } from '../utils';
 
@@ -13,6 +14,7 @@ type InstallAndLaunchAppAsyncOptions = {
   appPath: string;
   deviceId?: string;
   launchUrl?: string;
+  forceSimulator?: boolean;
 };
 
 export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsyncOptions) {
@@ -28,11 +30,21 @@ export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsync
   const platform = getPlatformFromURI(appPath);
 
   return platform === Platform.Ios
-    ? installAndLaunchIOSAppAsync(appPath, options.deviceId, options.launchUrl)
+    ? installAndLaunchIOSAppAsync(
+        appPath,
+        options.deviceId,
+        options.launchUrl,
+        options.forceSimulator
+      )
     : installAndLaunchAndroidAppAsync(appPath, options.deviceId, options.launchUrl);
 }
 
-async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string, launchURL?: string) {
+async function installAndLaunchIOSAppAsync(
+  appPath: string,
+  deviceId: string,
+  launchURL?: string,
+  forceSimulator?: boolean
+) {
   const appInfo = await detectAppleAppType(appPath);
 
   // Simulators only exist on macOS, and `isSimulatorAsync` shells out to `simctl`
@@ -40,14 +52,21 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string, la
   const isSimulator = process.platform === 'darwin' && (await Simulator.isSimulatorAsync(deviceId));
 
   if (isSimulator) {
+    let simulatorAppPath = appPath;
     if (appInfo.deviceType === 'device') {
-      throw new Error(
-        "Apps built to target physical devices can't be installed on simulators. Either use a physical device or generate a new simulator build."
-      );
+      if (!forceSimulator) {
+        throw new InternalError(
+          'DEVICE_BUILD_ON_SIMULATOR',
+          "Apps built to target physical devices can't be installed on simulators. Either use a physical device or generate a new simulator build."
+        );
+      }
+      // Experimental: re-tag and re-sign the device build so it can run on the
+      // simulator. The conversion works on a copy, leaving the original intact.
+      simulatorAppPath = await Simulator.convertDeviceAppToSimulatorAsync(appPath);
     }
 
-    const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(appPath);
-    await Simulator.installAppAsync(deviceId, appPath);
+    const bundleIdentifier = await Simulator.getAppBundleIdentifierAsync(simulatorAppPath);
+    await Simulator.installAppAsync(deviceId, simulatorAppPath);
 
     if (launchURL) {
       try {

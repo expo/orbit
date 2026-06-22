@@ -44,6 +44,10 @@ program
   .requiredOption('--app-path  <string>', 'Local path of the app')
   .option('--device-id  <string>', 'UDID or name of the device')
   .option('--launch-url  <string>', 'URL to open on the device after installing the app')
+  .option(
+    '--force-simulator',
+    'Re-tag and re-sign an iOS device build so it can run on a simulator (experimental)'
+  )
   .action(returnLoggerMiddleware(installAndLaunchAppAsync));
 
 program

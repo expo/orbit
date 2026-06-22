@@ -21,6 +21,8 @@ import { parseBinaryPlistAsync } from '../../utils/parseBinaryPlistAsync';
 import { sleepAsync } from '../../utils/promise';
 import * as Versions from '../../versions';
 
+export { convertDeviceAppToSimulatorAsync } from './convertAppToSimulator';
+
 const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 const SIMCTL_INSTALL_MAX_RETRIES = 3;
 const SIMCTL_INSTALL_RETRY_DELAY_MS = 2000;

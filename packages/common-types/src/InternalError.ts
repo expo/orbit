@@ -37,7 +37,8 @@ export type InternalErrorCode =
   | 'SIMCTL_NOT_AVAILABLE'
   | 'NO_DEVELOPMENT_BUILDS_AVAILABLE'
   | 'UNAUTHORIZED_ACCOUNT'
-  | 'UNTRUSTED_SOURCE';
+  | 'UNTRUSTED_SOURCE'
+  | 'DEVICE_BUILD_ON_SIMULATOR';
 
 export type MultipleAppsInTarballErrorDetails = {
   apps: {

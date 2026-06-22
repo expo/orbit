@@ -530,10 +530,16 @@ function Core(props: Props) {
         let device: PlatformToDevice<typeof devicePlatform> | undefined;
         if (deviceId) {
           const requested = findDeviceById(deviceId);
+          // Honor an explicitly-selected iOS simulator for a device build: the
+          // install path will offer to re-tag it to run on the simulator.
+          const explicitSimulatorForDeviceBuild =
+            devicePlatform === 'ios' &&
+            appType === 'device' &&
+            requested?.deviceType === 'simulator';
           if (
             !requested ||
             getDeviceOS(requested) !== devicePlatform ||
-            (appType && requested.deviceType !== appType)
+            (appType && requested.deviceType !== appType && !explicitSimulatorForDeviceBuild)
           ) {
             warnDeviceIdNotFound(deviceId);
           } else {
@@ -582,6 +588,26 @@ function Core(props: Props) {
                 error.message,
                 'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
               );
+            } else if (error.code === 'DEVICE_BUILD_ON_SIMULATOR') {
+              const shouldConvert = await new Promise<boolean>((resolve) => {
+                Alert.alert(
+                  'This is a device build',
+                  'This app was built for physical devices. Orbit can try to re-tag and re-sign it to run on the simulator.\n\nThis is experimental and the app may crash on launch.',
+                  [
+                    { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+                    { text: 'Try anyway', style: 'default', onPress: () => resolve(true) },
+                  ]
+                );
+              });
+              if (shouldConvert) {
+                updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
+                await installAndLaunchAppAsync({
+                  appPath: localFilePath,
+                  deviceId: resolvedDeviceId,
+                  launchURL,
+                  forceSimulator: true,
+                });
+              }
             }
           } else {
             throw error;
