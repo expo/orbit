@@ -42,3 +42,15 @@ export const pairAndroidDeviceWithQRCodeAsync = async (
 
   return JSON.parse(stringResult) as PairAndroidDeviceResult;
 };
+
+export type AndroidPairingService = { name: string; address: string };
+
+/**
+ * List Android devices currently in Wi-Fi pairing mode (discovered over mDNS),
+ * so the user can pick one to pair with instead of typing its address.
+ */
+export const listAndroidPairingServicesAsync = async (): Promise<AndroidPairingService[]> => {
+  const stringResult = await MenuBarModule.runCli('list-android-pairing-services', [], undefined);
+
+  return JSON.parse(stringResult) as AndroidPairingService[];
+};

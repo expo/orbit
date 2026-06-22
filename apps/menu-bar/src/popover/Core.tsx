@@ -716,8 +716,14 @@ function Core(props: Props) {
             contentContainerStyle={{ width: '100%' }}
             showsHorizontalScrollIndicator={false}
             SectionSeparatorComponent={Separator}
-            renderSectionHeader={({ section: { label, error } }) => (
-              <DeviceListSectionHeader label={label} errorMessage={error?.message} />
+            renderSectionHeader={({ section: { key, label, error } }) => (
+              <DeviceListSectionHeader
+                label={label}
+                errorMessage={error?.message}
+                onPressAdd={
+                  key === 'android' ? () => WindowsNavigator.open('PairAndroidDevice') : undefined
+                }
+              />
             )}
             renderSectionFooter={({ section: { key, error } }) =>
               key === 'ios' && error?.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING' ? (
