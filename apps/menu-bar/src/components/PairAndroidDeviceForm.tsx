@@ -1,12 +1,14 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
-import React, { useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 
 import Button from './Button';
 import QRCode from './QRCode';
 import { Text, TextInput } from './Text';
 import { Row, View } from './View';
 import {
+  AndroidPairingService,
+  listAndroidPairingServicesAsync,
   pairAndroidDeviceAsync,
   pairAndroidDeviceWithQRCodeAsync,
 } from '../commands/pairAndroidDeviceAsync';
@@ -15,8 +17,8 @@ import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
-const ADDRESS_REGEX = /^[^\s:]+:\d+$/;
 const QR_CODE_SIZE = 180;
+const DISCOVERY_INTERVAL_MS = 2000;
 
 type PairingMode = 'qrCode' | 'pairingCode';
 
@@ -136,39 +138,52 @@ const QRCodePairing = () => {
 };
 
 const PairingCodeForm = ({ theme }: { theme: ReturnType<typeof useCurrentTheme> }) => {
-  const [pairingAddress, setPairingAddress] = useState('');
   const [pairingCode, setPairingCode] = useState('');
-  const [connectAddress, setConnectAddress] = useState('');
-  const [isPairing, setIsPairing] = useState(false);
+  const [services, setServices] = useState<AndroidPairingService[]>([]);
+  const [pairingAddress, setPairingAddress] = useState<string>();
 
   const backgroundColor =
     theme === 'light'
       ? addOpacity(lightTheme.background.default, 0.6)
       : addOpacity(darkTheme.background.default, 0.2);
 
-  const canPair =
-    !isPairing && ADDRESS_REGEX.test(pairingAddress.trim()) && pairingCode.trim().length > 0;
+  // Continuously discover devices sitting on the "Pair device with pairing
+  // code" screen, the same way Android Studio lists them.
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const discovered = await listAndroidPairingServicesAsync();
+        if (!cancelled) {
+          setServices(discovered);
+        }
+      } catch {
+        // Ignore transient discovery failures; the next poll will retry.
+      }
+    };
+    poll();
+    const interval = setInterval(poll, DISCOVERY_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
-  const handlePair = async () => {
-    if (!canPair) {
+  const handlePair = async (service: AndroidPairingService) => {
+    const code = pairingCode.trim();
+    if (!code || pairingAddress) {
       return;
     }
 
-    setIsPairing(true);
+    setPairingAddress(service.address);
     try {
       const result = await pairAndroidDeviceAsync({
-        pairingAddress: pairingAddress.trim(),
-        pairingCode: pairingCode.trim(),
-        connectAddress: connectAddress.trim() || undefined,
+        pairingAddress: service.address,
+        pairingCode: code,
       });
 
       if (result.success) {
-        Alert.alert(
-          'Device paired',
-          connectAddress.trim()
-            ? 'Your Android device was paired and connected over Wi-Fi.'
-            : 'Your Android device was paired. Enter the "Wireless debugging" address below to connect to it.'
-        );
+        Alert.alert('Device paired', 'Your Android device was paired and connected over Wi-Fi.');
         setPairingCode('');
       } else {
         Alert.alert(
@@ -183,61 +198,78 @@ const PairingCodeForm = ({ theme }: { theme: ReturnType<typeof useCurrentTheme> 
         error instanceof Error ? error.message : 'Something went wrong while pairing the device.'
       );
     } finally {
-      setIsPairing(false);
+      setPairingAddress(undefined);
     }
   };
-
-  const renderInput = (props: React.ComponentProps<typeof TextInput>) => (
-    <Row
-      border="light"
-      rounded="medium"
-      align="center"
-      mt="1"
-      style={[styles.inputContainer, { backgroundColor }]}>
-      <TextInput
-        {...props}
-        shadow="input"
-        style={styles.input}
-        placeholderTextColor={PlatformColor('placeholderTextColor')}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-    </Row>
-  );
 
   return (
     <View>
       <Text size="tiny" color="secondary" style={styles.description}>
         Enable "Wireless debugging" in your device's developer options, then choose "Pair device
-        with pairing code" to get the values below.
+        with pairing code". Enter the code below and pick your device once it appears.
       </Text>
 
-      {renderInput({
-        value: pairingAddress,
-        onChangeText: setPairingAddress,
-        placeholder: 'Pairing IP address & port (e.g. 192.168.1.10:37123)',
-      })}
-      {renderInput({
-        value: pairingCode,
-        onChangeText: setPairingCode,
-        placeholder: 'Pairing code (e.g. 123456)',
-        keyboardType: 'number-pad',
-      })}
-      {renderInput({
-        value: connectAddress,
-        onChangeText: setConnectAddress,
-        placeholder: 'Connect IP address & port (optional, e.g. 192.168.1.10:5555)',
-      })}
-
-      <Row justify="end" mt="2">
-        <Button
-          title={isPairing ? 'Pairing…' : 'Pair device'}
-          color="primary"
-          disabled={!canPair}
-          onPress={handlePair}
-          style={styles.button}
+      <Row
+        border="light"
+        rounded="medium"
+        align="center"
+        mt="2"
+        style={[styles.inputContainer, { backgroundColor }]}>
+        <TextInput
+          value={pairingCode}
+          onChangeText={setPairingCode}
+          placeholder="Pairing code (e.g. 123456)"
+          keyboardType="number-pad"
+          shadow="input"
+          style={styles.input}
+          placeholderTextColor={PlatformColor('placeholderTextColor')}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
       </Row>
+
+      <Row align="center" justify="between" mt="3" mb="1">
+        <Text size="tiny" weight="semibold" color="secondary">
+          Available Wi-Fi devices
+        </Text>
+        <ActivityIndicator size="small" />
+      </Row>
+
+      {services.length === 0 ? (
+        <Text size="tiny" color="secondary" style={styles.description}>
+          Searching for devices in pairing mode…
+        </Text>
+      ) : (
+        services.map((service) => (
+          <Row
+            key={service.address}
+            align="center"
+            justify="between"
+            gap="2"
+            border="light"
+            rounded="medium"
+            mt="1"
+            px="2.5"
+            py="2"
+            style={{ backgroundColor }}>
+            <View flex="1">
+              <Text size="small" weight="medium" numberOfLines={1}>
+                Device at {service.address}
+              </Text>
+              <Text size="tiny" color="secondary">
+                {pairingAddress === service.address ? 'Pairing…' : 'Available to pair'}
+              </Text>
+            </View>
+            <Button
+              title="Pair"
+              color="primary"
+              disabled={pairingCode.trim().length === 0 || pairingAddress !== undefined}
+              onPress={() => handlePair(service)}
+              style={styles.button}
+            />
+          </Row>
+        ))
+      )}
     </View>
   );
 };
