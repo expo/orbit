@@ -232,6 +232,9 @@ export function hasDevicectlEverBeenInstalled() {
 }
 
 function isDevicectlInstalled() {
+  if (process.platform !== 'darwin') {
+    return false;
+  }
   try {
     execSync('xcrun devicectl --version', { stdio: 'ignore' });
     return true;
