@@ -305,6 +305,9 @@ export async function tarExtractAsync(input: string, output: string): Promise<vo
   try {
     await spawnAsync('tar', ['-xf', input, '-C', output], {
       stdio: 'inherit',
+      // Stop tar's console window from flashing on screen when invoked from a
+      // GUI (Electron) process on Windows. Safe (no-op) on other platforms.
+      windowsHide: true,
     });
     return;
   } catch (error: any) {
