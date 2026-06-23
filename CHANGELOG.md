@@ -17,6 +17,7 @@
 - Add cross-platform E2E testing with WebdriverIO for Electron and Appium mac2 for macOS. ([#334](https://github.com/expo/orbit/pull/334) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix flaky onboarding E2E test by switching off the closed onboarding window instead of querying it. ([#349](https://github.com/expo/orbit/pull/349) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Speed up the macOS E2E workflow by caching CocoaPods. ([#349](https://github.com/expo/orbit/pull/349) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Speed up CLI commands by lazy-loading command modules and listing devices in parallel. ([#351](https://github.com/expo/orbit/pull/351) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.7.0 — 2026-06-14
 
