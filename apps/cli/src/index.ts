@@ -119,6 +119,16 @@ program
   .argument('<string>', 'Trusted sources')
   .action(returnLoggerMiddleware(setCustomTrustedSourcesAsync));
 
+program
+  .command('mcp')
+  .description('Start the Model Context Protocol server')
+  .option('--port <number>', 'Port to listen on (default: 8765)')
+  .option('--token <string>', 'Override the bearer token (default: persisted in user settings)')
+  .action(async (options) => {
+    const { mcpServerAsync } = await import('./commands/Mcp');
+    await mcpServerAsync(options);
+  });
+
 if (process.argv.length < 3) {
   program.help();
 }

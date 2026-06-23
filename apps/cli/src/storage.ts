@@ -20,9 +20,19 @@ export async function setCustomTrustedSources(trustedSources: string[] | undefin
   await userSettingsJsonFile().setAsync('trustedSources', trustedSources);
 }
 
+export function getMcpToken(): string | undefined {
+  const userSettings = userSettingsJsonFile().read();
+  return userSettings.mcpToken;
+}
+
+export async function setMcpToken(mcpToken: string): Promise<void> {
+  await userSettingsJsonFile().setAsync('mcpToken', mcpToken);
+}
+
 type UserData = {
   sessionSecret?: string;
   trustedSources?: string[];
+  mcpToken?: string;
 };
 
 function userSettingsJsonFile(): JsonFile<UserData> {
