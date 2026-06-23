@@ -1,12 +1,8 @@
 module.exports = {
-  presets: ['babel-preset-expo'],
-  // force-transform classes + private fields/methods so the bundle is digestible by
-  // react-native-macos@0.81.6's hermesc, which rejects ES6 `class` and `#field`.
-  // Remove once react-native-macos ships a modern hermesc.
-  plugins: [
-    ['@babel/plugin-transform-classes', { loose: true }],
-    ['@babel/plugin-transform-private-methods', { loose: true }],
-    ['@babel/plugin-transform-class-properties', { loose: true }],
-    ['@babel/plugin-transform-private-property-in-object', { loose: true }],
-  ],
+  // rn-macos 0.81.6 ships the OLD hermesc (rejects ES6 classes, #fields, async arrow/generator
+  // funcs). SDK 56 defaults Hermes to the 'hermes-stable' profile, which preserves that syntax
+  // for a modern hermesc. Force the legacy 'hermes-v0' profile so the bundle is downleveled to
+  // what this hermesc accepts. Ignored on web (uses the web profile). Drop once rn-macos ships a
+  // modern hermesc.
+  presets: [['babel-preset-expo', { unstable_transformProfile: 'hermes-v0' }]],
 };
