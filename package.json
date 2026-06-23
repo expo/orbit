@@ -23,6 +23,9 @@
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0"
   },
+  "resolutions": {
+    "typescript": "~6.0.3"
+  },
   "packageManager": "yarn@1.22.22",
   "engines": {
     "node": ">=20.0.0"

@@ -1,6 +1,6 @@
 import { spacing } from '@expo/styleguide-native';
-import Clipboard from '@react-native-clipboard/clipboard';
 import { CliCommands } from 'common-types';
+import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -64,7 +64,7 @@ const CommandCheckItem = ({
         text: 'Copy command',
         style: 'default',
         onPress: () => {
-          Clipboard.setString(command);
+          Clipboard.setStringAsync(command);
         },
       });
     }

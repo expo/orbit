@@ -11,6 +11,6 @@
   "devDependencies": {
     "electron": "28.2.0",
     "eslint-config-universe": "^15.0.3",
-    "typescript": "^5.8.3"
+    "typescript": "~6.0.3"
   }
 }

@@ -1,4 +1,4 @@
-import Clipboard from '@react-native-clipboard/clipboard';
+import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { TouchableOpacity } from 'react-native';
 
@@ -16,7 +16,7 @@ export const ObjectInspector = ({ obj, name }: { obj: any; name?: string }) => {
         if (isObject) {
           setIsOpen((prev) => !prev);
         } else {
-          Clipboard.setString(obj);
+          Clipboard.setStringAsync(obj);
         }
       }}>
       <View

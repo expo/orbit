@@ -25,14 +25,15 @@ target 'ExpoMenuBar-macOS' do
     'react-native-config',
     '--json',
     '--platform',
-    'ios'
+    'macos',
+    '--source-dir',
+    File.expand_path('.', __dir__)
   ]
   config = use_native_modules!(config_command)
 
-  relative_rn_macos_path = "#{config[:reactNativePath]}-macos"
+  relative_rn_macos_path = "#{config[:reactNativePath]}"
   use_react_native!(
     :path => relative_rn_macos_path,
-    # to enable hermes on macOS, change `false` to `true` and then install pods
     :hermes_enabled => true
   )
 
