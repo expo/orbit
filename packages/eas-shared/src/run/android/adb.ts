@@ -64,7 +64,7 @@ export async function pairAndroidDeviceAsync({
   await adbAsync('start-server');
 
   let lastError: unknown;
-  // ponytail: 2 attempts covers the daemon cold-start race the user hit; bump if it still flakes.
+  // 2 attempts covers the daemon cold-start race the user hit; bump if it still flakes.
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const { stdout } = await adbAsync('pair', pairingAddress, pairingCode);

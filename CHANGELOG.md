@@ -7,7 +7,7 @@
 ### 🎉 New features
 
 - Add support for physical iPhones on Windows and Linux. ([#347](https://github.com/expo/orbit/pull/347) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Add Wi-Fi pairing support for Android devices. ([#344](https://github.com/expo/orbit/pull/344) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add Wi-Fi pairing support for Android devices. ([#350](https://github.com/expo/orbit/pull/350) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 

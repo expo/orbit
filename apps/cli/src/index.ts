@@ -44,27 +44,18 @@ program
 
 program
   .command('pair-android-device')
-  .description('Pair a physical Android device over Wi-Fi using a pairing code')
-  .requiredOption('--pairing-address  <string>', 'IP address and port shown on the pairing dialog')
-  .requiredOption('--pairing-code  <string>', 'Six digit pairing code shown on the pairing dialog')
+  .description('Pair a physical Android device over Wi-Fi')
+  .requiredOption('--mode  <string>', 'Pairing mode: "code" (manual address) or "qr" (scanned)')
+  .option('--pairing-code  <string>', '"code" mode: pairing code shown on the device')
+  .option('--pairing-address  <string>', '"code" mode: IP address and port shown on the pairing dialog')
   .option(
     '--connect-address  <string>',
-    'IP address and port used to connect to the device after pairing'
+    '"code" mode: IP address and port used to connect to the device after pairing'
   )
+  .option('--timeout  <number>', '"qr" mode: time to wait for the device to scan, in milliseconds')
   .action(async (...args) => {
     const { pairAndroidDeviceAsync } = await import('./commands/PairAndroidDevice');
     return returnLoggerMiddleware(pairAndroidDeviceAsync)(...args);
-  });
-
-program
-  .command('pair-android-device-qr')
-  .description('Pair a physical Android device over Wi-Fi after it scans a pairing QR code')
-  .requiredOption('--service-name  <string>', 'mDNS service name embedded in the QR code')
-  .requiredOption('--pairing-code  <string>', 'Pairing code embedded in the QR code')
-  .option('--timeout  <number>', 'Time to wait for the device to scan the QR code, in milliseconds')
-  .action(async (...args) => {
-    const { pairAndroidDeviceWithQRCodeAsync } = await import('./commands/PairAndroidDevice');
-    return returnLoggerMiddleware(pairAndroidDeviceWithQRCodeAsync)(...args);
   });
 
 program

@@ -13,7 +13,6 @@ import { Text } from './Text';
 import { Row, Spacer, View } from './View';
 import {
   AndroidPairingService,
-  DEVICE_PAIRED_LOG,
   listAndroidPairingServicesAsync,
   pairAndroidDeviceAsync,
   pairAndroidDeviceWithQRCodeAsync,
@@ -35,11 +34,6 @@ type PairingCallbacks = {
   onSuccess: (deviceName: string) => void;
   onError: (message?: string) => void;
 };
-
-function randomAlphanumeric(length: number): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
 
 const PairAndroidDeviceForm = () => {
   const theme = useCurrentTheme();
@@ -150,37 +144,23 @@ const QRCodePairing = ({ onSuccess, onError }: PairingCallbacks) => {
   const [qrCodeContent, setQrCodeContent] = useState<string>();
 
   useEffect(() => {
-    // Ignore results once the component unmounts (e.g. user switches tabs).
-    let active = true;
-    const serviceName = `expo-orbit-${randomAlphanumeric(10)}`;
-    const pairingCode = randomAlphanumeric(8);
-    setQrCodeContent(`WIFI:T:ADB;S:${serviceName};P:${pairingCode};;`);
+    const controller = new AbortController();
+    const { signal } = controller;
 
-    pairAndroidDeviceWithQRCodeAsync({ serviceName, pairingCode }, (statusMessage) => {
-      // Show success the moment pairing lands; the CLI connects in the
-      // background (discovering the connect service can take ~15s).
-      if (active && statusMessage.includes(DEVICE_PAIRED_LOG)) {
-        onSuccess('your device');
-      }
+    pairAndroidDeviceWithQRCodeAsync({
+      onQrCode: (content) => !signal.aborted && setQrCodeContent(content),
+      onPaired: () => !signal.aborted && onSuccess('Your device'),
     })
       .then((result) => {
-        // Only surface failures here — success is driven by the log above so
-        // the user isn't kept waiting on the background connect step.
-        if (active && !result.success) {
+        if (!signal.aborted && !result.success) {
           onError(result.error?.message);
         }
       })
-      .catch((error) => {
-        if (active) {
-          onError(error instanceof Error ? error.message : undefined);
-        }
-      });
+      .catch(
+        (error) => !signal.aborted && onError(error instanceof Error ? error.message : undefined)
+      );
 
-    // ponytail: this abandons the in-flight CLI wait, but the process keeps
-    // running until it times out (no cancellation hook exists).
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [onSuccess, onError]);
 
   return (
@@ -269,15 +249,10 @@ const PairingCodeForm = ({
     try {
       const result = await pairAndroidDeviceAsync(
         { pairingAddress: service.address, pairingCode: code },
-        (statusMessage) => {
-          // Show success as soon as pairing lands; connect runs in the
-          // background (the runCli listener outlives this unmounted form).
-          if (statusMessage.includes(DEVICE_PAIRED_LOG)) {
-            onSuccess(name);
-          }
-        }
+        // Show success as soon as pairing lands; connect runs in the
+        // background (the runCli listener outlives this unmounted form).
+        { onPaired: () => onSuccess(name) }
       );
-      // Pairing itself failed (sentinel never logged) — surface the error.
       if (!result.success) {
         onError(result.error?.message);
       }
@@ -360,7 +335,7 @@ const CodeInput = ({
   const refs = useRef<(RNTextInput | null)[]>([]);
 
   const setDigit = (index: number, raw: string) => {
-    // ponytail: take the last digit typed; multi-char paste lands in one box.
+    // take the last digit typed; multi-char paste lands in one box.
     const value = raw.replace(/\D/g, '').slice(-1);
     const next = digits.slice();
     next[index] = value;
@@ -520,8 +495,6 @@ const styles = StyleSheet.create({
   },
   codeBox: {
     flex: 1,
-    // Height comes from padding so the digit/placeholder stays vertically
-    // centered — a fixed height top-aligns the text on macOS.
     paddingVertical: 13,
     textAlign: 'center',
     textAlignVertical: 'center',
