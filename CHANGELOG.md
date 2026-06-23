@@ -18,6 +18,9 @@
 - Fix flaky onboarding E2E test by switching off the closed onboarding window instead of querying it. ([#349](https://github.com/expo/orbit/pull/349) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Speed up the macOS E2E workflow by caching CocoaPods. ([#349](https://github.com/expo/orbit/pull/349) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Speed up CLI commands by lazy-loading command modules and listing devices in parallel. ([#351](https://github.com/expo/orbit/pull/351) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade menu-bar app to Expo SDK 56. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Replaced @react-native-clipboard/clipboard with expo-clipboard. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Replaced SystemIconView local module with expo-symbols. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.7.0 — 2026-06-14
 
