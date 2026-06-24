@@ -11,14 +11,17 @@ permissions:
 
 jobs:
   build_on_linux:
-    # ubuntu-24.04's rpm 4.18 runs strip/debuginfo BRP scripts that
-    # choke on Electron's prebuilt binaries (maker-rpm %install failure).
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: 👀 Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
+      # rpm's post-install brp-strip chokes on Electron's prebuilt binaries,
+      # failing maker-rpm's %install step. Electron binaries shouldn't be
+      # stripped anyway, so disable the post-install scriptlet globally.
+      - name: 🩹 Disable rpm binary stripping
+        run: echo '%__os_install_post %{nil}' >> ~/.rpmmacros
       - name: ⬢ Setup Node
         uses: actions/setup-node@v4
         with:
