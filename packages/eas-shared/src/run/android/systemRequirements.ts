@@ -2,7 +2,6 @@ import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { InternalError } from 'common-types';
 
-import { getAaptExecutableAsync } from './aapt';
 import { getAdbExecutableAsync } from './adb';
 import { getEmulatorExecutableAsync } from './emulator';
 
@@ -25,5 +24,4 @@ ${err.message}`
 export async function assertExecutablesExistAsync(): Promise<void> {
   await assertExecutableExistsAsync(await getAdbExecutableAsync(), ['--version']);
   await assertExecutableExistsAsync(await getEmulatorExecutableAsync(), ['-list-avds']);
-  await assertExecutableExistsAsync(await getAaptExecutableAsync(), ['version']);
 }

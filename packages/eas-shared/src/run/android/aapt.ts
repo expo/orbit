@@ -2,21 +2,17 @@ import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import glob from 'fast-glob';
 import path from 'path';
 
+import { readApkManifestParametersAsync } from './apkManifest';
 import { getAndroidSdkRootAsync } from './sdk';
 import Log from '../../log';
 
+// Failures here (e.g. no SDK build-tools installed) are expected and handled by
+// the JS manifest fallback in getAptParametersAsync, so just let them propagate.
 async function aaptAsync(...options: string[]): Promise<SpawnResult> {
-  try {
-    return await spawnAsync(await getAaptExecutableAsync(), options);
-  } catch (error: any) {
-    if (error.stderr) {
-      Log.error(error.stderr);
-    }
-    throw error;
-  }
+  return spawnAsync(await getAaptExecutableAsync(), options);
 }
 
-export async function getAaptExecutableAsync(): Promise<string> {
+async function getAaptExecutableAsync(): Promise<string> {
   const sdkRoot = await getAndroidSdkRootAsync();
   if (!sdkRoot) {
     Log.debug('Failed to resolve the Android SDK path, falling back to global aapt executable');
@@ -34,9 +30,28 @@ export async function getAaptExecutableAsync(): Promise<string> {
   return sorted[sorted.length - 1];
 }
 
-export async function getAptParametersAsync(
-  appPath: string
-): Promise<{ packageName: string; activityName?: string }> {
+export type AptParameters = { packageName: string; activityName?: string };
+
+/**
+ * Read the package name and launchable activity from an APK.
+ *
+ * Prefer `aapt` when the SDK build-tools are available, and fall back to reading APK manifest
+ * directly in JS.
+ */
+export async function getAptParametersAsync(appPath: string): Promise<AptParameters> {
+  try {
+    return await readAptParametersWithAaptAsync(appPath);
+  } catch (error) {
+    Log.debug(
+      `Failed to read package info with aapt, falling back to the APK manifest: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+    return await readApkManifestParametersAsync(appPath);
+  }
+}
+
+async function readAptParametersWithAaptAsync(appPath: string): Promise<AptParameters> {
   const { stdout } = await aaptAsync('dump', 'badging', appPath);
 
   const packageNameMatch = stdout.match(/package: name='([^']+)'/);
