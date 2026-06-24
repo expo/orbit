@@ -1,5 +1,6 @@
 import DebugMenu from './DebugMenu';
 import Onboarding from './Onboarding';
+import PairAndroidDevice from './PairAndroidDevice';
 import Settings from './Settings';
 import { WindowStyleMask, createWindowsNavigator } from '../modules/WindowManager';
 
@@ -25,6 +26,18 @@ export const WindowsNavigator = createWindowsNavigator({
         titlebarAppearsTransparent: true,
         height: 618,
         width: 400,
+      },
+    },
+  },
+  PairAndroidDevice: {
+    component: PairAndroidDevice,
+    options: {
+      title: 'Pair Android Device',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        height: 440,
+        width: 500,
       },
     },
   },

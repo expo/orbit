@@ -43,6 +43,30 @@ program
   });
 
 program
+  .command('pair-android-device')
+  .description('Pair a physical Android device over Wi-Fi')
+  .requiredOption('--mode  <string>', 'Pairing mode: "code" (manual address) or "qr" (scanned)')
+  .option('--pairing-code  <string>', '"code" mode: pairing code shown on the device')
+  .option('--pairing-address  <string>', '"code" mode: IP address and port shown on the pairing dialog')
+  .option(
+    '--connect-address  <string>',
+    '"code" mode: IP address and port used to connect to the device after pairing'
+  )
+  .option('--timeout  <number>', '"qr" mode: time to wait for the device to scan, in milliseconds')
+  .action(async (...args) => {
+    const { pairAndroidDeviceAsync } = await import('./commands/PairAndroidDevice');
+    return returnLoggerMiddleware(pairAndroidDeviceAsync)(...args);
+  });
+
+program
+  .command('list-android-pairing-services')
+  .description('List Android devices advertising a Wi-Fi pairing service over mDNS')
+  .action(async (...args) => {
+    const { listAndroidPairingServicesAsync } = await import('./commands/PairAndroidDevice');
+    return returnLoggerMiddleware(listAndroidPairingServicesAsync)(...args);
+  });
+
+program
   .command('install-and-launch')
   .requiredOption('--app-path  <string>', 'Local path of the app')
   .option('--device-id  <string>', 'UDID or name of the device')
