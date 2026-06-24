@@ -87,9 +87,7 @@ export function getSectionsFromDeviceList(
   // enabled, so the header's "+" stays available for pairing a device over Wi-Fi.
   return sections.filter(
     (section) =>
-      section.data.length > 0 ||
-      section.error ||
-      (section.key === 'android' && alwaysShowAndroid)
+      section.data.length > 0 || section.error || (section.key === 'android' && alwaysShowAndroid)
   );
 }
 
