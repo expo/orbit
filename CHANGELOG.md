@@ -22,6 +22,7 @@
 - Upgrade menu-bar app to Expo SDK 56. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Replaced @react-native-clipboard/clipboard with expo-clipboard. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Replaced SystemIconView local module with expo-symbols. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Hide the `tar` console window on Windows when extracting builds, skip probing `devicectl` on non-macOS, and detect locked iOS 17+ devices correctly. ([#352](https://github.com/expo/orbit/pull/352) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.7.0 — 2026-06-14
 
