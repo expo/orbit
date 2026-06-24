@@ -1,6 +1,0 @@
-{
-  "platforms": ["apple", "web"],
-  "apple": {
-    "modules": ["SystemIconViewModule"]
-  }
-}

@@ -1,7 +1,7 @@
 import Foundation
 import Swifter
 import Dispatch
-import MenuBar
+internal import MenuBar
 
 private let PORTS = [35783, 47909, 44171, 50799]
 private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localhost"]

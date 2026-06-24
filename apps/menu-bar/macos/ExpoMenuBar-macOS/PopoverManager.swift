@@ -1,6 +1,6 @@
 import Cocoa
 import React_RCTAppDelegate
-import Expo
+internal import Expo
 
 class PopoverManager: NSObject {
   @objc public static private(set) var shared: PopoverManager!

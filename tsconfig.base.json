@@ -5,6 +5,7 @@
     "composite": true,
     "inlineSources": true,
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "noImplicitReturns": true,
     "resolveJsonModule": true,
     "sourceMap": true,

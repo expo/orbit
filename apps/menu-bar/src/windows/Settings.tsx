@@ -1,11 +1,12 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
+import { Bug16Filled } from '@fluentui/react-icons';
 import { Config } from 'common-types';
+import { SymbolView } from 'expo-symbols';
 import React, { Fragment, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, Platform, ScrollView } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import AutoUpdater from '../../modules/auto-updater';
-import { SystemIconView } from '../../modules/system-icon-view';
 import {
   openAuthSessionAsync,
   WebBrowserResultType,
@@ -241,7 +242,7 @@ const Settings = () => {
                       styles.debugButton,
                       getStylesForColor('primary', theme)?.touchableStyle,
                     ]}>
-                    <SystemIconView systemIconName="ladybug" />
+                    <SymbolView name="ladybug" size={18} fallback={<Bug16Filled />} />
                   </TouchableOpacity>
                   <Button
                     title="Sign Up"
@@ -386,7 +387,7 @@ const Settings = () => {
           <TouchableOpacity
             onPress={() => WindowsNavigator.open('DebugMenu')}
             style={[styles.debugButton, getStylesForColor('primary', theme)?.touchableStyle]}>
-            <SystemIconView systemIconName="ladybug" />
+            <SymbolView name="ladybug" size={18} fallback={<Bug16Filled />} />
           </TouchableOpacity>
         </View>
       </ScrollView>

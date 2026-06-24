@@ -15,6 +15,7 @@
     "lib": ["ES2022"],
     "module": "ES2022",
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "target": "ES2022",
     "typeRoots": ["../../ts-declarations", "src/ts-declarations", "./node_modules/@types"]
   },

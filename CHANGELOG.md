@@ -7,6 +7,7 @@
 ### 🎉 New features
 
 - Add support for physical iPhones on Windows and Linux. ([#347](https://github.com/expo/orbit/pull/347) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add Wi-Fi pairing support for Android devices. ([#350](https://github.com/expo/orbit/pull/350) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
@@ -17,6 +18,11 @@
 - Add cross-platform E2E testing with WebdriverIO for Electron and Appium mac2 for macOS. ([#334](https://github.com/expo/orbit/pull/334) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix flaky onboarding E2E test by switching off the closed onboarding window instead of querying it. ([#349](https://github.com/expo/orbit/pull/349) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Speed up the macOS E2E workflow by caching CocoaPods. ([#349](https://github.com/expo/orbit/pull/349) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Speed up CLI commands by lazy-loading command modules and listing devices in parallel. ([#351](https://github.com/expo/orbit/pull/351) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Upgrade menu-bar app to Expo SDK 56. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Replaced @react-native-clipboard/clipboard with expo-clipboard. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Replaced SystemIconView local module with expo-symbols. ([#346](https://github.com/expo/orbit/pull/346) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Hide the `tar` console window on Windows when extracting builds, skip probing `devicectl` on non-macOS, and detect locked iOS 17+ devices correctly. ([#352](https://github.com/expo/orbit/pull/352) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.7.0 — 2026-06-14
 

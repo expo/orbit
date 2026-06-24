@@ -9,7 +9,7 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
  
-  RCTReactNativeFactory *reactNativeFactory = [((EXExpoAppDelegate *)[NSApp delegate]) factory];
+  RCTReactNativeFactory *reactNativeFactory = ((AppDelegate *)[NSApp delegate]).reactNativeFactory;
   RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:@"main"
                                                                   initialProperties:@{@"isDevWindow" : @YES}];
 
