@@ -3,6 +3,22 @@
   "link": "https://raw.githubusercontent.com/expo/orbit/main/electron-updates.json",
   "versions": [
     {
+      "version": "2.8.0",
+      "pub_date": "2026-06-24",
+      "release_notes": "      <h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Add support for physical iPhones on Windows and Linux. (<a href=\"https://github.com/expo/orbit/pull/347\">#347</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Add Wi-Fi pairing support for Android devices. (<a href=\"https://github.com/expo/orbit/pull/350\">#350</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>Fix error message when launching updates on iOS physical devices. (<a href=\"https://github.com/expo/orbit/pull/348\">#348</a> by <a href=\"https://github.com/patrickwehbe\">@patrickwehbe</a>)</li>\n      </ul>\n      <h3 id=\"-others\">💡 Others</h3>\n      <ul>\n        <li>Add cross-platform E2E testing with WebdriverIO for Electron and Appium mac2 for macOS. (<a href=\"https://github.com/expo/orbit/pull/334\">#334</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Fix flaky onboarding E2E test by switching off the closed onboarding window instead of querying it. (<a href=\"https://github.com/expo/orbit/pull/349\">#349</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Speed up the macOS E2E workflow by caching CocoaPods. (<a href=\"https://github.com/expo/orbit/pull/349\">#349</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Speed up CLI commands by lazy-loading command modules and listing devices in parallel. (<a href=\"https://github.com/expo/orbit/pull/351\">#351</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Upgrade menu-bar app to Expo SDK 56. (<a href=\"https://github.com/expo/orbit/pull/346\">#346</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Replaced @react-native-clipboard/clipboard with expo-clipboard. (<a href=\"https://github.com/expo/orbit/pull/346\">#346</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Replaced SystemIconView local module with expo-symbols. (<a href=\"https://github.com/expo/orbit/pull/346\">#346</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Drop aapt requirement for installing apps to Android devices. (<a href=\"https://github.com/expo/orbit/pull/352\">#352</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Hide the <code>tar</code> console window on Windows when extracting builds, skip probing <code>devicectl</code> on non-macOS, and detect locked iOS 17+ devices correctly. (<a href=\"https://github.com/expo/orbit/pull/352\">#352</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n      </ul>",
+      "builds": {
+        "win32-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.8.0/"
+        },
+        "linux-deb-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.8.0/expo-orbit_2.8.0_amd64.deb"
+        },
+        "linux-rpm-x64": {
+          "url": "https://github.com/expo/orbit/releases/download/expo-orbit-v2.8.0/expo-orbit-2.8.0-1.x86_64.rpm"
+        }
+      }
+    },
+    {
       "version": "2.7.0",
       "pub_date": "2026-06-15",
       "release_notes": "      <h3 id=\"-new-features\">🎉 New features</h3>\n      <ul>\n        <li>Add support for DeviceHub.app on Xcode 27, which replaces Simulator.app. (<a href=\"https://github.com/expo/orbit/pull/343\">#343</a> by <a href=\"https://github.com/GersonRocha9\">@GersonRocha9</a>)</li>\n      </ul>\n      <h3 id=\"-bug-fixes\">🐛 Bug fixes</h3>\n      <ul>\n        <li>Fix Run Android emulator without audio option. (<a href=\"https://github.com/expo/orbit/pull/340\">#340</a> by <a href=\"https://github.com/lklima\">@lklima</a>)</li>\n        <li>Fix opening APKs/tar from finder. (<a href=\"https://github.com/expo/orbit/pull/341\">#341</a> by <a href=\"https://github.com/gabrieldonadel\">@gabrieldonadel</a>)</li>\n        <li>Fix building the menu-bar macOS app with Xcode 26.4. (<a href=\"https://github.com/expo/orbit/pull/343\">#343</a> by <a href=\"https://github.com/GersonRocha9\">@GersonRocha9</a>)</li>\n      </ul>",

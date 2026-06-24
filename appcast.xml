@@ -7,6 +7,44 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.8.0</title>
+      <description>
+      <![CDATA[
+      <h3 id="-new-features">🎉 New features</h3>
+      <ul>
+        <li>Add support for physical iPhones on Windows and Linux. (<a href="https://github.com/expo/orbit/pull/347">#347</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Add Wi-Fi pairing support for Android devices. (<a href="https://github.com/expo/orbit/pull/350">#350</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix error message when launching updates on iOS physical devices. (<a href="https://github.com/expo/orbit/pull/348">#348</a> by <a href="https://github.com/patrickwehbe">@patrickwehbe</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Add cross-platform E2E testing with WebdriverIO for Electron and Appium mac2 for macOS. (<a href="https://github.com/expo/orbit/pull/334">#334</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix flaky onboarding E2E test by switching off the closed onboarding window instead of querying it. (<a href="https://github.com/expo/orbit/pull/349">#349</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Speed up the macOS E2E workflow by caching CocoaPods. (<a href="https://github.com/expo/orbit/pull/349">#349</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Speed up CLI commands by lazy-loading command modules and listing devices in parallel. (<a href="https://github.com/expo/orbit/pull/351">#351</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Upgrade menu-bar app to Expo SDK 56. (<a href="https://github.com/expo/orbit/pull/346">#346</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Replaced @react-native-clipboard/clipboard with expo-clipboard. (<a href="https://github.com/expo/orbit/pull/346">#346</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Replaced SystemIconView local module with expo-symbols. (<a href="https://github.com/expo/orbit/pull/346">#346</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Drop aapt requirement for installing apps to Android devices. (<a href="https://github.com/expo/orbit/pull/352">#352</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Hide the <code>tar</code> console window on Windows when extracting builds, skip probing <code>devicectl</code> on non-macOS, and detect locked iOS 17+ devices correctly. (<a href="https://github.com/expo/orbit/pull/352">#352</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2026-06-24</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.8.0</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.8.0/expo-orbit.v2.8.0-macos.zip"
+        sparkle:version="46"
+        sparkle:shortVersionString="2.8.0"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.7.0</title>
       <description>
       <![CDATA[
