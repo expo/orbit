@@ -40,7 +40,10 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
   const [hasInitialized, setHasInitialized] = useState(false);
   const [error, setError] = useState<Error>();
 
-  const sections = getSectionsFromDeviceList(devicesPerPlatform);
+  const { showAndroidEmulators } = getUserPreferences();
+  const sections = getSectionsFromDeviceList(devicesPerPlatform, {
+    alwaysShowAndroid: showAndroidEmulators,
+  });
 
   const updateDevicesList = useCallback(async () => {
     const {

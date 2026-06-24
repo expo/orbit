@@ -29,7 +29,15 @@ function throwXcrunError(e: any): never {
         command: 'sudo xcode-select -s /Applications/Xcode.app',
       }
     );
-  } else if (e.stderr?.match(/the device was not, or could not be, unlocked/)) {
+  } else if (
+    // Pre-iOS17 simctl wording.
+    e.stderr?.match(/the device was not, or could not be, unlocked/) ||
+    // iOS 17+ devicectl wording. The inner CoreDeviceError 10003 is "device
+    // locked", which cascades into "DDI could not be mounted" (12040) and
+    // surfaces as a `xcrun devicectl device install` non-zero exit.
+    e.stderr?.includes('The device is currently locked') ||
+    e.stderr?.match(/CoreDeviceError error 10003/)
+  ) {
     throw new InternalError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
   } else if (e.stderr?.match(/Unable to lookup in current state: Shutdown/)) {
     throw new InternalError(
