@@ -50,7 +50,8 @@ export function getDeviceId(device: Device): string {
 }
 
 export function getSectionsFromDeviceList(
-  devicesPerPlatform: DevicesPerPlatform
+  devicesPerPlatform: DevicesPerPlatform,
+  { alwaysShowAndroid = false }: { alwaysShowAndroid?: boolean } = {}
 ): SectionListData<
   Device,
   { label: string; error?: DevicesPerPlatform[keyof DevicesPerPlatform]['error'] }
@@ -82,7 +83,14 @@ export function getSectionsFromDeviceList(
     },
   ];
 
-  return sections.filter((section) => section.data.length > 0 || section.error);
+  // Keep the Android section visible even with no devices/errors when Android is
+  // enabled, so the header's "+" stays available for pairing a device over Wi-Fi.
+  return sections.filter(
+    (section) =>
+      section.data.length > 0 ||
+      section.error ||
+      (section.key === 'android' && alwaysShowAndroid)
+  );
 }
 
 export function isVirtualDevice(
