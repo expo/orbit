@@ -6,6 +6,14 @@
 
 ### 🎉 New features
 
+### 🐛 Bug fixes
+
+### 💡 Others
+
+## 2.8.0 — 2026-06-24
+
+### 🎉 New features
+
 - Add support for physical iPhones on Windows and Linux. ([#347](https://github.com/expo/orbit/pull/347) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add Wi-Fi pairing support for Android devices. ([#350](https://github.com/expo/orbit/pull/350) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
