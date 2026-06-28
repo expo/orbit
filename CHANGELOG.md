@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix Android code pairing input width on Windows and Linux. ([#357](https://github.com/expo/orbit/pull/357) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 ## 2.8.0 — 2026-06-24
