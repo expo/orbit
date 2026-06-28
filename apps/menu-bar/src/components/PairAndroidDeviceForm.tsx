@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TextInput as RNTextInput,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 
 import Button from './Button';
@@ -495,6 +496,11 @@ const styles = StyleSheet.create({
   },
   codeBox: {
     flex: 1,
+    ...Platform.select({
+      web: {
+        minWidth: 0,
+      },
+    }),
     paddingVertical: 13,
     textAlign: 'center',
     textAlignVertical: 'center',
