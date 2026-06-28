@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+#
+# Bootstrap reference for the FIRST manual submission to winget-pkgs.
+# Prefer generating this with `wingetcreate` so InstallerSha256 and the exact
+# InstallerUrl are computed from the real release asset (see winget/README.md).
+PackageIdentifier: Expo.Orbit
+PackageVersion: 2.8.0
+# Electron Forge's Squirrel.Windows maker produces a self-contained Setup.exe
+# that installs per-user (%LOCALAPPDATA%) and runs silently with no switches.
+InstallerType: exe
+Scope: user
+InstallModes:
+  - silent
+  - silentWithProgress
+UpgradeBehavior: install
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/expo/orbit/releases/download/expo-orbit-v2.8.0/Expo.Orbit-2.8.0-x64.Setup.exe
+    # TODO: replace with the SHA256 of the published Setup.exe before submitting.
+    # `wingetcreate` computes this for you.
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+ManifestType: installer
+ManifestVersion: 1.6.0

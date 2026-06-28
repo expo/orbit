@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+#
+# Bootstrap reference for the FIRST manual submission to winget-pkgs.
+PackageIdentifier: Expo.Orbit
+PackageVersion: 2.8.0
+PackageLocale: en-US
+Publisher: Expo
+PublisherUrl: https://expo.dev
+PublisherSupportUrl: https://github.com/expo/orbit/issues
+PackageName: Expo Orbit
+PackageUrl: https://github.com/expo/orbit
+License: MIT
+LicenseUrl: https://github.com/expo/orbit/blob/main/LICENSE
+ShortDescription: Accelerate your development workflow with one-click build launches and simulator management from your menu bar.
+Description: >-
+  Expo Orbit is a desktop menu bar application and CLI tool that accelerates
+  mobile development workflows through one-click build launches and
+  simulator/emulator management.
+Moniker: expo-orbit
+Tags:
+  - expo
+  - react-native
+  - eas
+  - simulator
+  - emulator
+  - mobile-development
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

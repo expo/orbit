@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.version.1.6.0.schema.json
+#
+# Bootstrap reference for the FIRST manual submission to winget-pkgs.
+# After the package exists, new versions are published automatically by
+# .github/workflows/winget.yml — these files do not need to be kept in sync.
+PackageIdentifier: Expo.Orbit
+PackageVersion: 2.8.0
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.6.0

@@ -1,0 +1,55 @@
+name: Publish to WinGet
+
+# Submits the Windows installer to the Windows Package Manager community repo
+# (microsoft/winget-pkgs) so users can install/upgrade Orbit with
+# `winget install Expo.Orbit`.
+#
+# This reuses the `*Setup.exe` asset already published by the Build workflow's
+# GitHub Release — no extra build step is needed.
+#
+# Prerequisites (one-time, see winget/README.md):
+#   1. The `Expo.Orbit` package must already exist in winget-pkgs. Bootstrap the
+#      first version manually with `wingetcreate` (winget-releaser only handles
+#      packages that already exist).
+#   2. A `WINGET_TOKEN` repo secret: a classic PAT with `public_repo` scope whose
+#      owner has a fork of microsoft/winget-pkgs. The action pushes a branch to
+#      that fork and opens the PR from it.
+
+on:
+  # Fires when a draft release is published (drafts are created by build.yml and
+  # published manually after review). `released` does not fire for pre-releases.
+  release:
+    types: [released]
+  # Manual re-run / backfill for a specific tag.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, e.g. expo-orbit-v2.8.0
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Only Orbit app releases are tagged `expo-orbit-v*`; ignore any other tags.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.release.tag_name, 'expo-orbit-v')
+    steps:
+      - name: 🏷️ Resolve tag and version
+        id: meta
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          # winget wants a bare semver, e.g. 2.8.0 (the tag is expo-orbit-v2.8.0).
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#expo-orbit-v}" >> "$GITHUB_OUTPUT"
+
+      - name: 🚀 Submit Expo Orbit to winget-pkgs
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Expo.Orbit
+          version: ${{ steps.meta.outputs.version }}
+          release-tag: ${{ steps.meta.outputs.tag }}
+          # The Squirrel maker emits `Expo.Orbit-<version>-x64.Setup.exe`; match
+          # the Setup.exe and ignore the .nupkg / RELEASES assets.
+          installers-regex: 'Setup\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
