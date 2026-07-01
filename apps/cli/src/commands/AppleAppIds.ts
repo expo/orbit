@@ -1,4 +1,4 @@
-import { listAppIdsForAccountAsync, deleteAppIdForAccountAsync } from 'apple-resign';
+import { listAppIdsForAccountAsync, deleteAppIdForAccountAsync } from 'ipa-resign';
 
 type ListAppIdsOptions = {
   appleId: string;

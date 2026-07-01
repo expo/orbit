@@ -11,7 +11,7 @@ function isMenuBar(): boolean {
 
 type InternalErrorLike = Error & { code: string; details?: unknown };
 
-// Both common-types' and apple-resign's InternalError set `name = 'InternalError'`
+// Both common-types' and ipa-resign's InternalError set `name = 'InternalError'`
 // and carry a string `code`. Match on that shape so either class serializes with
 // its `code`/`details` intact, while plain errors carrying an unrelated `code`
 // (e.g. Node's `ENOENT`) are left to the generic Error branch.
@@ -55,7 +55,7 @@ export function returnLoggerMiddleware(fn: (...args: any[]) => any | Promise<any
     } catch (error) {
       console.log('---- thrown error ----');
       // Detect InternalError structurally rather than with `instanceof`: some
-      // dependencies (e.g. apple-resign) ship their own binary-compatible
+      // dependencies (e.g. ipa-resign) ship their own binary-compatible
       // InternalError class, so a strict `instanceof` against common-types'
       // class misses those and would drop `code`/`details` on serialization.
       if (isInternalErrorLike(error)) {

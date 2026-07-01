@@ -2,11 +2,11 @@
   "pkg": {
     "assets": [
       "../../node_modules/macos-export-certificate-and-key/**/*.node",
-      "../../node_modules/apple-resign/node_modules/macos-export-certificate-and-key/**/*.node",
-      "../../node_modules/apple-resign/bin/anisette",
-      "../../node_modules/apple-resign/bin/anisette-*",
-      "../../node_modules/apple-resign/bin/zsign",
-      "../../node_modules/apple-resign/bin/zsign-*"
+      "../../node_modules/ipa-resign/node_modules/macos-export-certificate-and-key/**/*.node",
+      "../../node_modules/ipa-resign/bin/anisette",
+      "../../node_modules/ipa-resign/bin/anisette-*",
+      "../../node_modules/ipa-resign/bin/zsign",
+      "../../node_modules/ipa-resign/bin/zsign-*"
     ],
     "targets": ["node18-macos-arm64", "node18-macos-x64"]
   }

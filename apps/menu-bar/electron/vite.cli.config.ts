@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 // Native node addons (.node) and the modules that load them. Rollup can't
 // bundle these — they must stay as require()s resolved by Node at runtime,
-// against the linked apple-resign's own node_modules.
+// against the linked ipa-resign's own node_modules.
 const NATIVE_EXTERNALS = [
   'keytar',
   'system-ca',

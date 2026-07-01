@@ -1,4 +1,4 @@
-import { signInAsync, signOutAsync, submitTwoFactorCodeAsync } from 'apple-resign';
+import { signInAsync, signOutAsync, submitTwoFactorCodeAsync } from 'ipa-resign';
 
 const PASSWORD_ENV = 'EXPO_ORBIT_APPLE_PASSWORD';
 

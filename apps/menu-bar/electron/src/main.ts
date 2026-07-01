@@ -16,7 +16,7 @@ if (process.platform === 'win32' && started) {
 // The bundled CLI resolves the native helper binaries (anisette/zsign) relative
 // to its own location, which only works in dev. In a packaged build they ship as
 // an extraResource (outside the asar so they stay executable), so point
-// apple-resign at that location. Forked CLI processes inherit this via env.
+// ipa-resign at that location. Forked CLI processes inherit this via env.
 if (app.isPackaged) {
   process.env.ORBIT_HELPER_BIN_DIR = path.join(process.resourcesPath, 'bin');
 }

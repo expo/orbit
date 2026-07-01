@@ -1,4 +1,4 @@
-import { resignIpaAsync } from 'apple-resign';
+import { resignIpaAsync } from 'ipa-resign';
 
 type ResignIpaOptions = {
   ipa: string;
