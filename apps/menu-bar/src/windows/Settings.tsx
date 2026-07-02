@@ -163,7 +163,7 @@ const Settings = () => {
     const authSessionURL = `${
       Config.website.origin
     }/${type}?confirm_account=1&app_redirect_uri=${encodeURIComponent(redirectBase)}`;
-    console.log('handleAuthentication')
+
     const result = await openAuthSessionAsync(authSessionURL);
 
     if (result.type === WebBrowserResultType.SUCCESS) {
