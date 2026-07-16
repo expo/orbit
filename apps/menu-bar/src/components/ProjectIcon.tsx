@@ -9,16 +9,15 @@ import { getProjectBackgroundColor } from '../utils/theme';
 
 type Props = { app: PinnedApp };
 
-export const ProjectIcon = ({ app: { name, icon, isPinned, profileImageUrl } }: Props) => {
+export const ProjectIcon = ({ app: { name, isPinned, profileImageUrl } }: Props) => {
   const backgroundColor = getProjectBackgroundColor(name);
-  const iconUrl = profileImageUrl ?? icon?.url;
 
   return (
     <View style={styles.icon} align="centered">
       <View rounded="small" overflow="hidden" style={styles.icon}>
-        {iconUrl ? (
+        {profileImageUrl ? (
           <View bg="secondary" flex="1" align="centered">
-            <Image source={{ uri: iconUrl }} style={StyleSheet.absoluteFill} />
+            <Image source={{ uri: profileImageUrl }} style={StyleSheet.absoluteFill} />
           </View>
         ) : (
           <View style={{ backgroundColor }} flex="1" align="centered">

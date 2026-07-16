@@ -3,10 +3,6 @@ fragment AppForPinnedList on App {
   name
   slug
   latestActivity
-  icon {
-    url
-    primaryColor
-  }
   profileImageUrl
   ownerAccount {
     name

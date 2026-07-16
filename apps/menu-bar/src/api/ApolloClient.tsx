@@ -1,7 +1,6 @@
 import {
   ApolloClient,
   ApolloLink,
-  FieldFunctionOptions,
   HttpLink,
   InMemoryCache,
   concat,
@@ -17,15 +16,6 @@ const httpLink = new HttpLink({
   uri: `${Config.api.origin}/graphql`,
 });
 
-const mergeBasedOnOffset = (existing: any[], incoming: any[], { args }: FieldFunctionOptions) => {
-  const merged = existing ? existing.slice(0) : [];
-
-  for (let i = 0; i < incoming.length; ++i) {
-    merged[i + (args?.offset || 0)] = incoming[i];
-  }
-  return merged;
-};
-
 const { possibleTypes } = possibleTypesData;
 const cache = new InMemoryCache({
   possibleTypes,
@@ -36,22 +26,8 @@ const cache = new InMemoryCache({
     AccountQuery: {
       keyFields: ['byId', ['id']],
     },
-    Account: {
-      fields: {
-        apps: {
-          keyArgs: ['limit'],
-          merge: mergeBasedOnOffset,
-        },
-      },
-    },
     App: {
       keyFields: ['id'],
-      fields: {
-        builds: {
-          keyArgs: ['limit', 'platform'],
-          merge: mergeBasedOnOffset,
-        },
-      },
     },
   },
 });

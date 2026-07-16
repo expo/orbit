@@ -23,7 +23,9 @@ query getAppBuildForUpdate(
             id
             ... on Build {
               appIdentifier
-              runtimeVersion
+              runtime {
+                version
+              }
               expirationDate
               artifacts {
                 buildUrl
