@@ -19,6 +19,19 @@
     "BuildOrBuildJob": [
       "Build"
     ],
+    "ChannelBuildOrEmbeddedUpdate": [
+      "Build",
+      "EmbeddedUpdate"
+    ],
+    "ConcurrencyConsumer": [
+      "Build",
+      "JobRun"
+    ],
+    "DeviceRunSessionRemoteConfig": [
+      "AgentDeviceRunSessionRemoteConfig",
+      "ArgentRunSessionRemoteConfig",
+      "ServeSimRunSessionRemoteConfig"
+    ],
     "FcmSnippet": [
       "FcmSnippetLegacy",
       "FcmSnippetV1"
@@ -43,6 +56,14 @@
     "Project": [
       "App",
       "Snack"
+    ],
+    "StartPostHogConnectionResult": [
+      "PostHogOrganizationConnection",
+      "PostHogPendingConnection"
+    ],
+    "UpdatesTimelineItem": [
+      "EmbeddedUpdate",
+      "UpdateGroup"
     ],
     "UserActor": [
       "SSOUser",
