@@ -12,6 +12,8 @@
 
 ### 💡 Others
 
+- Remove deprecated Expo GraphQL API field usage. ([#359](https://github.com/expo/orbit/pull/359) by [@tchayen](https://github.com/tchayen))
+
 ## 2.8.0 — 2026-06-24
 
 ### 🎉 New features
