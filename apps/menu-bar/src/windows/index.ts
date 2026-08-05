@@ -4,12 +4,8 @@ import LaunchCloudSimulator from './LaunchCloudSimulator';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
 import Settings from './Settings';
-import { getUserPreferences } from '../modules/Storage';
 import { WindowStyleMask, createWindowsNavigator } from '../modules/WindowManager';
-
-// Design B is opt-in: a borderless, transparent window whose shape comes from the
-// device bezel that the preview page draws. Design A keeps a normal titled window.
-const framelessCloudSimulator = getUserPreferences().framelessCloudSimulator;
+import { getCloudSimulatorWindowOptions } from '../utils/cloudSimulatorWindow';
 
 export const WindowsNavigator = createWindowsNavigator({
   Settings: {
@@ -62,21 +58,9 @@ export const WindowsNavigator = createWindowsNavigator({
   },
   CloudSimulator: {
     component: CloudSimulator,
-    options: {
-      title: 'Cloud Simulator',
-      windowStyle: {
-        // Narrow enough that serve-sim keeps its devices sidebar collapsed, and
-        // tall enough for a phone bezel.
-        mask: framelessCloudSimulator
-          ? [WindowStyleMask.Borderless, WindowStyleMask.Resizable]
-          : [WindowStyleMask.Titled, WindowStyleMask.Closable, WindowStyleMask.Resizable],
-        titlebarAppearsTransparent: true,
-        height: 860,
-        width: 420,
-        transparent: framelessCloudSimulator,
-        hasShadow: true,
-      },
-    },
+    // Callers pass getCloudSimulatorWindowOptions() so the frameless preference is
+    // read when the window opens, not when this module is first imported.
+    options: getCloudSimulatorWindowOptions(false),
   },
   DebugMenu: {
     component: DebugMenu,

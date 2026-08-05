@@ -6,6 +6,7 @@ import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import CloudIcon from '../assets/icons/cloud.svg';
 import { Row, Text, TextInput, View } from '../components';
+import { WindowsNavigator } from './index';
 import Button from '../components/Button';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
@@ -15,13 +16,14 @@ import { Linking } from '../modules/Linking';
 import { PlatformColor } from '../modules/PlatformColor';
 import {
   getLastCloudSimulatorAppId,
+  getUserPreferences,
   saveLastCloudSimulatorAppId,
   saveOpenCloudSimulatorSessionId,
   sessionSecretStorageKey,
   storage,
 } from '../modules/Storage';
 import { CloudSimulatorProvider, useCloudSimulators } from '../providers/CloudSimulatorProvider';
-import { WindowsNavigator } from '../windows';
+import { getCloudSimulatorWindowOptions } from '../utils/cloudSimulatorWindow';
 
 const LaunchCloudSimulatorContent = () => {
   const { apps, loading: appsLoading } = useGetPinnedApps();
@@ -59,7 +61,10 @@ const LaunchCloudSimulatorContent = () => {
         name: sessionName,
       });
       saveOpenCloudSimulatorSessionId(session.id);
-      WindowsNavigator.open('CloudSimulator');
+      WindowsNavigator.open(
+        'CloudSimulator',
+        getCloudSimulatorWindowOptions(getUserPreferences().framelessCloudSimulator)
+      );
       WindowsNavigator.close('LaunchCloudSimulator');
     } catch (error) {
       Alert.alert(

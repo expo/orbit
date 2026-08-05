@@ -42,6 +42,7 @@ import {
 } from '../modules/Storage';
 import { CloudSimulatorProvider, useCloudSimulators } from '../providers/CloudSimulatorProvider';
 import { useListDevices } from '../providers/DevicesProvider';
+import { getCloudSimulatorWindowOptions } from '../utils/cloudSimulatorWindow';
 import {
   DevicePlatform,
   DevicesPerPlatform,
@@ -127,7 +128,10 @@ function Core(props: Props) {
 
   const openCloudSimulator = useCallback((sessionId: string) => {
     saveOpenCloudSimulatorSessionId(sessionId);
-    WindowsNavigator.open('CloudSimulator');
+    WindowsNavigator.open(
+      'CloudSimulator',
+      getCloudSimulatorWindowOptions(getUserPreferences().framelessCloudSimulator)
+    );
   }, []);
 
   const stopCloudSimulator = useCallback(

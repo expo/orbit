@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 
 import { SimulatorWebView } from '../../modules/simulator-webview';
 import { Analytics, Event } from '../analytics';
+import { WindowsNavigator } from './index';
 import { withApolloProvider } from '../api/ApolloClient';
 import { Row, Text, View } from '../components';
 import Button from '../components/Button';
@@ -21,7 +22,6 @@ import {
   getPreviewUrl,
   isSessionTerminal,
 } from '../utils/cloudSimulator';
-import { WindowsNavigator } from '../windows';
 
 const CloudSimulatorContent = () => {
   // Separate windows are separate React roots, so the session id travels through

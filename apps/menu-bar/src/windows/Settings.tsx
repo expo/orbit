@@ -334,7 +334,7 @@ const Settings = () => {
                   <Checkbox
                     value={userPreferences.framelessCloudSimulator}
                     onValueChange={onPressFramelessCloudSimulator}
-                    label="Frameless simulator window (restart Orbit to apply)"
+                    label="Frameless simulator window"
                   />
                 </Row>
               ) : null}
