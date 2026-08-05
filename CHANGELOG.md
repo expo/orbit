@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add EAS Simulator cloud simulators, so an iOS simulator can be launched and previewed from Orbit on macOS, Windows, and Linux. ([#361](https://github.com/expo/orbit/pull/361) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Fix Android code pairing input width on Windows and Linux. ([#357](https://github.com/expo/orbit/pull/357) by [@gabrieldonadel](https://github.com/gabrieldonadel))
