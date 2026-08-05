@@ -30,8 +30,9 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
       webPreferences: {
         devTools: true,
         webSecurity: false,
-        // The cloud simulator window embeds the serve-sim preview in a <webview>.
-        webviewTag: true,
+        // Opt-in per window: only the cloud simulator embeds a <webview>, and
+        // enabling this everywhere changes the renderer process model.
+        webviewTag: windowStyle.webviewTag ?? false,
         preload: path.join(__dirname, './preload.js'),
       },
     });

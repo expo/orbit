@@ -26,6 +26,12 @@ export type WindowOptions = {
      */
     transparent?: boolean;
     hasShadow?: boolean;
+    /**
+     * Electron only. Enables the <webview> tag for this window. Off by default:
+     * it changes the renderer's process model, and enabling it on every window
+     * made destroying the Onboarding window hang on Linux.
+     */
+    webviewTag?: boolean;
   };
 };
 

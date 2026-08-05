@@ -26,6 +26,9 @@ export function getCloudSimulatorWindowOptions(frameless: boolean): WindowOption
       titlebarAppearsTransparent: true,
       transparent: frameless,
       hasShadow: true,
+      // Electron hosts the preview in a <webview>, which has to be enabled on
+      // the window that renders it.
+      webviewTag: true,
     },
   };
 }
