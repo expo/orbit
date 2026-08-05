@@ -17,6 +17,8 @@ export type UserPreferences = {
   showTvosSimulators: boolean;
   showWatchosSimulators: boolean;
   showAndroidEmulators: boolean;
+  showCloudSimulators: boolean;
+  framelessCloudSimulator: boolean;
 };
 
 export const defaultUserPreferences: UserPreferences = {
@@ -28,6 +30,11 @@ export const defaultUserPreferences: UserPreferences = {
   showTvosSimulators: false,
   showWatchosSimulators: Platform.OS === 'macos',
   showAndroidEmulators: true,
+  // EAS Simulator is still limited access, so the entry point stays opt-in even
+  // for accounts that have the feature gate.
+  showCloudSimulators: false,
+  // Design B: a borderless window shaped by the preview's own device bezel.
+  framelessCloudSimulator: false,
 };
 
 export const getUserPreferences = () => {
@@ -63,6 +70,58 @@ export const getSelectedDevicesIds = () => {
 
 export const saveSelectedDevicesIds = (devicesIds: SelectedDevicesIds) => {
   storage.set(selectedDevicesIdsStorageKey, JSON.stringify(devicesIds));
+};
+
+const cloudSimulatorSessionIdsStorageKey = 'cloud-simulator-session-ids';
+const lastCloudSimulatorAppIdStorageKey = 'cloud-simulator-last-app-id';
+
+/**
+ * Active EAS Simulator sessions bill until they are stopped, so their ids are
+ * persisted. On the next launch Orbit re-queries them and can still offer Stop
+ * for a session it started before a reload or a crash.
+ */
+export const getCloudSimulatorSessionIds = (): string[] => {
+  const value = storage.getString(cloudSimulatorSessionIdsStorageKey);
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const saveCloudSimulatorSessionIds = (sessionIds: string[]) => {
+  storage.set(cloudSimulatorSessionIdsStorageKey, JSON.stringify(sessionIds));
+};
+
+export const getLastCloudSimulatorAppId = () =>
+  storage.getString(lastCloudSimulatorAppIdStorageKey);
+
+export const saveLastCloudSimulatorAppId = (appId: string) => {
+  storage.set(lastCloudSimulatorAppIdStorageKey, appId);
+};
+
+const openCloudSimulatorSessionIdStorageKey = 'cloud-simulator-open-session-id';
+
+/**
+ * Secondary windows are separate React roots — separate renderer processes under
+ * Electron — so they cannot read the popover's context. Storage is the channel
+ * the rest of the app already uses for cross-window state, so the simulator
+ * window picks up which session to show from here and queries it by id.
+ */
+export const getOpenCloudSimulatorSessionId = () =>
+  storage.getString(openCloudSimulatorSessionIdStorageKey);
+
+export const saveOpenCloudSimulatorSessionId = (sessionId: string | undefined) => {
+  if (sessionId === undefined) {
+    storage.delete(openCloudSimulatorSessionIdStorageKey);
+  } else {
+    storage.set(openCloudSimulatorSessionIdStorageKey, sessionId);
+  }
 };
 
 export const resetStorage = () => {

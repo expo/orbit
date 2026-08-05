@@ -1,0 +1,105 @@
+fragment DeviceRunSessionData on DeviceRunSession {
+  id
+  name
+  status
+  type
+  platform
+  packageVersion
+  createdAt
+  startedAt
+  finishedAt
+  app {
+    id
+    slug
+    ownerAccount {
+      id
+      name
+    }
+  }
+  turtleJobRun {
+    id
+    status
+  }
+  remoteConfig {
+    __typename
+    ... on AgentDeviceRunSessionRemoteConfig {
+      agentDeviceRemoteSessionUrl
+      agentDeviceRemoteSessionToken
+      webPreviewUrl
+    }
+    ... on ArgentRunSessionRemoteConfig {
+      toolsUrl
+      toolsAuthToken
+      webPreviewUrl
+    }
+    ... on ServeSimRunSessionRemoteConfig {
+      previewUrl
+    }
+  }
+}
+
+query GetDeviceRunSession($deviceRunSessionId: ID!) {
+  deviceRunSessions {
+    byId(deviceRunSessionId: $deviceRunSessionId) {
+      ...DeviceRunSessionData
+    }
+  }
+}
+
+# EAS Simulator is a limited-access feature. The `device-run-sessions` gate on the
+# owning account decides whether `createDeviceRunSession` will work at all, so the
+# UI checks it before offering to start a session.
+query GetSimulatorAvailability($appId: String!, $filter: [String!]) {
+  app {
+    byId(appId: $appId) {
+      id
+      ownerAccount {
+        id
+        name
+        accountFeatureGates(filter: $filter)
+      }
+    }
+  }
+}
+
+query GetDeviceRunSessionsForApp(
+  $appId: String!
+  $first: Int
+  $filter: DeviceRunSessionFilterInput
+) {
+  app {
+    byId(appId: $appId) {
+      id
+      deviceRunSessionsPaginated(first: $first, filter: $filter) {
+        edges {
+          cursor
+          node {
+            ...DeviceRunSessionData
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+
+mutation CreateDeviceRunSession($deviceRunSessionInput: CreateDeviceRunSessionInput!) {
+  deviceRunSession {
+    createDeviceRunSession(deviceRunSessionInput: $deviceRunSessionInput) {
+      ...DeviceRunSessionData
+    }
+  }
+}
+
+mutation StopDeviceRunSession($deviceRunSessionId: ID!) {
+  deviceRunSession {
+    ensureDeviceRunSessionStopped(deviceRunSessionId: $deviceRunSessionId) {
+      id
+      status
+      finishedAt
+    }
+  }
+}

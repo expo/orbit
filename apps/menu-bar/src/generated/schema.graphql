@@ -177,6 +177,9 @@ type Account {
   """Subscription info visible to members that have VIEWER role"""
   subscription: SubscriptionDetails
 
+  """Supabase connection for this account"""
+  supabaseConnection: SupabaseConnection
+
   """Coalesced project activity for an app using pagination"""
   timelineActivity(after: String, before: String, filter: TimelineActivityFilterInput, first: Int, last: Int): TimelineActivityConnection!
   updatedAt: DateTime!
@@ -193,6 +196,9 @@ type Account {
 
   """Vexo account connection for this account"""
   vexoAccountConnection: VexoAccountConnection
+
+  """Most recently active first"""
+  viewerDashboardChats(after: String, before: String, first: Int, last: Int): DashboardChatConnection!
 
   """Notification preferences of the viewer for this account"""
   viewerNotificationPreferences: [NotificationPreferenceItem!]!
@@ -1022,6 +1028,7 @@ type App implements Project {
   submissions(filter: SubmissionFilter!, limit: Int!, offset: Int!): [Submission!]!
   submissionsPaginated(after: String, before: String, first: Int, last: Int): AppSubmissionsConnection!
   suggestedDevDomainName: String!
+  supabaseProject: SupabaseProject
 
   """Coalesced project activity for an app using pagination"""
   timelineActivity(after: String, before: String, filter: TimelineActivityFilterInput, first: Int, last: Int): TimelineActivityConnection!
@@ -1263,6 +1270,21 @@ type AppObserve {
   errorTimeSeries(input: AppObserveErrorTimeSeriesInput!): AppObserveErrorTimeSeries!
   events(after: String, before: String, filter: AppObserveEventsFilter, first: Int, last: Int, orderBy: AppObserveEventsOrderBy): AppObserveEventsConnection!
   navigationRoutes(after: String, before: String, filter: AppObserveNavigationRoutesFilter!, first: Int, last: Int, orderBy: AppObserveNavigationRoutesOrderBy): AppObserveNavigationRoutesConnection!
+
+  """
+  Active users and sessions for the Overview engagement band, across all versions.
+  """
+  overviewEngagement(input: AppObserveOverviewEngagementInput!): AppObserveOverviewEngagement!
+
+  """
+  Per-update comparison within one app version: the embedded bundle plus each OTA update.
+  """
+  overviewUpdateComparison(input: AppObserveOverviewUpdateComparisonInput!): AppObserveOverviewUpdateComparison!
+
+  """
+  Per-version, per-platform metric summaries for the Overview version-comparison matrix.
+  """
+  overviewVersionComparison(input: AppObserveOverviewVersionComparisonInput!): AppObserveOverviewVersionComparison!
   timeSeries(input: AppObserveTimeSeriesInput!): AppObserveTimeSeries!
   totalEventCount: Int!
 
@@ -1382,6 +1404,11 @@ type AppObserveCustomEvent {
   deviceModel: String!
   deviceOs: String!
   deviceOsVersion: String!
+
+  """
+  Human-friendly label from the expo.log.display_name attribute; null when the event was logged without one.
+  """
+  displayName: String
   easClientId: String!
   environment: String
   errorFingerprint: String
@@ -1840,7 +1867,7 @@ input AppObserveNavigationRoutesFilter {
   appVersion: String
   endTime: DateTime!
   environment: String
-  platform: AppObservePlatform!
+  platform: AppObservePlatform
   routeNames: [String!]
   startTime: DateTime!
 }
@@ -1867,6 +1894,164 @@ type AppObserveNavigationStat {
   p90: Float
 }
 
+type AppObserveOverviewEngagement {
+  activeUsers: AppObserveOverviewEngagementStat!
+  sessions: AppObserveOverviewEngagementStat!
+}
+
+type AppObserveOverviewEngagementBucket {
+  bucketStart: DateTime!
+  count: Int!
+}
+
+"""
+Engagement-band filters. No release filters: the band always spans all versions.
+"""
+input AppObserveOverviewEngagementInput {
+  """Series bucket size. Defaults to one day."""
+  bucketIntervalMinutes: Int
+  endTime: DateTime!
+  environment: String
+  platform: AppObservePlatform
+  startTime: DateTime!
+}
+
+type AppObserveOverviewEngagementStat {
+  previousPeriodTotal: Int!
+
+  """Per-bucket approximate uniques; buckets do not sum to `total`."""
+  series: [AppObserveOverviewEngagementBucket!]!
+  total: Int!
+}
+
+type AppObserveOverviewStability {
+  affectedUsers: Int!
+
+  """Fraction (0..1) of active sessions without a fatal error."""
+  crashFreeSessions: Float!
+
+  """Fraction (0..1) of active users without a fatal error."""
+  crashFreeUsers: Float!
+  totalErrors: Int!
+}
+
+type AppObserveOverviewUpdate {
+  """Null for the embedded bundle."""
+  appUpdateId: ID
+
+  """
+  Downloads recorded in range across platforms; null when none were recorded (and always for the embedded bundle).
+  """
+  downloadCount: Int
+
+  """
+  One entry per platform with downloads in range; empty for the embedded bundle.
+  """
+  downloads: [AppObserveOverviewUpdateDownload!]!
+  eventCount: Int!
+  firstSeenAt: DateTime!
+  isEmbedded: Boolean!
+
+  """
+  EAS update message; null for the embedded bundle or when the update row no longer exists.
+  """
+  message: String
+
+  """One entry per (metric, platform) with data in range."""
+  metrics: [AppObserveOverviewUpdateMetric!]!
+
+  """When the update was published; null for the embedded bundle."""
+  publishedAt: DateTime
+  stability: AppObserveOverviewStability!
+  uniqueUserCount: Int!
+}
+
+type AppObserveOverviewUpdateComparison {
+  """
+  Embedded bundle first, then OTA updates oldest first. Only updates with runtime data appear.
+  """
+  updates: [AppObserveOverviewUpdate!]!
+}
+
+input AppObserveOverviewUpdateComparisonInput {
+  appVersion: String!
+  endTime: DateTime!
+  environment: String
+
+  """
+  Metric names to aggregate. Defaults to all metrics available on the account's plan.
+  """
+  metricNames: [String!]
+  startTime: DateTime!
+}
+
+type AppObserveOverviewUpdateDownload {
+  downloadCount: Int!
+  medianDownloadTime: Float!
+  platform: AppObservePlatform!
+}
+
+type AppObserveOverviewUpdateMetric {
+  eventCount: Int!
+  metricName: String!
+  platform: AppObservePlatform!
+  statistics: AppObserveVersionMarkerStatistics!
+}
+
+type AppObserveOverviewVersion {
+  appVersion: String!
+  firstSeenAt: DateTime!
+
+  """
+  One entry per (metric, platform) with data in range; iOS includes tvOS and iPadOS.
+  """
+  metrics: [AppObserveOverviewVersionMetric!]!
+
+  """Error stats for this version, all platforms combined."""
+  stability: AppObserveOverviewStability!
+  uniqueUserCount: Int!
+}
+
+type AppObserveOverviewVersionComparison {
+  """
+  Every version with data in range, highest version first, for the version picker.
+  """
+  allVersions: [AppObserveOverviewVersionSummary!]!
+
+  """
+  Compared versions, lowest version first. Requested versions with no data are omitted.
+  """
+  versions: [AppObserveOverviewVersion!]!
+}
+
+input AppObserveOverviewVersionComparisonInput {
+  """
+  Versions to compare (max 10, any order). Defaults to the three highest versions.
+  """
+  appVersions: [String!]
+  endTime: DateTime!
+  environment: String
+
+  """
+  Metric names to aggregate. Defaults to all metrics available on the account's plan.
+  """
+  metricNames: [String!]
+  startTime: DateTime!
+}
+
+type AppObserveOverviewVersionMetric {
+  eventCount: Int!
+  metricName: String!
+  platform: AppObservePlatform!
+  statistics: AppObserveVersionMarkerStatistics!
+}
+
+type AppObserveOverviewVersionSummary {
+  appVersion: String!
+  firstSeenAt: DateTime!
+  uniqueUserCount: Int!
+}
+
 enum AppObservePlatform {
   ANDROID
   IOS
@@ -1883,7 +2068,7 @@ input AppObserveReleasesInput {
   endTime: DateTime!
   environment: String
   metricNames: [String!]
-  platform: AppObservePlatform!
+  platform: AppObservePlatform
   startTime: DateTime!
 }
 
@@ -1918,7 +2103,7 @@ input AppObserveTimeSeriesInput {
   environment: String
   isEmbeddedUpdate: Boolean
   metricName: String!
-  platform: AppObservePlatform!
+  platform: AppObservePlatform
   routeName: String
   startTime: DateTime!
 }
@@ -1965,7 +2150,7 @@ input AppObserveUpdatesInput {
   environment: String
   first: Int
   orderBy: AppObserveUpdatesOrderBy
-  platform: AppObservePlatform!
+  platform: AppObservePlatform
   startTime: DateTime!
 }
 
@@ -2294,6 +2479,7 @@ type AppWorkflowRunEdge {
 
 input AppWorkflowRunFilterInput {
   requestedGitRef: String
+  searchTerm: String
   status: WorkflowRunStatus
   timeRange: WorkflowRunTimeRangeInput
   workflowId: ID
@@ -2414,8 +2600,11 @@ type AppleDeviceRegistrationRequest {
 }
 
 type AppleDeviceRegistrationRequestMutation {
-  """Create an Apple Device registration request"""
-  createAppleDeviceRegistrationRequest(accountId: ID!, appleTeamId: ID!): AppleDeviceRegistrationRequest!
+  """
+  Create an Apple Device registration request.
+  Pass singleUse to create a fresh request that closes after the first device is registered.
+  """
+  createAppleDeviceRegistrationRequest(accountId: ID!, appleTeamId: ID!, singleUse: Boolean): AppleDeviceRegistrationRequest!
 }
 
 """Publicly visible data for an AppleDeviceRegistrationRequest."""
@@ -2774,6 +2963,10 @@ enum BackgroundJobState {
   SUCCESS
 }
 
+input BeginSupabaseOAuthInput {
+  accountId: ID!
+}
+
 type Billing {
   """History of invoices"""
   charges: [Charge]
@@ -2868,7 +3061,8 @@ type Build implements ActivityTimelineProjectActivity & BuildOrBuildJob {
   isForIosSimulator: Boolean!
   isGitWorkingTreeDirty: Boolean
   isWaived: Boolean!
-  logFiles: [String!]!
+  logFileUrls: [String!]!
+  logFiles: [String!]! @deprecated(reason: "Use logFileUrls instead")
   maxBuildTimeSeconds: Int!
 
   """Retry time starts after completedAt"""
@@ -2902,6 +3096,9 @@ type Build implements ActivityTimelineProjectActivity & BuildOrBuildJob {
   runtimeVersion: String @deprecated(reason: "Use 'runtime' field instead.")
   sdkVersion: String
   selectedImage: String @deprecated(reason: "Use 'resolvedImage' for the concrete image the build runs on.")
+
+  """The active ssh session for this build, if any."""
+  sshSession: TurtleSshSession
   status: BuildStatus!
   submissions: [Submission!]!
   updateChannel: UpdateChannel
@@ -3175,6 +3372,7 @@ enum BuildPhase {
   UPLOAD_APPLICATION_ARCHIVE
   UPLOAD_ARTIFACTS @deprecated
   UPLOAD_BUILD_ARTIFACTS
+  UPLOAD_EMBEDDED_BUNDLE
 }
 
 type BuildPlanCreditThresholdExceededMetadata {
@@ -3351,6 +3549,11 @@ input CompletePostHogConnectionInput {
   state: ID!
 }
 
+input CompleteSupabaseOAuthInput {
+  code: String!
+  state: ID!
+}
+
 type Concurrencies {
   android: Int!
   ios: Int!
@@ -3500,6 +3703,10 @@ type CreateDeviceRunSessionArtifactUploadSessionResult {
   uploadSession: DeviceRunSessionArtifactUploadSession!
 }
 
+type CreateDeviceRunSessionEventLogUploadSessionResult {
+  uploadSession: DeviceRunSessionEventLogUploadSession!
+}
+
 input CreateDeviceRunSessionInput {
   appId: ID!
 
@@ -3509,6 +3716,12 @@ input CreateDeviceRunSessionInput {
   plans. If omitted, the default is derived based on the job run's priority.
   """
   maxRunTimeMinutes: Int
+
+  """
+  Human-readable label for the session, at most 255 characters. If omitted, the
+  session is unnamed and clients fall back to identifying it by id.
+  """
+  name: String
 
   """
   The version of the package backing the device run session (e.g. "0.1.3-alpha.3").
@@ -3820,6 +4033,86 @@ enum CustomDomainStatus {
   TIMED_OUT
 }
 
+"""A dashboard AI chat conversation, private to the user who created it."""
+type DashboardChat {
+  account: Account!
+  createdAt: DateTime!
+  id: ID!
+  lastMessageAt: DateTime
+
+  """Most recent first"""
+  messages(after: String, before: String, first: Int, last: Int): DashboardChatMessageConnection!
+  title: String
+}
+
+type DashboardChatConnection {
+  edges: [DashboardChatEdge!]!
+  pageInfo: PageInfo!
+}
+
+type DashboardChatEdge {
+  cursor: String!
+  node: DashboardChat!
+}
+
+type DashboardChatMessage {
+  """Client-supplied; unique per chat, not globally"""
+  clientMessageId: String!
+  id: ID!
+
+  """UIMessage parts, stored verbatim, ordered by index"""
+  parts: [JSONObject!]!
+  role: DashboardChatMessageRole!
+  status: DashboardChatMessageStatus
+}
+
+type DashboardChatMessageConnection {
+  edges: [DashboardChatMessageEdge!]!
+  pageInfo: PageInfo!
+}
+
+type DashboardChatMessageEdge {
+  cursor: String!
+  node: DashboardChatMessage!
+}
+
+enum DashboardChatMessageRole {
+  ASSISTANT
+  USER
+}
+
+"""Terminal state of an assistant message"""
+enum DashboardChatMessageStatus {
+  CANCELED
+  COMPLETED
+  ERROR
+}
+
+type DashboardChatMutation {
+  """Persist a user message. Idempotent on clientMessageId."""
+  addUserMessage(accountID: ID!, chatID: ID!, clientMessageId: String!, parts: [JSONObject!]!): DashboardChatMessage!
+
+  """Create a new chat owned by the viewer"""
+  createChat(accountID: ID!): DashboardChat!
+
+  """Delete a chat and all of its messages"""
+  deleteChat(chatID: ID!): DashboardChat!
+
+  """Rename a chat"""
+  renameChat(chatID: ID!, title: String!): DashboardChat!
+
+  """
+  Persist an assistant message, replacing parts when a message with the
+  same clientMessageId already exists.
+  """
+  upsertAssistantMessage(accountID: ID!, chatID: ID!, clientMessageId: String!, parts: [JSONObject!]!, status: DashboardChatMessageStatus!): DashboardChatMessage!
+}
+
+type DashboardChatQuery {
+  """Get dashboard chat by ID - entry point to the graph"""
+  byId(id: ID!): DashboardChat
+}
+
 enum DashboardViewPin {
   ACTIVITY
   OVERVIEW
@@ -4050,6 +4343,12 @@ type DeviceRunSession {
   initiatingActor: Actor
 
   """
+  Human-readable label chosen by whoever started the session. Null when the
+  session was started without one.
+  """
+  name: String
+
+  """
   The version of the package backing the device run session. Null means the session is
   pinned to "latest" at the consumer side.
   """
@@ -4085,7 +4384,14 @@ type DeviceRunSessionArtifactUploadSession {
   url: String!
 }
 
+type DeviceRunSessionEventLogUploadSession {
+  headers: JSONObject!
+  url: String!
+}
+
 input DeviceRunSessionFilterInput {
+  """Case-insensitive prefix match on the session name."""
+  name: String
   platforms: [AppPlatform!]
   statuses: [DeviceRunSessionStatus!]
   types: [DeviceRunSessionType!]
@@ -4099,6 +4405,12 @@ type DeviceRunSessionMutation {
 
   """Create a device run session"""
   createDeviceRunSession(deviceRunSessionInput: CreateDeviceRunSessionInput!): DeviceRunSession!
+
+  """
+  Create a standard artifact and a two-hour upload URL for repeatedly
+  overwriting its structured event log while the backing job run is running.
+  """
+  createEventLogUploadSession(deviceRunSessionId: ID!): CreateDeviceRunSessionEventLogUploadSessionResult!
 
   """
   Ensure a device run session is stopped. Idempotent: if the session has already
@@ -4810,12 +5122,15 @@ enum EntityTypeName {
   CustomerEntity
   EchoProjectEntity
   EchoVersionEntity
+  EnvironmentVariableEntity
   GoogleServiceAccountKeyEntity
   IosAppCredentialsEntity
   LogRocketOrganizationEntity
   LogRocketProjectEntity
   PostHogOrganizationConnectionEntity
   PostHogProjectEntity
+  SupabaseConnectionEntity
+  SupabaseProjectEntity
   UserInvitationEntity
   UserPermissionEntity
   VexoAccountConnectionEntity
@@ -5879,6 +6194,9 @@ type JobRun {
 
   """String describing the worker profile used to run this job run."""
   resourceClassDisplayName: String!
+
+  """The active ssh session for this job run, if any."""
+  sshSession: TurtleSshSession
   startedAt: DateTime
   status: JobRunStatus!
   updateGroups: [[Update!]!]!
@@ -5892,9 +6210,17 @@ type JobRunError {
   message: String!
 }
 
+type JobRunLogsCentrifugoSubscriptionToken {
+  channel: String!
+  token: String!
+}
+
 type JobRunMutation {
   """Cancel an EAS Job Run"""
   cancelJobRun(jobRunId: ID!): JobRun!
+
+  """Generate a token for subscribing to an EAS Job Run log channel"""
+  generateLogsCentrifugoSubscriptionToken(jobRunId: ID!, thread: String): JobRunLogsCentrifugoSubscriptionToken!
 }
 
 enum JobRunPriority {
@@ -5967,6 +6293,11 @@ input LinkSentryInstallationToExpoAccountInput {
   code: String!
   installationId: ID!
   sentryOrgSlug: String!
+}
+
+input LinkSupabaseProjectInput {
+  appId: ID!
+  supabaseProjectRef: String!
 }
 
 input LocalBuildArchiveSourceInput {
@@ -6081,12 +6412,6 @@ type MeMutation {
   Schedule deletion of a SSO user. Actor must be an owner on the SSO user's SSO account.
   """
   scheduleSSOUserDeletionAsSSOAccountOwner(ssoUserId: ID!): BackgroundJobReceipt!
-
-  """
-  Legacy user preferences are no longer stored; this mutation accepts and discards
-  its input. Use userPreference.set instead.
-  """
-  setPreferences(preferences: UserPreferencesInput!): UserPreferences! @deprecated(reason: "No longer stored; this mutation has no effect. Use userPreference.set instead.")
 
   """Set the user's primary second factor device"""
   setPrimarySecondFactorDevice(userSecondFactorDeviceId: ID!): SecondFactorBooleanResult!
@@ -6428,6 +6753,29 @@ type ProjectPublicData {
   id: ID!
 }
 
+input ProvisionAdditionalSupabaseProjectInput {
+  appId: ID!
+
+  """
+  Suffix appended to the app name for the new Supabase project (e.g. preview).
+  """
+  projectNameSuffix: String!
+
+  """
+  A Supabase region code (e.g. us-east-1) or smart-group (americas, emea, apac).
+  """
+  region: String!
+}
+
+input ProvisionSupabaseProjectInput {
+  appId: ID!
+
+  """
+  A Supabase region code (e.g. us-east-1) or smart-group (americas, emea, apac).
+  """
+  region: String!
+}
+
 type PublicArtifacts {
   applicationArchiveUrl: String
   buildUrl: String
@@ -6450,6 +6798,15 @@ input PublishUpdateGroupInput {
   runtimeVersion: String!
   turtleJobRunId: String
   updateInfoGroup: UpdateInfoGroup
+}
+
+type RealtimeLogsCentrifugoConnectionToken {
+  token: String!
+}
+
+type RealtimeLogsMutation {
+  """Generate a token for connecting to EAS Logs Centrifugo"""
+  generateCentrifugoConnectionToken: RealtimeLogsCentrifugoConnectionToken!
 }
 
 type RemoteAppStoreConnectApp {
@@ -6663,6 +7020,9 @@ type RootMutation {
   convexProject: ConvexProjectMutation!
   convexTeamConnection: ConvexTeamConnectionMutation!
   customDomain: CustomDomainMutation!
+
+  """Mutations for dashboard chats"""
+  dashboardChat: DashboardChatMutation!
   deployments: DeploymentsMutation!
 
   """Mutations that assign or modify DevDomainNames for apps"""
@@ -6758,6 +7118,7 @@ type RootMutation {
   notificationPreference: NotificationPreferenceMutation!
   posthogOrganizationConnection: PostHogOrganizationConnectionMutation!
   posthogProject: PostHogProjectMutation!
+  realtimeLogs: RealtimeLogsMutation!
 
   """Mutations that create, update, and delete Robots"""
   robot: RobotMutation!
@@ -6770,8 +7131,11 @@ type RootMutation {
 
   """Mutations that modify an EAS Submit submission"""
   submission: SubmissionMutation!
+  supabaseConnection: SupabaseConnectionMutation!
+  supabaseProject: SupabaseProjectMutation!
   tunnels: TunnelsMutation!
   turtleBrownfieldArtifacts: TurtleBrownfieldArtifactMutation!
+  turtleSshSession: TurtleSshSessionMutation!
   update: UpdateMutation!
   updateBranch: UpdateBranchMutation!
   updateChannel: UpdateChannelMutation!
@@ -6866,6 +7230,9 @@ type RootQuery {
 
   """Top-level query object for querying Convex Integration information."""
   convexIntegration: ConvexIntegrationQuery!
+
+  """Top-level query object for querying dashboard chats."""
+  dashboardChat: DashboardChatQuery!
 
   """Top-level query object for querying Deployments."""
   deployments: DeploymentQuery!
@@ -7179,7 +7546,12 @@ type SentryProjectMutation {
 
 type ServeSimRunSessionRemoteConfig {
   previewUrl: String!
-  streamUrl: String!
+  streamUrl: String @deprecated(reason: "Use previewUrl instead.")
+}
+
+input SetSupabaseConnectionOrganizationInput {
+  organizationSlug: String!
+  supabaseConnectionId: ID!
 }
 
 input SetupConvexProjectInput {
@@ -7513,6 +7885,103 @@ type SubscriptionDetails {
   willCancel: Boolean
 }
 
+type SupabaseConnection {
+  account: Account!
+  createdAt: DateTime!
+  id: ID!
+  supabaseOrganizationName: String!
+
+  """
+  The organization new projects are provisioned under. Chosen at connect time; defaults to the first.
+  """
+  supabaseOrganizationSlug: String!
+  supabaseProjects: [SupabaseProject!]!
+  updatedAt: DateTime!
+}
+
+type SupabaseConnectionMutation {
+  """
+  Begins a Supabase connection: creates the PKCE handoff and returns the authorize URL.
+  """
+  beginSupabaseOAuth(input: BeginSupabaseOAuthInput!): SupabaseOAuthStart!
+
+  """
+  Completes a connection from the browser callback: exchanges the authorization code with the
+  stored PKCE verifier and persists the connection.
+  """
+  completeSupabaseOAuth(input: CompleteSupabaseOAuthInput!): SupabaseConnection!
+
+  """
+  Removes the Expo-side connection only; the Supabase organization and its projects are preserved.
+  """
+  disconnectSupabase(id: ID!): ID!
+
+  """
+  Live list of Supabase organizations this connection can access (Management API). Used once at
+  connect-time for the org picker — not a type field, so casual connection reads stay cheap.
+  """
+  listSupabaseOrganizations(accountId: ID!): [SupabaseOrganization!]!
+
+  """
+  Sets which Supabase organization new projects are provisioned under (the connect-time picker).
+  """
+  setSupabaseConnectionOrganization(input: SetSupabaseConnectionOrganizationInput!): SupabaseConnection!
+}
+
+"""
+Handoff for the browser OAuth step. The CLI opens `url`, and once the user authorizes,
+the website callback completes the connection; the CLI polls for it with `state`.
+"""
+type SupabaseOAuthStart {
+  state: ID!
+  url: String!
+}
+
+type SupabaseOrganization {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type SupabaseProject {
+  app: App!
+  createdAt: DateTime!
+  id: ID!
+  supabaseConnection: SupabaseConnection!
+  supabaseProjectName: String!
+  supabaseProjectRef: String!
+  supabaseProjectUrl: String!
+  supabaseRegion: String!
+  updatedAt: DateTime!
+}
+
+type SupabaseProjectMutation {
+  """
+  Removes the Expo-side project link only; the Supabase project is preserved.
+  """
+  deleteSupabaseProject(id: ID!): ID!
+
+  """
+  Live publishable (anon) key for the app's linked Supabase project (Management API). Never
+  stored — null while the project is still provisioning. Used by the CLI to write EAS env vars.
+  """
+  fetchSupabasePublishableKey(appId: ID!): String
+
+  """Links an existing Supabase project (by ref) to the app."""
+  linkSupabaseProject(input: LinkSupabaseProjectInput!): SupabaseProject!
+
+  """
+  Schedules an additional hosted Supabase project for selected EAS environments. Does not replace
+  the app's primary linked project — poll the receipt for ref/url/publishableKey in resultData.
+  """
+  provisionAdditionalSupabaseProject(input: ProvisionAdditionalSupabaseProjectInput!): BackgroundJobReceipt!
+
+  """
+  Schedules provisioning of a new Supabase project for the app. Poll the returned receipt until success, then read app.supabaseProject.
+  """
+  provisionSupabaseProject(input: ProvisionSupabaseProjectInput!): BackgroundJobReceipt!
+}
+
 enum TargetEntityMutationType {
   CREATE
   DELETE
@@ -7557,6 +8026,51 @@ type TurtleBrownfieldArtifactMutation {
 type TurtleBrownfieldArtifactQuery {
   byId(turtleBrownfieldArtifactId: ID!): BrownfieldArtifact!
   latestForApp(appId: ID!, bundleName: String!, platform: AppPlatform!): BrownfieldArtifact
+}
+
+"""
+Everything a client needs to open the ssh connection, reported by the worker once it has dialed
+the relay. Reading this decrypts the connection secret, so it is gated at account PUBLISH.
+"""
+type TurtleSshConnectionConfig {
+  host: String!
+  reconnecting: Boolean!
+  secret: String!
+  type: TurtleSshTransportType!
+}
+
+input TurtleSshConnectionConfigInput {
+  host: String!
+  reconnecting: Boolean
+  secret: String!
+  type: TurtleSshTransportType!
+}
+
+type TurtleSshSession {
+  build: Build
+  connectionConfig: TurtleSshConnectionConfig!
+  createdAt: DateTime!
+  id: ID!
+  initiatingActor: Actor
+  jobRun: JobRun
+  sessionSettings: TurtleSshSessionSettings!
+  updatedAt: DateTime!
+}
+
+type TurtleSshSessionMutation {
+  createOrUpdateTurtleSshSession(connectionConfig: TurtleSshConnectionConfigInput!, sessionSettings: TurtleSshSessionSettingsInput!, turtleBuildId: ID, turtleJobRunId: ID): TurtleSshSession!
+}
+
+type TurtleSshSessionSettings {
+  idleTimeoutSeconds: Int!
+}
+
+input TurtleSshSessionSettingsInput {
+  idleTimeoutSeconds: Int!
+}
+
+enum TurtleSshTransportType {
+  UPTERM_V1
 }
 
 type UniqueUsersOverTimeData {
@@ -7945,8 +8459,9 @@ input UpdatesTimelineFilter {
   runtimeVersions: [String!]
 
   """
-  Case-insensitive substring match on update group message and branch name.
-  Embedded updates are matched on channel and runtime version.
+  Case-insensitive substring match on update group message, branch name, and runtime version,
+  plus prefix match on update ID, update group ID, and git commit hash.
+  Embedded updates are matched on channel, runtime version, and ID prefix.
   """
   searchTerm: String
   types: [UpdatesTimelineItemType!]
@@ -8078,13 +8593,18 @@ type User implements Actor & UserActor {
   hasPendingUserInvitations: Boolean!
   id: ID!
   isExpoAdmin: Boolean!
-  isLegacy: Boolean! @deprecated
   isSecondFactorAuthenticationEnabled: Boolean!
   isStaffModeEnabled: Boolean!
   lastDeletionAttemptTime: DateTime
   lastName: String
   newEmailPendingVerification: String
   oAuthIdentities: [OAuthIdentity!]!
+
+  """
+  The organization created during signup onboarding: the most recently
+  created organization this user owns. Only resolves for the viewer.
+  """
+  onboardingOrganization: Account
 
   """Registered passkey credentials"""
   passkeyCredentials: [UserPasskeyCredential!]!
@@ -8182,7 +8702,6 @@ type UserActorPublicData {
   id: ID!
   lastName: String
   primaryAccountProfileImageUrl: String!
-  profilePhoto: String! @deprecated(reason: "Use primaryAccountProfileImageUrl instead")
 
   """Snacks associated with this user's personal account"""
   snacks(limit: Int!, offset: Int!): [Snack!]!
@@ -8425,7 +8944,6 @@ type UserPermission {
   id: ID!
   permissions: [Permission!]!
   role: Role!
-  user: User @deprecated(reason: "User type is deprecated")
   userActor: UserActor
 }
 
@@ -8457,24 +8975,11 @@ type UserPreferences {
   onboarding: UserPreferencesOnboarding @deprecated(reason: "No longer stored; always null.")
 }
 
-input UserPreferencesInput {
-  onboarding: UserPreferencesOnboardingInput
-}
-
 """
 Set by website. Used by CLI to continue onboarding process on user's machine - clone repository,
 install dependencies etc.
 """
 type UserPreferencesOnboarding {
-  appId: ID!
-  deviceType: OnboardingDeviceType
-  environment: OnboardingEnvironment
-  isCLIDone: Boolean
-  lastUsed: String!
-  platform: AppPlatform
-}
-
-input UserPreferencesOnboardingInput {
   appId: ID!
   deviceType: OnboardingDeviceType
   environment: OnboardingEnvironment
@@ -9210,7 +9715,7 @@ input WorkflowDeviceTestCaseResultInput {
   """Execution time in milliseconds. Must be non-negative."""
   duration: Int
 
-  """Error message if failed. Max 4096 characters."""
+  """Error message if failed. Truncated to 4096 characters."""
   errorMessage: String
 
   """Test case name (e.g., "login", "checkout"). Max 255 characters."""
@@ -9344,6 +9849,12 @@ type WorkflowJob {
   name: String!
   outputs: JSONObject!
   requiredJobKeys: [String!]!
+
+  """
+  Updates in the group being rolled out by an UPDATE_ROLLOUT job, resolved from the job's
+  update_group_id output. Empty for other job types or when the group has no updates.
+  """
+  rolloutUpdateGroup: [Update!]!
   status: WorkflowJobStatus!
   turtleBuild: Build
   turtleJobRun: JobRun
@@ -9371,7 +9882,6 @@ type WorkflowJobApproval {
   id: ID!
   reviewingActor: Actor
   updatedAt: DateTime!
-  userActor: UserActor @deprecated(reason: "Use reviewingActor instead")
   workflowJob: WorkflowJob!
 }
 
@@ -9422,6 +9932,7 @@ enum WorkflowJobType {
   SUBMISSION
   TESTFLIGHT
   UPDATE
+  UPDATE_ROLLOUT
 }
 
 input WorkflowProjectSourceInput {
@@ -9498,6 +10009,7 @@ type WorkflowRun implements ActivityTimelineProjectActivity {
   retriedWorkflowRun: WorkflowRun
   retries: [WorkflowRun!]!
   sourceExpiresAt: DateTime
+  sshSettings: WorkflowRunSshSettings
   status: WorkflowRunStatus!
   triggerEventType: WorkflowRunTriggerEventType!
   triggeringLabelName: String
@@ -9542,6 +10054,10 @@ type WorkflowRunMutation {
 
 type WorkflowRunQuery {
   byId(workflowRunId: ID!): WorkflowRun!
+}
+
+type WorkflowRunSshSettings {
+  idleTimeoutSeconds: Int!
 }
 
 enum WorkflowRunStatus {

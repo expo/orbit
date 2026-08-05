@@ -19,6 +19,13 @@ export type WindowOptions = {
     height?: number;
     width?: number;
     titlebarAppearsTransparent?: boolean;
+    /**
+     * Draw the window without an opaque background so the content defines its
+     * shape. Used by the cloud simulator's frameless layout, where the device
+     * bezel rendered by the page becomes the window outline.
+     */
+    transparent?: boolean;
+    hasShadow?: boolean;
   };
 };
 

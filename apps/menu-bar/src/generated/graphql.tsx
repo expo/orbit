@@ -176,6 +176,8 @@ export type Account = {
   ssoConfiguration?: Maybe<AccountSsoConfiguration>;
   /** Subscription info visible to members that have VIEWER role */
   subscription?: Maybe<SubscriptionDetails>;
+  /** Supabase connection for this account */
+  supabaseConnection?: Maybe<SupabaseConnection>;
   /** Coalesced project activity for an app using pagination */
   timelineActivity: TimelineActivityConnection;
   updatedAt: Scalars['DateTime']['output'];
@@ -191,6 +193,8 @@ export type Account = {
   users: Array<UserPermission>;
   /** Vexo account connection for this account */
   vexoAccountConnection?: Maybe<VexoAccountConnection>;
+  /** Most recently active first */
+  viewerDashboardChats: DashboardChatConnection;
   /** Notification preferences of the viewer for this account */
   viewerNotificationPreferences: Array<NotificationPreferenceItem>;
   /** Permission info for the viewer on this account */
@@ -471,6 +475,18 @@ export type AccountTimelineActivityArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<TimelineActivityFilterInput>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+/**
+ * An account is a container owning projects, credentials, billing and other organization
+ * data and settings. Actors may own and be members of accounts.
+ */
+export type AccountViewerDashboardChatsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -1476,6 +1492,7 @@ export type App = Project & {
   submissions: Array<Submission>;
   submissionsPaginated: AppSubmissionsConnection;
   suggestedDevDomainName: Scalars['String']['output'];
+  supabaseProject?: Maybe<SupabaseProject>;
   /** Coalesced project activity for an app using pagination */
   timelineActivity: TimelineActivityConnection;
   turtleBrownfieldArtifactsPaginated: BrownfieldArtifactsConnection;
@@ -2131,6 +2148,12 @@ export type AppObserve = {
   errorTimeSeries: AppObserveErrorTimeSeries;
   events: AppObserveEventsConnection;
   navigationRoutes: AppObserveNavigationRoutesConnection;
+  /** Active users and sessions for the Overview engagement band, across all versions. */
+  overviewEngagement: AppObserveOverviewEngagement;
+  /** Per-update comparison within one app version: the embedded bundle plus each OTA update. */
+  overviewUpdateComparison: AppObserveOverviewUpdateComparison;
+  /** Per-version, per-platform metric summaries for the Overview version-comparison matrix. */
+  overviewVersionComparison: AppObserveOverviewVersionComparison;
   timeSeries: AppObserveTimeSeries;
   totalEventCount: Scalars['Int']['output'];
   /**
@@ -2224,6 +2247,21 @@ export type AppObserveNavigationRoutesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<AppObserveNavigationRoutesOrderBy>;
+};
+
+
+export type AppObserveOverviewEngagementArgs = {
+  input: AppObserveOverviewEngagementInput;
+};
+
+
+export type AppObserveOverviewUpdateComparisonArgs = {
+  input: AppObserveOverviewUpdateComparisonInput;
+};
+
+
+export type AppObserveOverviewVersionComparisonArgs = {
+  input: AppObserveOverviewVersionComparisonInput;
 };
 
 
@@ -2346,6 +2384,8 @@ export type AppObserveCustomEvent = {
   deviceModel: Scalars['String']['output'];
   deviceOs: Scalars['String']['output'];
   deviceOsVersion: Scalars['String']['output'];
+  /** Human-friendly label from the expo.log.display_name attribute; null when the event was logged without one. */
+  displayName?: Maybe<Scalars['String']['output']>;
   easClientId: Scalars['String']['output'];
   environment?: Maybe<Scalars['String']['output']>;
   errorFingerprint?: Maybe<Scalars['String']['output']>;
@@ -2762,7 +2802,7 @@ export type AppObserveNavigationRoutesFilter = {
   appVersion?: InputMaybe<Scalars['String']['input']>;
   endTime: Scalars['DateTime']['input'];
   environment?: InputMaybe<Scalars['String']['input']>;
-  platform: AppObservePlatform;
+  platform?: InputMaybe<AppObservePlatform>;
   routeNames?: InputMaybe<Array<Scalars['String']['input']>>;
   startTime: Scalars['DateTime']['input'];
 };
@@ -2790,6 +2830,141 @@ export type AppObserveNavigationStat = {
   p90?: Maybe<Scalars['Float']['output']>;
 };
 
+export type AppObserveOverviewEngagement = {
+  __typename?: 'AppObserveOverviewEngagement';
+  activeUsers: AppObserveOverviewEngagementStat;
+  sessions: AppObserveOverviewEngagementStat;
+};
+
+export type AppObserveOverviewEngagementBucket = {
+  __typename?: 'AppObserveOverviewEngagementBucket';
+  bucketStart: Scalars['DateTime']['output'];
+  count: Scalars['Int']['output'];
+};
+
+/** Engagement-band filters. No release filters: the band always spans all versions. */
+export type AppObserveOverviewEngagementInput = {
+  /** Series bucket size. Defaults to one day. */
+  bucketIntervalMinutes?: InputMaybe<Scalars['Int']['input']>;
+  endTime: Scalars['DateTime']['input'];
+  environment?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<AppObservePlatform>;
+  startTime: Scalars['DateTime']['input'];
+};
+
+export type AppObserveOverviewEngagementStat = {
+  __typename?: 'AppObserveOverviewEngagementStat';
+  previousPeriodTotal: Scalars['Int']['output'];
+  /** Per-bucket approximate uniques; buckets do not sum to `total`. */
+  series: Array<AppObserveOverviewEngagementBucket>;
+  total: Scalars['Int']['output'];
+};
+
+export type AppObserveOverviewStability = {
+  __typename?: 'AppObserveOverviewStability';
+  affectedUsers: Scalars['Int']['output'];
+  /** Fraction (0..1) of active sessions without a fatal error. */
+  crashFreeSessions: Scalars['Float']['output'];
+  /** Fraction (0..1) of active users without a fatal error. */
+  crashFreeUsers: Scalars['Float']['output'];
+  totalErrors: Scalars['Int']['output'];
+};
+
+export type AppObserveOverviewUpdate = {
+  __typename?: 'AppObserveOverviewUpdate';
+  /** Null for the embedded bundle. */
+  appUpdateId?: Maybe<Scalars['ID']['output']>;
+  /** Downloads recorded in range across platforms; null when none were recorded (and always for the embedded bundle). */
+  downloadCount?: Maybe<Scalars['Int']['output']>;
+  /** One entry per platform with downloads in range; empty for the embedded bundle. */
+  downloads: Array<AppObserveOverviewUpdateDownload>;
+  eventCount: Scalars['Int']['output'];
+  firstSeenAt: Scalars['DateTime']['output'];
+  isEmbedded: Scalars['Boolean']['output'];
+  /** EAS update message; null for the embedded bundle or when the update row no longer exists. */
+  message?: Maybe<Scalars['String']['output']>;
+  /** One entry per (metric, platform) with data in range. */
+  metrics: Array<AppObserveOverviewUpdateMetric>;
+  /** When the update was published; null for the embedded bundle. */
+  publishedAt?: Maybe<Scalars['DateTime']['output']>;
+  stability: AppObserveOverviewStability;
+  uniqueUserCount: Scalars['Int']['output'];
+};
+
+export type AppObserveOverviewUpdateComparison = {
+  __typename?: 'AppObserveOverviewUpdateComparison';
+  /** Embedded bundle first, then OTA updates oldest first. Only updates with runtime data appear. */
+  updates: Array<AppObserveOverviewUpdate>;
+};
+
+export type AppObserveOverviewUpdateComparisonInput = {
+  appVersion: Scalars['String']['input'];
+  endTime: Scalars['DateTime']['input'];
+  environment?: InputMaybe<Scalars['String']['input']>;
+  /** Metric names to aggregate. Defaults to all metrics available on the account's plan. */
+  metricNames?: InputMaybe<Array<Scalars['String']['input']>>;
+  startTime: Scalars['DateTime']['input'];
+};
+
+export type AppObserveOverviewUpdateDownload = {
+  __typename?: 'AppObserveOverviewUpdateDownload';
+  downloadCount: Scalars['Int']['output'];
+  medianDownloadTime: Scalars['Float']['output'];
+  platform: AppObservePlatform;
+};
+
+export type AppObserveOverviewUpdateMetric = {
+  __typename?: 'AppObserveOverviewUpdateMetric';
+  eventCount: Scalars['Int']['output'];
+  metricName: Scalars['String']['output'];
+  platform: AppObservePlatform;
+  statistics: AppObserveVersionMarkerStatistics;
+};
+
+export type AppObserveOverviewVersion = {
+  __typename?: 'AppObserveOverviewVersion';
+  appVersion: Scalars['String']['output'];
+  firstSeenAt: Scalars['DateTime']['output'];
+  /** One entry per (metric, platform) with data in range; iOS includes tvOS and iPadOS. */
+  metrics: Array<AppObserveOverviewVersionMetric>;
+  /** Error stats for this version, all platforms combined. */
+  stability: AppObserveOverviewStability;
+  uniqueUserCount: Scalars['Int']['output'];
+};
+
+export type AppObserveOverviewVersionComparison = {
+  __typename?: 'AppObserveOverviewVersionComparison';
+  /** Every version with data in range, highest version first, for the version picker. */
+  allVersions: Array<AppObserveOverviewVersionSummary>;
+  /** Compared versions, lowest version first. Requested versions with no data are omitted. */
+  versions: Array<AppObserveOverviewVersion>;
+};
+
+export type AppObserveOverviewVersionComparisonInput = {
+  /** Versions to compare (max 10, any order). Defaults to the three highest versions. */
+  appVersions?: InputMaybe<Array<Scalars['String']['input']>>;
+  endTime: Scalars['DateTime']['input'];
+  environment?: InputMaybe<Scalars['String']['input']>;
+  /** Metric names to aggregate. Defaults to all metrics available on the account's plan. */
+  metricNames?: InputMaybe<Array<Scalars['String']['input']>>;
+  startTime: Scalars['DateTime']['input'];
+};
+
+export type AppObserveOverviewVersionMetric = {
+  __typename?: 'AppObserveOverviewVersionMetric';
+  eventCount: Scalars['Int']['output'];
+  metricName: Scalars['String']['output'];
+  platform: AppObservePlatform;
+  statistics: AppObserveVersionMarkerStatistics;
+};
+
+export type AppObserveOverviewVersionSummary = {
+  __typename?: 'AppObserveOverviewVersionSummary';
+  appVersion: Scalars['String']['output'];
+  firstSeenAt: Scalars['DateTime']['output'];
+  uniqueUserCount: Scalars['Int']['output'];
+};
+
 export enum AppObservePlatform {
   Android = 'ANDROID',
   Ios = 'IOS'
@@ -2806,7 +2981,7 @@ export type AppObserveReleasesInput = {
   endTime: Scalars['DateTime']['input'];
   environment?: InputMaybe<Scalars['String']['input']>;
   metricNames?: InputMaybe<Array<Scalars['String']['input']>>;
-  platform: AppObservePlatform;
+  platform?: InputMaybe<AppObservePlatform>;
   startTime: Scalars['DateTime']['input'];
 };
 
@@ -2843,7 +3018,7 @@ export type AppObserveTimeSeriesInput = {
   environment?: InputMaybe<Scalars['String']['input']>;
   isEmbeddedUpdate?: InputMaybe<Scalars['Boolean']['input']>;
   metricName: Scalars['String']['input'];
-  platform: AppObservePlatform;
+  platform?: InputMaybe<AppObservePlatform>;
   routeName?: InputMaybe<Scalars['String']['input']>;
   startTime: Scalars['DateTime']['input'];
 };
@@ -2894,7 +3069,7 @@ export type AppObserveUpdatesInput = {
   environment?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   orderBy?: InputMaybe<AppObserveUpdatesOrderBy>;
-  platform: AppObservePlatform;
+  platform?: InputMaybe<AppObservePlatform>;
   startTime: Scalars['DateTime']['input'];
 };
 
@@ -3318,6 +3493,7 @@ export type AppWorkflowRunEdge = {
 
 export type AppWorkflowRunFilterInput = {
   requestedGitRef?: InputMaybe<Scalars['String']['input']>;
+  searchTerm?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<WorkflowRunStatus>;
   timeRange?: InputMaybe<WorkflowRunTimeRangeInput>;
   workflowId?: InputMaybe<Scalars['ID']['input']>;
@@ -3485,7 +3661,10 @@ export type AppleDeviceRegistrationRequest = {
 
 export type AppleDeviceRegistrationRequestMutation = {
   __typename?: 'AppleDeviceRegistrationRequestMutation';
-  /** Create an Apple Device registration request */
+  /**
+   * Create an Apple Device registration request.
+   * Pass singleUse to create a fresh request that closes after the first device is registered.
+   */
   createAppleDeviceRegistrationRequest: AppleDeviceRegistrationRequest;
 };
 
@@ -3493,6 +3672,7 @@ export type AppleDeviceRegistrationRequestMutation = {
 export type AppleDeviceRegistrationRequestMutationCreateAppleDeviceRegistrationRequestArgs = {
   accountId: Scalars['ID']['input'];
   appleTeamId: Scalars['ID']['input'];
+  singleUse?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 /** Publicly visible data for an AppleDeviceRegistrationRequest. */
@@ -4009,6 +4189,10 @@ export enum BackgroundJobState {
   Success = 'SUCCESS'
 }
 
+export type BeginSupabaseOAuthInput = {
+  accountId: Scalars['ID']['input'];
+};
+
 export type Billing = {
   __typename?: 'Billing';
   /** History of invoices */
@@ -4112,6 +4296,8 @@ export type Build = ActivityTimelineProjectActivity & BuildOrBuildJob & {
   isForIosSimulator: Scalars['Boolean']['output'];
   isGitWorkingTreeDirty?: Maybe<Scalars['Boolean']['output']>;
   isWaived: Scalars['Boolean']['output'];
+  logFileUrls: Array<Scalars['String']['output']>;
+  /** @deprecated Use logFileUrls instead */
   logFiles: Array<Scalars['String']['output']>;
   maxBuildTimeSeconds: Scalars['Int']['output'];
   /** Retry time starts after completedAt */
@@ -4148,6 +4334,8 @@ export type Build = ActivityTimelineProjectActivity & BuildOrBuildJob & {
   sdkVersion?: Maybe<Scalars['String']['output']>;
   /** @deprecated Use 'resolvedImage' for the concrete image the build runs on. */
   selectedImage?: Maybe<Scalars['String']['output']>;
+  /** The active ssh session for this build, if any. */
+  sshSession?: Maybe<TurtleSshSession>;
   status: BuildStatus;
   submissions: Array<Submission>;
   updateChannel?: Maybe<UpdateChannel>;
@@ -4511,7 +4699,8 @@ export enum BuildPhase {
   UploadApplicationArchive = 'UPLOAD_APPLICATION_ARCHIVE',
   /** @deprecated No longer supported */
   UploadArtifacts = 'UPLOAD_ARTIFACTS',
-  UploadBuildArtifacts = 'UPLOAD_BUILD_ARTIFACTS'
+  UploadBuildArtifacts = 'UPLOAD_BUILD_ARTIFACTS',
+  UploadEmbeddedBundle = 'UPLOAD_EMBEDDED_BUNDLE'
 }
 
 export type BuildPlanCreditThresholdExceededMetadata = {
@@ -4723,6 +4912,11 @@ export type CompletePostHogConnectionInput = {
   state: Scalars['ID']['input'];
 };
 
+export type CompleteSupabaseOAuthInput = {
+  code: Scalars['String']['input'];
+  state: Scalars['ID']['input'];
+};
+
 export type Concurrencies = {
   __typename?: 'Concurrencies';
   android: Scalars['Int']['output'];
@@ -4896,6 +5090,11 @@ export type CreateDeviceRunSessionArtifactUploadSessionResult = {
   uploadSession: DeviceRunSessionArtifactUploadSession;
 };
 
+export type CreateDeviceRunSessionEventLogUploadSessionResult = {
+  __typename?: 'CreateDeviceRunSessionEventLogUploadSessionResult';
+  uploadSession: DeviceRunSessionEventLogUploadSession;
+};
+
 export type CreateDeviceRunSessionInput = {
   appId: Scalars['ID']['input'];
   /**
@@ -4904,6 +5103,11 @@ export type CreateDeviceRunSessionInput = {
    * plans. If omitted, the default is derived based on the job run's priority.
    */
   maxRunTimeMinutes?: InputMaybe<Scalars['Int']['input']>;
+  /**
+   * Human-readable label for the session, at most 255 characters. If omitted, the
+   * session is unnamed and clients fall back to identifying it by id.
+   */
+  name?: InputMaybe<Scalars['String']['input']>;
   /**
    * The version of the package backing the device run session (e.g. "0.1.3-alpha.3").
    * If omitted, consumers treat the session as pinned to "latest".
@@ -5216,6 +5420,135 @@ export enum CustomDomainStatus {
   Pending = 'PENDING',
   TimedOut = 'TIMED_OUT'
 }
+
+/** A dashboard AI chat conversation, private to the user who created it. */
+export type DashboardChat = {
+  __typename?: 'DashboardChat';
+  account: Account;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  lastMessageAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Most recent first */
+  messages: DashboardChatMessageConnection;
+  title?: Maybe<Scalars['String']['output']>;
+};
+
+
+/** A dashboard AI chat conversation, private to the user who created it. */
+export type DashboardChatMessagesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type DashboardChatConnection = {
+  __typename?: 'DashboardChatConnection';
+  edges: Array<DashboardChatEdge>;
+  pageInfo: PageInfo;
+};
+
+export type DashboardChatEdge = {
+  __typename?: 'DashboardChatEdge';
+  cursor: Scalars['String']['output'];
+  node: DashboardChat;
+};
+
+export type DashboardChatMessage = {
+  __typename?: 'DashboardChatMessage';
+  /** Client-supplied; unique per chat, not globally */
+  clientMessageId: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** UIMessage parts, stored verbatim, ordered by index */
+  parts: Array<Scalars['JSONObject']['output']>;
+  role: DashboardChatMessageRole;
+  status?: Maybe<DashboardChatMessageStatus>;
+};
+
+export type DashboardChatMessageConnection = {
+  __typename?: 'DashboardChatMessageConnection';
+  edges: Array<DashboardChatMessageEdge>;
+  pageInfo: PageInfo;
+};
+
+export type DashboardChatMessageEdge = {
+  __typename?: 'DashboardChatMessageEdge';
+  cursor: Scalars['String']['output'];
+  node: DashboardChatMessage;
+};
+
+export enum DashboardChatMessageRole {
+  Assistant = 'ASSISTANT',
+  User = 'USER'
+}
+
+/** Terminal state of an assistant message */
+export enum DashboardChatMessageStatus {
+  Canceled = 'CANCELED',
+  Completed = 'COMPLETED',
+  Error = 'ERROR'
+}
+
+export type DashboardChatMutation = {
+  __typename?: 'DashboardChatMutation';
+  /** Persist a user message. Idempotent on clientMessageId. */
+  addUserMessage: DashboardChatMessage;
+  /** Create a new chat owned by the viewer */
+  createChat: DashboardChat;
+  /** Delete a chat and all of its messages */
+  deleteChat: DashboardChat;
+  /** Rename a chat */
+  renameChat: DashboardChat;
+  /**
+   * Persist an assistant message, replacing parts when a message with the
+   * same clientMessageId already exists.
+   */
+  upsertAssistantMessage: DashboardChatMessage;
+};
+
+
+export type DashboardChatMutationAddUserMessageArgs = {
+  accountID: Scalars['ID']['input'];
+  chatID: Scalars['ID']['input'];
+  clientMessageId: Scalars['String']['input'];
+  parts: Array<Scalars['JSONObject']['input']>;
+};
+
+
+export type DashboardChatMutationCreateChatArgs = {
+  accountID: Scalars['ID']['input'];
+};
+
+
+export type DashboardChatMutationDeleteChatArgs = {
+  chatID: Scalars['ID']['input'];
+};
+
+
+export type DashboardChatMutationRenameChatArgs = {
+  chatID: Scalars['ID']['input'];
+  title: Scalars['String']['input'];
+};
+
+
+export type DashboardChatMutationUpsertAssistantMessageArgs = {
+  accountID: Scalars['ID']['input'];
+  chatID: Scalars['ID']['input'];
+  clientMessageId: Scalars['String']['input'];
+  parts: Array<Scalars['JSONObject']['input']>;
+  status: DashboardChatMessageStatus;
+};
+
+export type DashboardChatQuery = {
+  __typename?: 'DashboardChatQuery';
+  /** Get dashboard chat by ID - entry point to the graph */
+  byId?: Maybe<DashboardChat>;
+};
+
+
+export type DashboardChatQueryByIdArgs = {
+  id: Scalars['ID']['input'];
+};
 
 export enum DashboardViewPin {
   Activity = 'ACTIVITY',
@@ -5532,6 +5865,11 @@ export type DeviceRunSession = {
   id: Scalars['ID']['output'];
   initiatingActor?: Maybe<Actor>;
   /**
+   * Human-readable label chosen by whoever started the session. Null when the
+   * session was started without one.
+   */
+  name?: Maybe<Scalars['String']['output']>;
+  /**
    * The version of the package backing the device run session. Null means the session is
    * pinned to "latest" at the consumer side.
    */
@@ -5575,7 +5913,15 @@ export type DeviceRunSessionArtifactUploadSession = {
   url: Scalars['String']['output'];
 };
 
+export type DeviceRunSessionEventLogUploadSession = {
+  __typename?: 'DeviceRunSessionEventLogUploadSession';
+  headers: Scalars['JSONObject']['output'];
+  url: Scalars['String']['output'];
+};
+
 export type DeviceRunSessionFilterInput = {
+  /** Case-insensitive prefix match on the session name. */
+  name?: InputMaybe<Scalars['String']['input']>;
   platforms?: InputMaybe<Array<AppPlatform>>;
   statuses?: InputMaybe<Array<DeviceRunSessionStatus>>;
   types?: InputMaybe<Array<DeviceRunSessionType>>;
@@ -5587,6 +5933,11 @@ export type DeviceRunSessionMutation = {
   createArtifactUploadSession: CreateDeviceRunSessionArtifactUploadSessionResult;
   /** Create a device run session */
   createDeviceRunSession: DeviceRunSession;
+  /**
+   * Create a standard artifact and a two-hour upload URL for repeatedly
+   * overwriting its structured event log while the backing job run is running.
+   */
+  createEventLogUploadSession: CreateDeviceRunSessionEventLogUploadSessionResult;
   /**
    * Ensure a device run session is stopped. Idempotent: if the session has already
    * finished, the existing session is returned unchanged (an ERRORED session stays
@@ -5606,6 +5957,11 @@ export type DeviceRunSessionMutationCreateArtifactUploadSessionArgs = {
 
 export type DeviceRunSessionMutationCreateDeviceRunSessionArgs = {
   deviceRunSessionInput: CreateDeviceRunSessionInput;
+};
+
+
+export type DeviceRunSessionMutationCreateEventLogUploadSessionArgs = {
+  deviceRunSessionId: Scalars['ID']['input'];
 };
 
 
@@ -6525,12 +6881,15 @@ export enum EntityTypeName {
   CustomerEntity = 'CustomerEntity',
   EchoProjectEntity = 'EchoProjectEntity',
   EchoVersionEntity = 'EchoVersionEntity',
+  EnvironmentVariableEntity = 'EnvironmentVariableEntity',
   GoogleServiceAccountKeyEntity = 'GoogleServiceAccountKeyEntity',
   IosAppCredentialsEntity = 'IosAppCredentialsEntity',
   LogRocketOrganizationEntity = 'LogRocketOrganizationEntity',
   LogRocketProjectEntity = 'LogRocketProjectEntity',
   PostHogOrganizationConnectionEntity = 'PostHogOrganizationConnectionEntity',
   PostHogProjectEntity = 'PostHogProjectEntity',
+  SupabaseConnectionEntity = 'SupabaseConnectionEntity',
+  SupabaseProjectEntity = 'SupabaseProjectEntity',
   UserInvitationEntity = 'UserInvitationEntity',
   UserPermissionEntity = 'UserPermissionEntity',
   VexoAccountConnectionEntity = 'VexoAccountConnectionEntity',
@@ -7909,6 +8268,8 @@ export type JobRun = {
   priority: JobRunPriority;
   /** String describing the worker profile used to run this job run. */
   resourceClassDisplayName: Scalars['String']['output'];
+  /** The active ssh session for this job run, if any. */
+  sshSession?: Maybe<TurtleSshSession>;
   startedAt?: Maybe<Scalars['DateTime']['output']>;
   status: JobRunStatus;
   updateGroups: Array<Array<Update>>;
@@ -7923,15 +8284,29 @@ export type JobRunError = {
   message: Scalars['String']['output'];
 };
 
+export type JobRunLogsCentrifugoSubscriptionToken = {
+  __typename?: 'JobRunLogsCentrifugoSubscriptionToken';
+  channel: Scalars['String']['output'];
+  token: Scalars['String']['output'];
+};
+
 export type JobRunMutation = {
   __typename?: 'JobRunMutation';
   /** Cancel an EAS Job Run */
   cancelJobRun: JobRun;
+  /** Generate a token for subscribing to an EAS Job Run log channel */
+  generateLogsCentrifugoSubscriptionToken: JobRunLogsCentrifugoSubscriptionToken;
 };
 
 
 export type JobRunMutationCancelJobRunArgs = {
   jobRunId: Scalars['ID']['input'];
+};
+
+
+export type JobRunMutationGenerateLogsCentrifugoSubscriptionTokenArgs = {
+  jobRunId: Scalars['ID']['input'];
+  thread?: InputMaybe<Scalars['String']['input']>;
 };
 
 export enum JobRunPriority {
@@ -8017,6 +8392,11 @@ export type LinkSentryInstallationToExpoAccountInput = {
   code: Scalars['String']['input'];
   installationId: Scalars['ID']['input'];
   sentryOrgSlug: Scalars['String']['input'];
+};
+
+export type LinkSupabaseProjectInput = {
+  appId: Scalars['ID']['input'];
+  supabaseProjectRef: Scalars['String']['input'];
 };
 
 export type LocalBuildArchiveSourceInput = {
@@ -8145,12 +8525,6 @@ export type MeMutation = {
   scheduleCurrentUserDeletion: BackgroundJobReceipt;
   /** Schedule deletion of a SSO user. Actor must be an owner on the SSO user's SSO account. */
   scheduleSSOUserDeletionAsSSOAccountOwner: BackgroundJobReceipt;
-  /**
-   * Legacy user preferences are no longer stored; this mutation accepts and discards
-   * its input. Use userPreference.set instead.
-   * @deprecated No longer stored; this mutation has no effect. Use userPreference.set instead.
-   */
-  setPreferences: UserPreferences;
   /** Set the user's primary second factor device */
   setPrimarySecondFactorDevice: SecondFactorBooleanResult;
   /** Transfer project to a different Account */
@@ -8225,11 +8599,6 @@ export type MeMutationScheduleAccountDeletionArgs = {
 
 export type MeMutationScheduleSsoUserDeletionAsSsoAccountOwnerArgs = {
   ssoUserId: Scalars['ID']['input'];
-};
-
-
-export type MeMutationSetPreferencesArgs = {
-  preferences: UserPreferencesInput;
 };
 
 
@@ -8632,6 +9001,20 @@ export type ProjectPublicData = {
   id: Scalars['ID']['output'];
 };
 
+export type ProvisionAdditionalSupabaseProjectInput = {
+  appId: Scalars['ID']['input'];
+  /** Suffix appended to the app name for the new Supabase project (e.g. preview). */
+  projectNameSuffix: Scalars['String']['input'];
+  /** A Supabase region code (e.g. us-east-1) or smart-group (americas, emea, apac). */
+  region: Scalars['String']['input'];
+};
+
+export type ProvisionSupabaseProjectInput = {
+  appId: Scalars['ID']['input'];
+  /** A Supabase region code (e.g. us-east-1) or smart-group (americas, emea, apac). */
+  region: Scalars['String']['input'];
+};
+
 export type PublicArtifacts = {
   __typename?: 'PublicArtifacts';
   applicationArchiveUrl?: Maybe<Scalars['String']['output']>;
@@ -8655,6 +9038,17 @@ export type PublishUpdateGroupInput = {
   runtimeVersion: Scalars['String']['input'];
   turtleJobRunId?: InputMaybe<Scalars['String']['input']>;
   updateInfoGroup?: InputMaybe<UpdateInfoGroup>;
+};
+
+export type RealtimeLogsCentrifugoConnectionToken = {
+  __typename?: 'RealtimeLogsCentrifugoConnectionToken';
+  token: Scalars['String']['output'];
+};
+
+export type RealtimeLogsMutation = {
+  __typename?: 'RealtimeLogsMutation';
+  /** Generate a token for connecting to EAS Logs Centrifugo */
+  generateCentrifugoConnectionToken: RealtimeLogsCentrifugoConnectionToken;
 };
 
 export type RemoteAppStoreConnectApp = {
@@ -8871,6 +9265,8 @@ export type RootMutation = {
   convexProject: ConvexProjectMutation;
   convexTeamConnection: ConvexTeamConnectionMutation;
   customDomain: CustomDomainMutation;
+  /** Mutations for dashboard chats */
+  dashboardChat: DashboardChatMutation;
   deployments: DeploymentsMutation;
   /** Mutations that assign or modify DevDomainNames for apps */
   devDomainName: AppDevDomainNameMutation;
@@ -8935,6 +9331,7 @@ export type RootMutation = {
   notificationPreference: NotificationPreferenceMutation;
   posthogOrganizationConnection: PostHogOrganizationConnectionMutation;
   posthogProject: PostHogProjectMutation;
+  realtimeLogs: RealtimeLogsMutation;
   /** Mutations that create, update, and delete Robots */
   robot: RobotMutation;
   /** Mutations for Sentry installations */
@@ -8943,8 +9340,11 @@ export type RootMutation = {
   sentryProject: SentryProjectMutation;
   /** Mutations that modify an EAS Submit submission */
   submission: SubmissionMutation;
+  supabaseConnection: SupabaseConnectionMutation;
+  supabaseProject: SupabaseProjectMutation;
   tunnels: TunnelsMutation;
   turtleBrownfieldArtifacts: TurtleBrownfieldArtifactMutation;
+  turtleSshSession: TurtleSshSessionMutation;
   update: UpdateMutation;
   updateBranch: UpdateBranchMutation;
   updateChannel: UpdateChannelMutation;
@@ -9034,6 +9434,8 @@ export type RootQuery = {
   channels: ChannelQuery;
   /** Top-level query object for querying Convex Integration information. */
   convexIntegration: ConvexIntegrationQuery;
+  /** Top-level query object for querying dashboard chats. */
+  dashboardChat: DashboardChatQuery;
   /** Top-level query object for querying Deployments. */
   deployments: DeploymentQuery;
   deviceRunSessionArtifacts: DeviceRunSessionArtifactQuery;
@@ -9429,7 +9831,13 @@ export type SentryProjectMutationDeleteSentryProjectArgs = {
 export type ServeSimRunSessionRemoteConfig = {
   __typename?: 'ServeSimRunSessionRemoteConfig';
   previewUrl: Scalars['String']['output'];
-  streamUrl: Scalars['String']['output'];
+  /** @deprecated Use previewUrl instead. */
+  streamUrl?: Maybe<Scalars['String']['output']>;
+};
+
+export type SetSupabaseConnectionOrganizationInput = {
+  organizationSlug: Scalars['String']['input'];
+  supabaseConnectionId: Scalars['ID']['input'];
 };
 
 export type SetupConvexProjectInput = {
@@ -9778,6 +10186,138 @@ export type SubscriptionDetailsPlanEnablementArgs = {
   serviceMetric: EasServiceMetric;
 };
 
+export type SupabaseConnection = {
+  __typename?: 'SupabaseConnection';
+  account: Account;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  supabaseOrganizationName: Scalars['String']['output'];
+  /** The organization new projects are provisioned under. Chosen at connect time; defaults to the first. */
+  supabaseOrganizationSlug: Scalars['String']['output'];
+  supabaseProjects: Array<SupabaseProject>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type SupabaseConnectionMutation = {
+  __typename?: 'SupabaseConnectionMutation';
+  /** Begins a Supabase connection: creates the PKCE handoff and returns the authorize URL. */
+  beginSupabaseOAuth: SupabaseOAuthStart;
+  /**
+   * Completes a connection from the browser callback: exchanges the authorization code with the
+   * stored PKCE verifier and persists the connection.
+   */
+  completeSupabaseOAuth: SupabaseConnection;
+  /** Removes the Expo-side connection only; the Supabase organization and its projects are preserved. */
+  disconnectSupabase: Scalars['ID']['output'];
+  /**
+   * Live list of Supabase organizations this connection can access (Management API). Used once at
+   * connect-time for the org picker — not a type field, so casual connection reads stay cheap.
+   */
+  listSupabaseOrganizations: Array<SupabaseOrganization>;
+  /** Sets which Supabase organization new projects are provisioned under (the connect-time picker). */
+  setSupabaseConnectionOrganization: SupabaseConnection;
+};
+
+
+export type SupabaseConnectionMutationBeginSupabaseOAuthArgs = {
+  input: BeginSupabaseOAuthInput;
+};
+
+
+export type SupabaseConnectionMutationCompleteSupabaseOAuthArgs = {
+  input: CompleteSupabaseOAuthInput;
+};
+
+
+export type SupabaseConnectionMutationDisconnectSupabaseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type SupabaseConnectionMutationListSupabaseOrganizationsArgs = {
+  accountId: Scalars['ID']['input'];
+};
+
+
+export type SupabaseConnectionMutationSetSupabaseConnectionOrganizationArgs = {
+  input: SetSupabaseConnectionOrganizationInput;
+};
+
+/**
+ * Handoff for the browser OAuth step. The CLI opens `url`, and once the user authorizes,
+ * the website callback completes the connection; the CLI polls for it with `state`.
+ */
+export type SupabaseOAuthStart = {
+  __typename?: 'SupabaseOAuthStart';
+  state: Scalars['ID']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type SupabaseOrganization = {
+  __typename?: 'SupabaseOrganization';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type SupabaseProject = {
+  __typename?: 'SupabaseProject';
+  app: App;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  supabaseConnection: SupabaseConnection;
+  supabaseProjectName: Scalars['String']['output'];
+  supabaseProjectRef: Scalars['String']['output'];
+  supabaseProjectUrl: Scalars['String']['output'];
+  supabaseRegion: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type SupabaseProjectMutation = {
+  __typename?: 'SupabaseProjectMutation';
+  /** Removes the Expo-side project link only; the Supabase project is preserved. */
+  deleteSupabaseProject: Scalars['ID']['output'];
+  /**
+   * Live publishable (anon) key for the app's linked Supabase project (Management API). Never
+   * stored — null while the project is still provisioning. Used by the CLI to write EAS env vars.
+   */
+  fetchSupabasePublishableKey?: Maybe<Scalars['String']['output']>;
+  /** Links an existing Supabase project (by ref) to the app. */
+  linkSupabaseProject: SupabaseProject;
+  /**
+   * Schedules an additional hosted Supabase project for selected EAS environments. Does not replace
+   * the app's primary linked project — poll the receipt for ref/url/publishableKey in resultData.
+   */
+  provisionAdditionalSupabaseProject: BackgroundJobReceipt;
+  /** Schedules provisioning of a new Supabase project for the app. Poll the returned receipt until success, then read app.supabaseProject. */
+  provisionSupabaseProject: BackgroundJobReceipt;
+};
+
+
+export type SupabaseProjectMutationDeleteSupabaseProjectArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type SupabaseProjectMutationFetchSupabasePublishableKeyArgs = {
+  appId: Scalars['ID']['input'];
+};
+
+
+export type SupabaseProjectMutationLinkSupabaseProjectArgs = {
+  input: LinkSupabaseProjectInput;
+};
+
+
+export type SupabaseProjectMutationProvisionAdditionalSupabaseProjectArgs = {
+  input: ProvisionAdditionalSupabaseProjectInput;
+};
+
+
+export type SupabaseProjectMutationProvisionSupabaseProjectArgs = {
+  input: ProvisionSupabaseProjectInput;
+};
+
 export enum TargetEntityMutationType {
   Create = 'CREATE',
   Delete = 'DELETE',
@@ -9852,6 +10392,63 @@ export type TurtleBrownfieldArtifactQueryLatestForAppArgs = {
   bundleName: Scalars['String']['input'];
   platform: AppPlatform;
 };
+
+/**
+ * Everything a client needs to open the ssh connection, reported by the worker once it has dialed
+ * the relay. Reading this decrypts the connection secret, so it is gated at account PUBLISH.
+ */
+export type TurtleSshConnectionConfig = {
+  __typename?: 'TurtleSshConnectionConfig';
+  host: Scalars['String']['output'];
+  reconnecting: Scalars['Boolean']['output'];
+  secret: Scalars['String']['output'];
+  type: TurtleSshTransportType;
+};
+
+export type TurtleSshConnectionConfigInput = {
+  host: Scalars['String']['input'];
+  reconnecting?: InputMaybe<Scalars['Boolean']['input']>;
+  secret: Scalars['String']['input'];
+  type: TurtleSshTransportType;
+};
+
+export type TurtleSshSession = {
+  __typename?: 'TurtleSshSession';
+  build?: Maybe<Build>;
+  connectionConfig: TurtleSshConnectionConfig;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  initiatingActor?: Maybe<Actor>;
+  jobRun?: Maybe<JobRun>;
+  sessionSettings: TurtleSshSessionSettings;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type TurtleSshSessionMutation = {
+  __typename?: 'TurtleSshSessionMutation';
+  createOrUpdateTurtleSshSession: TurtleSshSession;
+};
+
+
+export type TurtleSshSessionMutationCreateOrUpdateTurtleSshSessionArgs = {
+  connectionConfig: TurtleSshConnectionConfigInput;
+  sessionSettings: TurtleSshSessionSettingsInput;
+  turtleBuildId?: InputMaybe<Scalars['ID']['input']>;
+  turtleJobRunId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type TurtleSshSessionSettings = {
+  __typename?: 'TurtleSshSessionSettings';
+  idleTimeoutSeconds: Scalars['Int']['output'];
+};
+
+export type TurtleSshSessionSettingsInput = {
+  idleTimeoutSeconds: Scalars['Int']['input'];
+};
+
+export enum TurtleSshTransportType {
+  UptermV1 = 'UPTERM_V1'
+}
 
 export type UniqueUsersOverTimeData = {
   __typename?: 'UniqueUsersOverTimeData';
@@ -10433,8 +11030,9 @@ export type UpdatesTimelineFilter = {
   platform?: InputMaybe<AppPlatform>;
   runtimeVersions?: InputMaybe<Array<Scalars['String']['input']>>;
   /**
-   * Case-insensitive substring match on update group message and branch name.
-   * Embedded updates are matched on channel and runtime version.
+   * Case-insensitive substring match on update group message, branch name, and runtime version,
+   * plus prefix match on update ID, update group ID, and git commit hash.
+   * Embedded updates are matched on channel, runtime version, and ID prefix.
    */
   searchTerm?: InputMaybe<Scalars['String']['input']>;
   types?: InputMaybe<Array<UpdatesTimelineItemType>>;
@@ -10571,14 +11169,17 @@ export type User = Actor & UserActor & {
   hasPendingUserInvitations: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   isExpoAdmin: Scalars['Boolean']['output'];
-  /** @deprecated No longer supported */
-  isLegacy: Scalars['Boolean']['output'];
   isSecondFactorAuthenticationEnabled: Scalars['Boolean']['output'];
   isStaffModeEnabled: Scalars['Boolean']['output'];
   lastDeletionAttemptTime?: Maybe<Scalars['DateTime']['output']>;
   lastName?: Maybe<Scalars['String']['output']>;
   newEmailPendingVerification?: Maybe<Scalars['String']['output']>;
   oAuthIdentities: Array<OAuthIdentity>;
+  /**
+   * The organization created during signup onboarding: the most recently
+   * created organization this user owns. Only resolves for the viewer.
+   */
+  onboardingOrganization?: Maybe<Account>;
   /** Registered passkey credentials */
   passkeyCredentials: Array<UserPasskeyCredential>;
   /** Pending UserInvitations for this user. Only resolves for the viewer. */
@@ -10717,8 +11318,6 @@ export type UserActorPublicData = {
   id: Scalars['ID']['output'];
   lastName?: Maybe<Scalars['String']['output']>;
   primaryAccountProfileImageUrl: Scalars['String']['output'];
-  /** @deprecated Use primaryAccountProfileImageUrl instead */
-  profilePhoto: Scalars['String']['output'];
   /** Snacks associated with this user's personal account */
   snacks: Array<Snack>;
   username: Scalars['String']['output'];
@@ -11051,8 +11650,6 @@ export type UserPermission = {
   id: Scalars['ID']['output'];
   permissions: Array<Permission>;
   role: Role;
-  /** @deprecated User type is deprecated */
-  user?: Maybe<User>;
   userActor?: Maybe<UserActor>;
 };
 
@@ -11107,10 +11704,6 @@ export type UserPreferences = {
   onboarding?: Maybe<UserPreferencesOnboarding>;
 };
 
-export type UserPreferencesInput = {
-  onboarding?: InputMaybe<UserPreferencesOnboardingInput>;
-};
-
 /**
  * Set by website. Used by CLI to continue onboarding process on user's machine - clone repository,
  * install dependencies etc.
@@ -11123,15 +11716,6 @@ export type UserPreferencesOnboarding = {
   isCLIDone?: Maybe<Scalars['Boolean']['output']>;
   lastUsed: Scalars['String']['output'];
   platform?: Maybe<AppPlatform>;
-};
-
-export type UserPreferencesOnboardingInput = {
-  appId: Scalars['ID']['input'];
-  deviceType?: InputMaybe<OnboardingDeviceType>;
-  environment?: InputMaybe<OnboardingEnvironment>;
-  isCLIDone?: InputMaybe<Scalars['Boolean']['input']>;
-  lastUsed: Scalars['String']['input'];
-  platform?: InputMaybe<AppPlatform>;
 };
 
 /** A second factor device belonging to a User */
@@ -12088,7 +12672,7 @@ export type WorkflowDeviceTestCaseResult = {
 export type WorkflowDeviceTestCaseResultInput = {
   /** Execution time in milliseconds. Must be non-negative. */
   duration?: InputMaybe<Scalars['Int']['input']>;
-  /** Error message if failed. Max 4096 characters. */
+  /** Error message if failed. Truncated to 4096 characters. */
   errorMessage?: InputMaybe<Scalars['String']['input']>;
   /** Test case name (e.g., "login", "checkout"). Max 255 characters. */
   name: Scalars['String']['input'];
@@ -12225,6 +12809,11 @@ export type WorkflowJob = {
   name: Scalars['String']['output'];
   outputs: Scalars['JSONObject']['output'];
   requiredJobKeys: Array<Scalars['String']['output']>;
+  /**
+   * Updates in the group being rolled out by an UPDATE_ROLLOUT job, resolved from the job's
+   * update_group_id output. Empty for other job types or when the group has no updates.
+   */
+  rolloutUpdateGroup: Array<Update>;
   status: WorkflowJobStatus;
   turtleBuild?: Maybe<Build>;
   turtleJobRun?: Maybe<JobRun>;
@@ -12261,8 +12850,6 @@ export type WorkflowJobApproval = {
   id: Scalars['ID']['output'];
   reviewingActor?: Maybe<Actor>;
   updatedAt: Scalars['DateTime']['output'];
-  /** @deprecated Use reviewingActor instead */
-  userActor?: Maybe<UserActor>;
   workflowJob: WorkflowJob;
 };
 
@@ -12326,7 +12913,8 @@ export enum WorkflowJobType {
   Slack = 'SLACK',
   Submission = 'SUBMISSION',
   Testflight = 'TESTFLIGHT',
-  Update = 'UPDATE'
+  Update = 'UPDATE',
+  UpdateRollout = 'UPDATE_ROLLOUT'
 }
 
 export type WorkflowProjectSourceInput = {
@@ -12444,6 +13032,7 @@ export type WorkflowRun = ActivityTimelineProjectActivity & {
   retriedWorkflowRun?: Maybe<WorkflowRun>;
   retries: Array<WorkflowRun>;
   sourceExpiresAt?: Maybe<Scalars['DateTime']['output']>;
+  sshSettings?: Maybe<WorkflowRunSshSettings>;
   status: WorkflowRunStatus;
   triggerEventType: WorkflowRunTriggerEventType;
   triggeringLabelName?: Maybe<Scalars['String']['output']>;
@@ -12529,6 +13118,11 @@ export type WorkflowRunQuery = {
 
 export type WorkflowRunQueryByIdArgs = {
   workflowRunId: Scalars['ID']['input'];
+};
+
+export type WorkflowRunSshSettings = {
+  __typename?: 'WorkflowRunSshSettings';
+  idleTimeoutSeconds: Scalars['Int']['output'];
 };
 
 export enum WorkflowRunStatus {
@@ -12691,6 +13285,57 @@ export type GetAppsForPinnedListQueryVariables = Exact<{ [key: string]: never; }
 
 export type GetAppsForPinnedListQuery = { __typename?: 'RootQuery', meUserActor?: { __typename?: 'SSOUser', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | { __typename?: 'User', id: string, pinnedApps: Array<{ __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, ownerAccount: { __typename?: 'Account', name: string } }>, accounts: Array<{ __typename?: 'Account', id: string, appsPaginated: { __typename?: 'AccountAppsConnection', edges: Array<{ __typename?: 'AccountAppsEdge', cursor: string, node: { __typename?: 'App', id: string, name: string, slug: string, latestActivity: any, profileImageUrl?: string | null, ownerAccount: { __typename?: 'Account', name: string } } }> } }> } | null };
 
+export type BuildForCloudSimulatorFragment = { __typename?: 'Build', id: string, appVersion?: string | null, appBuildVersion?: string | null, runtimeVersion?: string | null, buildProfile?: string | null, isForIosSimulator: boolean, completedAt?: any | null, artifacts?: { __typename?: 'BuildArtifacts', applicationArchiveUrl?: string | null } | null };
+
+export type GetSimulatorBuildsForAppQueryVariables = Exact<{
+  appId: Scalars['String']['input'];
+  limit: Scalars['Int']['input'];
+  platform: AppPlatform;
+}>;
+
+
+export type GetSimulatorBuildsForAppQuery = { __typename?: 'RootQuery', app: { __typename?: 'AppQuery', byId: { __typename?: 'App', id: string, builds: Array<{ __typename?: 'Build', id: string, appVersion?: string | null, appBuildVersion?: string | null, runtimeVersion?: string | null, buildProfile?: string | null, isForIosSimulator: boolean, completedAt?: any | null, artifacts?: { __typename?: 'BuildArtifacts', applicationArchiveUrl?: string | null } | null }> } } };
+
+export type DeviceRunSessionDataFragment = { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, packageVersion?: string | null, createdAt: any, startedAt?: any | null, finishedAt?: any | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } }, turtleJobRun?: { __typename?: 'JobRun', id: string, status: JobRunStatus } | null, remoteConfig?: { __typename: 'AgentDeviceRunSessionRemoteConfig', agentDeviceRemoteSessionUrl: string, agentDeviceRemoteSessionToken: string, webPreviewUrl?: string | null } | { __typename: 'ArgentRunSessionRemoteConfig', toolsUrl: string, toolsAuthToken?: string | null, webPreviewUrl?: string | null } | { __typename: 'ServeSimRunSessionRemoteConfig', previewUrl: string } | null };
+
+export type GetDeviceRunSessionQueryVariables = Exact<{
+  deviceRunSessionId: Scalars['ID']['input'];
+}>;
+
+
+export type GetDeviceRunSessionQuery = { __typename?: 'RootQuery', deviceRunSessions: { __typename?: 'DeviceRunSessionQuery', byId: { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, packageVersion?: string | null, createdAt: any, startedAt?: any | null, finishedAt?: any | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } }, turtleJobRun?: { __typename?: 'JobRun', id: string, status: JobRunStatus } | null, remoteConfig?: { __typename: 'AgentDeviceRunSessionRemoteConfig', agentDeviceRemoteSessionUrl: string, agentDeviceRemoteSessionToken: string, webPreviewUrl?: string | null } | { __typename: 'ArgentRunSessionRemoteConfig', toolsUrl: string, toolsAuthToken?: string | null, webPreviewUrl?: string | null } | { __typename: 'ServeSimRunSessionRemoteConfig', previewUrl: string } | null } } };
+
+export type GetSimulatorAvailabilityQueryVariables = Exact<{
+  appId: Scalars['String']['input'];
+  filter?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetSimulatorAvailabilityQuery = { __typename?: 'RootQuery', app: { __typename?: 'AppQuery', byId: { __typename?: 'App', id: string, ownerAccount: { __typename?: 'Account', id: string, name: string, accountFeatureGates: any } } } };
+
+export type GetDeviceRunSessionsForAppQueryVariables = Exact<{
+  appId: Scalars['String']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  filter?: InputMaybe<DeviceRunSessionFilterInput>;
+}>;
+
+
+export type GetDeviceRunSessionsForAppQuery = { __typename?: 'RootQuery', app: { __typename?: 'AppQuery', byId: { __typename?: 'App', id: string, deviceRunSessionsPaginated: { __typename?: 'AppDeviceRunSessionsConnection', edges: Array<{ __typename?: 'AppDeviceRunSessionEdge', cursor: string, node: { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, packageVersion?: string | null, createdAt: any, startedAt?: any | null, finishedAt?: any | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } }, turtleJobRun?: { __typename?: 'JobRun', id: string, status: JobRunStatus } | null, remoteConfig?: { __typename: 'AgentDeviceRunSessionRemoteConfig', agentDeviceRemoteSessionUrl: string, agentDeviceRemoteSessionToken: string, webPreviewUrl?: string | null } | { __typename: 'ArgentRunSessionRemoteConfig', toolsUrl: string, toolsAuthToken?: string | null, webPreviewUrl?: string | null } | { __typename: 'ServeSimRunSessionRemoteConfig', previewUrl: string } | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null } } } } };
+
+export type CreateDeviceRunSessionMutationVariables = Exact<{
+  deviceRunSessionInput: CreateDeviceRunSessionInput;
+}>;
+
+
+export type CreateDeviceRunSessionMutation = { __typename?: 'RootMutation', deviceRunSession: { __typename?: 'DeviceRunSessionMutation', createDeviceRunSession: { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, packageVersion?: string | null, createdAt: any, startedAt?: any | null, finishedAt?: any | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } }, turtleJobRun?: { __typename?: 'JobRun', id: string, status: JobRunStatus } | null, remoteConfig?: { __typename: 'AgentDeviceRunSessionRemoteConfig', agentDeviceRemoteSessionUrl: string, agentDeviceRemoteSessionToken: string, webPreviewUrl?: string | null } | { __typename: 'ArgentRunSessionRemoteConfig', toolsUrl: string, toolsAuthToken?: string | null, webPreviewUrl?: string | null } | { __typename: 'ServeSimRunSessionRemoteConfig', previewUrl: string } | null } } };
+
+export type StopDeviceRunSessionMutationVariables = Exact<{
+  deviceRunSessionId: Scalars['ID']['input'];
+}>;
+
+
+export type StopDeviceRunSessionMutation = { __typename?: 'RootMutation', deviceRunSession: { __typename?: 'DeviceRunSessionMutation', ensureDeviceRunSessionStopped: { __typename?: 'DeviceRunSession', id: string, status: DeviceRunSessionStatus, finishedAt?: any | null } } };
+
 type CurrentUserData_SsoUser_Fragment = { __typename?: 'SSOUser', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, primaryAccountProfileImageUrl: string };
 
 type CurrentUserData_User_Fragment = { __typename?: 'User', id: string, username: string, firstName?: string | null, lastName?: string | null, bestContactEmail?: string | null, primaryAccountProfileImageUrl: string };
@@ -12711,6 +13356,61 @@ export const AppForPinnedListFragmentDoc = gql`
   profileImageUrl
   ownerAccount {
     name
+  }
+}
+    `;
+export const BuildForCloudSimulatorFragmentDoc = gql`
+    fragment BuildForCloudSimulator on Build {
+  id
+  appVersion
+  appBuildVersion
+  runtimeVersion
+  buildProfile
+  isForIosSimulator
+  completedAt
+  artifacts {
+    applicationArchiveUrl
+  }
+}
+    `;
+export const DeviceRunSessionDataFragmentDoc = gql`
+    fragment DeviceRunSessionData on DeviceRunSession {
+  id
+  name
+  status
+  type
+  platform
+  packageVersion
+  createdAt
+  startedAt
+  finishedAt
+  app {
+    id
+    slug
+    ownerAccount {
+      id
+      name
+    }
+  }
+  turtleJobRun {
+    id
+    status
+  }
+  remoteConfig {
+    __typename
+    ... on AgentDeviceRunSessionRemoteConfig {
+      agentDeviceRemoteSessionUrl
+      agentDeviceRemoteSessionToken
+      webPreviewUrl
+    }
+    ... on ArgentRunSessionRemoteConfig {
+      toolsUrl
+      toolsAuthToken
+      webPreviewUrl
+    }
+    ... on ServeSimRunSessionRemoteConfig {
+      previewUrl
+    }
   }
 }
     `;
@@ -12772,6 +13472,255 @@ export function useGetAppsForPinnedListLazyQuery(baseOptions?: Apollo.LazyQueryH
 export type GetAppsForPinnedListQueryHookResult = ReturnType<typeof useGetAppsForPinnedListQuery>;
 export type GetAppsForPinnedListLazyQueryHookResult = ReturnType<typeof useGetAppsForPinnedListLazyQuery>;
 export type GetAppsForPinnedListQueryResult = Apollo.QueryResult<GetAppsForPinnedListQuery, GetAppsForPinnedListQueryVariables>;
+export const GetSimulatorBuildsForAppDocument = gql`
+    query GetSimulatorBuildsForApp($appId: String!, $limit: Int!, $platform: AppPlatform!) {
+  app {
+    byId(appId: $appId) {
+      id
+      builds(
+        limit: $limit
+        offset: 0
+        filter: {platform: $platform, simulator: true, status: FINISHED}
+      ) {
+        ...BuildForCloudSimulator
+      }
+    }
+  }
+}
+    ${BuildForCloudSimulatorFragmentDoc}`;
+
+/**
+ * __useGetSimulatorBuildsForAppQuery__
+ *
+ * To run a query within a React component, call `useGetSimulatorBuildsForAppQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSimulatorBuildsForAppQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSimulatorBuildsForAppQuery({
+ *   variables: {
+ *      appId: // value for 'appId'
+ *      limit: // value for 'limit'
+ *      platform: // value for 'platform'
+ *   },
+ * });
+ */
+export function useGetSimulatorBuildsForAppQuery(baseOptions: Apollo.QueryHookOptions<GetSimulatorBuildsForAppQuery, GetSimulatorBuildsForAppQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSimulatorBuildsForAppQuery, GetSimulatorBuildsForAppQueryVariables>(GetSimulatorBuildsForAppDocument, options);
+      }
+export function useGetSimulatorBuildsForAppLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSimulatorBuildsForAppQuery, GetSimulatorBuildsForAppQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSimulatorBuildsForAppQuery, GetSimulatorBuildsForAppQueryVariables>(GetSimulatorBuildsForAppDocument, options);
+        }
+export type GetSimulatorBuildsForAppQueryHookResult = ReturnType<typeof useGetSimulatorBuildsForAppQuery>;
+export type GetSimulatorBuildsForAppLazyQueryHookResult = ReturnType<typeof useGetSimulatorBuildsForAppLazyQuery>;
+export type GetSimulatorBuildsForAppQueryResult = Apollo.QueryResult<GetSimulatorBuildsForAppQuery, GetSimulatorBuildsForAppQueryVariables>;
+export const GetDeviceRunSessionDocument = gql`
+    query GetDeviceRunSession($deviceRunSessionId: ID!) {
+  deviceRunSessions {
+    byId(deviceRunSessionId: $deviceRunSessionId) {
+      ...DeviceRunSessionData
+    }
+  }
+}
+    ${DeviceRunSessionDataFragmentDoc}`;
+
+/**
+ * __useGetDeviceRunSessionQuery__
+ *
+ * To run a query within a React component, call `useGetDeviceRunSessionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetDeviceRunSessionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetDeviceRunSessionQuery({
+ *   variables: {
+ *      deviceRunSessionId: // value for 'deviceRunSessionId'
+ *   },
+ * });
+ */
+export function useGetDeviceRunSessionQuery(baseOptions: Apollo.QueryHookOptions<GetDeviceRunSessionQuery, GetDeviceRunSessionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetDeviceRunSessionQuery, GetDeviceRunSessionQueryVariables>(GetDeviceRunSessionDocument, options);
+      }
+export function useGetDeviceRunSessionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetDeviceRunSessionQuery, GetDeviceRunSessionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetDeviceRunSessionQuery, GetDeviceRunSessionQueryVariables>(GetDeviceRunSessionDocument, options);
+        }
+export type GetDeviceRunSessionQueryHookResult = ReturnType<typeof useGetDeviceRunSessionQuery>;
+export type GetDeviceRunSessionLazyQueryHookResult = ReturnType<typeof useGetDeviceRunSessionLazyQuery>;
+export type GetDeviceRunSessionQueryResult = Apollo.QueryResult<GetDeviceRunSessionQuery, GetDeviceRunSessionQueryVariables>;
+export const GetSimulatorAvailabilityDocument = gql`
+    query GetSimulatorAvailability($appId: String!, $filter: [String!]) {
+  app {
+    byId(appId: $appId) {
+      id
+      ownerAccount {
+        id
+        name
+        accountFeatureGates(filter: $filter)
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetSimulatorAvailabilityQuery__
+ *
+ * To run a query within a React component, call `useGetSimulatorAvailabilityQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetSimulatorAvailabilityQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetSimulatorAvailabilityQuery({
+ *   variables: {
+ *      appId: // value for 'appId'
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useGetSimulatorAvailabilityQuery(baseOptions: Apollo.QueryHookOptions<GetSimulatorAvailabilityQuery, GetSimulatorAvailabilityQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetSimulatorAvailabilityQuery, GetSimulatorAvailabilityQueryVariables>(GetSimulatorAvailabilityDocument, options);
+      }
+export function useGetSimulatorAvailabilityLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetSimulatorAvailabilityQuery, GetSimulatorAvailabilityQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetSimulatorAvailabilityQuery, GetSimulatorAvailabilityQueryVariables>(GetSimulatorAvailabilityDocument, options);
+        }
+export type GetSimulatorAvailabilityQueryHookResult = ReturnType<typeof useGetSimulatorAvailabilityQuery>;
+export type GetSimulatorAvailabilityLazyQueryHookResult = ReturnType<typeof useGetSimulatorAvailabilityLazyQuery>;
+export type GetSimulatorAvailabilityQueryResult = Apollo.QueryResult<GetSimulatorAvailabilityQuery, GetSimulatorAvailabilityQueryVariables>;
+export const GetDeviceRunSessionsForAppDocument = gql`
+    query GetDeviceRunSessionsForApp($appId: String!, $first: Int, $filter: DeviceRunSessionFilterInput) {
+  app {
+    byId(appId: $appId) {
+      id
+      deviceRunSessionsPaginated(first: $first, filter: $filter) {
+        edges {
+          cursor
+          node {
+            ...DeviceRunSessionData
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+    ${DeviceRunSessionDataFragmentDoc}`;
+
+/**
+ * __useGetDeviceRunSessionsForAppQuery__
+ *
+ * To run a query within a React component, call `useGetDeviceRunSessionsForAppQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetDeviceRunSessionsForAppQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetDeviceRunSessionsForAppQuery({
+ *   variables: {
+ *      appId: // value for 'appId'
+ *      first: // value for 'first'
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useGetDeviceRunSessionsForAppQuery(baseOptions: Apollo.QueryHookOptions<GetDeviceRunSessionsForAppQuery, GetDeviceRunSessionsForAppQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetDeviceRunSessionsForAppQuery, GetDeviceRunSessionsForAppQueryVariables>(GetDeviceRunSessionsForAppDocument, options);
+      }
+export function useGetDeviceRunSessionsForAppLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetDeviceRunSessionsForAppQuery, GetDeviceRunSessionsForAppQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetDeviceRunSessionsForAppQuery, GetDeviceRunSessionsForAppQueryVariables>(GetDeviceRunSessionsForAppDocument, options);
+        }
+export type GetDeviceRunSessionsForAppQueryHookResult = ReturnType<typeof useGetDeviceRunSessionsForAppQuery>;
+export type GetDeviceRunSessionsForAppLazyQueryHookResult = ReturnType<typeof useGetDeviceRunSessionsForAppLazyQuery>;
+export type GetDeviceRunSessionsForAppQueryResult = Apollo.QueryResult<GetDeviceRunSessionsForAppQuery, GetDeviceRunSessionsForAppQueryVariables>;
+export const CreateDeviceRunSessionDocument = gql`
+    mutation CreateDeviceRunSession($deviceRunSessionInput: CreateDeviceRunSessionInput!) {
+  deviceRunSession {
+    createDeviceRunSession(deviceRunSessionInput: $deviceRunSessionInput) {
+      ...DeviceRunSessionData
+    }
+  }
+}
+    ${DeviceRunSessionDataFragmentDoc}`;
+export type CreateDeviceRunSessionMutationFn = Apollo.MutationFunction<CreateDeviceRunSessionMutation, CreateDeviceRunSessionMutationVariables>;
+
+/**
+ * __useCreateDeviceRunSessionMutation__
+ *
+ * To run a mutation, you first call `useCreateDeviceRunSessionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateDeviceRunSessionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createDeviceRunSessionMutation, { data, loading, error }] = useCreateDeviceRunSessionMutation({
+ *   variables: {
+ *      deviceRunSessionInput: // value for 'deviceRunSessionInput'
+ *   },
+ * });
+ */
+export function useCreateDeviceRunSessionMutation(baseOptions?: Apollo.MutationHookOptions<CreateDeviceRunSessionMutation, CreateDeviceRunSessionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateDeviceRunSessionMutation, CreateDeviceRunSessionMutationVariables>(CreateDeviceRunSessionDocument, options);
+      }
+export type CreateDeviceRunSessionMutationHookResult = ReturnType<typeof useCreateDeviceRunSessionMutation>;
+export type CreateDeviceRunSessionMutationResult = Apollo.MutationResult<CreateDeviceRunSessionMutation>;
+export type CreateDeviceRunSessionMutationOptions = Apollo.BaseMutationOptions<CreateDeviceRunSessionMutation, CreateDeviceRunSessionMutationVariables>;
+export const StopDeviceRunSessionDocument = gql`
+    mutation StopDeviceRunSession($deviceRunSessionId: ID!) {
+  deviceRunSession {
+    ensureDeviceRunSessionStopped(deviceRunSessionId: $deviceRunSessionId) {
+      id
+      status
+      finishedAt
+    }
+  }
+}
+    `;
+export type StopDeviceRunSessionMutationFn = Apollo.MutationFunction<StopDeviceRunSessionMutation, StopDeviceRunSessionMutationVariables>;
+
+/**
+ * __useStopDeviceRunSessionMutation__
+ *
+ * To run a mutation, you first call `useStopDeviceRunSessionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useStopDeviceRunSessionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [stopDeviceRunSessionMutation, { data, loading, error }] = useStopDeviceRunSessionMutation({
+ *   variables: {
+ *      deviceRunSessionId: // value for 'deviceRunSessionId'
+ *   },
+ * });
+ */
+export function useStopDeviceRunSessionMutation(baseOptions?: Apollo.MutationHookOptions<StopDeviceRunSessionMutation, StopDeviceRunSessionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<StopDeviceRunSessionMutation, StopDeviceRunSessionMutationVariables>(StopDeviceRunSessionDocument, options);
+      }
+export type StopDeviceRunSessionMutationHookResult = ReturnType<typeof useStopDeviceRunSessionMutation>;
+export type StopDeviceRunSessionMutationResult = Apollo.MutationResult<StopDeviceRunSessionMutation>;
+export type StopDeviceRunSessionMutationOptions = Apollo.BaseMutationOptions<StopDeviceRunSessionMutation, StopDeviceRunSessionMutationVariables>;
 export const GetCurrentUserDocument = gql`
     query GetCurrentUser {
   meUserActor {

@@ -139,6 +139,22 @@ const Settings = () => {
     });
   };
 
+  const onPressShowCloudSimulators = async (value: boolean) => {
+    setUserPreferences((prev) => {
+      const newPreferences = { ...prev, showCloudSimulators: value };
+      saveUserPreferences(newPreferences);
+      return newPreferences;
+    });
+  };
+
+  const onPressFramelessCloudSimulator = async (value: boolean) => {
+    setUserPreferences((prev) => {
+      const newPreferences = { ...prev, framelessCloudSimulator: value };
+      saveUserPreferences(newPreferences);
+      return newPreferences;
+    });
+  };
+
   const toggleCustomSdkPath = (value: boolean) => {
     setCustomSdkPathEnabled(value);
     if (!value) {
@@ -301,6 +317,29 @@ const Settings = () => {
               />
             </Row>
             <Divider />
+            <View pb="2">
+              <Row align="center" style={styles.preferencesRow}>
+                <Checkbox
+                  value={userPreferences.showCloudSimulators}
+                  onValueChange={onPressShowCloudSimulators}
+                  label="Cloud simulators (EAS Simulator)"
+                />
+              </Row>
+              <Text size="tiny" color="secondary" style={styles.settingHint}>
+                Adds a “+” to the iOS section that runs a simulator on EAS. Requires the feature on
+                your account, and the session bills until you stop it.
+              </Text>
+              {userPreferences.showCloudSimulators ? (
+                <Row align="center" style={styles.preferencesRow}>
+                  <Checkbox
+                    value={userPreferences.framelessCloudSimulator}
+                    onValueChange={onPressFramelessCloudSimulator}
+                    label="Frameless simulator window (restart Orbit to apply)"
+                  />
+                </Row>
+              ) : null}
+            </View>
+            <Divider />
             <View pb="3">
               <Row align="center" style={styles.preferencesRow}>
                 <Checkbox
@@ -432,5 +471,8 @@ const styles = StyleSheet.create({
   },
   preferencesRow: {
     minHeight: 38,
+  },
+  settingHint: {
+    marginBottom: 4,
   },
 });

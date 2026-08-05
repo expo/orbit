@@ -21,6 +21,7 @@ import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
 import { Spacer, View } from '../components';
+import CloudSimulatorItem from '../components/CloudSimulatorItem';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
@@ -32,10 +33,14 @@ import MenuBarModule from '../modules/MenuBarModule';
 import {
   SelectedDevicesIds,
   getSelectedDevicesIds,
+  getUserPreferences,
+  saveLastCloudSimulatorAppId,
+  saveOpenCloudSimulatorSessionId,
   saveSelectedDevicesIds,
   sessionSecretStorageKey,
   storage,
 } from '../modules/Storage';
+import { CloudSimulatorProvider, useCloudSimulators } from '../providers/CloudSimulatorProvider';
 import { useListDevices } from '../providers/DevicesProvider';
 import {
   DevicePlatform,
@@ -117,6 +122,30 @@ function Core(props: Props) {
     }, [refetch])
   );
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
+  const { showCloudSimulators } = getUserPreferences();
+  const { activeSessions, stopSession } = useCloudSimulators();
+
+  const openCloudSimulator = useCallback((sessionId: string) => {
+    saveOpenCloudSimulatorSessionId(sessionId);
+    WindowsNavigator.open('CloudSimulator');
+  }, []);
+
+  const stopCloudSimulator = useCallback(
+    async (sessionId: string) => {
+      Analytics.track(Event.STOP_CLOUD_SIMULATOR);
+      try {
+        await stopSession(sessionId);
+      } catch (error) {
+        Alert.alert(
+          'Could not stop the cloud simulator',
+          error instanceof Error
+            ? `${error.message} It may still be running and billing — stop it from expo.dev.`
+            : 'It may still be running and billing — stop it from expo.dev.'
+        );
+      }
+    },
+    [stopSession]
+  );
 
   // TODO: Extract into a hook
   const displayDimensions = useSafeDisplayDimensions();
@@ -675,6 +704,12 @@ function Core(props: Props) {
                 Analytics.track(Event.LAUNCH_BUILD);
                 installAppFromURI(url, deeplinkInfo.launchURL, deeplinkInfo.deviceId);
                 break;
+              case URLType.CLOUD_SIMULATOR:
+                if (deeplinkInfo.appId) {
+                  saveLastCloudSimulatorAppId(deeplinkInfo.appId);
+                }
+                WindowsNavigator.open('LaunchCloudSimulator');
+                break;
             }
           } catch (error) {
             if (error instanceof Error) {
@@ -717,13 +752,31 @@ function Core(props: Props) {
             showsHorizontalScrollIndicator={false}
             SectionSeparatorComponent={Separator}
             renderSectionHeader={({ section: { key, label, error } }) => (
-              <DeviceListSectionHeader
-                label={label}
-                errorMessage={error?.message}
-                onPressAdd={
-                  key === 'android' ? () => WindowsNavigator.open('PairAndroidDevice') : undefined
-                }
-              />
+              <>
+                <DeviceListSectionHeader
+                  label={label}
+                  errorMessage={error?.message}
+                  onPressAdd={
+                    key === 'android'
+                      ? () => WindowsNavigator.open('PairAndroidDevice')
+                      : key === 'ios' && showCloudSimulators
+                        ? () => WindowsNavigator.open('LaunchCloudSimulator')
+                        : undefined
+                  }
+                />
+                {/* Cloud sessions are not local devices, so they sit above the
+                    device list rather than inside it. */}
+                {key === 'ios'
+                  ? activeSessions.map((session) => (
+                      <CloudSimulatorItem
+                        key={session.id}
+                        session={session}
+                        onPress={() => openCloudSimulator(session.id)}
+                        onPressStop={() => stopCloudSimulator(session.id)}
+                      />
+                    ))
+                  : null}
+              </>
             )}
             renderSectionFooter={({ section: { key, error } }) =>
               key === 'ios' && error?.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING' ? (
@@ -756,4 +809,10 @@ function Core(props: Props) {
 
 const Separator = () => <Spacer.Vertical size="tiny" />;
 
-export default memo(withApolloProvider(Core));
+const CoreWithProviders = (props: Props) => (
+  <CloudSimulatorProvider>
+    <Core {...props} />
+  </CloudSimulatorProvider>
+);
+
+export default memo(withApolloProvider(CoreWithProviders));

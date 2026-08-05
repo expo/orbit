@@ -42,6 +42,10 @@
     CGFloat width = [windowStyle[@"width"] ?: @(400) floatValue];
     CGFloat height = [windowStyle[@"height"] ?: @(300) floatValue];
     BOOL titlebarAppearsTransparent = [windowStyle[@"titlebarAppearsTransparent"] boolValue];
+    // A transparent window lets the page's own rounded device bezel define the
+    // window shape, which is how the cloud simulator gets its Simulator.app look.
+    BOOL transparent = [windowStyle[@"transparent"] boolValue];
+    BOOL hasShadow = windowStyle[@"hasShadow"] ? [windowStyle[@"hasShadow"] boolValue] : YES;
 
     NSRect screenRect = [[NSScreen mainScreen] visibleFrame];
     CGFloat screenWidth = NSWidth(screenRect);
@@ -79,6 +83,11 @@
 
     window.title = title;
     [window setTitlebarAppearsTransparent:titlebarAppearsTransparent];
+    [window setOpaque:!transparent];
+    [window setHasShadow:hasShadow];
+    [window setBackgroundColor:transparent ? [NSColor clearColor] : [NSColor windowBackgroundColor]];
+    // A borderless window has no title bar to drag, so let the background move it.
+    [window setMovableByWindowBackground:transparent];
     if(window.styleMask != windowStyleMask){
       [window setStyleMask:windowStyleMask];
     }
