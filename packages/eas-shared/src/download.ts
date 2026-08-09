@@ -9,6 +9,7 @@ import { Stream } from 'stream';
 import { extract } from 'tar';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 import fetch, { RequestInit, Response } from './fetch';
 import { formatBytes } from './files';
@@ -123,8 +124,18 @@ function _downloadsCacheDirectory() {
   return dir;
 }
 
+/**
+ * Deterministic, length-bounded cache directory name for a build URL. Signing a
+ * build URL (rather than percent-encoding it) keeps the path component well
+ * under NAME_MAX even for long signed distribution URLs, which previously caused
+ * an `ENAMETOOLONG` crash.
+ */
+function getDownloadCacheDirectoryName(url: string): string {
+  return crypto.createHash('sha256').update(url).digest('hex');
+}
+
 export async function downloadAndMaybeExtractAppAsync(url: string): Promise<string> {
-  const name = encodeURIComponent(url.replace(/^[^:]+:\/\//, ''));
+  const name = getDownloadCacheDirectoryName(url);
 
   const outputDir = path.join(_downloadsCacheDirectory(), `${name}`);
   if (await checkCacheAvailabilityAsync(outputDir)) {
