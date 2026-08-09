@@ -24,6 +24,9 @@ import {
 
 const debug = Debug('expo:apple-device:client:afc');
 const MAX_OPEN_FILES = 240;
+// How many times a single file upload is retried after a transient
+// AFC_STATUS.NO_RESOURCES before the error is surfaced. Tunable.
+const MAX_UPLOAD_RETRIES = 10;
 
 export class AFCClient extends ServiceClient<AFCProtocolClient> {
   constructor(public override socket: Socket) {
@@ -181,9 +184,16 @@ export class AFCClient extends ServiceClient<AFCProtocolClient> {
               .catch((err: AFCError) => {
                 // Couldn't get fd for whatever reason, try again
                 // # of retries is arbitrary and can be adjusted
-                if (err.status === AFC_STATUS.NO_RESOURCES && tries < 10) {
-                  debug(`Received NO_RESOURCES from AFC, retrying ${filePath} upload. ${tries}`);
-                  uploadFile(tries++);
+                if (err.status === AFC_STATUS.NO_RESOURCES && tries < MAX_UPLOAD_RETRIES) {
+                  debug(
+                    `Received NO_RESOURCES from AFC, retrying ${filePath} upload (try ${
+                      tries + 1
+                    }/${MAX_UPLOAD_RETRIES}).`
+                  );
+                  // Release the slot this attempt held and re-acquire it in the
+                  // recursive call, so retries don't leak against MAX_OPEN_FILES.
+                  numOpenFiles--;
+                  uploadFile(tries + 1);
                 } else {
                   numOpenFiles--;
                   reject(err);
