@@ -9,7 +9,7 @@
 ### 🐛 Bug fixes
 
 - Fix Android code pairing input width on Windows and Linux. ([#357](https://github.com/expo/orbit/pull/357) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Fix `formatBytes` returning values off by a factor of 1024² for sizes of at least 102.4 GB. ([#NNN](https://github.com/expo/orbit/pull/NNN) by [@YuriNachos](https://github.com/YuriNachos))
+- Fix `formatBytes` returning values off by a factor of 1024² for sizes of at least 102.4 GB. ([#363](https://github.com/expo/orbit/pull/363) by [@YuriNachos](https://github.com/YuriNachos))
 
 ### 💡 Others
 
