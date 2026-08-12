@@ -21,6 +21,16 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
         return .forbidden
       }
 
+      if request.method == "OPTIONS" {
+        return .raw(204, "No Content", [
+          "Access-Control-Allow-Origin": origin,
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Allow-Private-Network": "true",
+          "Access-Control-Max-Age": "86400",
+        ], nil)
+      }
+
       return nil
     }
 
@@ -76,24 +86,68 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
       let deeplinkURLString = decodedURLParam.replacingOccurrences(of: "https://", with: "expo-orbit://")
                                              .replacingOccurrences(of: "exp://", with: "expo-orbit://")
 
-      let appleEvent = NSAppleEventDescriptor(eventClass: AEEventClass(kInternetEventClass),
-                                              eventID: AEEventID(kAEGetURL),
-                                              targetDescriptor: NSAppleEventDescriptor.currentProcess(),
-                                              returnID: AEReturnID(kAutoGenerateReturnID),
-                                              transactionID: AETransactionID(kAnyTransactionID))
-      appleEvent.setDescriptor(NSAppleEventDescriptor(string: deeplinkURLString), forKeyword: keyDirectObject)
-      DispatchQueue.main.sync {
-        do {
-          try appleEvent.sendEvent(timeout: 3)
-        } catch {
-          print("An error occurred: \(error)")
-        }
-      }
+      self.sendDeeplink(deeplinkURLString)
 
       return self.okJsonResponseWithCorsHeaders(json: ["ok": true], request: request)
     }
 
+    server.POST["/orbit/install"] = { request in
+      self.handleInstallRequest(request)
+    }
+
     startServer()
+  }
+
+  private func sendDeeplink(_ urlString: String) {
+    let appleEvent = NSAppleEventDescriptor(eventClass: AEEventClass(kInternetEventClass),
+                                            eventID: AEEventID(kAEGetURL),
+                                            targetDescriptor: NSAppleEventDescriptor.currentProcess(),
+                                            returnID: AEReturnID(kAutoGenerateReturnID),
+                                            transactionID: AETransactionID(kAnyTransactionID))
+    appleEvent.setDescriptor(NSAppleEventDescriptor(string: urlString), forKeyword: keyDirectObject)
+    DispatchQueue.main.sync {
+      do {
+        try appleEvent.sendEvent(timeout: 3)
+      } catch {
+        print("An error occurred: \(error)")
+      }
+    }
+  }
+
+  private func handleInstallRequest(_ request: HttpRequest) -> HttpResponse {
+    let rawFilename = request.queryParams.first(where: { $0.0 == "filename" })?.1.removingPercentEncoding ?? "app.ipa"
+    var filename = String((rawFilename.components(separatedBy: "/").last ?? "").map { char -> Character in
+      (char.isASCII && (char.isLetter || char.isNumber)) || char == "." || char == "_" || char == "-" ? char : "_"
+    })
+    if !filename.contains(where: { $0.isLetter || $0.isNumber }) {
+      filename = "app.ipa"
+    }
+
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("orbit-installs", isDirectory: true)
+      .appendingPathComponent(UUID().uuidString, isDirectory: true)
+    let fileURL = directory.appendingPathComponent(filename)
+
+    do {
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      try Data(request.body).write(to: fileURL)
+    } catch {
+      return okJsonResponseWithCorsHeaders(json: ["error": "Failed to save file: \(error.localizedDescription)"],
+                                           request: request)
+    }
+
+    var allowedCharacters = CharacterSet.alphanumerics
+    allowedCharacters.insert(charactersIn: "-._/")
+    let encodedPath = fileURL.path.addingPercentEncoding(withAllowedCharacters: allowedCharacters) ?? fileURL.path
+
+    var deeplinkURLString = "expo-orbit://download?url=\(encodedPath)"
+    if let deviceId = request.queryParams.first(where: { $0.0 == "deviceId" })?.1, !deviceId.isEmpty {
+      deeplinkURLString += "&deviceId=\(deviceId)"
+    }
+
+    sendDeeplink(deeplinkURLString)
+
+    return okJsonResponseWithCorsHeaders(json: ["ok": true], request: request)
   }
 
   private func startServer(attempts: Int = 0) {

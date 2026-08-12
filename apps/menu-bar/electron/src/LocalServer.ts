@@ -1,6 +1,9 @@
+import { randomUUID } from 'crypto';
 import { app as electronApp } from 'electron';
 import express, { Express } from 'express';
+import fs from 'fs';
 import path from 'path';
+import { pipeline } from 'stream/promises';
 
 import { getUserSettingsJsonFile } from '../../modules/menu-bar/electron/main';
 import spawnCliAsync from '../../modules/menu-bar/electron/spawnCliAsync';
@@ -26,6 +29,18 @@ export class LocalServer {
       }
 
       res.set('Access-Control-Allow-Origin', origin);
+
+      if (req.method === 'OPTIONS') {
+        res.set({
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Private-Network': 'true',
+          'Access-Control-Max-Age': '86400',
+        });
+        res.sendStatus(204);
+        return;
+      }
+
       next();
     });
   }
@@ -47,6 +62,42 @@ export class LocalServer {
         .replace('exp://', 'expo-orbit://');
 
       electronApp.emit('open-url', null, deeplinkURL);
+      res.json({ ok: true });
+    });
+
+    this.app.post('/orbit/install', async (req, res) => {
+      const rawFilename = typeof req.query.filename === 'string' ? req.query.filename : 'app.ipa';
+      let filename = path.basename(rawFilename).replace(/[^A-Za-z0-9._-]/g, '_');
+      if (!/[A-Za-z0-9]/.test(filename)) {
+        filename = 'app.ipa';
+      }
+
+      const destination = path.join(
+        electronApp.getPath('temp'),
+        'orbit-installs',
+        randomUUID(),
+        filename
+      );
+
+      try {
+        await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+        await pipeline(req, fs.createWriteStream(destination));
+      } catch (error) {
+        res.status(500).json({
+          error: `Failed to save file: ${error instanceof Error ? error.message : error}`,
+        });
+        return;
+      }
+
+      const deviceIdParam =
+        typeof req.query.deviceId === 'string' && req.query.deviceId
+          ? `&deviceId=${encodeURIComponent(req.query.deviceId)}`
+          : '';
+      electronApp.emit(
+        'open-url',
+        null,
+        `expo-orbit://download?url=${encodeURIComponent(destination)}${deviceIdParam}`
+      );
       res.json({ ok: true });
     });
 
