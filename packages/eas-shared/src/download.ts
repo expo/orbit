@@ -1,6 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import { InternalError } from 'common-types';
 import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
+import crypto from 'crypto';
 import extractZip from 'extract-zip';
 import glob from 'fast-glob';
 import fs from 'fs-extra';
@@ -9,7 +10,6 @@ import { Stream } from 'stream';
 import { extract } from 'tar';
 import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
-import crypto from 'crypto';
 
 import fetch, { RequestInit, Response } from './fetch';
 import { formatBytes } from './files';
