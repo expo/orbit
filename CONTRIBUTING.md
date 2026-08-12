@@ -14,11 +14,11 @@
 7. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`.
 8. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local CLI file.
 
-## 🏎️ Start the Development environment
+## 🏎️ Start the Development Environment
 
 1. From the `apps/menu-bar` directory, run `yarn start` to start Metro Bundler.
 2. Run `yarn macos` and build the `menu-bar` app with Xcode.
-3. And Orbit should automatically show up in your menu bar.
+3. Orbit should automatically show up in your menu bar.
 
 ## 📝 Writing a Commit Message
 
@@ -41,7 +41,7 @@ To help keep CI green, please make sure of the following:
 
 ## 📚 Additional Resources
 
-Hungry for more, check out these great guides:
+Hungry for more? Check out these great guides:
 
 - [Expo JavaScript/TypeScript Style Guide](https://github.com/expo/expo/blob/master/guides/Expo%20JavaScript%20Style%20Guide.md)
 - [Git and Code Reviews at Expo](https://github.com/expo/expo/blob/master/guides/Git%20and%20Code%20Reviews.md)
