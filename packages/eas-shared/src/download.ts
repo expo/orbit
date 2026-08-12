@@ -123,6 +123,16 @@ function _downloadsCacheDirectory() {
   return dir;
 }
 
+/**
+ * Whether `url` points directly at an Android `.apk` artifact, used to pick the
+ * direct-APK download path over the tarball-extract path. Inspects only the URL
+ * pathname so signed distribution URLs (which carry `?Signature=…` query
+ * strings) are detected as APKs instead of being misrouted into tarball extraction.
+ */
+export function isApkArtifactUrl(url: string): boolean {
+  return new URL(url).pathname.toLowerCase().endsWith('.apk');
+}
+
 export async function downloadAndMaybeExtractAppAsync(url: string): Promise<string> {
   const name = encodeURIComponent(url.replace(/^[^:]+:\/\//, ''));
 
@@ -138,7 +148,7 @@ export async function downloadAndMaybeExtractAppAsync(url: string): Promise<stri
 
   const tmpArchivePathDir = path.join(getTmpDirectory(), uuidv4());
   await fs.mkdir(tmpArchivePathDir, { recursive: true });
-  if (url.endsWith('apk')) {
+  if (isApkArtifactUrl(url)) {
     const tmpApkFilePath = path.join(tmpArchivePathDir, `${uuidv4()}.tar.gz`);
     await downloadFileWithProgressTrackerAsync(
       url,
