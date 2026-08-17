@@ -7,6 +7,36 @@
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
+      <title>2.8.1</title>
+      <description>
+      <![CDATA[
+      <h3 id="-bug-fixes">🐛 Bug fixes</h3>
+      <ul>
+        <li>Fix Android code pairing input width on Windows and Linux. (<a href="https://github.com/expo/orbit/pull/357">#357</a> by <a href="https://github.com/gabrieldonadel">@gabrieldonadel</a>)</li>
+        <li>Fix NO_RESOURCES retry counter and open-file slot leak in AFCClient. (<a href="https://github.com/expo/orbit/pull/366">#366</a> by <a href="https://github.com/YuriNachos">@YuriNachos</a>)</li>
+        <li>Fix <code>formatBytes</code> returning values off by a factor of 1024² for sizes of at least 102.4 GB. (<a href="https://github.com/expo/orbit/pull/363">#363</a> by <a href="https://github.com/YuriNachos">@YuriNachos</a>)</li>
+        <li>Fix <code>ENAMETOOLONG</code> crash when installing builds served via long signed URLs. (<a href="https://github.com/expo/orbit/pull/365">#365</a> by <a href="https://github.com/YuriNachos">@YuriNachos</a>)</li>
+        <li>Fix installing Android <code>.apk</code> builds distributed via signed URLs. (<a href="https://github.com/expo/orbit/pull/364">#364</a> by <a href="https://github.com/YuriNachos">@YuriNachos</a>)</li>
+        <li>Recognize the lowercase <code>~/Android/sdk</code> Android SDK path on Linux. (<a href="https://github.com/expo/orbit/pull/362">#362</a> by <a href="https://github.com/YuriNachos">@YuriNachos</a>)</li>
+      </ul>
+      <h3 id="-others">💡 Others</h3>
+      <ul>
+        <li>Remove deprecated Expo GraphQL API field usage. (<a href="https://github.com/expo/orbit/pull/359">#359</a> by <a href="https://github.com/tchayen">@tchayen</a>)</li>
+      </ul>
+      ]]>
+      </description>
+      <pubDate>2026-08-17</pubDate>
+      <releaseNotesLink>https://github.com/expo/orbit/releases/tag/expo-orbit-v2.8.1</releaseNotesLink>
+      <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/expo/orbit/releases/download/expo-orbit-v2.8.1/expo-orbit.v2.8.1-macos.zip"
+        sparkle:version="47"
+        sparkle:shortVersionString="2.8.1"
+        length="0"
+        type="application/octet-stream"
+      />
+    </item>
+    <item>
       <title>2.8.0</title>
       <description>
       <![CDATA[
