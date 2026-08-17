@@ -1,6 +1,7 @@
 import spawnAsync from '@expo/spawn-async';
 import { InternalError } from 'common-types';
 import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
+import crypto from 'crypto';
 import extractZip from 'extract-zip';
 import glob from 'fast-glob';
 import fs from 'fs-extra';
@@ -123,8 +124,28 @@ function _downloadsCacheDirectory() {
   return dir;
 }
 
+/**
+ * Deterministic, length-bounded cache directory name for a build URL. Signing a
+ * build URL (rather than percent-encoding it) keeps the path component well
+ * under NAME_MAX even for long signed distribution URLs, which previously caused
+ * an `ENAMETOOLONG` crash.
+ */
+function getDownloadCacheDirectoryName(url: string): string {
+  return crypto.createHash('sha256').update(url).digest('hex');
+}
+
+/**
+ * Whether `url` points directly at an Android `.apk` artifact, used to pick the
+ * direct-APK download path over the tarball-extract path. Inspects only the URL
+ * pathname so signed distribution URLs (which carry `?Signature=…` query
+ * strings) are detected as APKs instead of being misrouted into tarball extraction.
+ */
+export function isApkArtifactUrl(url: string): boolean {
+  return new URL(url).pathname.toLowerCase().endsWith('.apk');
+}
+
 export async function downloadAndMaybeExtractAppAsync(url: string): Promise<string> {
-  const name = encodeURIComponent(url.replace(/^[^:]+:\/\//, ''));
+  const name = getDownloadCacheDirectoryName(url);
 
   const outputDir = path.join(_downloadsCacheDirectory(), `${name}`);
   if (await checkCacheAvailabilityAsync(outputDir)) {
@@ -138,7 +159,7 @@ export async function downloadAndMaybeExtractAppAsync(url: string): Promise<stri
 
   const tmpArchivePathDir = path.join(getTmpDirectory(), uuidv4());
   await fs.mkdir(tmpArchivePathDir, { recursive: true });
-  if (url.endsWith('apk')) {
+  if (isApkArtifactUrl(url)) {
     const tmpApkFilePath = path.join(tmpArchivePathDir, `${uuidv4()}.tar.gz`);
     await downloadFileWithProgressTrackerAsync(
       url,
