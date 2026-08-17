@@ -9,6 +9,7 @@
 ### 🐛 Bug fixes
 
 - Fix Android code pairing input width on Windows and Linux. ([#357](https://github.com/expo/orbit/pull/357) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix NO_RESOURCES retry counter and open-file slot leak in AFCClient. ([#366](https://github.com/expo/orbit/pull/366) by [@YuriNachos](https://github.com/YuriNachos))
 
 ### 💡 Others
 
