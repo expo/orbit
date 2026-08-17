@@ -8,6 +8,12 @@
 
 ### 🐛 Bug fixes
 
+### 💡 Others
+
+## 2.8.1 — 2026-08-17
+
+### 🐛 Bug fixes
+
 - Fix Android code pairing input width on Windows and Linux. ([#357](https://github.com/expo/orbit/pull/357) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix NO_RESOURCES retry counter and open-file slot leak in AFCClient. ([#366](https://github.com/expo/orbit/pull/366) by [@YuriNachos](https://github.com/YuriNachos))
 - Fix `formatBytes` returning values off by a factor of 1024² for sizes of at least 102.4 GB. ([#363](https://github.com/expo/orbit/pull/363) by [@YuriNachos](https://github.com/YuriNachos))
