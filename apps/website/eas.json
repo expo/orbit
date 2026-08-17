@@ -1,0 +1,10 @@
+{
+  "cli": {
+    "version": ">= 5.4.0"
+  },
+  "build": {
+    "production": {
+      "distribution": "internal"
+    }
+  }
+}

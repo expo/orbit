@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["C8D8QTF339.dev.expo.orbit"],
+        "components": [
+          { "/": "/download", "?": { "url": "?*" }, "comment": "Open EAS builds" },
+          { "/": "/update", "?": { "url": "?*" }, "comment": "Open EAS updates" },
+          { "/": "/go", "?": { "url": "?*" }, "comment": "Launch Expo Go projects" },
+          { "/": "/snack", "?": { "url": "?*" }, "comment": "Open Snack projects" },
+          { "/": "/auth", "comment": "Authentication callback" }
+        ]
+      }
+    ]
+  }
+}
