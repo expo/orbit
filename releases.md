@@ -22,17 +22,16 @@ This will:
 
 This triggers CI which:
 
-- Builds Linux (DEB/RPM) and Windows (EXE) artifacts
-- Builds and notarizes the macOS app via EAS Build
-- Creates a **draft** GitHub Release with Linux/Windows artifacts
+- Creates a **draft** GitHub Release
+- Builds Linux (DEB/RPM) and Windows (EXE) artifacts in parallel
+- Builds and notarizes the macOS app via EAS Build, then downloads the zip
+- Each build job uploads its artifacts to the draft release when it finishes
 
 ## 2. Publish the GitHub Release
 
-1. Wait for the EAS Build to complete (check on [expo.dev](https://expo.dev))
-2. Download the notarized macOS zip from EAS
-3. Upload it to the draft GitHub Release
-4. Review the release notes
-5. Publish the release (mark as latest)
+1. Wait for the Build workflow to complete
+2. Review the release notes
+3. Publish the release (mark as latest)
 
 ## 3. Update auto-update metadata
 

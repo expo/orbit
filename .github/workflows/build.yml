@@ -12,6 +12,7 @@ permissions:
 jobs:
   build_on_linux:
     runs-on: ubuntu-latest
+    needs: create_release
     steps:
       - name: 👀 Checkout
         uses: actions/checkout@v4
@@ -46,9 +47,17 @@ jobs:
         with:
           name: linux-rpm
           path: apps/menu-bar/electron/out/make/rpm/x64/*.rpm
+      - name: 🚀 Upload artifacts to draft release
+        if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          find apps/menu-bar/electron/out/make -type f \( -name "*.deb" -o -name "*.rpm" \) -print0 \
+            | xargs -0 -I {} gh release upload "$GITHUB_REF_NAME" "{}"
 
   build_on_win:
     runs-on: windows-latest
+    needs: create_release
     steps:
       - name: 👀 Checkout
         uses: actions/checkout@v4
@@ -76,9 +85,19 @@ jobs:
             apps/menu-bar/electron/out/make/squirrel.windows/x64/*Setup.exe
             apps/menu-bar/electron/out/make/squirrel.windows/x64/*.nupkg
             apps/menu-bar/electron/out/make/squirrel.windows/x64/RELEASES
+      - name: 🚀 Upload artifacts to draft release
+        if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Upload individually to handle filenames with spaces
+          find apps/menu-bar/electron/out/make -type f \( -name "*Setup.exe" -o -name "*.nupkg" -o -name "RELEASES" \) -print0 \
+            | xargs -0 -I {} gh release upload "$GITHUB_REF_NAME" "{}"
 
   build_on_macos:
     runs-on: ubuntu-latest
+    needs: create_release
     steps:
       - name: 👀 Checkout
         uses: actions/checkout@v4
@@ -93,48 +112,48 @@ jobs:
       - name: 📦 Install EAS CLI
         run: npm install -g eas-cli
       - name: 🍎 Build and notarize macOS app
-        run: eas build --platform ios --profile production --non-interactive
+        id: eas
+        run: |
+          BUILD_JSON=$(eas build --platform ios --profile production --non-interactive --json)
+          echo "url=$(echo "$BUILD_JSON" | jq -r '.[0].artifacts.buildUrl')" >> "$GITHUB_OUTPUT"
         working-directory: apps/menu-bar
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: 📥 Download notarized macOS zip
+        run: |
+          VERSION=$(jq -r .version apps/menu-bar/package.json)
+          curl -fL "${{ steps.eas.outputs.url }}" -o "expo-orbit.v${VERSION}-macos.zip"
+      - name: 📤 Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-zip
+          path: expo-orbit.v*-macos.zip
+      - name: 🚀 Upload artifact to draft release
+        if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" expo-orbit.v*-macos.zip
 
+  # Runs before the builds so each build job can upload its artifacts to the
+  # draft release as soon as it finishes. No-op on non-tag runs.
   create_release:
-    if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
-    needs: [build_on_linux, build_on_win]
     runs-on: ubuntu-latest
     steps:
       - name: 👀 Checkout
+        if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
         uses: actions/checkout@v4
 
-      - name: 📥 Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: 📝 Extract release notes from CHANGELOG
-        id: notes
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/expo-orbit-v}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-          # Extract the section for this version from CHANGELOG.md
-          NOTES=$(awk "/^## ${VERSION} /{found=1; next} /^## [0-9]/{if(found) exit} found{print}" CHANGELOG.md)
-
-          # Write to file for gh release
-          echo "$NOTES" > release-notes.md
-
       - name: 🚀 Create draft GitHub Release
+        if: startsWith(github.ref, 'refs/tags/expo-orbit-v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="${{ steps.notes.outputs.version }}"
-          TAG="expo-orbit-v${VERSION}"
+          VERSION="${GITHUB_REF_NAME#expo-orbit-v}"
 
-          gh release create "$TAG" \
+          # Extract the section for this version from CHANGELOG.md
+          awk "/^## ${VERSION} /{found=1; next} /^## [0-9]/{if(found) exit} found{print}" CHANGELOG.md > release-notes.md
+
+          gh release create "$GITHUB_REF_NAME" \
             --draft \
             --title "v${VERSION}" \
             --notes-file release-notes.md
-
-          # Upload artifacts individually to handle filenames with spaces
-          find artifacts -type f \( -name "*.deb" -o -name "*.rpm" -o -name "*Setup.exe" -o -name "*.nupkg" -o -name "RELEASES" \) -print0 \
-            | xargs -0 -I {} gh release upload "$TAG" "{}"
