@@ -2,6 +2,7 @@ import DebugMenu from './DebugMenu';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
 import Settings from './Settings';
+import SimulatorCamera from './SimulatorCamera';
 import { WindowStyleMask, createWindowsNavigator } from '../modules/WindowManager';
 
 export const WindowsNavigator = createWindowsNavigator({
@@ -13,6 +14,18 @@ export const WindowsNavigator = createWindowsNavigator({
         mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
         titlebarAppearsTransparent: true,
         height: 720,
+        width: 500,
+      },
+    },
+  },
+  SimulatorCamera: {
+    component: SimulatorCamera,
+    options: {
+      title: 'Simulator Camera',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        height: 390,
         width: 500,
       },
     },
