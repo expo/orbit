@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add Simulator camera streaming on macOS. ([#369](https://github.com/expo/orbit/pull/369) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Fix Android code pairing input width on Windows and Linux. ([#357](https://github.com/expo/orbit/pull/357) by [@gabrieldonadel](https://github.com/gabrieldonadel))
