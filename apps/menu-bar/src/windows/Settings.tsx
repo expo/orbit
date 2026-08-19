@@ -5,6 +5,7 @@ import { SymbolView } from 'expo-symbols';
 import React, { Fragment, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, Platform, ScrollView } from 'react-native';
 
+import SimulatorCamera from './SimulatorCamera';
 import { WindowsNavigator } from './index';
 import AutoUpdater from '../../modules/auto-updater';
 import {
@@ -344,6 +345,7 @@ const Settings = () => {
               />
             </View>
           </View>
+          {Platform.OS === 'macos' && <SimulatorCamera groupWrapperStyle={groupWrapperStyle} />}
           <View>
             <Text size="medium" weight="semibold" style={[headerStyle, styles.headerSpacing]}>
               Platforms

@@ -19,7 +19,11 @@ const initialStatus: SimulatorCameraStatus = {
   streaming: false,
 };
 
-export default function SimulatorCamera() {
+type SimulatorCameraProps = {
+  groupWrapperStyle: object;
+};
+
+export default function SimulatorCamera({ groupWrapperStyle }: SimulatorCameraProps) {
   const [status, setStatus] = useState(initialStatus);
   const [working, setWorking] = useState(true);
 
@@ -40,8 +44,8 @@ export default function SimulatorCamera() {
   const toggleStreaming = () => perform(status.streaming ? stopAsync : startAsync);
 
   return (
-    <View flex="1" px="medium" pb="medium" testID="simulator-camera-window">
-      <Row align="center" gap="2.5" mb="3">
+    <View mb="3" testID="simulator-camera-settings">
+      <Row align="center" gap="2.5" mb="1.5" style={styles.headerSpacing}>
         <View rounded="medium" align="centered" style={styles.iconBadge}>
           <SimulatorCameraIcon width={20} height={20} fill={PlatformColor('controlAccentColor')} />
         </View>
@@ -56,7 +60,7 @@ export default function SimulatorCamera() {
         {working && <ActivityIndicator size="small" />}
       </Row>
 
-      <View border="light" rounded="medium" padding="medium" gap="3">
+      <View border="light" rounded="medium" padding="medium" gap="3" style={groupWrapperStyle}>
         <Row justify="between" align="center">
           <View flex="1" style={styles.copyColumn}>
             <Text weight="semibold">Xcode integration</Text>
@@ -123,5 +127,8 @@ const styles = StyleSheet.create({
   },
   copyColumn: {
     marginRight: 16,
+  },
+  headerSpacing: {
+    paddingLeft: 10,
   },
 });

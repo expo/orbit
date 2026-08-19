@@ -1,12 +1,12 @@
 import { memo } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import Item from './Item';
 import { Divider, Text, View } from '../components';
 import MenuBarModule from '../modules/MenuBarModule';
 import { WindowsNavigator } from '../windows';
 
-export const FOOTER_HEIGHT = Platform.OS === 'macos' ? 86 : 62;
+export const FOOTER_HEIGHT = 62;
 
 const Footer = () => {
   return (
@@ -15,13 +15,6 @@ const Footer = () => {
         <Divider />
       </View>
       <View py="tiny" pb="1.5">
-        {Platform.OS === 'macos' && (
-          <Item
-            onPress={() => WindowsNavigator.open('SimulatorCamera')}
-            testID="simulator-camera-button">
-            <Text>Simulator Camera…</Text>
-          </Item>
-        )}
         <Item onPress={() => WindowsNavigator.open('Settings')} testID="settings-button">
           <Text>Settings…</Text>
         </Item>
