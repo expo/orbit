@@ -22,9 +22,19 @@ export type AuthDeeplinkURLType = {
 };
 
 export type BaseDeeplinkURLType = {
-  urlType: Exclude<URLType, URLType.AUTH | URLType.GO | URLType.EXPO_BUILD>;
+  urlType: Exclude<
+    URLType,
+    URLType.AUTH | URLType.GO | URLType.EXPO_BUILD | URLType.CLOUD_SIMULATOR
+  >;
   url: string;
   deviceId?: string;
+};
+
+export type CloudSimulatorDeeplinkURLType = {
+  urlType: URLType.CLOUD_SIMULATOR;
+  url: string;
+  /** EAS project to start the session for. Optional — the window can prompt. */
+  appId?: string;
 };
 
 export type GoDeeplinkURLType = {
@@ -45,12 +55,13 @@ type DeeplinkURLType =
   | AuthDeeplinkURLType
   | BaseDeeplinkURLType
   | GoDeeplinkURLType
-  | DowndloadDeeplinkURLType;
+  | DowndloadDeeplinkURLType
+  | CloudSimulatorDeeplinkURLType;
 
 export function identifyAndParseDeeplinkURL(deeplinkURLString: string): DeeplinkURLType {
   // Replace double slash URLs with triple slash to support Slack and other deeplink previews
   const tripleSlashURL = deeplinkURLString.replace(
-    /^([^:]+:\/\/)(auth|update|download|go|snack)/,
+    /^([^:]+:\/\/)(auth|update|download|go|snack|cloud-simulator)/,
     '$1/$2'
   );
 
@@ -96,6 +107,13 @@ export function identifyAndParseDeeplinkURL(deeplinkURLString: string): Deeplink
       deviceId: deeplinkURL.searchParams.get('deviceId') ?? undefined,
     };
   }
+  if (pathname.startsWith('/cloud-simulator')) {
+    return {
+      urlType: URLType.CLOUD_SIMULATOR,
+      url: deeplinkURLString,
+      appId: deeplinkURL.searchParams.get('appId') ?? undefined,
+    };
+  }
   // Deprecate in future versions
   if (pathname.startsWith('/snack')) {
     return {
@@ -129,4 +147,5 @@ export enum URLType {
   EXPO_BUILD = 'EXPO_BUILD',
   SNACK = 'SNACK',
   GO = 'GO',
+  CLOUD_SIMULATOR = 'CLOUD_SIMULATOR',
 }

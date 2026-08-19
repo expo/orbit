@@ -1,8 +1,11 @@
+import CloudSimulator from './CloudSimulator';
 import DebugMenu from './DebugMenu';
+import LaunchCloudSimulator from './LaunchCloudSimulator';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
 import Settings from './Settings';
 import { WindowStyleMask, createWindowsNavigator } from '../modules/WindowManager';
+import { getCloudSimulatorWindowOptions } from '../utils/cloudSimulatorWindow';
 
 export const WindowsNavigator = createWindowsNavigator({
   Settings: {
@@ -40,6 +43,24 @@ export const WindowsNavigator = createWindowsNavigator({
         width: 500,
       },
     },
+  },
+  LaunchCloudSimulator: {
+    component: LaunchCloudSimulator,
+    options: {
+      title: 'Launch Cloud Simulator',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        height: 520,
+        width: 500,
+      },
+    },
+  },
+  CloudSimulator: {
+    component: CloudSimulator,
+    // Callers pass getCloudSimulatorWindowOptions() so the frameless preference is
+    // read when the window opens, not when this module is first imported.
+    options: getCloudSimulatorWindowOptions(false),
   },
   DebugMenu: {
     component: DebugMenu,

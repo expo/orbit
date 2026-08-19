@@ -21,11 +21,18 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
       width: windowStyle.width ?? 300,
       height: (windowStyle.height ?? 400) + (windowStyle.titlebarAppearsTransparent ? 30 : 0),
       title: options?.title ?? moduleName,
-      frame: !windowStyle.mask?.includes(WindowStyleMask.FullSizeContentView),
+      frame:
+        !windowStyle.transparent &&
+        !windowStyle.mask?.includes(WindowStyleMask.FullSizeContentView),
+      transparent: windowStyle.transparent ?? false,
+      hasShadow: windowStyle.hasShadow ?? true,
       resizable: windowStyle.mask?.includes(WindowStyleMask.Resizable) ?? false,
       webPreferences: {
         devTools: true,
         webSecurity: false,
+        // Opt-in per window: only the cloud simulator embeds a <webview>, and
+        // enabling this everywhere changes the renderer process model.
+        webviewTag: windowStyle.webviewTag ?? false,
         preload: path.join(__dirname, './preload.js'),
       },
     });

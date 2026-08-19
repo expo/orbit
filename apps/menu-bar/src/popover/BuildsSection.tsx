@@ -97,6 +97,8 @@ function getDescription(task: Task): string {
       return 'Opening project in Expo Go...';
     case MenuBarStatus.OPENING_UPDATE:
       return 'Opening update...';
+    case MenuBarStatus.STARTING_CLOUD_SIMULATOR:
+      return 'Starting cloud simulator...';
     case MenuBarStatus.WARNING:
       return task.message ?? '';
     default:

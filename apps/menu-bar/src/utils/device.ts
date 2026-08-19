@@ -51,7 +51,10 @@ export function getDeviceId(device: Device): string {
 
 export function getSectionsFromDeviceList(
   devicesPerPlatform: DevicesPerPlatform,
-  { alwaysShowAndroid = false }: { alwaysShowAndroid?: boolean } = {}
+  {
+    alwaysShowAndroid = false,
+    alwaysShowIos = false,
+  }: { alwaysShowAndroid?: boolean; alwaysShowIos?: boolean } = {}
 ): SectionListData<
   Device,
   { label: string; error?: DevicesPerPlatform[keyof DevicesPerPlatform]['error'] }
@@ -85,9 +88,15 @@ export function getSectionsFromDeviceList(
 
   // Keep the Android section visible even with no devices/errors when Android is
   // enabled, so the header's "+" stays available for pairing a device over Wi-Fi.
+  // The iOS section gets the same treatment when cloud simulators are available:
+  // Windows and Linux list no local iOS simulators at all, so without this the
+  // header — and its "+" — would never render there.
   return sections.filter(
     (section) =>
-      section.data.length > 0 || section.error || (section.key === 'android' && alwaysShowAndroid)
+      section.data.length > 0 ||
+      section.error ||
+      (section.key === 'android' && alwaysShowAndroid) ||
+      (section.key === 'ios' && alwaysShowIos)
   );
 }
 
