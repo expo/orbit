@@ -58,6 +58,12 @@ jobs:
   build_on_win:
     runs-on: windows-latest
     needs: create_release
+    # The Azure federated credential for signing only trusts OIDC tokens
+    # issued for this repo's "signing" environment.
+    environment: signing
+    permissions:
+      contents: write # upload artifacts to the draft release
+      id-token: write # mint the OIDC token for azure/login
     steps:
       - name: 👀 Checkout
         uses: actions/checkout@v4
@@ -74,9 +80,62 @@ jobs:
       - name: 🧶 Install electron node modules
         run: yarn install --frozen-lockfile
         working-directory: apps/menu-bar/electron
-      - name: 📦️ Build electron app
-        run: yarn make
+      - name: 📦️ Package electron app
+        run: yarn package
         working-directory: apps/menu-bar/electron
+      - name: 🔑 Azure login for Trusted Signing
+        uses: azure/login@v2
+        with:
+          client-id: cc54a2e1-37af-49e0-95f6-66257e1d3d3d # orbit-windows-signing
+          tenant-id: aeea8a0d-d522-46f8-b687-751081b5fa21
+          subscription-id: 50882aba-e9da-4eda-93b2-0b8e80ae3d42
+      # Sign the app exe before Squirrel packs it into the nupkg, so installed
+      # and auto-updated binaries are signed.
+      - name: 🔏 Sign app binaries with Azure Trusted Signing
+        uses: azure/trusted-signing-action@v2
+        with:
+          endpoint: https://eus.codesigning.azure.net/
+          trusted-signing-account-name: exposigning
+          certificate-profile-name: expo-public-trust
+          files-folder: apps/menu-bar/electron/out
+          files-folder-filter: exe
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-digest: SHA256
+          # Only use the azure/login CLI session, per the action's OIDC docs.
+          exclude-environment-credential: true
+          exclude-workload-identity-credential: true
+          exclude-managed-identity-credential: true
+          exclude-shared-token-cache-credential: true
+          exclude-visual-studio-credential: true
+          exclude-visual-studio-code-credential: true
+          exclude-azure-cli-credential: false
+          exclude-azure-powershell-credential: true
+          exclude-azure-developer-cli-credential: true
+          exclude-interactive-browser-credential: true
+      - name: 📦️ Build electron app
+        run: yarn make --skip-package
+        working-directory: apps/menu-bar/electron
+      - name: 🔏 Sign installer with Azure Trusted Signing
+        uses: azure/trusted-signing-action@v2
+        with:
+          endpoint: https://eus.codesigning.azure.net/
+          trusted-signing-account-name: exposigning
+          certificate-profile-name: expo-public-trust
+          files-folder: apps/menu-bar/electron/out/make/squirrel.windows/x64
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-digest: SHA256
+          exclude-environment-credential: true
+          exclude-workload-identity-credential: true
+          exclude-managed-identity-credential: true
+          exclude-shared-token-cache-credential: true
+          exclude-visual-studio-credential: true
+          exclude-visual-studio-code-credential: true
+          exclude-azure-cli-credential: false
+          exclude-azure-powershell-credential: true
+          exclude-azure-developer-cli-credential: true
+          exclude-interactive-browser-credential: true
       - name: 📤 Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
