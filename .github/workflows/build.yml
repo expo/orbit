@@ -95,7 +95,7 @@ jobs:
         uses: azure/trusted-signing-action@v2
         with:
           endpoint: https://eus.codesigning.azure.net/
-          trusted-signing-account-name: exposigning
+          signing-account-name: exposigning
           certificate-profile-name: expo-public-trust
           files-folder: apps/menu-bar/electron/out
           files-folder-filter: exe
@@ -120,7 +120,7 @@ jobs:
         uses: azure/trusted-signing-action@v2
         with:
           endpoint: https://eus.codesigning.azure.net/
-          trusted-signing-account-name: exposigning
+          signing-account-name: exposigning
           certificate-profile-name: expo-public-trust
           files-folder: apps/menu-bar/electron/out/make/squirrel.windows/x64
           files-folder-filter: exe
