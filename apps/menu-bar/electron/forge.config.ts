@@ -29,6 +29,12 @@ const config: ForgeConfig = {
     icon: './assets/images/icon-windows',
     executableName: 'expo-orbit',
     name: 'Expo Orbit',
+    // Without this the exe keeps Electron's default version resources
+    // (CompanyName "GitHub, Inc."), which Windows shows in firewall prompts.
+    win32metadata: {
+      CompanyName: '650 Industries, Inc.',
+      FileDescription: 'Expo Orbit',
+    },
     extraResource: './assets',
     // `wdio-electron-service` has to live in `dependencies` (not devDeps) so
     // electron-packager keeps it in the asar's node_modules — the runtime
