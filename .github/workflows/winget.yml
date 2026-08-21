@@ -1,0 +1,26 @@
+name: Publish to WinGet
+
+# Opens a PR on microsoft/winget-pkgs whenever a GitHub release is published.
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏷️ Get version from tag
+        id: version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: echo "version=${TAG#expo-orbit-v}" >> "$GITHUB_OUTPUT"
+
+      - name: 🚀 Publish Expo.Orbit to winget-pkgs
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Expo.Orbit
+          version: ${{ steps.version.outputs.version }}
+          installers-regex: '\.Setup\.exe$'
+          fork-user: expo
+          token: ${{ secrets.WINGET_TOKEN }}
