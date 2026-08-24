@@ -1,0 +1,21 @@
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px 0;
+}
+
+.notFound {
+  padding: 48px 0;
+  text-align: center;
+}
+
+.notFound h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.notFound p {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
