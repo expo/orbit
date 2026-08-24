@@ -90,6 +90,8 @@
 				</dict>
 			</dict>
 		</dict>
+		<key>NSCameraUsageDescription</key>
+		<string>Expo Orbit uses your Mac camera when streaming it to an iOS Simulator app.</string>
 		<key>NSMainStoryboardFile</key>
 		<string>Main</string>
 		<key>NSPrincipalClass</key>

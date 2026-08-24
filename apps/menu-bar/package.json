@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "start": "expo start",
     "test": "jest",
+    "test:simulator-camera": "bash simulator-camera/tests/run.sh",
     "update-cli": "mkdir -p cli && cp -R ../cli/dist/ cli/",
     "gql": "graphql-codegen --config codegen.ts",
     "typecheck": "tsc"

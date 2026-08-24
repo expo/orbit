@@ -275,6 +275,7 @@
 				C091563F2D7787B200FC1EB6 /* Archive and sign CLI  */,
 				381D8A6F24576A6C00465D17 /* Start Packager */,
 				63FA8EA00DD165DC6FA0B487 /* [Expo] Configure project */,
+				A1B2C3D4E5F60718293A4B5C /* Build Simulator Camera payload */,
 				514201452437B4B30078DB4F /* Sources */,
 				514201462437B4B30078DB4F /* Frameworks */,
 				514201472437B4B30078DB4F /* Resources */,
@@ -472,6 +473,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ExpoMenuBar-macOS/expo-configure-project.sh\"\n";
+		};
+		A1B2C3D4E5F60718293A4B5C /* Build Simulator Camera payload */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../simulator-camera/build-payload.sh",
+				"$(SRCROOT)/../simulator-camera/OrbitSimulatorCamera.m",
+				"$(SRCROOT)/../simulator-camera/OrbitSimulatorCameraProtocol.h",
+			);
+			name = "Build Simulator Camera payload";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/OrbitSimulatorCamera.dylib",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"$SRCROOT/../simulator-camera/build-payload.sh\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\n";
 		};
 		C091563F2D7787B200FC1EB6 /* Archive and sign CLI  */ = {
 			isa = PBXShellScriptBuildPhase;
