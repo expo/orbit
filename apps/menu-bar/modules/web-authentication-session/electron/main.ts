@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { app, shell } from 'electron';
 
 import {
   WebBrowserResult,
@@ -7,61 +7,32 @@ import {
 } from '../src/WebAuthenticationSession.types';
 
 async function openAuthSessionAsync(urlString: string): Promise<WebBrowserResult> {
-  const window = new BrowserWindow({
-    width: 860,
-    height: 740,
-  });
-  window.menuBarVisible = false;
-  window.loadURL(urlString);
+  await shell.openExternal(urlString);
 
-  return new Promise((resolve, reject) => {
-    let resolved = false;
-
-    function completeWithSuccess(resultUrl: string) {
-      if (resolved) return;
-      resolved = true;
-      window.close();
-      resolve({ type: WebBrowserResultType.SUCCESS, url: resultUrl });
+  return new Promise((resolve) => {
+    function cleanup() {
+      app.removeListener('open-url', handleOpenUrl);
+      app.removeListener('second-instance', handleSecondInstance);
     }
 
-    function handleRedirect(
-      event: Electron.Event<
-        Electron.WebContentsWillRedirectEventParams | Electron.WebContentsWillNavigateEventParams
-      >
-    ) {
-      if (event.isSameDocument) {
-        return;
-      }
-
-      const redirectProtocol = new URL(event.url).protocol;
-      if (redirectProtocol === 'https:' || redirectProtocol === 'http:') {
-        return;
-      }
-
-      event.preventDefault();
-      completeWithSuccess(event.url);
+    function handleOpenUrl(_event: Electron.Event, url: string) {
+      const protocol = new URL(url).protocol;
+      if (protocol === 'https:' || protocol === 'http:') return;
+      cleanup();
+      resolve({ type: WebBrowserResultType.SUCCESS, url });
     }
 
-    window.webContents.on('will-redirect', handleRedirect);
-    window.webContents.on('will-navigate', handleRedirect);
+    function handleSecondInstance(_event: Electron.Event, argv: string[]) {
+      const url = argv[argv.length - 1];
+      if (!url || !url.includes('://')) return;
+      const protocol = new URL(url).protocol;
+      if (protocol === 'https:' || protocol === 'http:') return;
+      cleanup();
+      resolve({ type: WebBrowserResultType.SUCCESS, url });
+    }
 
-    // Allow OAuth provider popups (e.g. Google sign-in) and monitor them for redirects
-    window.webContents.setWindowOpenHandler(() => ({ action: 'allow' }));
-    window.webContents.on('did-create-window', (childWindow) => {
-      childWindow.webContents.on('will-redirect', handleRedirect);
-      childWindow.webContents.on('will-navigate', handleRedirect);
-    });
-
-    window.on('closed', () => {
-      if (!resolved) {
-        resolved = true;
-        resolve({ type: WebBrowserResultType.CANCEL });
-      }
-    });
-
-    window.webContents.on('render-process-gone', (event, details) => {
-      reject(new Error(details.reason));
-    });
+    app.on('open-url', handleOpenUrl);
+    app.on('second-instance', handleSecondInstance);
   });
 }
 
