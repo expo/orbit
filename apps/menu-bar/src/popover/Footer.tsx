@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 import Item from './Item';
 import { Divider, Text, View } from '../components';
-import MenuBarModule from '../modules/MenuBarModule';
+import { quitWithCloudSimulatorGuard } from '../utils/cloudSimulatorQuitGuard';
 import { WindowsNavigator } from '../windows';
 
 export const FOOTER_HEIGHT = 62;
@@ -18,7 +18,7 @@ const Footer = () => {
         <Item onPress={() => WindowsNavigator.open('Settings')} testID="settings-button">
           <Text>Settings…</Text>
         </Item>
-        <Item onPress={MenuBarModule.exitApp} shortcut="⌘ Q" testID="quit-button">
+        <Item onPress={quitWithCloudSimulatorGuard} shortcut="⌘ Q" testID="quit-button">
           <Text>Quit</Text>
         </Item>
       </View>

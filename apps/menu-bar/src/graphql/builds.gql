@@ -1,0 +1,29 @@
+fragment BuildForCloudSimulator on Build {
+  id
+  appVersion
+  appBuildVersion
+  runtimeVersion
+  buildProfile
+  isForIosSimulator
+  completedAt
+  artifacts {
+    applicationArchiveUrl
+  }
+}
+
+# Only simulator builds can be installed on a cloud simulator; a device build is
+# signed for real hardware and will not run there.
+query GetSimulatorBuildsForApp($appId: String!, $limit: Int!, $platform: AppPlatform!) {
+  app {
+    byId(appId: $appId) {
+      id
+      builds(
+        limit: $limit
+        offset: 0
+        filter: { platform: $platform, simulator: true, status: FINISHED }
+      ) {
+        ...BuildForCloudSimulator
+      }
+    }
+  }
+}

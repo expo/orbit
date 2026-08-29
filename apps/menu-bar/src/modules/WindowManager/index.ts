@@ -73,8 +73,15 @@ export function createWindowsNavigator<T extends WindowsConfig>(config: T) {
   });
 
   return {
-    open: (window: keyof T) => {
-      WindowsManager?.openWindow(String(window), convertOptionsToNative(config[window].options));
+    /**
+     * `optionsOverride` lets a caller decide window style at open time rather than
+     * at registration time, so a preference change does not need an app restart.
+     */
+    open: (window: keyof T, optionsOverride?: WindowOptions) => {
+      WindowsManager?.openWindow(
+        String(window),
+        convertOptionsToNative(optionsOverride ?? config[window].options)
+      );
     },
     close: (window: keyof T) => {
       WindowsManager?.closeWindow(String(window));

@@ -189,6 +189,37 @@ describe('identifyAndParseDeeplinkURL', () => {
     });
   });
 
+  describe('Cloud simulator URLs', () => {
+    it('Should parse the /cloud-simulator route', () => {
+      const deeplinkURL = 'expo-orbit://cloud-simulator';
+
+      expect(identifyAndParseDeeplinkURL(deeplinkURL)).toEqual({
+        urlType: URLType.CLOUD_SIMULATOR,
+        url: deeplinkURL,
+        appId: undefined,
+      });
+    });
+
+    it('Should parse the appId parameter', () => {
+      const deeplinkURL = 'expo-orbit://cloud-simulator?appId=abc-123';
+
+      expect(identifyAndParseDeeplinkURL(deeplinkURL)).toEqual({
+        urlType: URLType.CLOUD_SIMULATOR,
+        url: deeplinkURL,
+        appId: 'abc-123',
+      });
+    });
+
+    it('Should parse the triple slash form used by link previews', () => {
+      const deeplinkURL = 'expo-orbit:///cloud-simulator?appId=abc-123';
+
+      expect(identifyAndParseDeeplinkURL(deeplinkURL)).toMatchObject({
+        urlType: URLType.CLOUD_SIMULATOR,
+        appId: 'abc-123',
+      });
+    });
+  });
+
   describe('Unsuported URLs', () => {
     it('Should throw an error when the URL route is not supported', () => {
       const unsuportedURL = 'expo-orbit:///some-future-route';
