@@ -8248,10 +8248,10 @@ ip-address@^9.0.5:
     jsbn "1.1.0"
     sprintf-js "^1.1.3"
 
-ipa-resign@^0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/ipa-resign/-/ipa-resign-0.0.6.tgz#616e88321392dca3e469236f3b5b4393ec7a0ca7"
-  integrity sha512-7caMPO0pu0ubY121NA/wdPQUpCdGA/2VvN8Wt28rQyn5FD0AtloVgm9ywGNE40PGukM7pFFzcOx7Os1gylIeKQ==
+ipa-resign@^0.0.9:
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/ipa-resign/-/ipa-resign-0.0.9.tgz#d88db7a60b3b84552eae651cd90370da1a0412fd"
+  integrity sha512-tCZYpCIxTcE+Q76cDTDDPlXYWHado3f5q2LOe+SIg5T9d47hureDDAGxaQx7M5+EFRcak7mZuQCy3TtpNhIofw==
   dependencies:
     "@expo/spawn-async" "^1.7.2"
     bplist-parser "^0.3.0"
