@@ -6,8 +6,23 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import path from 'path';
+
+// `electron-forge make` aborts entirely if a maker's external tool is missing
+// (e.g. `rpmbuild` for the RPM maker, which isn't installed by default on most
+// Linux dev machines or on GitHub's ubuntu-latest). Only register makers whose
+// prerequisites exist so a local `yarn make` still produces the other targets.
+function hasBinary(bin: string): boolean {
+  try {
+    execSync(process.platform === 'win32' ? `where ${bin}` : `command -v ${bin}`, {
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type CommonParams<T, U> = {
   [K in keyof T & keyof U]?: T[K] extends U[K] ? T[K] : never;
@@ -35,13 +50,24 @@ const config: ForgeConfig = {
       CompanyName: '650 Industries, Inc.',
       FileDescription: 'Expo Orbit',
     },
-    extraResource: './assets',
+    // `./bin` holds the native helper binaries (anisette/zsign) produced by
+    // `yarn build:helpers`. Ship them as resources (copied to `<resources>/bin`,
+    // outside the asar) so they stay directly executable; the bundled CLI is
+    // pointed there via ORBIT_HELPER_BIN_DIR (see src/main.ts).
+    // `./anisette` holds the anisette-js WASM assets (Win/Linux anisette), also
+    // populated by `yarn build:helpers`; the CLI reads them via
+    // ORBIT_ANISETTE_ASSETS_DIR (see src/main.ts).
+    extraResource: ['./assets', './bin', './anisette'],
     // `wdio-electron-service` has to live in `dependencies` (not devDeps) so
     // electron-packager keeps it in the asar's node_modules — the runtime
     // require in src/main.ts needs it. But it's a test-only dep; strip it
-    // from production builds where WDIO_E2E isn't set.
-    ignore:
-      process.env.WDIO_E2E === '1' ? undefined : [/^\/node_modules\/wdio-electron-service(\/|$)/],
+    // from production builds where WDIO_E2E isn't set. Always keep `/bin` out of
+    // the asar — it's shipped via extraResource above, so the asar copy would be
+    // dead weight (and unexecutable).
+    ignore: [
+      /^\/bin(\/|$)/,
+      ...(process.env.WDIO_E2E === '1' ? [] : [/^\/node_modules\/wdio-electron-service(\/|$)/]),
+    ],
   },
   rebuildConfig: {},
   hooks: {
@@ -87,12 +113,16 @@ const config: ForgeConfig = {
         'https://raw.githubusercontent.com/expo/orbit/main/apps/menu-bar/electron/assets/images/icon-windows.ico',
     }),
     new MakerZIP({}, ['darwin']),
-    new MakerRpm({
-      options: {
-        ...linuxOptions,
-        license: 'MIT',
-      },
-    }),
+    ...(hasBinary('rpmbuild')
+      ? [
+          new MakerRpm({
+            options: {
+              ...linuxOptions,
+              license: 'MIT',
+            },
+          }),
+        ]
+      : []),
     new MakerDeb({
       options: {
         ...linuxOptions,

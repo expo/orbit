@@ -10,6 +10,7 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "build:helpers": "node scripts/build-helpers.js",
     "lint": "eslint --ext .ts,.tsx .",
     "typecheck": "tsc --noEmit"
   },
@@ -40,6 +41,7 @@
     "electron-store": "^8.2.0",
     "express": "^4.18.2",
     "react-native-electron-modules": "../../../packages/react-native-electron-modules",
+    "system-ca": "^2.0.1",
     "wdio-electron-service": "^8.1.0"
   },
   "config": {

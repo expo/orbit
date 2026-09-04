@@ -8,7 +8,12 @@ export interface NativeMenuBarModule {
   readonly homedir: string;
   exitApp(): void;
   openSystemSettingsLoginItems(): void;
-  runCli: (command: string, args: string[], listenerId: number) => Promise<string>;
+  runCli: (
+    command: string,
+    args: string[],
+    listenerId: number,
+    transientEnvVars?: Record<string, string>
+  ) => Promise<string>;
   runCommand: (command: string, args: string[]) => Promise<void>;
   setLoginItemEnabled: (enabled: boolean) => Promise<void>;
   setEnvVars: (envVars: { [key: string]: string }) => void;
@@ -35,6 +40,7 @@ export interface ElectronMainMenuBarModule
     command: string,
     args: string[],
     listenerId: number,
+    transientEnvVars: Record<string, string> | undefined,
     event: Electron.IpcMainInvokeEvent
   ) => Promise<string>;
 }
