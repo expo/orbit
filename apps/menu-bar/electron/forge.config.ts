@@ -7,6 +7,7 @@ import { MakerZIP } from '@electron-forge/maker-zip';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { execSync, spawn } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 
 // `electron-forge make` aborts entirely if a maker's external tool is missing
@@ -81,6 +82,15 @@ const config: ForgeConfig = {
       if (!isMakeOrPackage) {
         return;
       }
+
+      // `extraResource` copies ./bin and ./anisette verbatim and errors if a
+      // path is missing. `yarn build:helpers` populates them for real builds,
+      // but CI/E2E packaging runs without it — ensure they exist (empty is fine;
+      // the resign helpers just won't be present, which E2E never exercises) so
+      // packaging never fails with ENOENT.
+      fs.mkdirSync(path.join(__dirname, 'bin'), { recursive: true });
+      fs.mkdirSync(path.join(__dirname, 'anisette'), { recursive: true });
+
       console.log('Running custom pre-make command: yarn export-web');
 
       const parentDir = path.resolve(__dirname, '..'); // Get the parent directory
