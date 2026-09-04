@@ -8,9 +8,10 @@ import {
 import { CliCommands, Config } from 'common-types';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
 import { SymbolView } from 'expo-symbols';
-import React, { Fragment, useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet } from 'react-native';
 
+import { WindowsNavigator } from './index';
 import AutoUpdater from '../../modules/auto-updater';
 import {
   openAuthSessionAsync,
@@ -19,9 +20,17 @@ import {
 import {
   APPLE_ID_CHANGED_EVENT,
   clearAppleIdLoginAsync,
+  forgetAppleIdSession,
+  isAppleAuthExpiredError,
   loadAppleId,
   resolveAppleIdAsync,
 } from '../commands/appleAccountAsync';
+import {
+  AppleAppId,
+  deleteAppleAppIdAsync,
+  listAppleAppIdsAsync,
+} from '../commands/appleAppIdsAsync';
+import { cleanupResignedAppsAsync } from '../commands/cleanupResignedAppsAsync';
 import { getTrustedSourcesAsync } from '../commands/getTrustesSourcesAsync';
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { setTrustedSourcesAsync } from '../commands/setTrustedSourcesAsync';
@@ -36,6 +45,14 @@ import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
+  RESIGNED_APPS_CHANGED_EVENT,
+  RESIGNED_APPS_RENEW_REQUEST_EVENT,
+  ResignedAppRecord,
+  listResignedApps,
+  removeResignedApp,
+  updateResignedApp,
+} from '../modules/ResignedApps';
+import {
   UserPreferences,
   getUserPreferences,
   saveSessionSecret,
@@ -44,9 +61,11 @@ import {
   sessionSecretStorageKey,
   resetApolloStore,
 } from '../modules/Storage';
-import { getCurrentUserDisplayName } from '../utils/helpers';
+import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppIdsEvents';
+import { formatProfileExpiry, getCurrentUserDisplayName } from '../utils/helpers';
+import { describeResignError } from '../utils/resignErrorCopy';
 import { addOpacity } from '../utils/theme';
-import { useCurrentTheme } from '../utils/useExpoTheme';
+import { useCurrentTheme, useExpoPalette, useExpoTheme } from '../utils/useExpoTheme';
 
 export type Pane = 'general' | 'platforms' | 'apple' | 'advanced';
 export type PaneItem = {
@@ -71,6 +90,35 @@ export const panes: PaneItem[] = [
     fallback: <Options16Regular />,
   },
 ];
+
+const REQUESTED_PANE_KEY = 'settings:requested-pane';
+
+/** Open Settings on `pane` — e.g. the resign flow sends the user to Apple ID → App IDs. */
+export function openSettingsPane(pane: Pane) {
+  storage.set(REQUESTED_PANE_KEY, pane);
+  WindowsNavigator.open('Settings');
+}
+
+function consumeRequestedPane(): Pane | undefined {
+  const requested = storage.getString(REQUESTED_PANE_KEY);
+  if (!requested) return undefined;
+  storage.delete(REQUESTED_PANE_KEY);
+  return panes.some((item) => item.key === requested) ? (requested as Pane) : undefined;
+}
+
+/** Selected pane; honours openSettingsPane() on mount and while the window is already open. */
+export function useSettingsPane() {
+  const [pane, setPane] = useState<Pane>(() => consumeRequestedPane() ?? 'general');
+  useEffect(() => {
+    const listener = storage.addOnValueChangedListener((key) => {
+      if (key !== REQUESTED_PANE_KEY) return;
+      const requested = consumeRequestedPane();
+      if (requested) setPane(requested);
+    });
+    return listener.remove;
+  }, []);
+  return [pane, setPane] as const;
+}
 
 type PlatformItem = {
   label: string;
@@ -113,6 +161,7 @@ const platformList: PlatformItem[] = [
 export const hairline = addOpacity(lightTheme.border.default, 0.2);
 
 export function SettingsPane({ pane }: { pane: Pane }) {
+  const expoTheme = useExpoTheme();
   const [hasSessionSecret, setHasSessionSecret] = useState(
     Boolean(storage.getString(sessionSecretStorageKey))
   );
@@ -132,11 +181,15 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     Boolean(getUserPreferences().customSdkPath)
   );
   const [appleAccountId, setAppleAccountId] = useState<string | null>(loadAppleId());
+  const [resignedApps, setResignedApps] = useState<ResignedAppRecord[]>(listResignedApps());
 
   useEffect(() => {
-    // Cross-window: an Apple ID change (sign-in, sign-out, or an automatic logout
-    // on session expiry) can happen in the popover or another window; it
-    // broadcasts through the main-process DeviceEventEmitter.
+    // Cross-window: record writes and Apple ID changes (sign-in, sign-out, or an
+    // automatic logout on session expiry) can happen in the popover or another
+    // window; both broadcast through the main-process DeviceEventEmitter.
+    const recordsSub = DeviceEventEmitter.addListener(RESIGNED_APPS_CHANGED_EVENT, () => {
+      setResignedApps(listResignedApps());
+    });
     const appleIdSub = DeviceEventEmitter.addListener(APPLE_ID_CHANGED_EVENT, () => {
       setAppleAccountId(loadAppleId());
     });
@@ -144,9 +197,22 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     // CLI sign-in); it broadcasts APPLE_ID_CHANGED_EVENT, handled above.
     resolveAppleIdAsync().catch(() => {});
     return () => {
+      recordsSub.remove();
       appleIdSub.remove();
     };
   }, []);
+
+  // The resign flow parks on this event after sending the user here to free App
+  // ID quota (openSettingsPane('apple')); report what was freed once Settings closes.
+  const appIdsDeletedRef = useRef(0);
+  useEffect(
+    () => () => {
+      AppleAppIdsEmitter.emit(APPLE_APP_IDS_DONE_EVENT, {
+        deletedCount: appIdsDeletedRef.current,
+      });
+    },
+    []
+  );
 
   const signOutAppleId = async () => {
     try {
@@ -162,6 +228,47 @@ export function SettingsPane({ pane }: { pane: Pane }) {
       Alert.alert('Could not sign out', error instanceof Error ? error.message : String(error));
     }
   };
+
+  const renewRecordNow = (record: ResignedAppRecord) => {
+    // The renewal engine lives in the popover's Core (separate renderer on
+    // Electron); ask it to renew and bring the popover forward for progress.
+    DeviceEventEmitter.emit(RESIGNED_APPS_RENEW_REQUEST_EVENT, { recordId: record.id });
+    MenuBarModule.openPopover();
+  };
+
+  const removeRecord = (record: ResignedAppRecord) => {
+    Alert.alert(
+      `Remove ${record.appName}?`,
+      'Orbit deletes its stored copies and stops renewing it. The app stays on your ' +
+        'device until its profile expires.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'default',
+          onPress: () => {
+            removeResignedApp(record.id);
+            setResignedApps(listResignedApps());
+            cleanupResignedAppsAsync().catch(() => {});
+          },
+        },
+      ]
+    );
+  };
+
+  const toggleRecordAutoRenew = (record: ResignedAppRecord, value: boolean) => {
+    updateResignedApp(record.id, { autoRenew: value });
+    setResignedApps(listResignedApps());
+  };
+
+  const toggleAutoRenewResignedApps = (value: boolean) => {
+    setUserPreferences((prev) => {
+      const newPreferences = { ...prev, autoRenewResignedApps: value };
+      saveUserPreferences(newPreferences);
+      return newPreferences;
+    });
+  };
+
   const [trustedSourcesEnabled, setTrustedSourcesEnabled] = useState(false);
   const [trustedSources, setTrustedSources] = useState<string>('');
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
@@ -300,6 +407,18 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     setUserPreferences(newPreferences);
   };
 
+  const keyIcon = (
+    <IconTile>
+      <SymbolView
+        name="key"
+        size={18}
+        tintColor={expoTheme.text.default}
+        fallback={<Key16Regular />}
+        style={styles.symbol}
+      />
+    </IconTile>
+  );
+
   return (
     <View flex="1">
       <View justify="center" px="6" style={[styles.header, { borderBottomColor: hairline }]}>
@@ -412,23 +531,108 @@ export function SettingsPane({ pane }: { pane: Pane }) {
             <Card>
               {appleAccountId ? (
                 <SettingRow
+                  leading={keyIcon}
                   title={appleAccountId}
                   subtitle="Used to re-sign builds for your iPhone">
                   <Button
                     title="Sign out"
-                    color="primary"
+                    color="danger"
                     onPress={signOutAppleId}
                     style={styles.button}
                   />
                 </SettingRow>
               ) : (
-                <View px="3.5" py="3">
-                  <Text size="tiny" color="secondary">
-                    Orbit asks for your Apple ID when it re-signs a build for your iPhone.
-                  </Text>
-                </View>
+                <SettingRow
+                  leading={keyIcon}
+                  title="No Apple ID saved"
+                  subtitle="Orbit will ask the next time it re-signs a build.">
+                  <Button
+                    title="Sign in…"
+                    onPress={() => WindowsNavigator.open('AppleIdAuth')}
+                    style={styles.button}
+                  />
+                </SettingRow>
               )}
             </Card>
+            {appleAccountId ? (
+              <AppleAppIdsSection
+                appleId={appleAccountId}
+                onDeleted={() => {
+                  appIdsDeletedRef.current += 1;
+                }}
+              />
+            ) : null}
+            {resignedApps.length > 0 ? (
+              <Section title="Resigned apps">
+                <Card>
+                  <SettingRow
+                    title="Renew automatically"
+                    subtitle="Apps signed with a free Apple ID stop opening after 7 days">
+                    <Switch
+                      value={userPreferences.autoRenewResignedApps}
+                      onValueChange={toggleAutoRenewResignedApps}
+                    />
+                  </SettingRow>
+                  {resignedApps.map((record) => {
+                    const expiry = formatProfileExpiry(record.profileExpiresAt);
+                    const status = record.lastError
+                      ? record.lastError.message
+                      : record.pendingInstall
+                        ? 'Renewed — installs when the device reconnects'
+                        : null;
+                    return (
+                      <Fragment key={record.id}>
+                        <Divider />
+                        <SettingRow
+                          title={record.appName}
+                          subtitle={
+                            <>
+                              <Row gap="1">
+                                <Text size="tiny" color="secondary" numberOfLines={1}>
+                                  {record.deviceName} ·
+                                </Text>
+                                <Text
+                                  size="tiny"
+                                  color={expiry.critical ? 'error' : 'secondary'}
+                                  numberOfLines={1}>
+                                  {expiry.label}
+                                </Text>
+                              </Row>
+                              {status ? (
+                                <Text
+                                  size="tiny"
+                                  color={record.lastError ? 'error' : 'secondary'}
+                                  numberOfLines={2}>
+                                  {status}
+                                </Text>
+                              ) : null}
+                            </>
+                          }>
+                          <Text size="tiny" color="secondary">
+                            Auto-renew
+                          </Text>
+                          <Switch
+                            value={record.autoRenew}
+                            onValueChange={(value) => toggleRecordAutoRenew(record, value)}
+                          />
+                          <Button
+                            title="Renew now"
+                            color="primary"
+                            onPress={() => renewRecordNow(record)}
+                            style={styles.smallButton}
+                          />
+                          <Button
+                            title="Remove"
+                            onPress={() => removeRecord(record)}
+                            style={styles.smallButton}
+                          />
+                        </SettingRow>
+                      </Fragment>
+                    );
+                  })}
+                </Card>
+              </Section>
+            ) : null}
             <Section title="How Orbit uses your Apple ID">
               <Text size="tiny" color="secondary">
                 Your Apple ID is used only to create a free signing certificate for your devices.
@@ -500,12 +704,185 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const FREE_APP_ID_QUOTA = 10;
+
+function formatShortDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/**
+ * The App IDs registered to the signed-in Apple ID, so the user can free quota
+ * slots (free teams: 10 App IDs per rolling 7 days). `onDeleted` feeds the
+ * `apple-app-ids:done` count the resign flow waits on.
+ */
+function AppleAppIdsSection({ appleId, onDeleted }: { appleId: string; onDeleted: () => void }) {
+  const expoTheme = useExpoTheme();
+  const palette = useExpoPalette();
+  const [appIds, setAppIds] = useState<AppleAppId[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setError(null);
+    try {
+      const rows = await listAppleAppIdsAsync(appleId);
+      rows.sort((a, b) => (a.expirationDate ?? '').localeCompare(b.expirationDate ?? ''));
+      setAppIds(rows);
+    } catch (e) {
+      if (isAppleAuthExpiredError(e)) {
+        // An expired session is a logout: the pane flips to its signed-out
+        // state (and this section unmounts) through APPLE_ID_CHANGED_EVENT.
+        forgetAppleIdSession();
+        return;
+      }
+      setError(describeResignError(e).message);
+      setAppIds((rows) => rows ?? []);
+    }
+  }, [appleId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const onDelete = (row: AppleAppId) => {
+    Alert.alert(
+      `Delete "${row.name}"?`,
+      `${row.identifier}\n\nApps signed with this App ID keep working until their profile expires, but they can’t be renewed with it anymore.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'default',
+          onPress: async () => {
+            setBusyId(row.appIdId);
+            try {
+              await deleteAppleAppIdAsync(appleId, row.appIdId);
+              onDeleted();
+              await load();
+            } catch (e) {
+              if (isAppleAuthExpiredError(e)) {
+                forgetAppleIdSession();
+                return;
+              }
+              setError(describeResignError(e).message);
+            } finally {
+              setBusyId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Free teams' App IDs expire 7 days after registration, so the list is the
+  // rolling-window usage. Paid teams' App IDs never expire and have no cap.
+  const quota = appIds !== null && appIds.every((row) => Boolean(row.expirationDate));
+  const used = appIds?.length ?? 0;
+
+  return (
+    <Section
+      title="App IDs"
+      trailing={
+        quota ? (
+          <Text size="tiny" color="secondary">
+            {used} of {FREE_APP_ID_QUOTA} used
+          </Text>
+        ) : null
+      }>
+      {quota ? (
+        <>
+          <Text size="tiny" color="secondary">
+            Free Apple IDs can register at most {FREE_APP_ID_QUOTA} App IDs per rolling 7-day
+            window. Delete ones you no longer use to free a slot.
+          </Text>
+          <Row style={styles.slots}>
+            {Array.from({ length: FREE_APP_ID_QUOTA }, (_, index) => (
+              <View
+                key={index}
+                flex="1"
+                style={[
+                  styles.slot,
+                  { backgroundColor: index < used ? expoTheme.link.default : palette.gray['300'] },
+                ]}
+              />
+            ))}
+          </Row>
+        </>
+      ) : null}
+      <Card>
+        {appIds === null ? (
+          <View px="3.5" py="3" align="start">
+            <ActivityIndicator />
+          </View>
+        ) : appIds.length === 0 ? (
+          <View px="3.5" py="3">
+            <Text size="tiny" color="secondary">
+              {quota
+                ? 'No App IDs registered in the last 7 days.'
+                : 'No App IDs are registered to this team.'}
+            </Text>
+          </View>
+        ) : (
+          appIds.map((row, index) => (
+            <Fragment key={row.appIdId}>
+              {index > 0 ? <Divider /> : null}
+              <SettingRow
+                title={row.name}
+                subtitle={
+                  <Row gap="1.5">
+                    <Text
+                      size="tiny"
+                      color="secondary"
+                      type="mono"
+                      numberOfLines={1}
+                      style={styles.shrink}>
+                      {row.identifier}
+                    </Text>
+                    {row.expirationDate ? (
+                      <Text size="tiny" color="secondary">
+                        · expires {formatShortDate(row.expirationDate)}
+                      </Text>
+                    ) : null}
+                  </Row>
+                }>
+                <Button
+                  title={busyId === row.appIdId ? 'Deleting…' : 'Delete'}
+                  color="danger"
+                  disabled={busyId !== null}
+                  onPress={() => onDelete(row)}
+                  style={styles.smallButton}
+                />
+              </SettingRow>
+            </Fragment>
+          ))
+        )}
+      </Card>
+      {error ? (
+        <Text size="tiny" color="error">
+          {error}
+        </Text>
+      ) : null}
+    </Section>
+  );
+}
+
+function Section({
+  title,
+  trailing,
+  children,
+}: {
+  title: string;
+  trailing?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <View gap="2">
-      <Text size="tiny" weight="semibold" color="secondary">
-        {title}
-      </Text>
+      <Row align="center" justify="between">
+        <Text size="tiny" weight="semibold" color="secondary">
+          {title}
+        </Text>
+        {trailing}
+      </Row>
       {children}
     </View>
   );
@@ -525,15 +902,26 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+function IconTile({ children }: { children: React.ReactNode }) {
+  const palette = useExpoPalette();
+  return (
+    <View align="centered" style={[styles.iconTile, { backgroundColor: palette.gray['200'] }]}>
+      {children}
+    </View>
+  );
+}
+
 function SettingRow({
+  leading,
   title,
   subtitle,
   disabled,
   below,
   children,
 }: {
+  leading?: React.ReactNode;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   disabled?: boolean;
   below?: React.ReactNode;
   children: React.ReactNode;
@@ -541,13 +929,18 @@ function SettingRow({
   return (
     <View px="3.5" py="3" gap="2.5" style={disabled && styles.disabled}>
       <Row align="center" gap="3">
+        {leading}
         <View flex="1" gap="0.5">
-          <Text size="small">{title}</Text>
-          {subtitle ? (
+          <Text size="small" numberOfLines={1}>
+            {title}
+          </Text>
+          {typeof subtitle === 'string' ? (
             <Text size="tiny" color="secondary">
               {subtitle}
             </Text>
-          ) : null}
+          ) : (
+            subtitle
+          )}
         </View>
         {children}
       </Row>
@@ -580,5 +973,24 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  shrink: {
+    flexShrink: 1,
+  },
+  iconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+  },
+  symbol: {
+    width: 18,
+    height: 18,
+  },
+  slots: {
+    gap: 3,
+  },
+  slot: {
+    height: 4,
+    borderRadius: 2,
   },
 });

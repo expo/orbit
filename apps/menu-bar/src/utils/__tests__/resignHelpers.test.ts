@@ -1,4 +1,4 @@
-import { resignStepProgress } from '../helpers';
+import { formatProfileExpiry, resignStepProgress } from '../helpers';
 import { describeResignError } from '../resignErrorCopy';
 
 const RESIGN_STEPS = [
@@ -28,8 +28,30 @@ describe(resignStepProgress, () => {
     expect(resignStepProgress('done')).toBeLessThan(resignStepProgress('installing')!);
   });
 
-  it('returns undefined (indeterminate) for the orbit-side waiting step', () => {
+  it('returns undefined (indeterminate) for orbit-side waiting steps', () => {
     expect(resignStepProgress('waiting-for-auth')).toBeUndefined();
+    expect(resignStepProgress('waiting-for-cleanup')).toBeUndefined();
+  });
+});
+
+describe(formatProfileExpiry, () => {
+  const now = Date.parse('2026-08-25T12:00:00Z');
+
+  it('marks expired profiles as critical', () => {
+    expect(formatProfileExpiry('2026-08-25T11:00:00Z', now)).toEqual({
+      label: 'Expired',
+      critical: true,
+    });
+  });
+
+  it('marks profiles inside the 48h renewal window as critical', () => {
+    const result = formatProfileExpiry('2026-08-26T12:00:00Z', now);
+    expect(result).toEqual({ label: 'Expires in 1d 0h', critical: true });
+  });
+
+  it('shows days and hours for healthy profiles', () => {
+    const result = formatProfileExpiry('2026-09-01T15:30:00Z', now);
+    expect(result).toEqual({ label: 'Expires in 7d 3h', critical: false });
   });
 });
 

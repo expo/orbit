@@ -1,0 +1,66 @@
+diff --git a/node_modules/react-native-macos/React/CoreModules/RCTWebSocketModule.mm b/node_modules/react-native-macos/React/CoreModules/RCTWebSocketModule.mm
+index 4914245..d8a5022 100644
+--- a/node_modules/react-native-macos/React/CoreModules/RCTWebSocketModule.mm
++++ b/node_modules/react-native-macos/React/CoreModules/RCTWebSocketModule.mm
+@@ -44,6 +44,10 @@ void RCTSetCustomSRWebSocketProvider(SRWebSocketProvider provider)
+ @implementation RCTWebSocketModule {
+   NSMutableDictionary<NSNumber *, SRWebSocket *> *_sockets;
+   NSMutableDictionary<NSNumber *, id<RCTWebSocketContentHandler>> *_contentHandlers;
++  // SocketRocket resolves its delegate before hopping to the delegate queue, so a
++  // callback can still reach this module after invalidate. By then the JS instance
++  // (and the weak callableJSModules) is gone, and sendEventWithName would assert.
++  BOOL _invalidated;
+ }
+ 
+ RCT_EXPORT_MODULE()
+@@ -62,6 +66,7 @@ RCT_EXPORT_MODULE()
+ {
+   [super invalidate];
+ 
++  _invalidated = YES;
+   _contentHandlers = nil;
+   for (SRWebSocket *socket in _sockets.allValues) {
+     socket.delegate = nil;
+@@ -153,6 +158,10 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
+ 
+ - (void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(id)message
+ {
++  if (_invalidated) {
++    return;
++  }
++
+   NSString *type;
+ 
+   NSNumber *socketID = [webSocket reactTag];
+@@ -173,12 +182,20 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
+ 
+ - (void)webSocketDidOpen:(SRWebSocket *)webSocket
+ {
++  if (_invalidated) {
++    return;
++  }
++
+   [self sendEventWithName:@"websocketOpen"
+                      body:@{@"id" : webSocket.reactTag, @"protocol" : webSocket.protocol ? webSocket.protocol : @""}];
+ }
+ 
+ - (void)webSocket:(SRWebSocket *)webSocket didFailWithError:(NSError *)error
+ {
++  if (_invalidated) {
++    return;
++  }
++
+   NSNumber *socketID = [webSocket reactTag];
+   _contentHandlers[socketID] = nil;
+   _sockets[socketID] = nil;
+@@ -192,6 +209,10 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
+               reason:(NSString *)reason
+             wasClean:(BOOL)wasClean
+ {
++  if (_invalidated) {
++    return;
++  }
++
+   NSNumber *socketID = [webSocket reactTag];
+   _contentHandlers[socketID] = nil;
+   _sockets[socketID] = nil;

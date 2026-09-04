@@ -22,17 +22,16 @@ import {
   padding,
   tag,
 } from '@expo/ui/swift-ui/modifiers';
-import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 
-import { Pane, SettingsPane, panes } from './SettingsPanes';
+import { Pane, SettingsPane, panes, useSettingsPane } from './SettingsPanes';
 import { WindowsNavigator } from './index';
 import { withApolloProvider } from '../api/ApolloClient';
 import MenuBarModule from '../modules/MenuBarModule';
 
 // macOS uses a native SwiftUI sidebar. Settings.tsx is the JS fallback used by Electron.
 const Settings = () => {
-  const [pane, setPane] = useState<Pane>('general');
+  const [pane, setPane] = useSettingsPane();
 
   return (
     <Host style={styles.host}>
