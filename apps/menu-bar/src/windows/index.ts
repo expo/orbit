@@ -1,3 +1,4 @@
+import AppleAppIds from './AppleAppIds';
 import AppleIdAuth from './AppleIdAuth';
 import DebugMenu from './DebugMenu';
 import Onboarding from './Onboarding';
@@ -61,6 +62,18 @@ export const WindowsNavigator = createWindowsNavigator({
         titlebarAppearsTransparent: true,
         height: 470,
         width: 440,
+      },
+    },
+  },
+  AppleAppIds: {
+    component: AppleAppIds,
+    options: {
+      title: 'Manage Apple App IDs',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        height: 460,
+        width: 520,
       },
     },
   },

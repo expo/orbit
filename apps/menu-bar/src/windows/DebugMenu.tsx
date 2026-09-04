@@ -6,7 +6,13 @@ import Button from '../components/Button';
 import { DebugLogs } from '../components/DebugLogs';
 import NativeColorPalette from '../components/NativeColorPalette';
 import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
+import {
+  RESIGNED_APPS_CHECK_REQUEST_EVENT,
+  listResignedApps,
+  updateResignedApp,
+} from '../modules/ResignedApps';
 import { resetApolloStore, resetStorage } from '../modules/Storage';
 
 const DebugMenu = () => {
@@ -53,6 +59,27 @@ const DebugMenu = () => {
           color="primary"
           title="Sign out of Apple ID"
           onPress={clearAppleIdLogin}
+        />
+        <Button
+          style={styles.button}
+          color="primary"
+          title="Force renewal check"
+          onPress={() => DeviceEventEmitter.emit(RESIGNED_APPS_CHECK_REQUEST_EVENT)}
+        />
+        <Button
+          style={styles.button}
+          color="primary"
+          title="Expire resigned apps now"
+          onPress={() => {
+            const expired = new Date(Date.now() - 1000).toISOString();
+            for (const record of listResignedApps()) {
+              updateResignedApp(record.id, {
+                profileExpiresAt: expired,
+                lastAttemptAt: undefined,
+              });
+            }
+            Alert.alert('Resigned apps expired', 'Run a renewal check to watch them renew.');
+          }}
         />
       </Row>
       <NativeColorPalette />
