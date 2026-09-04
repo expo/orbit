@@ -47,7 +47,10 @@ program
   .description('Pair a physical Android device over Wi-Fi')
   .requiredOption('--mode  <string>', 'Pairing mode: "code" (manual address) or "qr" (scanned)')
   .option('--pairing-code  <string>', '"code" mode: pairing code shown on the device')
-  .option('--pairing-address  <string>', '"code" mode: IP address and port shown on the pairing dialog')
+  .option(
+    '--pairing-address  <string>',
+    '"code" mode: IP address and port shown on the pairing dialog'
+  )
   .option(
     '--connect-address  <string>',
     '"code" mode: IP address and port used to connect to the device after pairing'
@@ -142,6 +145,35 @@ program
   .command('set-custom-trusted-sources')
   .argument('<string>', 'Trusted sources')
   .action(returnLoggerMiddleware(setCustomTrustedSourcesAsync));
+
+program
+  .command('apple-id-auth')
+  .description('Sign in / verify 2FA / sign out for the Apple ID used by IPA resigning')
+  .requiredOption('--mode <string>', 'sign-in | verify-2fa | sign-out')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .option('--code <string>', '2FA code (when --mode verify-2fa)')
+  .option('--prefer-sms', 'Send the 2FA code by SMS instead of a trusted-device push')
+  .action(async (...args) => {
+    const { appleIdAuthAsync } = await import('./commands/AppleIdAuth');
+    return returnLoggerMiddleware(appleIdAuthAsync)(...args);
+  });
+
+program
+  .command('resign-ipa')
+  .description('Resign an IPA with a free Apple ID-issued certificate for the given device')
+  .requiredOption('--ipa <string>', 'Path to the input IPA')
+  .requiredOption('--udid <string>', 'UDID of the target physical iPhone / iPad')
+  .requiredOption('--device-name <string>', 'Friendly name for the device (used in Apple portal)')
+  .requiredOption('--apple-id <string>', 'Apple ID that owns the signing identity')
+  .option('--output <string>', 'Path to the resigned IPA (default: alongside the input)')
+  .option(
+    '--strip-extensions',
+    'Remove PlugIns/*.appex and Watch/* before signing (free-account App ID limit)'
+  )
+  .action(async (...args) => {
+    const { resignIpaCommandAsync } = await import('./commands/ResignIpa');
+    return returnLoggerMiddleware(resignIpaCommandAsync)(...args);
+  });
 
 if (process.argv.length < 3) {
   program.help();

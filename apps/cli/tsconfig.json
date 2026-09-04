@@ -2,7 +2,10 @@
   "extends": "../../tsconfig.base",
   "compilerOptions": {
     "outDir": "build",
-    "rootDir": "src"
+    "rootDir": "src",
+    // ts-jest compiles tests with this config; without the jest types every
+    // suite fails diagnostics with "Cannot find name 'expect'".
+    "types": ["node", "jest"]
   },
   "include": ["src"],
   "exclude": ["**/__mocks__/*", "**/__tests__/*", "**/*.test.ts"]

@@ -39,6 +39,22 @@ function throwXcrunError(e: any): never {
     e.stderr?.match(/CoreDeviceError error 10003/)
   ) {
     throw new InternalError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
+  } else if (
+    // devicectl code-signature / provisioning rejection. The usbmux install
+    // path maps the same failure (LockdownProtocol's `ApplicationVerificationFailed`)
+    // — mirror it here so the devicectl fallback also triggers the resign offer.
+    // Covers ad-hoc/internal builds not provisioned for this device AND IPAs
+    // carrying a Beta (TestFlight/App Store) profile that can't be sideloaded
+    // ("Attempted to install a Beta profile without the proper entitlement").
+    e.stderr?.includes('ApplicationVerificationFailed') ||
+    e.stderr?.includes('its integrity could not be verified') ||
+    e.stderr?.includes('Attempted to install a Beta profile')
+  ) {
+    throw new InternalError(
+      'APPLE_APP_VERIFICATION_FAILED',
+      'The app is not signed for this device.',
+      { stderr: e.stderr }
+    );
   } else if (e.stderr?.match(/Unable to lookup in current state: Shutdown/)) {
     throw new InternalError(
       'SIMULATOR_NOT_READY',
