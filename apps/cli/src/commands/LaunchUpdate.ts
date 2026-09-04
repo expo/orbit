@@ -165,14 +165,14 @@ async function launchUpdateOnIOSAsync(
   });
 }
 
-function getExpoGoUpdateDeeplink(updateURL: string, manifest: Manifest) {
+export function getExpoGoUpdateDeeplink(updateURL: string, manifest: Manifest) {
   if (updateURL.startsWith('https://u.expo.dev')) {
     return `exp://u.expo.dev/update/${manifest.id}`;
   }
   return updateURL.replace('https://', 'exp://');
 }
 
-function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
+export function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
   const updateIdURL = updateURL.startsWith('https://u.expo.dev')
     ? `https://u.expo.dev/update/${manifest.id}`
     : updateURL;
