@@ -133,7 +133,6 @@ function buildAnisette() {
         'Could not build the macOS anisette helper — check the Xcode toolchain. Apple ID auth will be unavailable.'
       );
     }
-    return;
   }
   // Windows / Linux: no native anisette binary — the WASM assets copied above are
   // the provider.
