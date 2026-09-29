@@ -172,7 +172,7 @@ function getExpoGoUpdateDeeplink(updateURL: string, manifest: Manifest) {
   return updateURL.replace('https://', 'exp://');
 }
 
-function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
+export function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
   const updateIdURL = updateURL.startsWith('https://u.expo.dev')
     ? `https://u.expo.dev/update/${manifest.id}`
     : updateURL;
@@ -186,7 +186,14 @@ function getUpdateDeeplink(updateURL: string, manifest: Manifest) {
     throw new Error('Unable to resolve schema from manifest');
   }
 
-  return `${scheme || `exp+${slug}`}://expo-development-client/?url=${updateIdURL}`;
+  const appScheme = scheme || `exp+${slug}`;
+  // SDK 58+ dev clients accept the reserved `__expo_url` param on any host (expo/expo#50287).
+  // Older clients only recognize the `expo-development-client` host, so keep the legacy form for them.
+  const sdkMajor = parseInt(manifest?.extra?.expoClient?.sdkVersion ?? '', 10);
+  if (sdkMajor >= 58) {
+    return `${appScheme}://?__expo_url=${encodeURIComponent(updateIdURL)}`;
+  }
+  return `${appScheme}://expo-development-client/?url=${updateIdURL}`;
 }
 
 async function downloadAndInstallLatestDevBuildAsync({

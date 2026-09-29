@@ -300,7 +300,8 @@ export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
       '-a',
       'android.intent.action.VIEW',
       '-d',
-      url
+      // adb shell joins its args into one device-shell command, so quote the URL to keep `&` intact
+      `'${url.replace(/'/g, `'\\''`)}'`
     );
     return openProject;
   } catch (error: any) {

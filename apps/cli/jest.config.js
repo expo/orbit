@@ -1,11 +1,9 @@
-const { createDefaultPreset } = require("ts-jest");
-
-const tsJestTransformCfg = createDefaultPreset().transform;
-
 /** @type {import("jest").Config} **/
 module.exports = {
-  testEnvironment: "node",
+  testEnvironment: 'node',
   transform: {
-    ...tsJestTransformCfg,
+    // Transpile-only: the tsconfig intentionally excludes tests (and their
+    // jest type globals), so let Jest run them without full type-checking.
+    '^.+\\.tsx?$': ['ts-jest', { isolatedModules: true }],
   },
 };
