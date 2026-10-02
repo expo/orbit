@@ -386,11 +386,7 @@ function Core(props: Props) {
             platform: getDeviceOS(device),
           },
           (status, progress) => {
-            updateTask({
-              id: url,
-              status,
-              progress: status === MenuBarStatus.DOWNLOADING ? progress : 0,
-            });
+            updateTask({ id: url, status, ...(progress != null && { progress }) });
           }
         );
       } catch (error) {
