@@ -12,6 +12,11 @@ import {
   WebBrowserResultType,
 } from '../../modules/web-authentication-session';
 import { withApolloProvider } from '../api/ApolloClient';
+import {
+  APPLE_ID_CHANGED_EVENT,
+  clearAppleIdLoginAsync,
+  loadAppleId,
+} from '../commands/appleAccountAsync';
 import { getTrustedSourcesAsync } from '../commands/getTrustesSourcesAsync';
 import { setTrustedSourcesAsync } from '../commands/setTrustedSourcesAsync';
 import { Checkbox, View, Row, Text, Divider } from '../components';
@@ -22,6 +27,7 @@ import { Switch } from '../components/Switch';
 import TrustedSourcesInput from '../components/TrustedSourcesInput';
 import { useGetCurrentUserQuery } from '../generated/graphql';
 import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   UserPreferences,
@@ -79,6 +85,34 @@ const Settings = () => {
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
     Boolean(getUserPreferences().customSdkPath)
   );
+  const [appleAccountId, setAppleAccountId] = useState<string | null>(loadAppleId());
+
+  useEffect(() => {
+    // Cross-window: an Apple ID change (sign-in, sign-out, or an automatic logout
+    // on session expiry) can happen in the popover or another window; it
+    // broadcasts through the main-process DeviceEventEmitter.
+    const appleIdSub = DeviceEventEmitter.addListener(APPLE_ID_CHANGED_EVENT, () => {
+      setAppleAccountId(loadAppleId());
+    });
+    return () => {
+      appleIdSub.remove();
+    };
+  }, []);
+
+  const signOutAppleId = async () => {
+    try {
+      const signedOut = await clearAppleIdLoginAsync();
+      setAppleAccountId(null);
+      Alert.alert(
+        'Apple ID signed out',
+        signedOut
+          ? `Signed out ${signedOut}. The next resign will ask you to sign in again.`
+          : 'No Apple ID was signed in.'
+      );
+    } catch (error) {
+      Alert.alert('Could not sign out', error instanceof Error ? error.message : String(error));
+    }
+  };
   const [trustedSourcesEnabled, setTrustedSourcesEnabled] = useState(false);
   const [trustedSources, setTrustedSources] = useState<string>('');
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
@@ -259,6 +293,46 @@ const Settings = () => {
               )}
             </Row>
           </View>
+          <View mb="3">
+            <Text size="medium" weight="semibold" style={[headerStyle, styles.headerSpacing]}>
+              Apple ID
+            </Text>
+            <View
+              mt="1.5"
+              rounded="medium"
+              style={groupWrapperStyle}
+              border="light"
+              px="2.5"
+              pt="1"
+              pb="2">
+              {appleAccountId ? (
+                <Row align="center" mt="1" gap="2">
+                  <View flex="1">
+                    <Text weight="medium" numberOfLines={1}>
+                      {appleAccountId}
+                    </Text>
+                    <Text size="tiny" color="secondary">
+                      Used to re-sign builds for your iPhone
+                    </Text>
+                  </View>
+                  <Button title="Sign Out" onPress={signOutAppleId} style={styles.button} />
+                </Row>
+              ) : (
+                <Row mt="1">
+                  <Text size="tiny" color="secondary" style={styles.captionText}>
+                    Orbit asks for your Apple ID when it re-signs a build for your iPhone.
+                  </Text>
+                </Row>
+              )}
+              <Row mt="1.5">
+                <Text size="tiny" color="secondary" style={styles.captionText}>
+                  Your Apple ID is used only to create a free signing certificate for your devices.
+                  The password is never stored — it is passed once to a local signing process.
+                  Session tokens stay on this computer in ~/.orbit/apple-resign.
+                </Text>
+              </Row>
+            </View>
+          </View>
           <Text size="medium" weight="semibold" style={[headerStyle, styles.headerSpacing]}>
             Preferences
           </Text>
@@ -426,6 +500,10 @@ const styles = StyleSheet.create({
   },
   osRow: {
     minHeight: 36,
+  },
+  captionText: {
+    flex: 1,
+    lineHeight: 15,
   },
   disabledRow: {
     opacity: 0.5,

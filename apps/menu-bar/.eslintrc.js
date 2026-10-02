@@ -5,7 +5,7 @@ module.exports = {
   overrides: [
     {
       extends: 'universe/node',
-      files: ['metro.config.js'],
+      files: ['metro.config.js', 'electron/scripts/*.js'],
     },
   ],
   rules: {
