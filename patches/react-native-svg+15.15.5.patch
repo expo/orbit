@@ -1,0 +1,11 @@
+diff --git a/node_modules/react-native-svg/apple/RNSVGUIKit.macos.mm b/node_modules/react-native-svg/apple/RNSVGUIKit.macos.mm
+index aa9f94b..f3bbf76 100644
+--- a/node_modules/react-native-svg/apple/RNSVGUIKit.macos.mm
++++ b/node_modules/react-native-svg/apple/RNSVGUIKit.macos.mm
+@@ -1,5 +1,6 @@
+ #import "RNSVGUIKit.h"
+ #import <objc/runtime.h>
++#import <React/RCTAssert.h>
+ 
+ #if TARGET_OS_OSX
+ 
