@@ -3,6 +3,8 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { isNativeMac } from './helpers';
+
 const ARTIFACTS_DIR = path.resolve(__dirname, 'artifacts');
 
 function sanitize(name: string): string {
@@ -95,7 +97,20 @@ export const sharedConfig: Partial<Options.Testrunner> = {
       // Goes through the WebDriver session, so no TCC / Screen Recording
       // permission is needed — `screencapture` would otherwise pop a system
       // prompt that blocks the runner's UI mid-test.
-      await browser.saveScreenshot(`${base}.png`);
+      //
+      // Chromedriver's screenshot waits for the renderer to paint a frame. A
+      // BrowserWindow that was shown and then hidden again (the popover after
+      // "Get Started" under xvfb on Linux CI) never paints, so the command
+      // hangs until wdio's 120s request timeout and wedges the session. Skip
+      // it in that case; the DOM dump below still works on a hidden window.
+      const visibility = isNativeMac()
+        ? 'visible'
+        : await browser.execute(() => document.visibilityState);
+      if (visibility === 'visible') {
+        await browser.saveScreenshot(`${base}.png`);
+      } else {
+        console.warn(`[e2e] skipping screenshot: document.visibilityState is "${visibility}"`);
+      }
     } catch (err) {
       console.warn('[e2e] saveScreenshot failed:', (err as Error).message);
     }
