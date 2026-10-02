@@ -107,8 +107,6 @@ PODS:
   - hermes-engine/Pre-built (0.14.1)
   - MenuBar (1.0.0):
     - ExpoModulesCore
-  - ProgressIndicator (1.0.0):
-    - ExpoModulesCore
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -2717,7 +2715,6 @@ DEPENDENCIES:
   - glog (from `../../../node_modules/react-native-macos/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../../../node_modules/react-native-macos/sdks/hermes-engine/hermes-engine.podspec`)
   - MenuBar (from `../modules/menu-bar/ios`)
-  - ProgressIndicator (from `../modules/progress-indicator/ios`)
   - RCT-Folly (from `../../../node_modules/react-native-macos/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../../../node_modules/react-native-macos/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../../../node_modules/react-native-macos/Libraries/Required`)
@@ -2856,8 +2853,6 @@ EXTERNAL SOURCES:
     :tag: hermes-v0.14.1
   MenuBar:
     :path: "../modules/menu-bar/ios"
-  ProgressIndicator:
-    :path: "../modules/progress-indicator/ios"
   RCT-Folly:
     :podspec: "../../../node_modules/react-native-macos/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -3035,7 +3030,6 @@ SPEC CHECKSUMS:
   glog: f8e4bcc2257b1ee8479afbd6a6e27e17bc3d2716
   hermes-engine: a2a9fc7160af80292783f30b771f14a477f29712
   MenuBar: 5986d3736166dc022b970e61baefc9de9adbdd60
-  ProgressIndicator: 542bea1889c04508f35bebe4ec5fb3409e84dc3f
   RCT-Folly: 1d8b5288a809622ec31fbac327165bc9b38413bb
   RCTDeprecation: 8df4aea13a635ebe88bafef941fb110e28923d9f
   RCTRequired: 521f85257041999bf5d16c2dd77d3bc61dd313ee
