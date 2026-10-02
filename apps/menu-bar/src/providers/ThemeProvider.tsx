@@ -20,7 +20,7 @@ export function ThemeProvider({ children, themePreference = 'no-preference' }: T
       return themePreference;
     }
 
-    return systemTheme ?? 'light';
+    return systemTheme === 'dark' ? 'dark' : 'light';
   }, [themePreference, systemTheme]);
 
   return <ThemeContext value={theme}>{children}</ThemeContext>;
