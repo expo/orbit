@@ -1,11 +1,25 @@
 import type { Options } from '@wdio/types';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import { isNativeMac } from './helpers';
 
 const ARTIFACTS_DIR = path.resolve(__dirname, 'artifacts');
+// Written by electron/src/wdio-hook.ts (E2E builds only): window / renderer
+// lifecycle events and a heartbeat from the Electron main process.
+const MAIN_PROCESS_LOG = path.join(os.tmpdir(), 'orbit-e2e-main.log');
+
+function collectMainProcessLog(name: string): void {
+  if (!fs.existsSync(MAIN_PROCESS_LOG)) {
+    return;
+  }
+  const contents = fs.readFileSync(MAIN_PROCESS_LOG, 'utf-8');
+  fs.rmSync(MAIN_PROCESS_LOG, { force: true });
+  fs.writeFileSync(path.join(ARTIFACTS_DIR, `${name}.log`), contents);
+  console.log(`[e2e] Electron main-process log (${name}):\n${contents}`);
+}
 
 function sanitize(name: string): string {
   return name.replace(/[^a-z0-9-_]+/gi, '_');
@@ -70,6 +84,7 @@ export const sharedConfig: Partial<Options.Testrunner> = {
   onPrepare: () => {
     fs.rmSync(ARTIFACTS_DIR, { recursive: true, force: true });
     fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
+    fs.rmSync(MAIN_PROCESS_LOG, { force: true });
     console.log(`[e2e] Artifacts dir: ${ARTIFACTS_DIR}`);
     // Snapshot the desktop right at the start so we have at least one file
     // in the artifacts dir even if every wdio session fails to connect.
@@ -136,6 +151,7 @@ export const sharedConfig: Partial<Options.Testrunner> = {
   // a desktop snapshot to see what was on screen when Chromedriver gave up.
   afterSession: () => {
     captureWindowsDesktop(path.join(ARTIFACTS_DIR, `afterSession-${Date.now()}.desktop.png`));
+    collectMainProcessLog(`main-process-${Date.now()}`);
   },
 
   // Last-resort capture — fires once per run regardless of whether any
@@ -143,5 +159,6 @@ export const sharedConfig: Partial<Options.Testrunner> = {
   // and only if a session actually terminated; `onComplete` always fires.
   onComplete: () => {
     captureWindowsDesktop(path.join(ARTIFACTS_DIR, 'onComplete.desktop.png'));
+    collectMainProcessLog('main-process-onComplete');
   },
 };

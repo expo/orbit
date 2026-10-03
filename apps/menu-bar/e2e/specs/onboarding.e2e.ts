@@ -25,15 +25,21 @@ describe('Onboarding', () => {
       // Note: the Linux CI flake on this test was not in this body but in the
       // afterTest screenshot of the popover window; see wdio.shared.ts.
       const onboardingHandle = await browser.getWindowHandle();
+      console.log(
+        `[e2e] onboarding handle ${onboardingHandle}, all handles before click:`,
+        await browser.getWindowHandles()
+      );
       await byTestId(TestIDs.getStartedButton).click();
 
+      let remainingHandle = '';
       await browser.waitUntil(
         async () => {
           const handles = await browser.getWindowHandles();
           if (handles.includes(onboardingHandle) || handles.length !== 1) {
             return false;
           }
-          await browser.switchToWindow(handles[0]);
+          remainingHandle = handles[0];
+          await browser.switchToWindow(remainingHandle);
           return true;
         },
         {
@@ -41,6 +47,9 @@ describe('Onboarding', () => {
           timeoutMsg: 'Onboarding window did not close after pressing "Get Started"',
         }
       );
+      // getUrl is answered by the browser process, so it tells us which window
+      // survived even when its renderer is wedged (Linux CI investigation).
+      console.log(`[e2e] switched to ${remainingHandle}: ${await browser.getUrl()}`);
     } else {
       await byTestId(TestIDs.getStartedButton).click();
       await expect(byTestId(TestIDs.getStartedButton)).not.toExist();
