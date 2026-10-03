@@ -40,7 +40,7 @@ export enum MenuBarStatus {
   WARNING,
 }
 
-export function extractDownloadProgress(string: string) {
+export function extractDownloadProgress(string: string): number | undefined {
   const regex = /(\d+(?:\.\d+)?) MB \/ (\d+(?:\.\d+)?) MB/;
   const matches = string.match(regex);
 
@@ -51,7 +51,8 @@ export function extractDownloadProgress(string: string) {
     return progress;
   }
 
-  return 0;
+  // CLI output arrives in arbitrary chunks, so a line may be partial. No match means "unknown", not 0.
+  return undefined;
 }
 
 export type Task = {

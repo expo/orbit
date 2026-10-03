@@ -18,15 +18,12 @@ describe('Onboarding', () => {
       // Pressing "Get Started" runs closeOnboarding() in Onboarding.tsx, which
       // destroys the Onboarding window (the one this session is currently
       // focused on, having been switched to it by the previous test) and opens
-      // the popover. If we issue any WebDriver command against that destroyed
-      // target — as a bare `getWindowHandles()` after the click would — the
-      // legacy IPC bridge hangs instead of erroring, wedging the session until
-      // the 60s Mocha timeout (and then a 120s session-teardown timeout). That
-      // race is the source of this spec's flakiness.
+      // the popover. Capture the onboarding handle up front, then after the
+      // click poll until it drops out of the handle list and switch to a
+      // surviving window by id, so we never query the dead target.
       //
-      // Capture the onboarding handle up front, then after the click poll until
-      // it drops out of the handle list and switch to a surviving window by id,
-      // so we never query the dead target.
+      // Note: the Linux CI flake on this test was not in this body but in the
+      // afterTest screenshot of the popover window; see wdio.shared.ts.
       const onboardingHandle = await browser.getWindowHandle();
       await byTestId(TestIDs.getStartedButton).click();
 

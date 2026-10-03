@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
 import NativeCheckbox from './NativeCheckbox';
@@ -7,8 +6,6 @@ import { Text } from '../Text';
 import { Row } from '../View';
 
 const Checkbox = ({ onChange, onValueChange, label, ...props }: CheckboxProps) => {
-  const nativeCheckboxRef = useRef<React.ElementRef<typeof NativeCheckbox>>(null);
-
   const handleChange = (event: CheckboxChangeEvent) => {
     onChange?.(event);
     onValueChange?.(event.nativeEvent.value);
@@ -16,18 +13,9 @@ const Checkbox = ({ onChange, onValueChange, label, ...props }: CheckboxProps) =
 
   return (
     <Row align="center" gap="1">
-      <NativeCheckbox
-        {...props}
-        style={[styles.checkbox, props.style]}
-        onChange={handleChange}
-        ref={nativeCheckboxRef}
-      />
+      <NativeCheckbox {...props} style={[styles.checkbox, props.style]} onChange={handleChange} />
       {label && (
-        <Pressable
-          onPress={() => {
-            onValueChange?.(!props.value);
-            nativeCheckboxRef.current?.setNativeValue(!props.value);
-          }}>
+        <Pressable onPress={() => onValueChange?.(!props.value)}>
           <Text size="small">{label}</Text>
         </Pressable>
       )}

@@ -64,7 +64,11 @@
       RCTReactNativeFactory *reactNativeFactory = ((AppDelegate *)[NSApp delegate]).reactNativeFactory;
       RCTPlatformView *rootView = [reactNativeFactory.rootViewFactory viewWithModuleName:moduleName
                                                                        initialProperties:@{}];
-      newWindow.contentView = rootView;
+      // expo-modules-core only attaches SwiftUI hosting views when an NSViewController is in the responder chain.
+      rootView.frame = NSMakeRect(0, 0, width, height);
+      NSViewController *contentViewController = [NSViewController new];
+      contentViewController.view = rootView;
+      newWindow.contentViewController = contentViewController;
       [self->_windowsMap setObject:newWindow forKey:moduleName];
       newWindow.delegate = self;
       window = newWindow;

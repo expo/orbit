@@ -9,7 +9,7 @@ type LaunchUpdateAsyncOptions = {
   forceExpoGo?: boolean;
 };
 
-type LaunchUpdateCallback = (status: MenuBarStatus, progress: number) => void;
+type LaunchUpdateCallback = (status: MenuBarStatus, progress?: number) => void;
 
 export async function launchUpdateAsync(
   { url, platform, deviceId, noInstall, forceExpoGo }: LaunchUpdateAsyncOptions,
