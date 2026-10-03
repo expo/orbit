@@ -79,6 +79,10 @@ async function getConnectedDevicesUsingNativeToolsAsync(): Promise<AppleConnecte
       // TODO: We could improve this logic in the future to attempt pairing if specified.
       .filter((device) => {
         return (
+          // Xcode 26 `devicectl` (JSON v4) also lists simulators, flagged with
+          // `reality: 'simulated'`. Older versions omit the field, so only
+          // exclude entries explicitly marked as simulated.
+          device.hardwareProperties?.reality !== 'simulated' &&
           device.connectionProperties.pairingState === 'paired' &&
           device.connectionProperties.tunnelState !== 'unavailable'
         );
