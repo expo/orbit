@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix simulators being listed as connected Apple devices with Xcode 27 `devicectl`. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 - Upgrade menu-bar app to Expo SDK 58. ([#373](https://github.com/expo/orbit/pull/373) by [@gabrieldonadel](https://github.com/gabrieldonadel))

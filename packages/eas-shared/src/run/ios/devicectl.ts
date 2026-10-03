@@ -32,7 +32,7 @@ type DeviceCtlDevice = {
   hardwareProperties: DeviceCtlHardwareProperties;
   /** "A1A1AAA1-0011-1AA1-11A1-10A1111AA11A" */
   identifier: string;
-  visibilityClass: AnyEnum<'default'>;
+  visibilityClass: AnyEnum<'default' | 'simulators'>;
 };
 
 type DeviceCtlHardwareProperties = {
@@ -52,7 +52,7 @@ type DeviceCtlHardwareProperties = {
   platform: AnyEnum<'iOS'>;
   /** "iPhone15,3" */
   productType: AnyEnum<'iPhone13,4' | 'iPhone15,3'>;
-  reality: AnyEnum<'physical'>;
+  reality?: AnyEnum<'physical' | 'simulated'>;
   /** "X2X1CC1XXX" */
   serialNumber: string;
   supportedCPUTypes: DeviceCtlCpuType[];
@@ -110,7 +110,7 @@ type DeviceCtlConnectionProperties = {
   pairingState: AnyEnum<'paired'>;
   /** ["00001111-001111110110101A.coredevice.local", "A1A1AAA1-0011-1AA1-11A1-10A1111AA11A.coredevice.local"] */
   potentialHostnames: string[];
-  transportType: AnyEnum<'localNetwork' | 'wired'>;
+  transportType: AnyEnum<'localNetwork' | 'wired' | 'sameMachine'>;
   tunnelState: AnyEnum<'disconnected'>;
   tunnelTransportProtocol: AnyEnum<'tcp'>;
 };
@@ -159,7 +159,7 @@ export async function getConnectedAppleDevicesAsync() {
   debug(devices.stdout);
   const devicesJson = await JsonFile.readAsync(tmpPath);
 
-  if (![2, 3].includes((devicesJson as any)?.info?.jsonVersion)) {
+  if (![2, 3, 4].includes((devicesJson as any)?.info?.jsonVersion)) {
     Log.warn(
       'Unexpected devicectl JSON version output from devicectl. Connecting to physical Apple devices may not work as expected.'
     );
