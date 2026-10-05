@@ -6,6 +6,9 @@ export async function downloadBuildAsync(
   progressCallback: (progress: number) => void
 ): Promise<string> {
   return MenuBarModule.runCli('download-build', [url], (status) => {
-    progressCallback(extractDownloadProgress(status));
+    const progress = extractDownloadProgress(status);
+    if (progress != null) {
+      progressCallback(progress);
+    }
   });
 }

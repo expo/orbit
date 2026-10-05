@@ -21,6 +21,7 @@
     "@apollo/client": "^3.8.1",
     "@expo/metro-runtime": "~58.0.9",
     "@expo/styleguide-native": "^1.0.1",
+    "@expo/ui": "~58.0.11",
     "@fluentui/react-checkbox": "^9.2.40",
     "@fluentui/react-icons": "^2.0.227",
     "@fluentui/react-progress": "^9.1.90",

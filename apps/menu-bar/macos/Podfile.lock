@@ -88,6 +88,10 @@ PODS:
     - ExpoModulesJSI
   - ExpoSymbols (58.0.3):
     - ExpoModulesCore
+  - ExpoUI (58.0.11):
+    - ExpoModulesCore
+    - ExpoModulesWorklets
+    - React-RCTFabric
   - ExpoWebBrowser (58.0.3):
     - ExpoModulesCore
   - fast_float (8.0.0)
@@ -102,8 +106,6 @@ PODS:
     - hermes-engine/Pre-built (= 0.14.1)
   - hermes-engine/Pre-built (0.14.1)
   - MenuBar (1.0.0):
-    - ExpoModulesCore
-  - ProgressIndicator (1.0.0):
     - ExpoModulesCore
   - RCT-Folly (2024.11.18.00):
     - boost
@@ -2703,6 +2705,7 @@ DEPENDENCIES:
   - ExpoModulesJSI (from `../../../node_modules/expo-modules-jsi/apple`)
   - ExpoModulesWorklets (from `../../../node_modules/expo-modules-core`)
   - ExpoSymbols (from `../../../node_modules/expo-symbols/ios`)
+  - "ExpoUI (from `../../../node_modules/@expo/ui/ios`)"
   - ExpoWebBrowser (from `../../../node_modules/expo-web-browser/ios`)
   - fast_float (from `../../../node_modules/react-native-macos/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../../../node_modules/react-native-macos/Libraries/FBLazyVector`)
@@ -2712,7 +2715,6 @@ DEPENDENCIES:
   - glog (from `../../../node_modules/react-native-macos/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../../../node_modules/react-native-macos/sdks/hermes-engine/hermes-engine.podspec`)
   - MenuBar (from `../modules/menu-bar/ios`)
-  - ProgressIndicator (from `../modules/progress-indicator/ios`)
   - RCT-Folly (from `../../../node_modules/react-native-macos/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../../../node_modules/react-native-macos/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../../../node_modules/react-native-macos/Libraries/Required`)
@@ -2830,6 +2832,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/expo-modules-core"
   ExpoSymbols:
     :path: "../../../node_modules/expo-symbols/ios"
+  ExpoUI:
+    :path: "../../../node_modules/@expo/ui/ios"
   ExpoWebBrowser:
     :path: "../../../node_modules/expo-web-browser/ios"
   fast_float:
@@ -2849,8 +2853,6 @@ EXTERNAL SOURCES:
     :tag: hermes-v0.14.1
   MenuBar:
     :path: "../modules/menu-bar/ios"
-  ProgressIndicator:
-    :path: "../modules/progress-indicator/ios"
   RCT-Folly:
     :podspec: "../../../node_modules/react-native-macos/third-party-podspecs/RCT-Folly.podspec"
   RCTDeprecation:
@@ -3018,6 +3020,7 @@ SPEC CHECKSUMS:
   ExpoModulesJSI: 4ec211f19ac17c6a3f55b6cbfa97cab41bab7b3a
   ExpoModulesWorklets: be50be7ab5cb58b8b89719b9f1abaa52750fca80
   ExpoSymbols: 69fe4c95edb08f1b2df3f6c33d0af5ba69827fd4
+  ExpoUI: 73be91476f61a29166c42379494b98db1aff0c26
   ExpoWebBrowser: 0faaeaef3ea4f47725af395ee76349c3cff24673
   fast_float: 020c9458cc2a6486c9ae199f75f74e84d561c5a4
   FBLazyVector: 3d09e008ffda2b1f6fcc3f9e924abf4f703d7311
@@ -3027,7 +3030,6 @@ SPEC CHECKSUMS:
   glog: f8e4bcc2257b1ee8479afbd6a6e27e17bc3d2716
   hermes-engine: a2a9fc7160af80292783f30b771f14a477f29712
   MenuBar: 5986d3736166dc022b970e61baefc9de9adbdd60
-  ProgressIndicator: 542bea1889c04508f35bebe4ec5fb3409e84dc3f
   RCT-Folly: 1d8b5288a809622ec31fbac327165bc9b38413bb
   RCTDeprecation: 8df4aea13a635ebe88bafef941fb110e28923d9f
   RCTRequired: 521f85257041999bf5d16c2dd77d3bc61dd313ee

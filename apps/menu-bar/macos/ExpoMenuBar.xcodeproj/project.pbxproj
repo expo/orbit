@@ -30,8 +30,6 @@
 		C08E65302A5C44870079E3A9 /* AutoLauncher.app in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E651E2A5C411D0079E3A9 /* AutoLauncher.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C08E65322A5C44B90079E3A9 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */; };
 		C08E65342A5D04910079E3A9 /* WindowNavigator.m in Sources */ = {isa = PBXBuildFile; fileRef = C08E65332A5D04910079E3A9 /* WindowNavigator.m */; };
-		C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36E9F2A65E25A004F2D8C /* Checkbox.m */; };
-		C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */; };
 		C0D4407A2DDB9B9E006B7C16 /* PopoverManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D440792DDB9B9E006B7C16 /* PopoverManager.swift */; };
 		C0D4407C2DDBD86F006B7C16 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D4407B2DDBD86F006B7C16 /* AppDelegate.swift */; };
 		C0DA577B2F847C080063FF01 /* RCTHostWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = C0DA577A2F847C080063FF01 /* RCTHostWrapper.mm */; };
@@ -95,10 +93,6 @@
 		C08E65312A5C44B90079E3A9 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/System/Library/Frameworks/ServiceManagement.framework; sourceTree = DEVELOPER_DIR; };
 		C08E65332A5D04910079E3A9 /* WindowNavigator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowNavigator.m; sourceTree = "<group>"; };
 		C08E65352A5D0A580079E3A9 /* WindowNavigator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WindowNavigator.h; sourceTree = "<group>"; };
-		C0B36E9E2A65E25A004F2D8C /* Checkbox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Checkbox.h; sourceTree = "<group>"; };
-		C0B36E9F2A65E25A004F2D8C /* Checkbox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Checkbox.m; sourceTree = "<group>"; };
-		C0B36EA02A65E25A004F2D8C /* CheckboxManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CheckboxManager.h; sourceTree = "<group>"; };
-		C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckboxManager.m; sourceTree = "<group>"; };
 		C0D440792DDB9B9E006B7C16 /* PopoverManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverManager.swift; sourceTree = "<group>"; };
 		C0D4407B2DDBD86F006B7C16 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0DA57792F847C080063FF01 /* RCTHostWrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTHostWrapper.h; sourceTree = "<group>"; };
@@ -183,10 +177,6 @@
 				C061C7A22A26B27E00A53D8D /* AutoResizerRootViewManager.h */,
 				C061C7A32A26B50200A53D8D /* AutoResizerRootView.m */,
 				C061C7A52A26B55C00A53D8D /* AutoResizerRootView.h */,
-				C0B36E9E2A65E25A004F2D8C /* Checkbox.h */,
-				C0B36E9F2A65E25A004F2D8C /* Checkbox.m */,
-				C0B36EA02A65E25A004F2D8C /* CheckboxManager.h */,
-				C0B36EA12A65E25A004F2D8C /* CheckboxManager.m */,
 				C061C7A92A26EDB800A53D8D /* RCTImageView+Private.h */,
 				C0523ECB2A550983003371AF /* WindowManager.m */,
 				C0523ECD2A550A04003371AF /* WindowManager.h */,
@@ -516,11 +506,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C0B36EA22A65E25A004F2D8C /* Checkbox.m in Sources */,
 				C0D4407A2DDB9B9E006B7C16 /* PopoverManager.swift in Sources */,
 				C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */,
 				C06B8F902AAB77D0009F2BB5 /* DragDropStatusItemView.m in Sources */,
-				C0B36EA32A65E25A004F2D8C /* CheckboxManager.m in Sources */,
 				C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */,
 				C0523ECC2A550983003371AF /* WindowManager.m in Sources */,
 				C0D4407C2DDBD86F006B7C16 /* AppDelegate.swift in Sources */,

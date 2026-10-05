@@ -1,9 +1,26 @@
 import type { Options } from '@wdio/types';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
+import { isNativeMac } from './helpers';
+
 const ARTIFACTS_DIR = path.resolve(__dirname, 'artifacts');
+// Written by electron/src/wdio-hook.ts (E2E builds only): window / renderer
+// lifecycle events and a heartbeat from the Electron main process.
+const MAIN_PROCESS_LOG = path.join(os.tmpdir(), 'orbit-e2e-main.log');
+const MAIN_PROCESS_PID = path.join(os.tmpdir(), 'orbit-e2e-main.pid');
+
+function collectMainProcessLog(name: string): void {
+  if (!fs.existsSync(MAIN_PROCESS_LOG)) {
+    return;
+  }
+  const contents = fs.readFileSync(MAIN_PROCESS_LOG, 'utf-8');
+  fs.rmSync(MAIN_PROCESS_LOG, { force: true });
+  fs.writeFileSync(path.join(ARTIFACTS_DIR, `${name}.log`), contents);
+  console.log(`[e2e] Electron main-process log (${name}):\n${contents}`);
+}
 
 function sanitize(name: string): string {
   return name.replace(/[^a-z0-9-_]+/gi, '_');
@@ -34,6 +51,29 @@ function captureWindowsDesktop(outputPath: string): void {
   if (result.status !== 0) {
     console.warn('[e2e] PowerShell desktop screenshot failed:', result.stderr);
   }
+}
+
+// Linux-only. On Linux CI the Electron main process has been observed to stop
+// servicing its event loop after "Get Started" (the heartbeat in the
+// main-process log goes silent). Capture what it is doing without touching the
+// (hung) WebDriver session: thread states, native stacks via gdb, the X window
+// tree and a screenshot of the Xvfb display, which would show a modal dialog.
+function captureLinuxProcessState(base: string): void {
+  if (process.platform !== 'linux' || !fs.existsSync(MAIN_PROCESS_PID)) {
+    return;
+  }
+  const pid = fs.readFileSync(MAIN_PROCESS_PID, 'utf-8').trim();
+  const sections: string[] = [];
+  const run = (cmd: string, args: string[], timeout = 60000) => {
+    const result = spawnSync(cmd, args, { encoding: 'utf-8', timeout });
+    sections.push(`$ ${cmd} ${args.join(' ')}\n${result.stdout ?? ''}${result.stderr ?? ''}`);
+  };
+  run('ps', ['-L', '-o', 'pid,tid,stat,pcpu,wchan:30,comm', '-p', pid]);
+  run('sudo', ['gdb', '-p', pid, '-batch', '-ex', 'thread apply all bt 30'], 180000);
+  run('xwininfo', ['-root', '-tree']);
+  fs.writeFileSync(`${base}.process.txt`, sections.join('\n\n'));
+  run('import', ['-window', 'root', `${base}.xvfb.png`]);
+  console.log(`[e2e] Linux process state for pid ${pid}:\n${sections.join('\n\n')}`);
 }
 
 export const sharedConfig: Partial<Options.Testrunner> = {
@@ -68,6 +108,8 @@ export const sharedConfig: Partial<Options.Testrunner> = {
   onPrepare: () => {
     fs.rmSync(ARTIFACTS_DIR, { recursive: true, force: true });
     fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
+    fs.rmSync(MAIN_PROCESS_LOG, { force: true });
+    fs.rmSync(MAIN_PROCESS_PID, { force: true });
     console.log(`[e2e] Artifacts dir: ${ARTIFACTS_DIR}`);
     // Snapshot the desktop right at the start so we have at least one file
     // in the artifacts dir even if every wdio session fails to connect.
@@ -89,13 +131,31 @@ export const sharedConfig: Partial<Options.Testrunner> = {
       ARTIFACTS_DIR,
       sanitize(`${test.parent}-${test.title}${passed ? '' : '-FAILED'}`)
     );
+    if (!passed) {
+      // Before any WebDriver command: those hang for 120s each while the app
+      // is wedged, and we want the process state from while it is wedged.
+      captureLinuxProcessState(base);
+    }
     try {
       // One screenshot per test (pass or fail). Mac2 captures the app's
       // frontmost window; Chromedriver captures the Electron renderer.
       // Goes through the WebDriver session, so no TCC / Screen Recording
       // permission is needed — `screencapture` would otherwise pop a system
       // prompt that blocks the runner's UI mid-test.
-      await browser.saveScreenshot(`${base}.png`);
+      //
+      // Chromedriver's screenshot waits for the renderer to paint a frame. A
+      // BrowserWindow that was shown and then hidden again (the popover after
+      // "Get Started" under xvfb on Linux CI) never paints, so the command
+      // hangs until wdio's 120s request timeout and wedges the session. Skip
+      // it in that case; the DOM dump below still works on a hidden window.
+      const visibility = isNativeMac()
+        ? 'visible'
+        : await browser.execute(() => document.visibilityState);
+      if (visibility === 'visible') {
+        await browser.saveScreenshot(`${base}.png`);
+      } else {
+        console.warn(`[e2e] skipping screenshot: document.visibilityState is "${visibility}"`);
+      }
     } catch (err) {
       console.warn('[e2e] saveScreenshot failed:', (err as Error).message);
     }
@@ -121,6 +181,7 @@ export const sharedConfig: Partial<Options.Testrunner> = {
   // a desktop snapshot to see what was on screen when Chromedriver gave up.
   afterSession: () => {
     captureWindowsDesktop(path.join(ARTIFACTS_DIR, `afterSession-${Date.now()}.desktop.png`));
+    collectMainProcessLog(`main-process-${Date.now()}`);
   },
 
   // Last-resort capture — fires once per run regardless of whether any
@@ -128,5 +189,6 @@ export const sharedConfig: Partial<Options.Testrunner> = {
   // and only if a session actually terminated; `onComplete` always fires.
   onComplete: () => {
     captureWindowsDesktop(path.join(ARTIFACTS_DIR, 'onComplete.desktop.png'));
+    collectMainProcessLog('main-process-onComplete');
   },
 };

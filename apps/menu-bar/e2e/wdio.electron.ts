@@ -58,6 +58,17 @@ export const config: WebdriverIO.Config = {
         appBinaryPath: getAppBinaryPath(),
         appArgs,
       },
+      // Full Chromedriver + Electron stderr log in the artifacts. Keys are
+      // decamelized into chromedriver flags (--log-path, --verbose, ...).
+      // appendLog keeps both sessions in one file; it is a valid flag that
+      // the wdio type simply doesn't list, hence the cast.
+      'wdio:chromedriverOptions': {
+        logPath: path.resolve(__dirname, 'artifacts', 'chromedriver.log'),
+        appendLog: true,
+        verbose: true,
+        readableTimestamp: true,
+        enableChromeLogs: true,
+      } as WebdriverIO.ChromedriverOptions,
     },
   ],
 

@@ -12,6 +12,7 @@
 
 ### 💡 Others
 
+- Use @expo/ui for checkboxes and progress bar components. ([#374](https://github.com/expo/orbit/pull/374) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade menu-bar app to Expo SDK 58. ([#373](https://github.com/expo/orbit/pull/373) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.8.1 — 2026-08-17

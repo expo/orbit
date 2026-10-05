@@ -104,8 +104,10 @@ jobs:
       - name: Install xvfb and Electron runtime libs
         run: |
           sudo apt-get update
+          # gdb, x11-utils and imagemagick are for the failure diagnostics in
+          # e2e/wdio.shared.ts (native stacks, X window tree, Xvfb screenshot).
           sudo apt-get install -y --no-install-recommends \
-            xvfb \
+            xvfb gdb x11-utils imagemagick \
             libgbm1 libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 \
             libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2
           # libasound2 on Ubuntu 22.04, libasound2t64 on 24.04; try both.
