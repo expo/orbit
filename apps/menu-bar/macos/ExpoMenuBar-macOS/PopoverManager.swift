@@ -102,7 +102,15 @@ class PopoverManager: NSObject {
     WindowNavigator.shared().openWindow(
       "Settings",
       options: [
-        "windowStyle": ["titlebarAppearsTransparent": true, "height": 720.0, "width": 500.0]
+        "title": "Settings",
+        "windowStyle": [
+          "mask": NSWindow.StyleMask([.titled, .closable, .fullSizeContentView]).rawValue,
+          "titlebarAppearsTransparent": true,
+          "titleVisibility": "hidden",
+          "toolbar": true,
+          "height": 520.0,
+          "width": 680.0,
+        ],
       ])
   }
 

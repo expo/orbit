@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import DebugMenu from './DebugMenu';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
@@ -10,10 +12,18 @@ export const WindowsNavigator = createWindowsNavigator({
     options: {
       title: 'Settings',
       windowStyle: {
-        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        // Electron renders FullSizeContentView windows frameless, so only macOS
+        // draws the sidebar under the traffic lights.
+        mask: [
+          WindowStyleMask.Titled,
+          WindowStyleMask.Closable,
+          ...(Platform.OS === 'macos' ? [WindowStyleMask.FullSizeContentView] : []),
+        ],
         titlebarAppearsTransparent: true,
-        height: 720,
-        width: 500,
+        titleVisibility: 'hidden',
+        toolbar: true,
+        height: 520,
+        width: 680,
       },
     },
   },

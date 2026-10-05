@@ -126,7 +126,7 @@ export const text = {
 
   type: {
     mono: {
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontFamily: Platform.OS === 'web' ? 'monospace' : 'Menlo',
     },
     InterBlack: { fontFamily: 'Inter-Black' },
     InterBlackItalic: { fontFamily: 'Inter-BlackItalic' },

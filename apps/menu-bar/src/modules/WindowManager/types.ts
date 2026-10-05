@@ -19,6 +19,8 @@ export type WindowOptions = {
     height?: number;
     width?: number;
     titlebarAppearsTransparent?: boolean;
+    titleVisibility?: 'visible' | 'hidden';
+    toolbar?: boolean;
   };
 };
 

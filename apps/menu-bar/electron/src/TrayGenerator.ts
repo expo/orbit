@@ -96,8 +96,8 @@ export default class TrayGenerator {
             title: 'Settings',
             windowStyle: {
               titlebarAppearsTransparent: true,
-              height: 720,
-              width: 500,
+              height: 520,
+              width: 680,
             },
           });
         },
