@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@types/picomatch": "^4.0.0",
-    "ipa-resign": "^0.0.9",
+    "ipa-resign": "^0.0.13",
     "commander": "^10.0.1",
     "common-types": "1.0.0",
     "eas-shared": "*",
