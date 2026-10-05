@@ -29,6 +29,26 @@ export function convertCliErrorObjectToError(errorObject: any) {
   return error;
 }
 
+// Turn the message of a rejected `runCli` call back into the CLI's error. The
+// native module does not hand over the CLI's JSON verbatim: expo-modules-core 58
+// reports a rejected Exception as its debug description, e.g.
+// `CLIOutputError: {"name":"InternalError",...} (at MenuBarModule.swift:144)`.
+// Extract the JSON object instead of parsing the whole message, and fall back to
+// a plain Error when there is none, so the error code (which drives flows like
+// the resign offer) is never lost to a JSON parse error.
+export function convertCliErrorMessageToError(message: string): Error {
+  const start = message.indexOf('{');
+  const end = message.lastIndexOf('}');
+  if (start !== -1 && end > start) {
+    try {
+      return convertCliErrorObjectToError(JSON.parse(message.slice(start, end + 1)));
+    } catch {
+      // Braces but not JSON: fall through to the plain message.
+    }
+  }
+  return new Error(message);
+}
+
 export enum MenuBarStatus {
   LISTENING,
   BOOTING_DEVICE,
