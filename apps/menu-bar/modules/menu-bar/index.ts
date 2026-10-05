@@ -3,7 +3,7 @@ import { CodedError } from 'expo-modules-core';
 import MenuBarModule, { emitter } from './src/MenuBarModule';
 import Alert from '../../src/modules/Alert';
 import { Logs } from '../../src/modules/Logs';
-import { convertCliErrorObjectToError } from '../../src/utils/helpers';
+import { convertCliErrorMessageToError } from '../../src/utils/helpers';
 
 const logs = new Logs();
 
@@ -38,8 +38,8 @@ async function runCli(
         hasShownCliErrorAlert = true;
       }
     } else if (error instanceof Error) {
-      // Original error from CLI is a stringified JSON object
-      const cliError = convertCliErrorObjectToError(JSON.parse(error.message));
+      // The CLI's error is a stringified JSON object, wrapped by the native module.
+      const cliError = convertCliErrorMessageToError(error.message);
       logs.push({ command, info: cliError.message });
 
       throw cliError;
