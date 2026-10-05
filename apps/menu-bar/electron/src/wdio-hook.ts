@@ -31,6 +31,9 @@ import path from 'path';
 // ponytail: appendFileSync and string lines; this never ships to users.
 // ---------------------------------------------------------------------------
 const LOG_PATH = path.join(os.tmpdir(), 'orbit-e2e-main.log');
+// Lets e2e/wdio.shared.ts find this process to dump its native stacks when
+// a test fails (the main loop has been seen to block on Linux CI).
+const PID_PATH = path.join(os.tmpdir(), 'orbit-e2e-main.pid');
 const startedAt = Date.now();
 
 function log(message: string) {
@@ -105,6 +108,19 @@ function watchContents(contents: WebContents) {
 log(
   `wdio-hook loaded electron=${process.versions.electron} platform=${process.platform} ` +
     `windows: ${describeWindows()} gpu=${JSON.stringify(app.getGPUFeatureStatus())}`
+);
+try {
+  fs.writeFileSync(PID_PATH, String(process.pid));
+} catch {
+  // see log()
+}
+// Electron's default handler shows a modal, synchronous error dialog for an
+// uncaught main-process exception, which would freeze the event loop under
+// test. Registering our own handler disables that dialog and records the
+// error instead.
+process.on('uncaughtException', (err) => log(`uncaughtException ${err?.stack ?? err}`));
+process.on('unhandledRejection', (reason) =>
+  log(`unhandledRejection ${(reason as Error)?.stack ?? String(reason)}`)
 );
 BrowserWindow.getAllWindows().forEach(watchWindow);
 webContents.getAllWebContents().forEach(watchContents);

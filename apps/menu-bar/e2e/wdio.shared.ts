@@ -10,6 +10,7 @@ const ARTIFACTS_DIR = path.resolve(__dirname, 'artifacts');
 // Written by electron/src/wdio-hook.ts (E2E builds only): window / renderer
 // lifecycle events and a heartbeat from the Electron main process.
 const MAIN_PROCESS_LOG = path.join(os.tmpdir(), 'orbit-e2e-main.log');
+const MAIN_PROCESS_PID = path.join(os.tmpdir(), 'orbit-e2e-main.pid');
 
 function collectMainProcessLog(name: string): void {
   if (!fs.existsSync(MAIN_PROCESS_LOG)) {
@@ -52,6 +53,29 @@ function captureWindowsDesktop(outputPath: string): void {
   }
 }
 
+// Linux-only. On Linux CI the Electron main process has been observed to stop
+// servicing its event loop after "Get Started" (the heartbeat in the
+// main-process log goes silent). Capture what it is doing without touching the
+// (hung) WebDriver session: thread states, native stacks via gdb, the X window
+// tree and a screenshot of the Xvfb display, which would show a modal dialog.
+function captureLinuxProcessState(base: string): void {
+  if (process.platform !== 'linux' || !fs.existsSync(MAIN_PROCESS_PID)) {
+    return;
+  }
+  const pid = fs.readFileSync(MAIN_PROCESS_PID, 'utf-8').trim();
+  const sections: string[] = [];
+  const run = (cmd: string, args: string[], timeout = 60000) => {
+    const result = spawnSync(cmd, args, { encoding: 'utf-8', timeout });
+    sections.push(`$ ${cmd} ${args.join(' ')}\n${result.stdout ?? ''}${result.stderr ?? ''}`);
+  };
+  run('ps', ['-L', '-o', 'pid,tid,stat,pcpu,wchan:30,comm', '-p', pid]);
+  run('sudo', ['gdb', '-p', pid, '-batch', '-ex', 'thread apply all bt 30'], 180000);
+  run('xwininfo', ['-root', '-tree']);
+  fs.writeFileSync(`${base}.process.txt`, sections.join('\n\n'));
+  run('import', ['-window', 'root', `${base}.xvfb.png`]);
+  console.log(`[e2e] Linux process state for pid ${pid}:\n${sections.join('\n\n')}`);
+}
+
 export const sharedConfig: Partial<Options.Testrunner> = {
   runner: 'local',
   tsConfigPath: './tsconfig.json',
@@ -85,6 +109,7 @@ export const sharedConfig: Partial<Options.Testrunner> = {
     fs.rmSync(ARTIFACTS_DIR, { recursive: true, force: true });
     fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
     fs.rmSync(MAIN_PROCESS_LOG, { force: true });
+    fs.rmSync(MAIN_PROCESS_PID, { force: true });
     console.log(`[e2e] Artifacts dir: ${ARTIFACTS_DIR}`);
     // Snapshot the desktop right at the start so we have at least one file
     // in the artifacts dir even if every wdio session fails to connect.
@@ -106,6 +131,11 @@ export const sharedConfig: Partial<Options.Testrunner> = {
       ARTIFACTS_DIR,
       sanitize(`${test.parent}-${test.title}${passed ? '' : '-FAILED'}`)
     );
+    if (!passed) {
+      // Before any WebDriver command: those hang for 120s each while the app
+      // is wedged, and we want the process state from while it is wedged.
+      captureLinuxProcessState(base);
+    }
     try {
       // One screenshot per test (pass or fail). Mac2 captures the app's
       // frontmost window; Chromedriver captures the Electron renderer.
