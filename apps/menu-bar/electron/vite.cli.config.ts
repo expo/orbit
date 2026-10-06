@@ -10,6 +10,10 @@ const NATIVE_EXTERNALS = [
   'macos-export-certificate-and-key',
 ];
 
+// ipa-resign ships a heavily obfuscated bundle whose entry uses dynamic
+// require() calls (e.g. `require("buffer")`) that Rollup can't resolve.
+const EXTERNALS = [...NATIVE_EXTERNALS, 'ipa-resign', /^ipa-resign\//];
+
 // https://vitejs.dev/config
 export default defineConfig({
   resolve: {
@@ -21,7 +25,7 @@ export default defineConfig({
       include: [/common-types/, /eas-shared/, /node_modules/],
     },
     rollupOptions: {
-      external: NATIVE_EXTERNALS,
+      external: EXTERNALS,
       output: {
         inlineDynamicImports: true,
         manualChunks: undefined,

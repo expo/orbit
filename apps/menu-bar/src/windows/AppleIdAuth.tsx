@@ -1,31 +1,59 @@
-import { lightTheme, darkTheme } from '@expo/styleguide-native';
+import {
+  Button,
+  Column,
+  Host,
+  Icon,
+  RNHostView,
+  Row,
+  Spacer,
+  Text,
+  TextInput,
+  type TextInputRef,
+  useNativeState,
+} from '@expo/ui';
+import { Key24Regular, ShieldCheckmark24Regular } from '@fluentui/react-icons';
 import { InternalError, AppleTwoFactorRequiredErrorDetails } from 'common-types';
-import React, { useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import { WindowsNavigator } from './index';
 import { AUTH_REASON_KEY, loadAppleIdHint, rememberAppleId } from '../commands/appleAccountAsync';
 import { appleIdSignInAsync, appleIdVerifyTwoFactorAsync } from '../commands/appleIdAuthAsync';
-import { TextInput, Text, View, Row, Divider } from '../components';
-import Button from '../components/Button';
 import TwoFactorCodeInput from '../components/TwoFactorCodeInput';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { AppleAuthCompletedEvent, AppleAuthEmitter } from '../utils/appleAuthEvents';
 import { describeResignError } from '../utils/resignErrorCopy';
-import { useCurrentTheme } from '../utils/useExpoTheme';
+import { useCurrentTheme, useExpoTheme } from '../utils/useExpoTheme';
 
-type Stage = 'credentials' | 'two-factor' | 'busy';
+// `@expo/ui` renders these components with SwiftUI on macOS and React Native on Electron.
+// The SwiftUI modifiers need the ExpoUI native module, which Electron lacks, so load them on macOS only.
+const swiftUI: typeof import('@expo/ui/swift-ui/modifiers') | null =
+  Platform.OS === 'macos' ? require('@expo/ui/swift-ui/modifiers') : null;
+const isWeb = Platform.OS === 'web';
+
+const ACCENT = '#0A84FF';
+const CODE_LENGTH = 6;
+
+type Stage = 'credentials' | 'two-factor';
 
 function isInternal(error: unknown, code: string): boolean {
   return error instanceof InternalError && error.code === code;
 }
 
-const AppleIdAuth: React.FC = () => {
-  const themeName = useCurrentTheme();
-  const theme = themeName === 'dark' ? darkTheme : lightTheme;
+const AppleIdAuth = () => {
+  const theme = useExpoTheme();
+  const dark = useCurrentTheme() === 'dark';
+  const colors = {
+    fill: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+    separator: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    secondary: dark ? '#9aa4ae' : '#596068',
+  };
+
   const [stage, setStage] = useState<Stage>('credentials');
+  const [busy, setBusy] = useState(false);
   const [appleId, setAppleId] = useState(() => loadAppleIdHint() ?? '');
+  const appleIdText = useNativeState(appleId);
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [preferSms, setPreferSms] = useState(false);
@@ -41,6 +69,16 @@ const AppleIdAuth: React.FC = () => {
   });
   // Guard against the auto-submitting code input re-submitting a rejected code.
   const lastSubmittedCodeRef = useRef<string | null>(null);
+  const appleIdRef = useRef<TextInputRef>(null);
+  const isTwoFactor = stage === 'two-factor';
+  const isSmsChallenge = twoFactorDetails?.authMode === 'sms';
+
+  // SwiftUI applies `autoFocus` before the new window is key, so focus the field once it is up.
+  useEffect(() => {
+    if (isTwoFactor) return;
+    const timeout = setTimeout(() => appleIdRef.current?.focus(), 300);
+    return () => clearTimeout(timeout);
+  }, [isTwoFactor]);
 
   const finish = (event: AppleAuthCompletedEvent) => {
     if (event.status === 'success') {
@@ -54,8 +92,9 @@ const AppleIdAuth: React.FC = () => {
   };
 
   const signIn = async (sms: boolean) => {
+    if (busy) return;
     setError(null);
-    setStage('busy');
+    setBusy(true);
     try {
       await appleIdSignInAsync({ appleId, password, preferSms: sms });
       finish({ status: 'success', appleId });
@@ -68,189 +107,243 @@ const AppleIdAuth: React.FC = () => {
         setStage('two-factor');
       } else {
         setError(describeResignError(e, { context: 'credentials' }).message);
-        setStage(twoFactorDetails ? 'two-factor' : 'credentials');
       }
+    } finally {
+      setBusy(false);
     }
   };
 
-  const submitCredentials = () => signIn(false);
+  const canContinue = Boolean(appleId && password) && !busy;
+  const canVerify = code.length === CODE_LENGTH && !busy;
+
+  const submitCredentials = () => {
+    if (canContinue) signIn(false);
+  };
 
   // Re-running sign-in issues a fresh challenge; used by both resend links.
   const resendChallenge = (sms: boolean) => signIn(sms);
 
   const submitTwoFactor = async (submittedCode?: string) => {
     const codeToSubmit = submittedCode ?? code;
-    if (codeToSubmit.length !== 6 || lastSubmittedCodeRef.current === codeToSubmit) {
+    if (
+      busy ||
+      codeToSubmit.length !== CODE_LENGTH ||
+      lastSubmittedCodeRef.current === codeToSubmit
+    ) {
       return;
     }
     lastSubmittedCodeRef.current = codeToSubmit;
     setError(null);
-    setStage('busy');
+    setBusy(true);
     try {
       await appleIdVerifyTwoFactorAsync({ appleId, password, code: codeToSubmit, preferSms });
       finish({ status: 'success', appleId });
     } catch (e: any) {
       setError(describeResignError(e, { context: 'code' }).message);
-      setStage('two-factor');
+    } finally {
+      setBusy(false);
     }
   };
 
-  const cancel = () => {
-    finish({ status: 'cancelled' });
+  const backToCredentials = () => {
+    setError(null);
+    setCode('');
+    lastSubmittedCodeRef.current = null;
+    setTwoFactorDetails(null);
+    setStage('credentials');
   };
 
+  const cancel = () => finish({ status: 'cancelled' });
+
+  const secondaryText = { fontSize: 13, color: colors.secondary, textAlign: 'center' } as const;
+  const linkText = { fontSize: 12, color: ACCENT } as const;
+  const smallText = { fontSize: 12, color: colors.secondary } as const;
+  // On Electron the input has a fixed default width, so let it fill the row (SwiftUI fields already do).
+  const inputStyle = isWeb
+    ? { flex: 1, minWidth: 0, paddingHorizontal: 0, borderWidth: 0, backgroundColor: 'transparent' }
+    : undefined;
+  const inputModifiers = swiftUI ? [swiftUI.textFieldStyle('plain')] : undefined;
+  const buttonStyle = isWeb ? { height: 28, borderRadius: 14, paddingHorizontal: 14 } : undefined;
+  const buttonModifiers = swiftUI ? [swiftUI.buttonBorderShape('capsule')] : undefined;
+
   return (
-    <View padding="large" flex="1" style={{ backgroundColor: theme.background.default }}>
-      <Text size="large" weight="bold">
-        Sign in with Apple ID
-      </Text>
-      <Text size="small" color="secondary" style={styles.subtitle}>
-        Orbit uses your Apple ID to issue a free 7-day signing certificate so downloaded IPAs can
-        install on your iPhone. Your password is never stored.
-      </Text>
-      <Divider style={styles.divider} />
-
-      {sessionExpired && stage !== 'busy' ? (
-        <Text size="tiny" style={styles.banner}>
-          Your Apple ID session expired. Sign in again to continue.
-        </Text>
-      ) : null}
-
-      {stage === 'busy' ? (
-        <View align="centered" justify="center" style={styles.busy}>
-          <ActivityIndicator />
-          <Text size="small" color="secondary" style={styles.busyMessage}>
-            Talking to Apple…
-          </Text>
-        </View>
-      ) : stage === 'credentials' ? (
-        <View>
-          <Text size="tiny" weight="medium" style={styles.label}>
-            Apple ID
-          </Text>
-          <TextInput
-            value={appleId}
-            onChangeText={setAppleId}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            placeholder="you@icloud.com"
-            border="default"
-            rounded="small"
-            padding="small"
-            style={styles.input}
-          />
-          <Text size="tiny" weight="medium" style={styles.label}>
-            Password
-          </Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            border="default"
-            rounded="small"
-            padding="small"
-            style={styles.input}
-          />
-        </View>
-      ) : (
-        <View>
-          <Text size="tiny" color="secondary" style={styles.label}>
-            {describeTwoFactorChannel(twoFactorDetails)}
-          </Text>
-          <TwoFactorCodeInput value={code} onChangeText={setCode} onComplete={submitTwoFactor} />
-          <View mt="2" gap="1">
-            {twoFactorDetails?.authMode === 'sms' ? (
-              <LinkText onPress={() => resendChallenge(true)}>Resend code</LinkText>
-            ) : (
-              <>
-                <LinkText onPress={() => resendChallenge(false)}>Resend code to devices</LinkText>
-                <LinkText onPress={() => resendChallenge(true)}>
-                  Can’t get to your devices? Text me a code
-                </LinkText>
-              </>
-            )}
-          </View>
-        </View>
-      )}
-
-      {error ? (
-        <Text size="tiny" style={styles.error}>
-          {error}
-        </Text>
-      ) : null}
-
-      <Row align="center" style={styles.actions}>
-        <Button title="Cancel" onPress={cancel} />
-        <View flex="1" />
-        {stage === 'credentials' && (
-          <Button
-            title="Continue"
-            color="primary"
-            onPress={submitCredentials}
-            disabled={!appleId || !password}
+    <Host
+      // On macOS the buttons follow the system accent color; Electron has none, so seed one.
+      seedColor={isWeb ? ACCENT : undefined}
+      style={[styles.host, isWeb && { backgroundColor: theme.background.default }]}>
+      <Column
+        alignment="center"
+        spacing={20}
+        style={{
+          paddingTop: 12,
+          paddingHorizontal: 28,
+          paddingBottom: 20,
+          ...(isWeb && { height: '100%' }),
+        }}>
+        {isWeb ? (
+          // `Icon` renders SF Symbols only, so Electron draws the tile with Fluent icons.
+          <RNHostView matchContents>
+            <View style={[styles.tile, { backgroundColor: colors.fill }]}>
+              {isTwoFactor ? <ShieldCheckmark24Regular /> : <Key24Regular />}
+            </View>
+          </RNHostView>
+        ) : (
+          <Icon
+            name={isTwoFactor ? 'checkmark.shield' : 'key'}
+            size={30}
+            style={{ width: 64, height: 64, borderRadius: 16, backgroundColor: colors.fill }}
           />
         )}
-        {stage === 'two-factor' && (
-          <Button
-            title="Verify"
-            color="primary"
-            onPress={() => submitTwoFactor()}
-            disabled={code.length !== 6}
-          />
+
+        <Column alignment="center" spacing={6}>
+          <Text textStyle={{ fontSize: 17, fontWeight: '600', textAlign: 'center' }}>
+            {isTwoFactor ? 'Two-factor authentication' : 'Sign in with Apple ID'}
+          </Text>
+          <Text textStyle={secondaryText}>
+            {isTwoFactor
+              ? isSmsChallenge
+                ? 'Enter the 6-digit code Apple sent by SMS to your trusted phone number.'
+                : `Enter the 6-digit code sent to your trusted Apple devices for ${appleId}.`
+              : 'Orbit uses your Apple ID to issue a free 7-day signing certificate so downloaded IPAs can install on your iPhone. Your password is never stored.'}
+          </Text>
+        </Column>
+
+        {isTwoFactor ? (
+          <Column alignment="center" spacing={12}>
+            <RNHostView matchContents={{ vertical: true }}>
+              {/* Hosted React Native content is sized from its children, so give the boxes a width. */}
+              <View style={styles.codeInput}>
+                <TwoFactorCodeInput
+                  value={code}
+                  onChangeText={setCode}
+                  onComplete={submitTwoFactor}
+                />
+              </View>
+            </RNHostView>
+            <Row spacing={4}>
+              <Spacer flexible />
+              <Text textStyle={smallText}>Didn’t get a code?</Text>
+              <Text textStyle={linkText} onPress={() => resendChallenge(isSmsChallenge)}>
+                Resend code
+              </Text>
+              <Spacer flexible />
+            </Row>
+            {!isSmsChallenge ? (
+              <Row spacing={4}>
+                <Spacer flexible />
+                <Text textStyle={smallText}>Can’t get to your devices?</Text>
+                <Text textStyle={linkText} onPress={() => resendChallenge(true)}>
+                  Text me a code
+                </Text>
+                <Spacer flexible />
+              </Row>
+            ) : null}
+          </Column>
+        ) : (
+          <Column spacing={0} style={{ backgroundColor: colors.fill, borderRadius: 12 }}>
+            <FieldRow label="Apple ID">
+              <TextInput
+                ref={appleIdRef}
+                value={appleIdText}
+                onChangeText={setAppleId}
+                placeholder="you@icloud.com"
+                autoFocus
+                textAlign="right"
+                textStyle={{ fontSize: 13 }}
+                style={inputStyle}
+                modifiers={inputModifiers}
+              />
+            </FieldRow>
+            <Column style={{ paddingLeft: 14 }}>
+              <Row style={{ height: 1, backgroundColor: colors.separator }}>
+                <Spacer flexible />
+              </Row>
+            </Column>
+            <FieldRow label="Password">
+              <TextInput
+                onChangeText={setPassword}
+                onSubmitEditing={submitCredentials}
+                secureTextEntry
+                placeholder="Required"
+                textAlign="right"
+                textStyle={{ fontSize: 13 }}
+                style={inputStyle}
+                modifiers={inputModifiers}
+              />
+            </FieldRow>
+          </Column>
         )}
-      </Row>
-    </View>
+
+        {sessionExpired ? (
+          <Text textStyle={{ fontSize: 12, color: '#FF9F0A', textAlign: 'center' }}>
+            Your Apple ID session expired. Sign in again to continue.
+          </Text>
+        ) : null}
+        {error ? (
+          <Text textStyle={{ fontSize: 12, color: '#FF453A', textAlign: 'center' }}>{error}</Text>
+        ) : null}
+
+        <Spacer flexible />
+
+        <Row alignment="center" spacing={8}>
+          {isTwoFactor ? (
+            <Button
+              variant="outlined"
+              label="Back"
+              onPress={backToCredentials}
+              style={buttonStyle}
+              modifiers={buttonModifiers}
+            />
+          ) : null}
+          {busy ? (
+            <RNHostView matchContents>
+              <ActivityIndicator size="small" />
+            </RNHostView>
+          ) : null}
+          <Spacer flexible />
+          <Button
+            variant="outlined"
+            label="Cancel"
+            onPress={cancel}
+            style={buttonStyle}
+            modifiers={buttonModifiers}
+          />
+          <Button
+            label={isTwoFactor ? 'Verify' : 'Continue'}
+            onPress={isTwoFactor ? () => submitTwoFactor() : submitCredentials}
+            disabled={isTwoFactor ? !canVerify : !canContinue}
+            style={buttonStyle}
+            modifiers={buttonModifiers}
+          />
+        </Row>
+      </Column>
+    </Host>
   );
 };
 
-const LinkText = ({ onPress, children }: { onPress: () => void; children: string }) => (
-  <TouchableOpacity onPress={onPress}>
-    <Text size="tiny" color="link">
+function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Row alignment="center" spacing={12} style={{ height: 40, paddingHorizontal: 14 }}>
+      <Text textStyle={{ fontSize: 13 }}>{label}</Text>
       {children}
-    </Text>
-  </TouchableOpacity>
-);
-
-function describeTwoFactorChannel(details: AppleTwoFactorRequiredErrorDetails | null): string {
-  // Apple's challenge response carries only the authMode — no device or phone
-  // lists — so keep the copy generic per channel.
-  if (details?.authMode === 'sms') {
-    return 'Enter the code Apple sent by SMS to your trusted phone number.';
-  }
-  return 'Enter the verification code Apple sent to your trusted devices.';
+    </Row>
+  );
 }
 
 const styles = StyleSheet.create({
-  subtitle: {
-    marginTop: 8,
-  },
-  divider: {
-    marginVertical: 16,
-  },
-  banner: {
-    color: '#b25000',
-    marginBottom: 8,
-  },
-  label: {
-    marginBottom: 6,
-    marginTop: 8,
-  },
-  input: {
-    marginBottom: 12,
-  },
-  busy: {
+  host: {
     flex: 1,
   },
-  busyMessage: {
-    marginTop: 12,
+  codeInput: {
+    // Window width (440) minus the 28pt side padding.
+    width: 384,
   },
-  error: {
-    color: '#cc3333',
-    marginTop: 8,
-  },
-  actions: {
-    marginTop: 24,
+  tile: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
