@@ -82,7 +82,13 @@
     }
 
     window.title = title;
+    window.titleVisibility = [windowStyle[@"titleVisibility"] isEqualToString:@"hidden"] ? NSWindowTitleHidden : NSWindowTitleVisible;
     [window setTitlebarAppearsTransparent:titlebarAppearsTransparent];
+    // A unified toolbar lets a SwiftUI sidebar run full height, with the traffic lights inside it.
+    if ([windowStyle[@"toolbar"] boolValue] && window.toolbar == nil) {
+      window.toolbar = [[NSToolbar alloc] initWithIdentifier:moduleName];
+      window.toolbarStyle = NSWindowToolbarStyleUnified;
+    }
     if(window.styleMask != windowStyleMask){
       [window setStyleMask:windowStyleMask];
     }

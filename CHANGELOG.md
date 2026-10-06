@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Redesign the Settings window with a sidebar, using a native SwiftUI sidebar on macOS. ([#376](https://github.com/expo/orbit/pull/376) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Fix simulators being listed as connected Apple devices with Xcode 27 `devicectl`. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
