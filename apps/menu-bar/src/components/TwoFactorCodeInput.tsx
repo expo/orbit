@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Pressable, TextInput as RNTextInput, StyleSheet } from 'react-native';
 
 import { Row, Text, View } from './index';
-import { useExpoTheme } from '../utils/useExpoTheme';
+import { useCurrentTheme } from '../utils/useExpoTheme';
 
 type Props = {
   value: string;
@@ -12,13 +12,16 @@ type Props = {
 };
 
 const CODE_LENGTH = 6;
+// react-native-macos prop that the upstream TextInput types do not declare.
+const noFocusRing = { enableFocusRing: false } as object;
+const ACCENT = '#0A84FF';
 
 /**
  * Six display boxes backed by one invisible full-size TextInput, so paste and
  * normal typing both work and focus handling stays native.
  */
 const TwoFactorCodeInput = ({ value, onChangeText, onComplete }: Props) => {
-  const theme = useExpoTheme();
+  const dark = useCurrentTheme() === 'dark';
   const inputRef = useRef<RNTextInput>(null);
   const [focused, setFocused] = useState(false);
 
@@ -31,21 +34,24 @@ const TwoFactorCodeInput = ({ value, onChangeText, onComplete }: Props) => {
   };
 
   const activeIndex = Math.min(value.length, CODE_LENGTH - 1);
+  const boxColors = {
+    backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+    borderColor: dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.1)',
+  };
 
   return (
     <Pressable onPress={() => inputRef.current?.focus()}>
-      <Row gap="1">
+      <Row style={styles.row}>
         {Array.from({ length: CODE_LENGTH }, (_, index) => (
           <View
             key={index}
-            border="default"
-            rounded="small"
             align="centered"
             style={[
               styles.box,
-              focused && index === activeIndex ? { borderColor: theme.text.default } : null,
+              boxColors,
+              focused && index === activeIndex ? styles.activeBox : null,
             ]}>
-            <Text size="large">{value[index] ?? ''}</Text>
+            <Text style={styles.digit}>{value[index] ?? ''}</Text>
           </View>
         ))}
       </Row>
@@ -57,6 +63,8 @@ const TwoFactorCodeInput = ({ value, onChangeText, onComplete }: Props) => {
         onBlur={() => setFocused(false)}
         keyboardType="number-pad"
         autoFocus
+        // macOS draws a focus ring around the field even when it is invisible.
+        {...noFocusRing}
         style={styles.hiddenInput}
       />
     </Pressable>
@@ -66,9 +74,24 @@ const TwoFactorCodeInput = ({ value, onChangeText, onComplete }: Props) => {
 export default TwoFactorCodeInput;
 
 const styles = StyleSheet.create({
+  row: {
+    gap: 8,
+  },
   box: {
-    width: 38,
-    height: 46,
+    flex: 1,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 0.5,
+  },
+  activeBox: {
+    borderColor: ACCENT,
+    borderWidth: 1.5,
+  },
+  digit: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '500',
+    fontVariant: ['tabular-nums'],
   },
   hiddenInput: {
     ...StyleSheet.absoluteFillObject,

@@ -69,7 +69,8 @@ export const WindowsNavigator = createWindowsNavigator({
       windowStyle: {
         mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
         titlebarAppearsTransparent: true,
-        height: 470,
+        titleVisibility: 'hidden',
+        height: 380,
         width: 440,
       },
     },
