@@ -4,8 +4,8 @@ import {
   AUTH_REASON_KEY,
   forgetAppleIdSession,
   hasShownTrustInstructions,
-  loadAppleId,
   markTrustInstructionsShown,
+  resolveAppleIdAsync,
 } from './appleAccountAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import Alert from '../modules/Alert';
@@ -75,6 +75,53 @@ function confirmAsync(title: string, message: string, confirmLabel: string): Pro
   });
 }
 
+const TRUST_STEPS =
+  'On your iPhone, open Settings → General → VPN & Device Management, tap the developer under “Developer App”, then tap Trust and confirm. The iPhone needs an internet connection to verify it.';
+
+const MAX_TRUST_LAUNCH_ATTEMPTS = 3;
+
+/**
+ * The app installed but iOS refused to open it: its developer certificate is
+ * not trusted on the device yet — the normal first run of an app signed with a
+ * free Apple ID. Orbit can't trust it remotely (there is no API; Xcode can't
+ * either), so walk the user through Settings and launch once they say they're
+ * done. "Launch" re-runs the ordinary install-and-launch: reinstalling the same
+ * IPA is harmless and quick, trust is per certificate so it survives, and it
+ * keeps the CLI free of a launch-only mode. Resolves true when the app
+ * launched, false if they chose to open it from the Home Screen themselves.
+ */
+export async function handleUntrustedDeveloperAsync(opts: {
+  appPath: string;
+  deviceId: string;
+  launchURL?: string;
+}): Promise<boolean> {
+  for (let attempt = 0; attempt < MAX_TRUST_LAUNCH_ATTEMPTS; attempt++) {
+    const launch = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Trust the developer on your iPhone',
+        'The app is installed, but iOS won’t open it until you trust its developer.\n\n' +
+          `${TRUST_STEPS}\n\n` +
+          'Then press Launch, or open the app from the Home Screen.',
+        [
+          { text: 'Open it myself', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Launch', style: 'default', onPress: () => resolve(true) },
+        ]
+      );
+    });
+    if (!launch) return false;
+    try {
+      await installAndLaunchAppAsync(opts);
+      return true;
+    } catch (error) {
+      if (!(error instanceof InternalError && error.code === 'APPLE_DEVELOPER_NOT_TRUSTED')) {
+        throw error;
+      }
+      // Still untrusted — ask again.
+    }
+  }
+  return false;
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // One combined modal (macOS alerts are modal and don't stack): expiry line,
@@ -123,7 +170,8 @@ export async function resignAndRetryAsync(opts: {
 }): Promise<void> {
   const { localFilePath, deviceId, deviceName, launchURL, onProgress } = opts;
 
-  let appleId = loadAppleId();
+  // Adopts a session the CLI already holds before ever showing the sign-in window.
+  let appleId = await resolveAppleIdAsync();
   let stripExtensions = false;
   let authPrompts = 0;
   let stripRetried = false;
@@ -150,11 +198,31 @@ export async function resignAndRetryAsync(opts: {
         stripExtensions,
         onProgress,
       });
-      await installAndLaunchAppAsync({
-        appPath: resignResult.resignedIpaPath,
-        deviceId,
-        launchURL,
-      });
+      try {
+        await installAndLaunchAppAsync({
+          appPath: resignResult.resignedIpaPath,
+          deviceId,
+          launchURL,
+        });
+      } catch (launchError) {
+        if (
+          !(
+            launchError instanceof InternalError &&
+            launchError.code === 'APPLE_DEVELOPER_NOT_TRUSTED'
+          )
+        ) {
+          throw launchError;
+        }
+        // Installed, but iOS won't open it until the developer is trusted — the
+        // expected first run with a free Apple ID. Walk the user through it and
+        // launch, instead of relying on the success alert's passive hint.
+        markTrustInstructionsShown(appleId, deviceId);
+        await handleUntrustedDeveloperAsync({
+          appPath: resignResult.resignedIpaPath,
+          deviceId,
+          launchURL,
+        });
+      }
       showResignSuccessAlert({
         appleId,
         deviceUdid: deviceId,

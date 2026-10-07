@@ -149,8 +149,8 @@ program
 program
   .command('apple-id-auth')
   .description('Sign in / verify 2FA / sign out for the Apple ID used by IPA resigning')
-  .requiredOption('--mode <string>', 'sign-in | verify-2fa | sign-out')
-  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .requiredOption('--mode <string>', 'sign-in | verify-2fa | sign-out | status')
+  .option('--apple-id <string>', 'Apple ID email (required except for --mode status)')
   .option('--code <string>', '2FA code (when --mode verify-2fa)')
   .option('--prefer-sms', 'Send the 2FA code by SMS instead of a trusted-device push')
   .action(async (...args) => {

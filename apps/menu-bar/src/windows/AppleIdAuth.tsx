@@ -23,6 +23,7 @@ import TwoFactorCodeInput from '../components/TwoFactorCodeInput';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { AppleAuthCompletedEvent, AppleAuthEmitter } from '../utils/appleAuthEvents';
+import { AppleRetryInfo, retryNoticeMessage } from '../utils/appleRetry';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { useCurrentTheme, useExpoTheme } from '../utils/useExpoTheme';
 
@@ -58,6 +59,7 @@ const AppleIdAuth = () => {
   const [code, setCode] = useState('');
   const [preferSms, setPreferSms] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retry, setRetry] = useState<AppleRetryInfo | null>(null);
   const [twoFactorDetails, setTwoFactorDetails] =
     useState<AppleTwoFactorRequiredErrorDetails | null>(null);
   // The window navigator passes no props; the opener leaves the banner reason
@@ -94,11 +96,13 @@ const AppleIdAuth = () => {
   const signIn = async (sms: boolean) => {
     if (busy) return;
     setError(null);
+    setRetry(null);
     setBusy(true);
     try {
-      await appleIdSignInAsync({ appleId, password, preferSms: sms });
+      await appleIdSignInAsync({ appleId, password, preferSms: sms, onRetry: setRetry });
       finish({ status: 'success', appleId });
     } catch (e: any) {
+      setRetry(null);
       if (isInternal(e, 'APPLE_TWO_FACTOR_REQUIRED')) {
         setPreferSms(sms);
         setCode('');
@@ -134,11 +138,19 @@ const AppleIdAuth = () => {
     }
     lastSubmittedCodeRef.current = codeToSubmit;
     setError(null);
+    setRetry(null);
     setBusy(true);
     try {
-      await appleIdVerifyTwoFactorAsync({ appleId, password, code: codeToSubmit, preferSms });
+      await appleIdVerifyTwoFactorAsync({
+        appleId,
+        password,
+        code: codeToSubmit,
+        preferSms,
+        onRetry: setRetry,
+      });
       finish({ status: 'success', appleId });
     } catch (e: any) {
+      setRetry(null);
       setError(describeResignError(e, { context: 'code' }).message);
     } finally {
       setBusy(false);
@@ -147,6 +159,7 @@ const AppleIdAuth = () => {
 
   const backToCredentials = () => {
     setError(null);
+    setRetry(null);
     setCode('');
     lastSubmittedCodeRef.current = null;
     setTwoFactorDetails(null);
@@ -159,8 +172,16 @@ const AppleIdAuth = () => {
   const linkText = { fontSize: 12, color: ACCENT } as const;
   const smallText = { fontSize: 12, color: colors.secondary } as const;
   // On Electron the input has a fixed default width, so let it fill the row (SwiftUI fields already do).
+  // boxShadow: 'none' drops @expo/ui's web focus ring (a 3px primary-color box-shadow).
   const inputStyle = isWeb
-    ? { flex: 1, minWidth: 0, paddingHorizontal: 0, borderWidth: 0, backgroundColor: 'transparent' }
+    ? {
+        flex: 1,
+        minWidth: 0,
+        paddingHorizontal: 0,
+        borderWidth: 0,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+      }
     : undefined;
   const inputModifiers = swiftUI ? [swiftUI.textFieldStyle('plain')] : undefined;
   const buttonStyle = isWeb ? { height: 28, borderRadius: 14, paddingHorizontal: 14 } : undefined;
@@ -277,6 +298,11 @@ const AppleIdAuth = () => {
         {sessionExpired ? (
           <Text textStyle={{ fontSize: 12, color: '#FF9F0A', textAlign: 'center' }}>
             Your Apple ID session expired. Sign in again to continue.
+          </Text>
+        ) : null}
+        {retry ? (
+          <Text textStyle={{ fontSize: 12, color: colors.secondary, textAlign: 'center' }}>
+            {retryNoticeMessage(retry)}
           </Text>
         ) : null}
         {error ? (
