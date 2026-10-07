@@ -70,10 +70,7 @@ const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
                   key={`${task.status}-${determinate}`}
                 />
               )}
-              <Text
-                style={{
-                  color: task.status === MenuBarStatus.WARNING ? theme.text.warning : undefined,
-                }}>
+              <Text color={task.status === MenuBarStatus.WARNING ? 'warning' : undefined}>
                 {getDescription(task)}
               </Text>
             </View>

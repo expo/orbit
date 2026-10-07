@@ -55,6 +55,20 @@ function throwXcrunError(e: any): never {
       'The app is not signed for this device.',
       { stderr: e.stderr }
     );
+  } else if (
+    // `devicectl device process launch` refused by SpringBoard: the install
+    // succeeded, but the app's developer certificate is not trusted on the
+    // device yet (FBSOpenApplication "Security" / RequestDenied). This is the
+    // normal first run of an app signed with a free Apple ID — the user has to
+    // trust the profile in Settings; nothing on the Mac can do it for them.
+    e.stderr?.includes('has not been explicitly trusted by the user') ||
+    e.stderr?.match(/FBSOpenApplicationErrorDomain error 3\b/)
+  ) {
+    throw new InternalError(
+      'APPLE_DEVELOPER_NOT_TRUSTED',
+      'The app is installed, but iOS has not trusted its developer yet. On the iPhone, open Settings → General → VPN & Device Management, tap the developer, then Trust — and launch the app again.',
+      { stderr: e.stderr }
+    );
   } else if (e.stderr?.match(/Unable to lookup in current state: Shutdown/)) {
     throw new InternalError(
       'SIMULATOR_NOT_READY',

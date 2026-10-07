@@ -20,7 +20,10 @@ import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
-import { resignAndRetryAsync } from '../commands/resignAndRetryAsync';
+import {
+  handleUntrustedDeveloperAsync,
+  resignAndRetryAsync,
+} from '../commands/resignAndRetryAsync';
 import { Spacer, View } from '../components';
 import DeviceItem, { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import { useDeepLinking } from '../hooks/useDeepLinking';
@@ -575,6 +578,15 @@ function Core(props: Props) {
                 'Please unlock your device and open the app manually',
                 'We were unable to launch your app because the device is currently locked.'
               );
+            } else if (error.code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+              // Installed, but iOS won't open it until the user trusts the
+              // developer certificate on the device (first run of a dev build
+              // signed with their own account). Walk them through it and launch.
+              await handleUntrustedDeveloperAsync({
+                appPath: localFilePath!,
+                deviceId: resolvedDeviceId,
+                launchURL,
+              });
             } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
               if (getDeviceOS(device) !== 'ios' || isVirtualDevice(device)) {
                 Alert.alert(

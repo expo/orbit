@@ -1,6 +1,6 @@
 import { InternalError } from 'common-types';
 
-import { appleIdSignOutAsync } from './appleIdAuthAsync';
+import { appleIdSignOutAsync, appleIdStatusAsync } from './appleIdAuthAsync';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import { storage } from '../modules/Storage';
 
@@ -32,6 +32,21 @@ export function rememberAppleId(appleId: string) {
 
 export function loadAppleId(): string | null {
   return storage.getString(LAST_APPLE_ID_KEY) ?? null;
+}
+
+/**
+ * The signed-in Apple ID, adopting a session the CLI already holds when this
+ * app instance has no record of it — a fresh install, the other app flavour
+ * (native and Electron keep separate storage), or a sign-in made through the
+ * CLI. Null only when the CLI has no persisted session either, which is the
+ * one case that warrants the sign-in window.
+ */
+export async function resolveAppleIdAsync(): Promise<string | null> {
+  const stored = loadAppleId();
+  if (stored) return stored;
+  const persisted = await appleIdStatusAsync().catch(() => null);
+  if (persisted) rememberAppleId(persisted);
+  return persisted;
 }
 
 /** The email to pre-fill in the sign-in form (survives expiry). */

@@ -62,11 +62,40 @@ export function describeResignError(
         'The Apple Developer Program membership for this account has expired. Renew it at developer.apple.com/account, or sign in with a free Apple ID.',
     };
   }
+  if (/forbidden for security reasons/i.test(message)) {
+    return {
+      title: 'Blocked for security',
+      message:
+        'Apple blocked the request for security reasons. Sign in at developer.apple.com/account, clear any pending agreement or verification prompts, then try again.',
+    };
+  }
+  // GSA ec -20101 ("Your account information was entered incorrectly"): a wrong
+  // Apple ID or password that GSA surfaces as a generic InternalError, not
+  // APPLE_BAD_CREDENTIALS.
+  if (/-20101/.test(message)) {
+    return { title: 'Sign-in failed', message: 'Check the Apple ID and password and try again.' };
+  }
   if (/\bHTTP (429|409)\b/.test(message)) {
     return {
       title: 'Too many attempts',
       message:
         'Apple is rate-limiting requests from this account. Wait a few minutes and try again.',
+    };
+  }
+  // Apple's edge answers a bare nginx 502/503 (same HTML page, no Retry-After)
+  // for two unrelated reasons we cannot tell apart: transient load shedding,
+  // which a later retry gets past, and a deterministic rejection of the client
+  // itself — since Sep 2026 any X-MMe-Client-Info naming Xcode (fixed in
+  // ipa-resign 0.0.14), which no amount of retrying survives. The CLI has
+  // already retried ~15-30s before this runs. Only 429 (branch above) is a real
+  // rate-limit signal, so this copy names neither cause and gives the one
+  // actionable fix for the deterministic case. Matches any error class: GSA and
+  // portal calls throw AppleResignFailedError, anisette a plain Error.
+  if (/\bHTTP 50[23]\b|503 Service Temporarily Unavailable/.test(message)) {
+    return {
+      title: 'Apple sign-in unavailable',
+      message:
+        "Apple's sign-in service rejected the request (HTTP 503). Wait a minute and try again. If it fails right away every time, update Orbit — Apple blocks some older clients.",
     };
   }
   if (code === 'APPLE_RESIGN_QUOTA_EXCEEDED') {
@@ -75,6 +104,10 @@ export function describeResignError(
       message:
         'Free Apple IDs can register at most 10 App IDs per rolling 7-day window. Delete App IDs you no longer use, or wait for old ones to expire.',
     };
+  }
+  if (code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+    // The CLI's message already carries the Settings steps.
+    return { title: 'Trust the developer on your iPhone', message };
   }
   if (code === 'APPLE_AUTH_REQUIRED') {
     return {

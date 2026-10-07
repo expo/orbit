@@ -20,6 +20,7 @@ import {
   APPLE_ID_CHANGED_EVENT,
   clearAppleIdLoginAsync,
   loadAppleId,
+  resolveAppleIdAsync,
 } from '../commands/appleAccountAsync';
 import { getTrustedSourcesAsync } from '../commands/getTrustesSourcesAsync';
 import { listDevicesAsync } from '../commands/listDevicesAsync';
@@ -139,6 +140,9 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     const appleIdSub = DeviceEventEmitter.addListener(APPLE_ID_CHANGED_EVENT, () => {
       setAppleAccountId(loadAppleId());
     });
+    // Adopt a session the CLI already holds (fresh install, other app flavour,
+    // CLI sign-in); it broadcasts APPLE_ID_CHANGED_EVENT, handled above.
+    resolveAppleIdAsync().catch(() => {});
     return () => {
       appleIdSub.remove();
     };
