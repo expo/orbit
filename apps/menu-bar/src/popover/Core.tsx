@@ -587,6 +587,10 @@ function Core(props: Props) {
                 deviceId: resolvedDeviceId,
                 launchURL,
               });
+            } else if (error.code === 'APPLE_DEVICE_CONNECTION_LOST') {
+              // The CLI already retried the devicectl connection; the message
+              // carries the cable / Wi-Fi / unlock checks.
+              Alert.alert('Lost connection to your device', error.message);
             } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
               if (getDeviceOS(device) !== 'ios' || isVirtualDevice(device)) {
                 Alert.alert(

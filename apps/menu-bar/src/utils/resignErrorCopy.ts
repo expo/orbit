@@ -105,6 +105,10 @@ export function describeResignError(
         'Free Apple IDs can register at most 10 App IDs per rolling 7-day window. Delete App IDs you no longer use, or wait for old ones to expire.',
     };
   }
+  if (code === 'APPLE_DEVICE_CONNECTION_LOST') {
+    // The CLI already retried; the message carries the cable/Wi-Fi/unlock checks.
+    return { title: 'Lost connection to your device', message };
+  }
   if (code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
     // The CLI's message already carries the Settings steps.
     return { title: 'Trust the developer on your iPhone', message };

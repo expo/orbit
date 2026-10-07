@@ -51,6 +51,17 @@ describe(describeResignError, () => {
     expect(copy.message).toMatch(/VPN & Device Management/);
   });
 
+  it('titles a lost device connection and keeps the CLI checks', () => {
+    const copy = describeResignError(
+      new InternalError(
+        'APPLE_DEVICE_CONNECTION_LOST',
+        'Lost the connection to the device. Check the USB cable or Wi-Fi connection, make sure the iPhone is unlocked, and try again.'
+      )
+    );
+    expect(copy.title).toBe('Lost connection to your device');
+    expect(copy.message).toMatch(/USB cable or Wi-Fi/);
+  });
+
   it('falls through to the raw message for an unknown error', () => {
     const copy = describeResignError(new Error('something unexpected'));
     expect(copy.title).toBe('Something went wrong');
