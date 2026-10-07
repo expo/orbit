@@ -5,12 +5,44 @@ import { InternalError } from 'common-types';
 import Log from '../../log';
 import { sleepAsync } from '../../utils/promise';
 
+// devicectl's control channel to the device drops now and then — right after an
+// install, or when a Wi-Fi-paired device blinks — and the command fails before
+// it starts (CoreDeviceError 4000, "Connection reset by peer"). It almost always
+// reconnects within a couple of seconds, so retry those before giving up.
+const DEVICECTL_CONNECTION_ATTEMPTS = 3;
+const DEVICECTL_CONNECTION_RETRY_DELAY_MS = 1500;
+
 export async function xcrunAsync(args: string[], options?: SpawnOptions): Promise<SpawnResult> {
-  try {
-    return await spawnAsync('xcrun', args, options);
-  } catch (e) {
-    throwXcrunError(e);
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await spawnAsync('xcrun', args, options);
+    } catch (e) {
+      if (
+        args[0] === 'devicectl' &&
+        isDeviceConnectionError(e) &&
+        attempt < DEVICECTL_CONNECTION_ATTEMPTS
+      ) {
+        console.log(
+          `devicectl lost the connection to the device, retrying (${attempt}/${
+            DEVICECTL_CONNECTION_ATTEMPTS - 1
+          })...`
+        );
+        await sleepAsync(DEVICECTL_CONNECTION_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+      throwXcrunError(e);
+    }
   }
+}
+
+function isDeviceConnectionError(e: any): boolean {
+  const stderr: string = e?.stderr ?? '';
+  return (
+    /CoreDeviceError error 4000\b/.test(stderr) ||
+    stderr.includes('ControlChannelConnectionError') ||
+    stderr.includes('Connection reset by peer') ||
+    /connection to this device could not be established/i.test(stderr)
+  );
 }
 
 function throwXcrunError(e: any): never {
@@ -67,6 +99,14 @@ function throwXcrunError(e: any): never {
     throw new InternalError(
       'APPLE_DEVELOPER_NOT_TRUSTED',
       'The app is installed, but iOS has not trusted its developer yet. On the iPhone, open Settings → General → VPN & Device Management, tap the developer, then Trust — and launch the app again.',
+      { stderr: e.stderr }
+    );
+  } else if (isDeviceConnectionError(e)) {
+    // Still failing after the retries in xcrunAsync: the device really is
+    // unreachable, not just blinking.
+    throw new InternalError(
+      'APPLE_DEVICE_CONNECTION_LOST',
+      'Lost the connection to the device. Check the USB cable or Wi-Fi connection, make sure the iPhone is unlocked, and try again.',
       { stderr: e.stderr }
     );
   } else if (e.stderr?.match(/Unable to lookup in current state: Shutdown/)) {
