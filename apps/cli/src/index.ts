@@ -47,7 +47,10 @@ program
   .description('Pair a physical Android device over Wi-Fi')
   .requiredOption('--mode  <string>', 'Pairing mode: "code" (manual address) or "qr" (scanned)')
   .option('--pairing-code  <string>', '"code" mode: pairing code shown on the device')
-  .option('--pairing-address  <string>', '"code" mode: IP address and port shown on the pairing dialog')
+  .option(
+    '--pairing-address  <string>',
+    '"code" mode: IP address and port shown on the pairing dialog'
+  )
   .option(
     '--connect-address  <string>',
     '"code" mode: IP address and port used to connect to the device after pairing'
@@ -74,6 +77,25 @@ program
   .action(async (...args) => {
     const { installAndLaunchAppAsync } = await import('./commands/InstallAndLaunchApp');
     return returnLoggerMiddleware(installAndLaunchAppAsync)(...args);
+  });
+
+program
+  .command('launch-app')
+  .description(
+    'Launch an app already installed on a physical iOS device (no reinstall), optionally ' +
+      'handing it a URL. Opens Settings screens too, e.g. --bundle-id com.apple.Preferences ' +
+      '--url "prefs:root=General&path=ManagedConfigurationList"'
+  )
+  .requiredOption('--device-id  <string>', 'UDID of the device')
+  .option('--bundle-id  <string>', 'Bundle identifier of the app to launch')
+  .option(
+    '--app-path  <string>',
+    'Local .app / .ipa the app was installed from (reads its bundle id)'
+  )
+  .option('--url  <string>', 'URL to hand to the app on launch')
+  .action(async (...args) => {
+    const { launchAppAsync } = await import('./commands/LaunchApp');
+    return returnLoggerMiddleware(launchAppAsync)(...args);
   });
 
 program
@@ -142,6 +164,38 @@ program
   .command('set-custom-trusted-sources')
   .argument('<string>', 'Trusted sources')
   .action(returnLoggerMiddleware(setCustomTrustedSourcesAsync));
+
+program
+  .command('apple-id-auth')
+  .description('Sign in / verify 2FA / sign out for the Apple ID used by IPA resigning')
+  .requiredOption('--mode <string>', 'sign-in | verify-2fa | sign-out | status')
+  .option('--apple-id <string>', 'Apple ID email (required except for --mode status)')
+  .option('--code <string>', '2FA code (when --mode verify-2fa)')
+  .option('--prefer-sms', 'Send the 2FA code by SMS instead of a trusted-device push')
+  .action(async (...args) => {
+    const { appleIdAuthAsync } = await import('./commands/AppleIdAuth');
+    return returnLoggerMiddleware(appleIdAuthAsync)(...args);
+  });
+
+program
+  .command('resign-ipa')
+  .description(
+    'Resign an IPA for the given device with a development certificate issued to the Apple ID ' +
+      '(free or paid developer account)'
+  )
+  .requiredOption('--ipa <string>', 'Path to the input IPA')
+  .requiredOption('--udid <string>', 'UDID of the target physical iPhone / iPad')
+  .requiredOption('--device-name <string>', 'Friendly name for the device (used in Apple portal)')
+  .requiredOption('--apple-id <string>', 'Apple ID that owns the signing identity')
+  .option('--output <string>', 'Path to the resigned IPA (default: alongside the input)')
+  .option(
+    '--strip-extensions',
+    'Remove PlugIns/*.appex and Watch/* before signing; each needs its own App ID (free accounts allow 10 per week)'
+  )
+  .action(async (...args) => {
+    const { resignIpaCommandAsync } = await import('./commands/ResignIpa');
+    return returnLoggerMiddleware(resignIpaCommandAsync)(...args);
+  });
 
 if (process.argv.length < 3) {
   program.help();

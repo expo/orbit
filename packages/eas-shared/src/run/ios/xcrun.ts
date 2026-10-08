@@ -5,12 +5,44 @@ import { InternalError } from 'common-types';
 import Log from '../../log';
 import { sleepAsync } from '../../utils/promise';
 
+// devicectl's control channel to the device drops now and then — right after an
+// install, or when a Wi-Fi-paired device blinks — and the command fails before
+// it starts (CoreDeviceError 4000, "Connection reset by peer"). It almost always
+// reconnects within a couple of seconds, so retry those before giving up.
+const DEVICECTL_CONNECTION_ATTEMPTS = 3;
+const DEVICECTL_CONNECTION_RETRY_DELAY_MS = 1500;
+
 export async function xcrunAsync(args: string[], options?: SpawnOptions): Promise<SpawnResult> {
-  try {
-    return await spawnAsync('xcrun', args, options);
-  } catch (e) {
-    throwXcrunError(e);
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await spawnAsync('xcrun', args, options);
+    } catch (e) {
+      if (
+        args[0] === 'devicectl' &&
+        isDeviceConnectionError(e) &&
+        attempt < DEVICECTL_CONNECTION_ATTEMPTS
+      ) {
+        console.log(
+          `devicectl lost the connection to the device, retrying (${attempt}/${
+            DEVICECTL_CONNECTION_ATTEMPTS - 1
+          })...`
+        );
+        await sleepAsync(DEVICECTL_CONNECTION_RETRY_DELAY_MS * attempt);
+        continue;
+      }
+      throwXcrunError(e);
+    }
   }
+}
+
+function isDeviceConnectionError(e: any): boolean {
+  const stderr: string = e?.stderr ?? '';
+  return (
+    /CoreDeviceError error 4000\b/.test(stderr) ||
+    stderr.includes('ControlChannelConnectionError') ||
+    stderr.includes('Connection reset by peer') ||
+    /connection to this device could not be established/i.test(stderr)
+  );
 }
 
 function throwXcrunError(e: any): never {
@@ -39,6 +71,44 @@ function throwXcrunError(e: any): never {
     e.stderr?.match(/CoreDeviceError error 10003/)
   ) {
     throw new InternalError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
+  } else if (
+    // devicectl code-signature / provisioning rejection. The usbmux install
+    // path maps the same failure (LockdownProtocol's `ApplicationVerificationFailed`)
+    // — mirror it here so the devicectl fallback also triggers the resign offer.
+    // Covers ad-hoc/internal builds not provisioned for this device AND IPAs
+    // carrying a Beta (TestFlight/App Store) profile that can't be sideloaded
+    // ("Attempted to install a Beta profile without the proper entitlement").
+    e.stderr?.includes('ApplicationVerificationFailed') ||
+    e.stderr?.includes('its integrity could not be verified') ||
+    e.stderr?.includes('Attempted to install a Beta profile')
+  ) {
+    throw new InternalError(
+      'APPLE_APP_VERIFICATION_FAILED',
+      'The app is not signed for this device.',
+      { stderr: e.stderr }
+    );
+  } else if (
+    // `devicectl device process launch` refused by SpringBoard: the install
+    // succeeded, but the app's developer certificate is not trusted on the
+    // device yet (FBSOpenApplication "Security" / RequestDenied). This is the
+    // normal first run of an app signed with a free Apple ID — the user has to
+    // trust the profile in Settings; nothing on the Mac can do it for them.
+    e.stderr?.includes('has not been explicitly trusted by the user') ||
+    e.stderr?.match(/FBSOpenApplicationErrorDomain error 3\b/)
+  ) {
+    throw new InternalError(
+      'APPLE_DEVELOPER_NOT_TRUSTED',
+      'The app is installed, but iOS has not trusted its developer yet. On the iPhone, open Settings → General → VPN & Device Management, tap the developer, then Trust — and launch the app again.',
+      { stderr: e.stderr }
+    );
+  } else if (isDeviceConnectionError(e)) {
+    // Still failing after the retries in xcrunAsync: the device really is
+    // unreachable, not just blinking.
+    throw new InternalError(
+      'APPLE_DEVICE_CONNECTION_LOST',
+      'Lost the connection to the device. Check the USB cable or Wi-Fi connection, make sure the iPhone is unlocked, and try again.',
+      { stderr: e.stderr }
+    );
   } else if (e.stderr?.match(/Unable to lookup in current state: Shutdown/)) {
     throw new InternalError(
       'SIMULATOR_NOT_READY',

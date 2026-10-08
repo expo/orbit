@@ -58,19 +58,19 @@ const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
         </>
       ) : (
         [...tasks.values()].map((task) => {
+          const determinate =
+            task.status === MenuBarStatus.DOWNLOADING ||
+            (task.status === MenuBarStatus.RESIGNING_APP && task.progress > 0);
           return (
             <View px="medium" key={task.id}>
               {task.status !== MenuBarStatus.WARNING && (
                 <ProgressIndicator
-                  progress={task.status === MenuBarStatus.DOWNLOADING ? task.progress : undefined}
-                  indeterminate={task.status !== MenuBarStatus.DOWNLOADING}
-                  key={task.status}
+                  progress={determinate ? task.progress : undefined}
+                  indeterminate={!determinate}
+                  key={`${task.status}-${determinate}`}
                 />
               )}
-              <Text
-                style={{
-                  color: task.status === MenuBarStatus.WARNING ? theme.text.warning : undefined,
-                }}>
+              <Text color={task.status === MenuBarStatus.WARNING ? 'warning' : undefined}>
                 {getDescription(task)}
               </Text>
             </View>
@@ -90,13 +90,15 @@ function getDescription(task: Task): string {
     case MenuBarStatus.DOWNLOADING:
       return 'Downloading build...';
     case MenuBarStatus.INSTALLING_APP:
-      return 'Installing...';
+      return task.message ?? 'Installing...';
     case MenuBarStatus.INSTALLING_EXPO_GO:
       return 'Installing Expo Go...';
     case MenuBarStatus.OPENING_PROJECT_IN_EXPO_GO:
       return 'Opening project in Expo Go...';
     case MenuBarStatus.OPENING_UPDATE:
       return 'Opening update...';
+    case MenuBarStatus.RESIGNING_APP:
+      return task.message ?? 'Re-signing app...';
     case MenuBarStatus.WARNING:
       return task.message ?? '';
     default:

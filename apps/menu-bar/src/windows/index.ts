@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 
+import AppleIdAuth from './AppleIdAuth';
 import DebugMenu from './DebugMenu';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
@@ -58,6 +59,19 @@ export const WindowsNavigator = createWindowsNavigator({
       windowStyle: {
         height: 600,
         width: 800,
+      },
+    },
+  },
+  AppleIdAuth: {
+    component: AppleIdAuth,
+    options: {
+      title: 'Sign in with Apple ID',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        titleVisibility: 'hidden',
+        height: 380,
+        width: 440,
       },
     },
   },

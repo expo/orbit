@@ -3,13 +3,18 @@ import { CodedError } from 'expo-modules-core';
 import MenuBarModule, { emitter } from './src/MenuBarModule';
 import Alert from '../../src/modules/Alert';
 import { Logs } from '../../src/modules/Logs';
-import { convertCliErrorObjectToError } from '../../src/utils/helpers';
+import { convertCliErrorMessageToError } from '../../src/utils/helpers';
 
 const logs = new Logs();
 
 let hasShownCliErrorAlert = false;
 let listenerCounter = 0;
-async function runCli(command: string, args: string[], callback?: (status: string) => void) {
+async function runCli(
+  command: string,
+  args: string[],
+  callback?: (status: string) => void,
+  transientEnvVars?: Record<string, string>
+) {
   const id = listenerCounter++;
   const filteredCallback = (event: { listenerId: number; output: string }) => {
     if (event.listenerId !== id) {
@@ -20,7 +25,7 @@ async function runCli(command: string, args: string[], callback?: (status: strin
   };
   const listener = emitter.addListener('onCLIOutput', filteredCallback);
   try {
-    const result = await MenuBarModule.runCli(command, args, id);
+    const result = await MenuBarModule.runCli(command, args, id, transientEnvVars);
     logs.push({ command, info: result });
     return result;
   } catch (error) {
@@ -33,8 +38,8 @@ async function runCli(command: string, args: string[], callback?: (status: strin
         hasShownCliErrorAlert = true;
       }
     } else if (error instanceof Error) {
-      // Original error from CLI is a stringified JSON object
-      const cliError = convertCliErrorObjectToError(JSON.parse(error.message));
+      // The CLI's error is a stringified JSON object, wrapped by the native module.
+      const cliError = convertCliErrorMessageToError(error.message);
       logs.push({ command, info: cliError.message });
 
       throw cliError;

@@ -21,6 +21,18 @@ config.resolver.sourceExts = [
   'svg', // react-native-svg-transformer
 ];
 
+// The universal components in `@expo/ui` ship SwiftUI implementations as `.ios` files. macOS
+// runs the same SwiftUI views, so on macOS resolve relative imports inside `@expo/ui` as `ios`.
+// Bare imports (`react-native`, `expo`) keep the `macos` platform.
+const expoUiDir = path.dirname(require.resolve('@expo/ui/package.json')) + path.sep;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  const useIosFiles =
+    platform === 'macos' &&
+    moduleName.startsWith('.') &&
+    context.originModulePath.startsWith(expoUiDir);
+  return context.resolveRequest(context, moduleName, useIosFiles ? 'ios' : platform);
+};
+
 config.transformer.babelTransformerPath = require.resolve('react-native-svg-transformer/expo');
 config.transformer.getTransformOptions = async () => ({
   transform: {

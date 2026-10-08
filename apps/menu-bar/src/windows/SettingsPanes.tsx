@@ -1,5 +1,10 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
-import { Options16Regular, PhoneLaptop16Regular, Settings16Regular } from '@fluentui/react-icons';
+import {
+  Key16Regular,
+  Options16Regular,
+  PhoneLaptop16Regular,
+  Settings16Regular,
+} from '@fluentui/react-icons';
 import { CliCommands, Config } from 'common-types';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
 import { SymbolView } from 'expo-symbols';
@@ -11,6 +16,12 @@ import {
   openAuthSessionAsync,
   WebBrowserResultType,
 } from '../../modules/web-authentication-session';
+import {
+  APPLE_ID_CHANGED_EVENT,
+  clearAppleIdLoginAsync,
+  loadAppleId,
+  resolveAppleIdAsync,
+} from '../commands/appleAccountAsync';
 import { getTrustedSourcesAsync } from '../commands/getTrustesSourcesAsync';
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { setTrustedSourcesAsync } from '../commands/setTrustedSourcesAsync';
@@ -22,6 +33,7 @@ import { Switch } from '../components/Switch';
 import TrustedSourcesInput from '../components/TrustedSourcesInput';
 import { useGetCurrentUserQuery } from '../generated/graphql';
 import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   UserPreferences,
@@ -36,7 +48,7 @@ import { getCurrentUserDisplayName } from '../utils/helpers';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
-export type Pane = 'general' | 'platforms' | 'advanced';
+export type Pane = 'general' | 'platforms' | 'apple' | 'advanced';
 export type PaneItem = {
   key: Pane;
   label: string;
@@ -51,6 +63,7 @@ export const panes: PaneItem[] = [
     symbol: 'macbook.and.iphone',
     fallback: <PhoneLaptop16Regular />,
   },
+  { key: 'apple', label: 'Apple ID', symbol: 'key', fallback: <Key16Regular /> },
   {
     key: 'advanced',
     label: 'Advanced',
@@ -118,6 +131,37 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
     Boolean(getUserPreferences().customSdkPath)
   );
+  const [appleAccountId, setAppleAccountId] = useState<string | null>(loadAppleId());
+
+  useEffect(() => {
+    // Cross-window: an Apple ID change (sign-in, sign-out, or an automatic logout
+    // on session expiry) can happen in the popover or another window; it
+    // broadcasts through the main-process DeviceEventEmitter.
+    const appleIdSub = DeviceEventEmitter.addListener(APPLE_ID_CHANGED_EVENT, () => {
+      setAppleAccountId(loadAppleId());
+    });
+    // Adopt a session the CLI already holds (fresh install, other app flavour,
+    // CLI sign-in); it broadcasts APPLE_ID_CHANGED_EVENT, handled above.
+    resolveAppleIdAsync().catch(() => {});
+    return () => {
+      appleIdSub.remove();
+    };
+  }, []);
+
+  const signOutAppleId = async () => {
+    try {
+      const signedOut = await clearAppleIdLoginAsync();
+      setAppleAccountId(null);
+      Alert.alert(
+        'Apple ID signed out',
+        signedOut
+          ? `Signed out ${signedOut}. The next resign will ask you to sign in again.`
+          : 'No Apple ID was signed in.'
+      );
+    } catch (error) {
+      Alert.alert('Could not sign out', error instanceof Error ? error.message : String(error));
+    }
+  };
   const [trustedSourcesEnabled, setTrustedSourcesEnabled] = useState(false);
   const [trustedSources, setTrustedSources] = useState<string>('');
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
@@ -361,6 +405,38 @@ export function SettingsPane({ pane }: { pane: Pane }) {
               ))}
             </Card>
           </View>
+        ) : null}
+
+        {pane === 'apple' ? (
+          <>
+            <Card>
+              {appleAccountId ? (
+                <SettingRow
+                  title={appleAccountId}
+                  subtitle="Used to re-sign builds for your iPhone">
+                  <Button
+                    title="Sign out"
+                    color="primary"
+                    onPress={signOutAppleId}
+                    style={styles.button}
+                  />
+                </SettingRow>
+              ) : (
+                <View px="3.5" py="3">
+                  <Text size="tiny" color="secondary">
+                    Orbit asks for your Apple ID when it re-signs a build for your iPhone.
+                  </Text>
+                </View>
+              )}
+            </Card>
+            <Section title="How Orbit uses your Apple ID">
+              <Text size="tiny" color="secondary">
+                Your Apple ID is used only to create a free signing certificate for your devices.
+                The password is never stored — it is passed once to a local signing process. Session
+                tokens stay on this computer in ~/.orbit/apple-resign.
+              </Text>
+            </Section>
+          </>
         ) : null}
 
         {pane === 'advanced' ? (

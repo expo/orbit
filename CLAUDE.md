@@ -9,6 +9,7 @@ Expo Orbit is a desktop menu bar application and CLI tool that accelerates mobil
 ## Monorepo Structure
 
 This is a Yarn/Lerna monorepo:
+
 - **apps/cli** - Node.js CLI tool (expo-orbit-cli) using Commander.js
 - **apps/menu-bar** - Main desktop app built with React Native + Electron
 - **packages/common-types** - Shared TypeScript type definitions
@@ -19,6 +20,7 @@ This is a Yarn/Lerna monorepo:
 ## Build Commands
 
 Root level commands (run from repo root):
+
 ```bash
 yarn build        # Build all packages via Lerna
 yarn lint         # Lint all packages
@@ -27,6 +29,7 @@ yarn typecheck    # TypeScript type checking
 ```
 
 ### CLI App (apps/cli)
+
 ```bash
 yarn build        # Compile TypeScript
 yarn test         # Run Jest tests
@@ -36,6 +39,7 @@ yarn gql          # Generate GraphQL types
 ```
 
 ### Menu Bar App (apps/menu-bar)
+
 ```bash
 yarn start        # Start Metro bundler for development
 yarn macos        # Build macOS app with Xcode
@@ -52,20 +56,21 @@ yarn notarize     # Notarize for macOS distribution
 2. Build macOS app: `yarn macos` (app appears in menu bar)
 3. For CLI changes: `cd apps/cli && yarn build && cd ../menu-bar && yarn update-cli`
 
+## Verifying on Devices (agent-device)
+
+Use `agent-device` when available to verify app installs and Orbit features on iOS simulators, Android emulators, and physical devices. Read the device's UI yourself — snapshot or screenshot — instead of asking the user what their screen shows, and treat a snapshot that names the expected screen as the verification (a bare launch exit code is not).
+
+- `agent-device help workflow|physical-device|ios-system-ui` has the full reference; `help <command>` the exact flags.
+- Physical iOS devices need the signed XCTest runner. Set `AGENT_DEVICE_IOS_TEAM_ID` (a team in Xcode's accounts) and `AGENT_DEVICE_IOS_BUNDLE_ID`, **plus a fresh `AGENT_DEVICE_STATE_DIR`**: the CLI talks to an already-running daemon, which keeps its own environment, so env set only on the CLI call is silently ignored (symptom: `No Account for Team`). Keep the same state dir for every call in that session.
+- Orbit's own device commands go through `apps/cli` (`install-and-launch`, `launch-app`, `apple-id-auth --mode status`); use them for the action under test and `agent-device` to observe the result.
+- Settings deep links on iOS 18+: `prefs:root=General&path=ManagedConfigurationList` opens VPN & Device Management; every `App-prefs:` form lands on the Apps list.
+- Never run `apple-id-auth --mode sign-in|sign-out` against the user's real session store (`~/.orbit/apple-resign/secrets.json`) to test things: a sign-out clears the session the menu bar relies on and a sign-in replaces it, and the user then gets the "session expired" sign-in window. For such tests set `APPLE_RESIGN_EPHEMERAL=1` (ipa-resign swaps the file for a process-local store), or back the file up and restore it.
+
 ## Code Style
 
 - Prettier: 100 char width, 2 spaces, single quotes, trailing comma es5
 - Run `yarn lint --fix` before commits
 - Commit message format: `[package-name] Description` (e.g., `[cli] Fix download retry logic`)
-
-## Key Technologies
-
-- React 19 with React Native 0.81.5
-- Electron 28 for desktop shell
-- TypeScript 5.8+
-- Apollo Client 3 for GraphQL (EAS API)
-- Fluent UI for Windows-style components
-- Node.js 20+ required
 
 ## Architecture Notes
 

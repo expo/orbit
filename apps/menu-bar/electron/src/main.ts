@@ -13,6 +13,23 @@ if (process.platform === 'win32' && started) {
   app.quit();
 }
 
+// The bundled CLI resolves the native helper binaries (anisette/zsign) relative
+// to its own location, which only works in dev. In a packaged build they ship as
+// an extraResource (outside the asar so they stay executable), so point
+// ipa-resign at that location. Forked CLI processes inherit this via env.
+if (app.isPackaged) {
+  process.env.ORBIT_HELPER_BIN_DIR = path.join(process.resourcesPath, 'bin');
+}
+
+// The Win/Linux anisette provider is the anisette-js WASM emulator, whose assets
+// (assets/anisette/, copied into electron/anisette/ by build-helpers) it loads at
+// runtime. ipa-resign is bundled into the CLI, so it can't find them relative to
+// its own dir — point it at the shipped copy. Packaged: <resources>/anisette;
+// dev: electron/anisette. Forked CLI processes inherit this via env.
+process.env.ORBIT_ANISETTE_ASSETS_DIR = app.isPackaged
+  ? path.join(process.resourcesPath, 'anisette')
+  : path.join(app.getAppPath(), 'anisette');
+
 // Use a different protocol for macos so it doesn't conflict with the react-native-macos project
 const scheme = os.platform() !== 'darwin' ? 'expo-orbit' : 'orbit-debug';
 if (process.defaultApp) {

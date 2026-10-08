@@ -1,6 +1,14 @@
 {
   "pkg": {
-    "assets": ["../../node_modules/macos-export-certificate-and-key/**/*.node"],
+    "assets": [
+      "../../node_modules/macos-export-certificate-and-key/**/*.node",
+      "../../node_modules/ipa-resign/node_modules/macos-export-certificate-and-key/**/*.node",
+      "../../node_modules/ipa-resign/bin/anisette",
+      "../../node_modules/ipa-resign/bin/zsign"
+    ],
+    "scripts": [
+      "../../node_modules/fflate/lib/*.cjs"
+    ],
     "targets": ["node18-macos-arm64", "node18-macos-x64"]
   }
 }
