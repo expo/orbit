@@ -1,0 +1,14 @@
+{
+  // `tsconfig.json` excludes `*.test.ts` (tests must not land in `build/`), which left ts-jest
+  // compiling them outside the program — so the Jest globals resolved to nothing and every suite
+  // failed to run. This config includes the tests and pulls the type packages in explicitly.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "noEmit": true,
+    "types": ["jest", "node"]
+  },
+  "include": ["src"],
+  "exclude": []
+}
