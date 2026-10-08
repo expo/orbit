@@ -32,6 +32,50 @@ expo-orbit-cli <command> [options]
 
 ---
 
+## Output and exit codes
+
+Every command accepts `--json`, which is the contract for scripts, CI, and agents:
+
+```bash
+expo-orbit-cli list-devices --json
+```
+
+- **stdout carries exactly one JSON value** and nothing else. Commands that return a bare string
+  emit a quoted JSON string; commands that return nothing emit `null`. Progress logging is moved to
+  stderr so it can't corrupt the payload.
+- **Errors are a JSON object on stderr**, and the command **exits `1`**:
+
+  ```json
+  {
+    "name": "InternalError",
+    "code": "TOOL_CHECK_FAILED",
+    "message": "adb executable doesn't seem to work…",
+    "details": { "command": "…" },
+    "stack": "…"
+  }
+  ```
+
+  `code` is always present. It is one of the `InternalErrorCode` values in
+  `packages/common-types/src/InternalError.ts` for a known failure — several are directly
+  actionable, such as `TOOL_CHECK_FAILED`, `APPLE_DEVICE_USBMUXD_NOT_RUNNING`, or
+  `UNTRUSTED_SOURCE` — and `UNKNOWN_ERROR` for anything else. Prefer branching on `code` rather
+  than matching on `message`.
+
+`EXPO_ORBIT_JSON=1` is equivalent to `--json`, for contexts where passing a flag is awkward.
+
+Without `--json`, output stays human-oriented: a colorized inspection of the result on stdout, and
+`Error [CODE]: message` on stderr. Failures exit `1` in this mode too. Set `EXPO_DEBUG=1` to also
+print the stack.
+
+> **Note:** `EXPO_MENU_BAR=1` selects a third, legacy mode that frames the payload between
+> `---- return output ----` / `---- thrown error ----` markers. It exists only for the desktop app,
+> whose parsers depend on that exact framing (`modules/menu-bar/electron/spawnCliAsync.ts` and
+> `ios/CLIOutputParser.swift`). It takes precedence over `--json`, because the app spawns the CLI
+> with the user's environment inherited and an exported `EXPO_ORBIT_JSON` must not change what the
+> app receives. Don't use it for anything new.
+
+---
+
 ## Commands
 
 ### download-build

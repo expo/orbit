@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { returnLoggerMiddleware } from './utils';
+import { returnLoggerMiddleware, setJsonOutput } from './utils';
 // Command modules that pull in `eas-shared`/GraphQL are loaded lazily inside their actions so a
 // single invocation only pays the import cost of the command actually being run. Keep light
 // modules (TrustedSources) eager since the validator middleware is needed up front.
@@ -47,7 +47,10 @@ program
   .description('Pair a physical Android device over Wi-Fi')
   .requiredOption('--mode  <string>', 'Pairing mode: "code" (manual address) or "qr" (scanned)')
   .option('--pairing-code  <string>', '"code" mode: pairing code shown on the device')
-  .option('--pairing-address  <string>', '"code" mode: IP address and port shown on the pairing dialog')
+  .option(
+    '--pairing-address  <string>',
+    '"code" mode: IP address and port shown on the pairing dialog'
+  )
   .option(
     '--connect-address  <string>',
     '"code" mode: IP address and port used to connect to the device after pairing'
@@ -142,6 +145,22 @@ program
   .command('set-custom-trusted-sources')
   .argument('<string>', 'Trusted sources')
   .action(returnLoggerMiddleware(setCustomTrustedSourcesAsync));
+
+const JSON_FLAG_DESCRIPTION =
+  'Print a single JSON value to stdout and JSON errors to stderr. Can also be set with EXPO_ORBIT_JSON=1.';
+
+// Commander only matches an option against the command it is declared on, so register `--json` both
+// on the program and on every subcommand. That way it works wherever a script or an agent happens
+// to put it: `expo-orbit-cli --json list-devices` and `expo-orbit-cli list-devices --json`.
+program.option('--json', JSON_FLAG_DESCRIPTION);
+for (const command of program.commands) {
+  command.option('--json', JSON_FLAG_DESCRIPTION);
+}
+
+// Resolve the flag before the action runs so `returnLoggerMiddleware` sees it.
+program.hook('preAction', (thisCommand, actionCommand) => {
+  setJsonOutput(Boolean(thisCommand.opts().json || actionCommand.opts().json));
+});
 
 if (process.argv.length < 3) {
   program.help();
