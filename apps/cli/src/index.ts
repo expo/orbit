@@ -80,6 +80,25 @@ program
   });
 
 program
+  .command('launch-app')
+  .description(
+    'Launch an app already installed on a physical iOS device (no reinstall), optionally ' +
+      'handing it a URL. Opens Settings screens too, e.g. --bundle-id com.apple.Preferences ' +
+      '--url "prefs:root=General&path=ManagedConfigurationList"'
+  )
+  .requiredOption('--device-id  <string>', 'UDID of the device')
+  .option('--bundle-id  <string>', 'Bundle identifier of the app to launch')
+  .option(
+    '--app-path  <string>',
+    'Local .app / .ipa the app was installed from (reads its bundle id)'
+  )
+  .option('--url  <string>', 'URL to hand to the app on launch')
+  .action(async (...args) => {
+    const { launchAppAsync } = await import('./commands/LaunchApp');
+    return returnLoggerMiddleware(launchAppAsync)(...args);
+  });
+
+program
   .command('launch-expo-go')
   .argument('<string>', 'Snack URL')
   .requiredOption('-p, --platform <string>', 'Selected platform')

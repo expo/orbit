@@ -8,6 +8,7 @@ import {
   resolveAppleIdAsync,
 } from './appleAccountAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
+import { launchAppAsync, openDeviceManagementSettingsAsync } from './launchAppAsync';
 import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
@@ -76,41 +77,56 @@ function confirmAsync(title: string, message: string, confirmLabel: string): Pro
 }
 
 const TRUST_STEPS =
-  'On your iPhone, open Settings → General → VPN & Device Management, tap the developer under “Developer App”, then tap Trust and confirm. The iPhone needs an internet connection to verify it.';
+  'Tap “Open Settings on iPhone” to jump to Settings → General → VPN & Device Management on the phone. Tap the developer under “Developer App”, then Trust and confirm — the iPhone needs an internet connection to verify it.';
 
-const MAX_TRUST_LAUNCH_ATTEMPTS = 3;
+// Each pass is one alert: a Settings jump, a launch attempt, or a cancel.
+const MAX_TRUST_PROMPTS = 8;
+
+type TrustChoice = 'settings' | 'launch' | 'cancel';
 
 /**
  * The app installed but iOS refused to open it: its developer certificate is
  * not trusted on the device yet — the normal first run of an app signed with a
  * free Apple ID. Orbit can't trust it remotely (there is no API; Xcode can't
- * either), so walk the user through Settings and launch once they say they're
- * done. "Launch" re-runs the ordinary install-and-launch: reinstalling the same
- * IPA is harmless and quick, trust is per certificate so it survives, and it
- * keeps the CLI free of a launch-only mode. Resolves true when the app
- * launched, false if they chose to open it from the Home Screen themselves.
+ * either), but it can put the phone on the right Settings screen and then
+ * launch the already-installed app — no reinstall. Resolves true when the app
+ * launched, false if the user cancelled.
  */
 export async function handleUntrustedDeveloperAsync(opts: {
-  appPath: string;
   deviceId: string;
+  /** Preferred: no extraction needed. */
+  bundleId?: string;
+  /** Fallback when only the installed .app / .ipa is known. */
+  appPath?: string;
   launchURL?: string;
 }): Promise<boolean> {
-  for (let attempt = 0; attempt < MAX_TRUST_LAUNCH_ATTEMPTS; attempt++) {
-    const launch = await new Promise<boolean>((resolve) => {
+  for (let prompt = 0; prompt < MAX_TRUST_PROMPTS; prompt++) {
+    const choice = await new Promise<TrustChoice>((resolve) => {
       Alert.alert(
         'Trust the developer on your iPhone',
         'The app is installed, but iOS won’t open it until you trust its developer.\n\n' +
           `${TRUST_STEPS}\n\n` +
-          'Then press Launch, or open the app from the Home Screen.',
+          'Then press Launch.',
         [
-          { text: 'Open it myself', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Launch', style: 'default', onPress: () => resolve(true) },
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve('cancel') },
+          { text: 'Open Settings on iPhone', style: 'default', onPress: () => resolve('settings') },
+          { text: 'Launch', style: 'default', onPress: () => resolve('launch') },
         ]
       );
     });
-    if (!launch) return false;
+    if (choice === 'cancel') return false;
+    if (choice === 'settings') {
+      // Best effort: if the jump fails the steps above still describe the path.
+      await openDeviceManagementSettingsAsync(opts.deviceId).catch(() => {});
+      continue;
+    }
     try {
-      await installAndLaunchAppAsync(opts);
+      await launchAppAsync({
+        deviceId: opts.deviceId,
+        bundleId: opts.bundleId,
+        appPath: opts.appPath,
+        url: opts.launchURL,
+      });
       return true;
     } catch (error) {
       if (!(error instanceof InternalError && error.code === 'APPLE_DEVELOPER_NOT_TRUSTED')) {
@@ -218,8 +234,8 @@ export async function resignAndRetryAsync(opts: {
         // launch, instead of relying on the success alert's passive hint.
         markTrustInstructionsShown(appleId, deviceId);
         await handleUntrustedDeveloperAsync({
-          appPath: resignResult.resignedIpaPath,
           deviceId,
+          bundleId: resignResult.bundleId,
           launchURL,
         });
       }
