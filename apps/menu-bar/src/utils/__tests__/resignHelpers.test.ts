@@ -11,16 +11,21 @@ const RESIGN_STEPS = [
   'codesigning',
   'repacking',
   'done',
+  // Orbit-side: the install that follows the CLI's `done`.
+  'installing',
 ];
 
 describe(resignStepProgress, () => {
-  it('is strictly increasing across the resign steps', () => {
+  it('is strictly increasing across the resign steps, install included', () => {
     const values = RESIGN_STEPS.map((step) => resignStepProgress(step)!);
     expect(values).not.toContain(undefined);
     for (let i = 1; i < values.length; i++) {
       expect(values[i]).toBeGreaterThan(values[i - 1]);
     }
-    expect(values[values.length - 1]).toBe(100);
+    // The task row is removed once the install succeeds, so the bar never needs
+    // to read 100 while work is still happening.
+    expect(values[values.length - 1]).toBeLessThanOrEqual(100);
+    expect(resignStepProgress('done')).toBeLessThan(resignStepProgress('installing')!);
   });
 
   it('returns undefined (indeterminate) for the orbit-side waiting step', () => {

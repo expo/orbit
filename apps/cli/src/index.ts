@@ -179,7 +179,10 @@ program
 
 program
   .command('resign-ipa')
-  .description('Resign an IPA with a free Apple ID-issued certificate for the given device')
+  .description(
+    'Resign an IPA for the given device with a development certificate issued to the Apple ID ' +
+      '(free or paid developer account)'
+  )
   .requiredOption('--ipa <string>', 'Path to the input IPA')
   .requiredOption('--udid <string>', 'UDID of the target physical iPhone / iPad')
   .requiredOption('--device-name <string>', 'Friendly name for the device (used in Apple portal)')
@@ -187,7 +190,7 @@ program
   .option('--output <string>', 'Path to the resigned IPA (default: alongside the input)')
   .option(
     '--strip-extensions',
-    'Remove PlugIns/*.appex and Watch/* before signing (free-account App ID limit)'
+    'Remove PlugIns/*.appex and Watch/* before signing; each needs its own App ID (free accounts allow 10 per week)'
   )
   .action(async (...args) => {
     const { resignIpaCommandAsync } = await import('./commands/ResignIpa');

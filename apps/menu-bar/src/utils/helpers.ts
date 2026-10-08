@@ -85,6 +85,9 @@ export function describeResignStep(step: string): string {
       return 'Repacking app…';
     case 'done':
       return 'Finishing up…';
+    // Orbit-side: the resigned IPA is being installed and launched on the device.
+    case 'installing':
+      return 'Installing on your device…';
     default:
       return 'Re-signing app…';
   }
@@ -125,8 +128,12 @@ export function resignStepProgress(step: string): number | undefined {
       return 75;
     case 'repacking':
       return 94;
+    // The CLI's `done` is not the end of the user's wait: the install that
+    // follows (Orbit-side `installing`) is what completes the task.
     case 'done':
-      return 100;
+      return 96;
+    case 'installing':
+      return 98;
     default:
       return undefined;
   }

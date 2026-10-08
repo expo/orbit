@@ -64,6 +64,7 @@ Use `agent-device` when available to verify app installs and Orbit features on i
 - Physical iOS devices need the signed XCTest runner. Set `AGENT_DEVICE_IOS_TEAM_ID` (a team in Xcode's accounts) and `AGENT_DEVICE_IOS_BUNDLE_ID`, **plus a fresh `AGENT_DEVICE_STATE_DIR`**: the CLI talks to an already-running daemon, which keeps its own environment, so env set only on the CLI call is silently ignored (symptom: `No Account for Team`). Keep the same state dir for every call in that session.
 - Orbit's own device commands go through `apps/cli` (`install-and-launch`, `launch-app`, `apple-id-auth --mode status`); use them for the action under test and `agent-device` to observe the result.
 - Settings deep links on iOS 18+: `prefs:root=General&path=ManagedConfigurationList` opens VPN & Device Management; every `App-prefs:` form lands on the Apps list.
+- Never run `apple-id-auth --mode sign-in|sign-out` against the user's real session store (`~/.orbit/apple-resign/secrets.json`) to test things: a sign-out clears the session the menu bar relies on and a sign-in replaces it, and the user then gets the "session expired" sign-in window. For such tests set `APPLE_RESIGN_EPHEMERAL=1` (ipa-resign swaps the file for a process-local store), or back the file up and restore it.
 
 ## Code Style
 

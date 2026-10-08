@@ -225,7 +225,7 @@ const AppleIdAuth = () => {
               ? isSmsChallenge
                 ? 'Enter the 6-digit code Apple sent by SMS to your trusted phone number.'
                 : `Enter the 6-digit code sent to your trusted Apple devices for ${appleId}.`
-              : 'Orbit uses your Apple ID to issue a free 7-day signing certificate so downloaded IPAs can install on your iPhone. Your password is never stored.'}
+              : 'Orbit uses your Apple ID to issue a development certificate so downloaded IPAs can install on your iPhone. Free and paid developer accounts both work. Your password is never stored.'}
           </Text>
         </Column>
 

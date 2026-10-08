@@ -86,8 +86,8 @@ type TrustChoice = 'settings' | 'launch' | 'cancel';
 
 /**
  * The app installed but iOS refused to open it: its developer certificate is
- * not trusted on the device yet — the normal first run of an app signed with a
- * free Apple ID. Orbit can't trust it remotely (there is no API; Xcode can't
+ * not trusted on the device yet — the normal first run of any development-signed
+ * app, free or paid team. Orbit can't trust it remotely (there is no API; Xcode can't
  * either), but it can put the phone on the right Settings screen and then
  * launch the already-installed app — no reinstall. Resolves true when the app
  * launched, false if the user cancelled.
@@ -167,7 +167,7 @@ function showResignSuccessAlert(opts: {
   }
   if (opts.strippedEntitlements && opts.strippedEntitlements.length > 0) {
     lines.push(
-      'Some capabilities won’t work — free Apple IDs can’t carry these entitlements:\n' +
+      'Some capabilities won’t work — the development profile Orbit issued can’t carry these entitlements:\n' +
         opts.strippedEntitlements.map((e) => `  • ${e}`).join('\n')
     );
   }
@@ -214,6 +214,9 @@ export async function resignAndRetryAsync(opts: {
         stripExtensions,
         onProgress,
       });
+      // The CLI's last step is `done`; the install is a second CLI call, so tell
+      // the task row what is actually happening instead of leaving "Finishing up".
+      onProgress?.('installing');
       try {
         await installAndLaunchAppAsync({
           appPath: resignResult.resignedIpaPath,
@@ -230,8 +233,9 @@ export async function resignAndRetryAsync(opts: {
           throw launchError;
         }
         // Installed, but iOS won't open it until the developer is trusted — the
-        // expected first run with a free Apple ID. Walk the user through it and
-        // launch, instead of relying on the success alert's passive hint.
+        // expected first run of a development-signed app on a device. Walk the
+        // user through it and launch, instead of relying on the success alert's
+        // passive hint.
         markTrustInstructionsShown(appleId, deviceId);
         await handleUntrustedDeveloperAsync({
           deviceId,
@@ -263,9 +267,9 @@ export async function resignAndRetryAsync(opts: {
             details.reason === 'extensions'
               ? 'This app has extensions (PlugIns)'
               : 'This app has a Watch app',
-            'Free Apple IDs can’t sign extensions or Watch apps yet. Orbit can ' +
-              'install the main app without them — extensions and the Watch app ' +
-              'won’t appear on your device.',
+            'Each extension and Watch app needs its own App ID, which this account ' +
+              'can’t provide right now. Orbit can install the main app without them — ' +
+              'extensions and the Watch app won’t appear on your device.',
             'Install without them'
           );
           if (!proceed) return;
