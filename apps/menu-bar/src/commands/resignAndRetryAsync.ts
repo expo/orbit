@@ -3,7 +3,6 @@ import { AppleResignUnsupportedIpaErrorDetails, InternalError } from 'common-typ
 import {
   AUTH_REASON_KEY,
   forgetAppleIdSession,
-  hasShownTrustInstructions,
   markTrustInstructionsShown,
   resolveAppleIdAsync,
 } from './appleAccountAsync';
@@ -140,11 +139,11 @@ export async function handleUntrustedDeveloperAsync(opts: {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// One combined modal (macOS alerts are modal and don't stack): expiry line,
-// first-time trust instructions, and stripped-entitlement warnings.
+// One combined modal (macOS alerts are modal and don't stack): expiry line and
+// stripped-entitlement warnings. Trust instructions are not repeated here: the
+// app has just launched, which proves the developer is trusted — the untrusted
+// case is handled (and the device marked) by handleUntrustedDeveloperAsync.
 function showResignSuccessAlert(opts: {
-  appleId: string;
-  deviceUdid: string;
   profileExpiresAt: string;
   strippedEntitlements?: string[];
 }) {
@@ -155,16 +154,6 @@ function showResignSuccessAlert(opts: {
       days === 1 ? 'day' : 'days'
     }). Re-sign it in Orbit to renew it.`,
   ];
-  if (!hasShownTrustInstructions(opts.appleId, opts.deviceUdid)) {
-    lines.push(
-      'First app from this Apple ID? iOS shows “Untrusted Developer” when you open it. To trust it:\n' +
-        '1. Open Settings → General → VPN & Device Management.\n' +
-        '2. Under “Developer App”, tap your Apple ID.\n' +
-        '3. Tap Trust, then confirm.\n' +
-        'Your iPhone needs an internet connection to verify the developer.'
-    );
-    markTrustInstructionsShown(opts.appleId, opts.deviceUdid);
-  }
   if (opts.strippedEntitlements && opts.strippedEntitlements.length > 0) {
     lines.push(
       'Some capabilities won’t work — the development profile Orbit issued can’t carry these entitlements:\n' +
@@ -244,8 +233,6 @@ export async function resignAndRetryAsync(opts: {
         });
       }
       showResignSuccessAlert({
-        appleId,
-        deviceUdid: deviceId,
         profileExpiresAt: resignResult.profileExpiresAt,
         strippedEntitlements: resignResult.strippedEntitlements,
       });

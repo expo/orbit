@@ -56,6 +56,7 @@ import {
   handleAuthUrl,
   identifyAndParseDeeplinkURL,
 } from '../utils/parseUrl';
+import { describeResignReason, resignReasonForDevice } from '../utils/provisioning';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { WindowsNavigator } from '../windows';
 
@@ -475,6 +476,21 @@ function Core(props: Props) {
 
       let localFilePath = appURI.startsWith('https://') ? undefined : appURI;
 
+      // Phase timings, written to the Debug Menu log, so a slow install can be
+      // attributed to download / detection / device / install instead of guessed.
+      let lastMark = Date.now();
+      const timing: string[] = [];
+      const mark = (label: string) => {
+        const now = Date.now();
+        timing.push(`${label} ${((now - lastMark) / 1000).toFixed(1)}s`);
+        lastMark = now;
+      };
+      const logTiming = (outcome: string) => {
+        const line = `${outcome} — ${timing.join(' · ')} — ${localFilePath ?? appURI}`;
+        MenuBarModule.logs.push({ command: 'install-app', info: line });
+        console.log(`[install-app] ${line}`);
+      };
+
       try {
         if (!localFilePath) {
           createTask({
@@ -486,13 +502,16 @@ function Core(props: Props) {
             updateTask({ id: appURI, progress });
           });
           localFilePath = buildPath;
+          mark('download');
         }
 
         let devicePlatform: DevicePlatform = getPlatformFromURI(appURI);
         let appType: Device['deviceType'] | undefined;
+        let appInfo: Awaited<ReturnType<typeof detectAppleAppTypeAsync>> | undefined;
 
         if (devicePlatform === 'ios') {
-          const appInfo = await detectAppleAppTypeAsync(localFilePath);
+          appInfo = await detectAppleAppTypeAsync(localFilePath);
+          mark('detect');
           appType = appInfo.deviceType;
           if (appInfo.osType === 'macOS') {
             if (tasks.get(appURI)) {
@@ -564,6 +583,117 @@ function Core(props: Props) {
         }
         await ensureDeviceIsRunning(device);
 
+        // Offer to resign the build for this device. Used both before the install
+        // (when the embedded profile already rules it out) and after a failed one.
+        const offerResign = (title: string, message: string) => {
+          const deviceName = device!.name ?? 'iPhone';
+          const ipaPath = localFilePath!;
+          const runResign = async () => {
+            MenuBarModule.openPopover();
+            const resignTaskId = `resign:${ipaPath}`;
+            // Progress is stitched: fixed percentages per step, plus a slow creep
+            // during the opaque codesigning phase so the bar never looks frozen.
+            // Kept monotonic across step repeats.
+            let lastProgress = 0;
+            let creepTimer: ReturnType<typeof setInterval> | undefined;
+            const clearCreep = () => {
+              if (creepTimer) {
+                clearInterval(creepTimer);
+                creepTimer = undefined;
+              }
+            };
+            createTask({
+              id: resignTaskId,
+              status: MenuBarStatus.RESIGNING_APP,
+              progress: 0,
+              message: describeResignStep('inspecting'),
+            });
+            try {
+              await resignAndRetryAsync({
+                localFilePath: ipaPath,
+                deviceId: resolvedDeviceId,
+                deviceName,
+                launchURL,
+                onProgress: (step) => {
+                  clearCreep();
+                  const target = resignStepProgress(step);
+                  if (target === undefined) {
+                    // Orbit-side waiting steps: back to indeterminate.
+                    lastProgress = 0;
+                  } else {
+                    lastProgress = Math.max(lastProgress, target);
+                  }
+                  updateTask({
+                    id: resignTaskId,
+                    status: MenuBarStatus.RESIGNING_APP,
+                    progress: lastProgress,
+                    message: describeResignStep(step),
+                  });
+                  if (step === 'codesigning') {
+                    creepTimer = setInterval(() => {
+                      if (lastProgress < 92) {
+                        lastProgress += 1;
+                        updateTask({ id: resignTaskId, progress: lastProgress });
+                      }
+                    }, 250);
+                  }
+                },
+              });
+            } catch (resignError) {
+              if (
+                resignError instanceof InternalError &&
+                resignError.code === 'APPLE_DEVICE_LOCKED'
+              ) {
+                Alert.alert(
+                  'Unlock your device and try again',
+                  'Your iPhone needs to be unlocked so the developer ' +
+                    'tooling can mount and install the resigned app.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Retry',
+                      style: 'default',
+                      onPress: () => {
+                        runResign();
+                      },
+                    },
+                  ]
+                );
+              } else {
+                const copy = describeResignError(resignError);
+                Alert.alert(copy.title, copy.message);
+              }
+            } finally {
+              clearCreep();
+              deleteTask(resignTaskId);
+            }
+          };
+          Alert.alert(title, message, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Resign and install', style: 'default', onPress: runResign },
+          ]);
+        };
+
+        // The embedded provisioning profile already tells whether this build can
+        // install on the device (expired, device not listed, App Store build).
+        // A failing device install is slow, so skip it and offer the resign now.
+        mark('device-ready');
+        if (getDeviceOS(device) === 'ios' && !isVirtualDevice(device) && appInfo?.provisioning) {
+          const reason = resignReasonForDevice(appInfo.provisioning, resolvedDeviceId);
+          if (reason) {
+            logTiming(`pre-check: ${reason} (${appInfo.provisioning.kind}) → resign offer`);
+            const copy = describeResignReason(reason, {
+              deviceName: device.name ?? 'iPhone',
+              expiresAt: appInfo.provisioning.expiresAt,
+            });
+            offerResign(copy.title, copy.message);
+            return;
+          }
+          timing.push(`pre-check ok (${appInfo.provisioning.kind})`);
+        } else {
+          timing.push(appInfo?.provisioning ? 'pre-check n/a' : 'pre-check skipped (no profile)');
+        }
+
         try {
           updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
           await installAndLaunchAppAsync({
@@ -571,7 +701,13 @@ function Core(props: Props) {
             deviceId: resolvedDeviceId,
             launchURL,
           });
+          mark('install');
+          logTiming('installed');
         } catch (error) {
+          mark('install');
+          logTiming(
+            `install failed: ${error instanceof InternalError ? error.code : (error as Error)?.message}`
+          );
           if (error instanceof InternalError) {
             if (error.code === 'APPLE_DEVICE_LOCKED') {
               Alert.alert(
@@ -598,95 +734,9 @@ function Core(props: Props) {
                   'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
                 );
               } else {
-                const deviceName = device.name ?? 'iPhone';
-                const ipaPath = localFilePath!;
-                const runResign = async () => {
-                  MenuBarModule.openPopover();
-                  const resignTaskId = `resign:${ipaPath}`;
-                  // Progress is stitched: fixed percentages per step, plus a
-                  // slow creep during the opaque codesigning phase so the bar
-                  // never looks frozen. Kept monotonic across step repeats.
-                  let lastProgress = 0;
-                  let creepTimer: ReturnType<typeof setInterval> | undefined;
-                  const clearCreep = () => {
-                    if (creepTimer) {
-                      clearInterval(creepTimer);
-                      creepTimer = undefined;
-                    }
-                  };
-                  createTask({
-                    id: resignTaskId,
-                    status: MenuBarStatus.RESIGNING_APP,
-                    progress: 0,
-                    message: describeResignStep('inspecting'),
-                  });
-                  try {
-                    await resignAndRetryAsync({
-                      localFilePath: ipaPath,
-                      deviceId: resolvedDeviceId,
-                      deviceName,
-                      launchURL,
-                      onProgress: (step) => {
-                        clearCreep();
-                        const target = resignStepProgress(step);
-                        if (target === undefined) {
-                          // Orbit-side waiting steps: back to indeterminate.
-                          lastProgress = 0;
-                        } else {
-                          lastProgress = Math.max(lastProgress, target);
-                        }
-                        updateTask({
-                          id: resignTaskId,
-                          status: MenuBarStatus.RESIGNING_APP,
-                          progress: lastProgress,
-                          message: describeResignStep(step),
-                        });
-                        if (step === 'codesigning') {
-                          creepTimer = setInterval(() => {
-                            if (lastProgress < 92) {
-                              lastProgress += 1;
-                              updateTask({ id: resignTaskId, progress: lastProgress });
-                            }
-                          }, 250);
-                        }
-                      },
-                    });
-                  } catch (resignError) {
-                    if (
-                      resignError instanceof InternalError &&
-                      resignError.code === 'APPLE_DEVICE_LOCKED'
-                    ) {
-                      Alert.alert(
-                        'Unlock your device and try again',
-                        'Your iPhone needs to be unlocked so the developer ' +
-                          'tooling can mount and install the resigned app.',
-                        [
-                          { text: 'Cancel', style: 'cancel' },
-                          {
-                            text: 'Retry',
-                            style: 'default',
-                            onPress: () => {
-                              runResign();
-                            },
-                          },
-                        ]
-                      );
-                    } else {
-                      const { title, message } = describeResignError(resignError);
-                      Alert.alert(title, message);
-                    }
-                  } finally {
-                    clearCreep();
-                    deleteTask(resignTaskId);
-                  }
-                };
-                Alert.alert(
+                offerResign(
                   "This build isn't signed for your device",
-                  'Orbit can resign it with your Apple ID and retry.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Resign and install', style: 'default', onPress: runResign },
-                  ]
+                  'Orbit can resign it with your Apple ID and retry.'
                 );
               }
             }
