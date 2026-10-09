@@ -4,19 +4,39 @@ import {
   AUTH_REASON_KEY,
   forgetAppleIdSession,
   markTrustInstructionsShown,
+  requestTwoFactorPrompt,
   resolveAppleIdAsync,
+  twoFactorAuthMode,
+  TwoFactorPrompt,
 } from './appleAccountAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { launchAppAsync, openDeviceManagementSettingsAsync } from './launchAppAsync';
 import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
-import { storage } from '../modules/Storage';
+import {
+  ResignedAppRecord,
+  buildResignedAppId,
+  getResignedAppsDirectory,
+  stripOrbitSuffix,
+  upsertResignedApp,
+} from '../modules/ResignedApps';
+import { getUserPreferences, storage } from '../modules/Storage';
+import {
+  APPLE_APP_IDS_DONE_EVENT,
+  AppleAppIdsDoneEvent,
+  AppleAppIdsEmitter,
+} from '../utils/appleAppIdsEvents';
 import { AppleAuthCompletedEvent, waitForAppleAuthCompleteAsync } from '../utils/appleAuthEvents';
 import { parseCliJsonResult } from '../utils/helpers';
+import { describeResignError } from '../utils/resignErrorCopy';
 import { WindowsNavigator } from '../windows';
+import { openSettingsPane } from '../windows/SettingsPanes';
 
 export type ResignCliResult = {
   resignedIpaPath: string;
+  originalIpaPath?: string;
+  iconPath?: string;
+  recordDirName?: string;
   bundleId: string;
   profileExpiresAt: string;
   strippedEntitlements?: string[];
@@ -24,7 +44,10 @@ export type ResignCliResult = {
 
 export type ResignProgressListener = (step: string, detail?: string) => void;
 
-/** Run the `resign-ipa` CLI command and parse its JSON result. */
+/**
+ * Run the `resign-ipa` CLI command. Shared by the interactive resign flow and
+ * the automatic 7-day renewal engine.
+ */
 export async function runResignCliAsync(opts: {
   ipaPath: string;
   udid: string;
@@ -42,6 +65,8 @@ export async function runResignCliAsync(opts: {
     opts.deviceName,
     '--apple-id',
     opts.appleId,
+    '--managed-dir',
+    getResignedAppsDirectory(),
   ];
   if (opts.stripExtensions) args.push('--strip-extensions');
   const result = await MenuBarModule.runCli('resign-ipa', args, (output: string) => {
@@ -58,12 +83,31 @@ export async function runResignCliAsync(opts: {
  * Open the Apple ID auth window and wait for it to finish. `reason` selects a
  * contextual banner in the window (e.g. after a session expiry).
  */
-export function ensureAppleAuthAsync(reason?: 'session-expired'): Promise<AppleAuthCompletedEvent> {
+export function ensureAppleAuthAsync(
+  reason?: 'session-expired',
+  twoFactor?: TwoFactorPrompt
+): Promise<AppleAuthCompletedEvent> {
   if (reason) {
     storage.set(AUTH_REASON_KEY, reason);
   }
+  // The saved password signed in but Apple wants a code: open on the code step.
+  if (twoFactor) {
+    requestTwoFactorPrompt(twoFactor);
+  }
   WindowsNavigator.open('AppleIdAuth');
   return waitForAppleAuthCompleteAsync();
+}
+
+function waitForAppIdCleanupAsync(): Promise<AppleAppIdsDoneEvent> {
+  return new Promise((resolve) => {
+    const sub = AppleAppIdsEmitter.addListener(
+      APPLE_APP_IDS_DONE_EVENT,
+      (event: AppleAppIdsDoneEvent) => {
+        sub.remove();
+        resolve(event);
+      }
+    );
+  });
 }
 
 function confirmAsync(title: string, message: string, confirmLabel: string): Promise<boolean> {
@@ -137,27 +181,77 @@ export async function handleUntrustedDeveloperAsync(opts: {
   return false;
 }
 
+function appNameFromIpaPath(ipaPath: string, fallback: string): string {
+  const base = ipaPath
+    .split(/[\\/]/)
+    .pop()
+    ?.replace(/\.ipa$/i, '');
+  // Downloaded builds have hash names like `application-4f9a…`; show the
+  // bundle id instead of the hash.
+  if (!base || /^application-[0-9a-f]+$/i.test(base)) return fallback;
+  return base;
+}
+
+function buildRecord(opts: {
+  result: ResignCliResult;
+  ipaPath: string;
+  deviceUdid: string;
+  deviceName: string;
+  appleId: string;
+  stripExtensions: boolean;
+  launchURL?: string;
+  sourceUri?: string;
+}): ResignedAppRecord | null {
+  const { result } = opts;
+  if (!result.originalIpaPath || !result.recordDirName) return null;
+  const nowIso = new Date().toISOString();
+  const originalBundleId = stripOrbitSuffix(result.bundleId);
+  return {
+    id: buildResignedAppId(result.bundleId, opts.deviceUdid),
+    appName: appNameFromIpaPath(opts.ipaPath, originalBundleId),
+    originalBundleId,
+    assignedBundleId: result.bundleId,
+    appleId: opts.appleId,
+    originalIpaPath: result.originalIpaPath,
+    resignedIpaPath: result.resignedIpaPath,
+    recordDirName: result.recordDirName,
+    sourceUri: opts.sourceUri,
+    iconPath: result.iconPath,
+    profileExpiresAt: result.profileExpiresAt,
+    lastRenewedAt: nowIso,
+    deviceUdid: opts.deviceUdid,
+    deviceName: opts.deviceName,
+    deviceLastSeenAt: nowIso,
+    launchURL: opts.launchURL,
+    stripExtensions: opts.stripExtensions,
+    autoRenew: true,
+    pendingInstall: false,
+  };
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // One combined modal (macOS alerts are modal and don't stack): expiry line and
 // stripped-entitlement warnings. Trust instructions are not repeated here: the
 // app has just launched, which proves the developer is trusted — the untrusted
 // case is handled (and the device marked) by handleUntrustedDeveloperAsync.
-function showResignSuccessAlert(opts: {
-  profileExpiresAt: string;
-  strippedEntitlements?: string[];
-}) {
-  const expires = new Date(opts.profileExpiresAt);
+function showResignSuccessAlert(record: ResignedAppRecord, strippedEntitlements?: string[]) {
+  const expires = new Date(record.profileExpiresAt);
   const days = Math.max(0, Math.round((expires.getTime() - Date.now()) / DAY_MS));
+  const autoRenew = getUserPreferences().autoRenewResignedApps;
   const lines = [
     `This build stops opening after ${expires.toLocaleDateString()} (${days} ${
       days === 1 ? 'day' : 'days'
-    }). Re-sign it in Orbit to renew it.`,
+    }). ${
+      autoRenew
+        ? 'Orbit will renew it automatically while it keeps running.'
+        : 'Renew it from Settings → Resigned apps.'
+    }`,
   ];
-  if (opts.strippedEntitlements && opts.strippedEntitlements.length > 0) {
+  if (strippedEntitlements && strippedEntitlements.length > 0) {
     lines.push(
       'Some capabilities won’t work — the development profile Orbit issued can’t carry these entitlements:\n' +
-        opts.strippedEntitlements.map((e) => `  • ${e}`).join('\n')
+        strippedEntitlements.map((e) => `  • ${e}`).join('\n')
     );
   }
   Alert.alert('App installed', lines.join('\n\n'));
@@ -171,26 +265,30 @@ export async function resignAndRetryAsync(opts: {
   deviceId: string;
   deviceName: string;
   launchURL?: string;
+  sourceUri?: string;
   onProgress?: (step: string) => void;
 }): Promise<void> {
-  const { localFilePath, deviceId, deviceName, launchURL, onProgress } = opts;
+  const { localFilePath, deviceId, deviceName, launchURL, sourceUri, onProgress } = opts;
 
   // Adopts a session the CLI already holds before ever showing the sign-in window.
   let appleId = await resolveAppleIdAsync();
   let stripExtensions = false;
   let authPrompts = 0;
   let stripRetried = false;
+  let quotaHandled = false;
   // Set when the CLI rejected a stored session, so the reopened auth window
   // explains why it is asking again.
   let authReason: 'session-expired' | undefined;
+  let twoFactor: TwoFactorPrompt | undefined;
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
     if (!appleId) {
       if (authPrompts >= MAX_AUTH_PROMPTS) break;
       authPrompts++;
       onProgress?.('waiting-for-auth');
-      const event = await ensureAppleAuthAsync(authReason);
+      const event = await ensureAppleAuthAsync(authReason, twoFactor);
       authReason = undefined;
+      twoFactor = undefined;
       if (event.status === 'cancelled') return;
       appleId = event.appleId;
     }
@@ -232,10 +330,20 @@ export async function resignAndRetryAsync(opts: {
           launchURL,
         });
       }
-      showResignSuccessAlert({
-        profileExpiresAt: resignResult.profileExpiresAt,
-        strippedEntitlements: resignResult.strippedEntitlements,
+      const record = buildRecord({
+        result: resignResult,
+        ipaPath: localFilePath,
+        deviceUdid: deviceId,
+        deviceName,
+        appleId,
+        stripExtensions,
+        launchURL,
+        sourceUri,
       });
+      if (record) {
+        upsertResignedApp(record);
+        showResignSuccessAlert(record, resignResult.strippedEntitlements);
+      }
       return;
     } catch (error) {
       const code = error instanceof InternalError ? error.code : undefined;
@@ -243,6 +351,13 @@ export async function resignAndRetryAsync(opts: {
         forgetAppleIdSession(); // expired session is a logout — reflect it everywhere
         appleId = null; // force the auth window on the next pass
         authReason = 'session-expired';
+        continue;
+      }
+      if (code === 'APPLE_TWO_FACTOR_REQUIRED' && authPrompts < MAX_AUTH_PROMPTS && appleId) {
+        // The saved password signed in again but Apple wants a code. Still
+        // signed in — only the code step is missing.
+        twoFactor = { appleId, authMode: twoFactorAuthMode(error) };
+        appleId = null; // force the auth window on the next pass
         continue;
       }
       if (code === 'APPLE_RESIGN_UNSUPPORTED_IPA' && !stripRetried) {
@@ -264,6 +379,21 @@ export async function resignAndRetryAsync(opts: {
           stripExtensions = true;
           continue;
         }
+      }
+      if (code === 'APPLE_RESIGN_QUOTA_EXCEEDED' && !quotaHandled) {
+        quotaHandled = true;
+        const proceed = await confirmAsync(
+          'Apple App ID limit reached',
+          describeResignError(error).message +
+            '\n\nOrbit can show your registered App IDs in Settings so you can delete stale ones; it retries when you close Settings.',
+          'Manage App IDs'
+        );
+        if (!proceed) throw error;
+        onProgress?.('waiting-for-cleanup');
+        openSettingsPane('apple');
+        const done = await waitForAppIdCleanupAsync();
+        if (done.deletedCount > 0) continue;
+        throw error;
       }
       throw error;
     }

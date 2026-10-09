@@ -8,6 +8,7 @@
 
 - Add support for re-signing iOS builds for an iPhone or iPad with your Apple ID (free or paid developer account) when they are not provisioned for the device. ([#372](https://github.com/expo/orbit/pull/372) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Redesign the Settings window with a sidebar, using a native SwiftUI sidebar on macOS. ([#376](https://github.com/expo/orbit/pull/376) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Renew apps signed with free Apple IDs automatically before their 7-day profile expires. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 
@@ -16,6 +17,7 @@
 ### 💡 Others
 
 - Use @expo/ui for checkboxes and progress bar components. ([#374](https://github.com/expo/orbit/pull/374) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Patch react-native-macos so a WebSocket message that arrives during a JS reload no longer aborts the Debug build. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Upgrade menu-bar app to Expo SDK 58. ([#373](https://github.com/expo/orbit/pull/373) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ## 2.8.1 — 2026-08-17

@@ -67,6 +67,8 @@ export function describeResignStep(step: string): string {
   switch (step) {
     case 'waiting-for-auth':
       return 'Waiting for Apple ID sign-in…';
+    case 'waiting-for-cleanup':
+      return 'Waiting for App ID cleanup…';
     case 'inspecting':
       return 'Inspecting app…';
     case 'authenticating':
@@ -137,6 +139,48 @@ export function resignStepProgress(step: string): number | undefined {
     default:
       return undefined;
   }
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+// Human label for a provisioning-profile expiry. `critical` marks records the
+// UI should paint red (< 48 h left, matching the renewal-due window).
+export function formatProfileExpiry(
+  profileExpiresAt: string,
+  now: number = Date.now()
+): { label: string; critical: boolean } {
+  const expiresAt = Date.parse(profileExpiresAt);
+  if (Number.isNaN(expiresAt)) return { label: 'Unknown expiry', critical: true };
+  const remaining = expiresAt - now;
+  if (remaining <= 0) return { label: 'Expired', critical: true };
+  const days = Math.floor(remaining / DAY_MS);
+  const hours = Math.max(1, Math.floor(remaining / HOUR_MS));
+  return {
+    label:
+      days > 0
+        ? `Expires in ${days} day${days === 1 ? '' : 's'}`
+        : `Expires in ${hours} hour${hours === 1 ? '' : 's'}`,
+    critical: remaining < 48 * HOUR_MS,
+  };
+}
+
+/**
+ * A renewal is in flight when the engine stamped `lastAttemptAt` after the last
+ * outcome (`lastRenewedAt` or `lastError.at`). Capped at 10 minutes so a run
+ * that died mid-way can't leave a row stuck on "Renewing…".
+ */
+export function isRenewing(
+  record: { lastAttemptAt?: string; lastRenewedAt: string; lastError?: { at: string } },
+  now: number = Date.now()
+): boolean {
+  const attempt = Date.parse(record.lastAttemptAt ?? '');
+  if (Number.isNaN(attempt) || now - attempt > 10 * 60 * 1000) return false;
+  const outcome = Math.max(
+    Date.parse(record.lastRenewedAt) || 0,
+    Date.parse(record.lastError?.at ?? '') || 0
+  );
+  return attempt > outcome;
 }
 
 export function extractDownloadProgress(string: string): number | undefined {

@@ -1,4 +1,4 @@
-import { resignStepProgress } from '../helpers';
+import { formatProfileExpiry, isRenewing, resignStepProgress } from '../helpers';
 import { describeResignError } from '../resignErrorCopy';
 
 const RESIGN_STEPS = [
@@ -28,8 +28,67 @@ describe(resignStepProgress, () => {
     expect(resignStepProgress('done')).toBeLessThan(resignStepProgress('installing')!);
   });
 
-  it('returns undefined (indeterminate) for the orbit-side waiting step', () => {
+  it('returns undefined (indeterminate) for orbit-side waiting steps', () => {
     expect(resignStepProgress('waiting-for-auth')).toBeUndefined();
+    expect(resignStepProgress('waiting-for-cleanup')).toBeUndefined();
+  });
+});
+
+describe(formatProfileExpiry, () => {
+  const now = Date.parse('2026-08-25T12:00:00Z');
+
+  it('marks expired profiles as critical', () => {
+    expect(formatProfileExpiry('2026-08-25T11:00:00Z', now)).toEqual({
+      label: 'Expired',
+      critical: true,
+    });
+  });
+
+  it('marks profiles inside the 48h renewal window as critical', () => {
+    const result = formatProfileExpiry('2026-08-26T12:00:00Z', now);
+    expect(result).toEqual({ label: 'Expires in 1 day', critical: true });
+  });
+
+  it('counts whole days for healthy profiles and hours under a day', () => {
+    expect(formatProfileExpiry('2026-09-01T15:30:00Z', now)).toEqual({
+      label: 'Expires in 7 days',
+      critical: false,
+    });
+    expect(formatProfileExpiry('2026-08-25T15:30:00Z', now).label).toBe('Expires in 3 hours');
+    expect(formatProfileExpiry('2026-08-25T12:20:00Z', now).label).toBe('Expires in 1 hour');
+  });
+});
+
+describe(isRenewing, () => {
+  const now = Date.parse('2026-08-25T12:00:00Z');
+  const base = { lastRenewedAt: '2026-08-20T12:00:00Z' };
+
+  it('is false until the engine stamps an attempt', () => {
+    expect(isRenewing(base, now)).toBe(false);
+  });
+
+  it('is true while an attempt is newer than the last outcome', () => {
+    expect(isRenewing({ ...base, lastAttemptAt: '2026-08-25T11:59:00Z' }, now)).toBe(true);
+    expect(
+      isRenewing(
+        {
+          ...base,
+          lastAttemptAt: '2026-08-25T11:59:00Z',
+          lastError: { at: '2026-08-25T11:59:30Z' },
+        },
+        now
+      )
+    ).toBe(false);
+    expect(
+      isRenewing(
+        { lastRenewedAt: '2026-08-25T11:59:30Z', lastAttemptAt: '2026-08-25T11:59:00Z' },
+        now
+      )
+    ).toBe(false);
+  });
+
+  it('gives up on attempts older than 10 minutes', () => {
+    expect(isRenewing({ ...base, lastAttemptAt: '2026-08-25T11:40:00Z' }, now)).toBe(false);
   });
 });
 
@@ -72,6 +131,18 @@ describe(describeResignError, () => {
       internalError('APPLE_RESIGN_QUOTA_EXCEEDED', 'resultCode 7460')
     );
     expect(copy.title).toBe('App ID limit reached');
+  });
+
+  it('explains an identifier Apple refuses to register, naming it', () => {
+    const copy = describeResignError(
+      internalError(
+        'APPLE_RESIGN_FAILED',
+        "Dev portal ios/addAppId.action failed (resultCode 1): An App ID with Identifier 'com.x.app.orbit07bcf83b' is not available. Please enter a different string."
+      )
+    );
+    expect(copy.title).toBe('App ID not available');
+    expect(copy.message).toContain('com.x.app.orbit07bcf83b');
+    expect(copy.message).toContain('different Apple ID');
   });
 
   it('maps an expired session by code', () => {

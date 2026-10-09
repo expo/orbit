@@ -10,6 +10,7 @@ import DeviceListSectionHeader from './DeviceListSectionHeader';
 import DevicesListError from './DevicesListError';
 import { FOOTER_HEIGHT } from './Footer';
 import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
+import ResignedAppsAttentionRow, { ATTENTION_ROW_HEIGHT } from './ResignedAppsAttentionRow';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import { useFileHandler } from '../../modules/file-handler';
 import { Analytics, Event } from '../analytics';
@@ -30,6 +31,7 @@ import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
 import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
+import { useResignedAppRenewals } from '../hooks/useResignedAppRenewals';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
@@ -124,6 +126,8 @@ function Core(props: Props) {
   );
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
 
+  const { attention } = useResignedAppRenewals({ createTask, updateTask, deleteTask });
+
   // TODO: Extract into a hook
   const displayDimensions = useSafeDisplayDimensions();
   const estimatedAvailableSizeForDevices =
@@ -131,6 +135,7 @@ function Core(props: Props) {
     FOOTER_HEIGHT -
     BUILDS_SECTION_HEIGHT -
     getProjectSectionHeight(apps?.length) -
+    (attention ? ATTENTION_ROW_HEIGHT : 0) -
     5;
   const heightOfAllDevices =
     DEVICE_ITEM_HEIGHT * numberOfDevices + SECTION_HEADER_HEIGHT * (sections?.length || 0);
@@ -614,6 +619,7 @@ function Core(props: Props) {
                 deviceId: resolvedDeviceId,
                 deviceName,
                 launchURL,
+                sourceUri: appURI.startsWith('https://') ? appURI : undefined,
                 onProgress: (step) => {
                   clearCreep();
                   const target = resignStepProgress(step);
@@ -862,6 +868,7 @@ function Core(props: Props) {
   return (
     <View shrink="1" testID="popover-core">
       <BuildsSection installAppFromURI={installAppFromURI} tasks={tasks} />
+      {attention ? <ResignedAppsAttentionRow attention={attention} /> : null}
       <ProjectsSection apps={apps} />
       <View shrink="1" pt="tiny" overflow="hidden">
         {devicesError ? (

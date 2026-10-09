@@ -13,7 +13,7 @@ import { PlatformColor } from '../modules/PlatformColor';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
-type Color = 'default' | 'primary';
+type Color = 'default' | 'primary' | 'danger';
 type Props = TouchableOpacityProps & {
   color?: Color;
   title: string;
@@ -43,6 +43,7 @@ export function getStylesForColor(color: Color, theme: ReturnType<typeof useCurr
 
   switch (color) {
     case 'primary':
+    case 'danger':
       touchableStyle = {
         backgroundColor:
           theme === 'light'
@@ -51,6 +52,9 @@ export function getStylesForColor(color: Color, theme: ReturnType<typeof useCurr
         borderColor: theme === 'light' ? lightTheme.border.default : darkTheme.border.default,
         borderWidth: 1,
       };
+      if (color === 'danger') {
+        textStyle = { color: theme === 'light' ? lightTheme.text.error : darkTheme.text.error };
+      }
 
       break;
     case 'default':

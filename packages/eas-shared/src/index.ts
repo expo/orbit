@@ -39,3 +39,4 @@ export {
   ManifestUtils,
   Manifest,
 };
+export { extractAppIconAsync } from './run/ios/appIcon';
