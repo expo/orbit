@@ -17,8 +17,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import { WindowsNavigator } from './index';
-import { AUTH_REASON_KEY, loadAppleIdHint, rememberAppleId } from '../commands/appleAccountAsync';
+import {
+  AUTH_REASON_KEY,
+  consumeTwoFactorPrompt,
+  loadAppleIdHint,
+  rememberAppleId,
+} from '../commands/appleAccountAsync';
 import { appleIdSignInAsync, appleIdVerifyTwoFactorAsync } from '../commands/appleIdAuthAsync';
+import Checkbox from '../components/Checkbox';
 import TwoFactorCodeInput from '../components/TwoFactorCodeInput';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
@@ -51,17 +57,27 @@ const AppleIdAuth = () => {
     secondary: dark ? '#9aa4ae' : '#596068',
   };
 
-  const [stage, setStage] = useState<Stage>('credentials');
+  // A silent re-sign-in with the saved password may have hit a 2FA challenge:
+  // the opener left it in storage, and the window then starts on the code step.
+  const [pendingTwoFactor] = useState(() => consumeTwoFactorPrompt());
+  const [stage, setStage] = useState<Stage>(pendingTwoFactor ? 'two-factor' : 'credentials');
   const [busy, setBusy] = useState(false);
-  const [appleId, setAppleId] = useState(() => loadAppleIdHint() ?? '');
+  const [appleId, setAppleId] = useState(
+    () => pendingTwoFactor?.appleId ?? loadAppleIdHint() ?? ''
+  );
   const appleIdText = useNativeState(appleId);
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [preferSms, setPreferSms] = useState(false);
+  const [preferSms, setPreferSms] = useState(pendingTwoFactor?.authMode === 'sms');
+  // "Keep me signed in": save the password so Orbit can sign in again by itself.
+  // Already on when the window is finishing a saved-password sign-in.
+  const [rememberPassword, setRememberPassword] = useState(Boolean(pendingTwoFactor));
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState<AppleRetryInfo | null>(null);
   const [twoFactorDetails, setTwoFactorDetails] =
-    useState<AppleTwoFactorRequiredErrorDetails | null>(null);
+    useState<AppleTwoFactorRequiredErrorDetails | null>(
+      pendingTwoFactor ? { authMode: pendingTwoFactor.authMode } : null
+    );
   // The window navigator passes no props; the opener leaves the banner reason
   // in storage instead. Read-and-clear on mount.
   const [sessionExpired] = useState(() => {
@@ -84,7 +100,7 @@ const AppleIdAuth = () => {
 
   const finish = (event: AppleAuthCompletedEvent) => {
     if (event.status === 'success') {
-      rememberAppleId(event.appleId);
+      rememberAppleId(event.appleId, { passwordSaved: rememberPassword });
     }
     AppleAuthEmitter.emit('apple-id-auth:complete', event);
     if (event.status === 'success') {
@@ -99,7 +115,15 @@ const AppleIdAuth = () => {
     setRetry(null);
     setBusy(true);
     try {
-      await appleIdSignInAsync({ appleId, password, preferSms: sms, onRetry: setRetry });
+      // No password typed (resending a code for a saved-password sign-in): the
+      // CLI falls back to the saved one.
+      await appleIdSignInAsync({
+        appleId,
+        password: password || undefined,
+        preferSms: sms,
+        rememberPassword,
+        onRetry: setRetry,
+      });
       finish({ status: 'success', appleId });
     } catch (e: any) {
       setRetry(null);
@@ -143,9 +167,10 @@ const AppleIdAuth = () => {
     try {
       await appleIdVerifyTwoFactorAsync({
         appleId,
-        password,
+        password: password || undefined,
         code: codeToSubmit,
         preferSms,
+        rememberPassword,
         onRetry: setRetry,
       });
       finish({ status: 'success', appleId });
@@ -225,7 +250,7 @@ const AppleIdAuth = () => {
               ? isSmsChallenge
                 ? 'Enter the 6-digit code Apple sent by SMS to your trusted phone number.'
                 : `Enter the 6-digit code sent to your trusted Apple devices for ${appleId}.`
-              : 'Orbit uses your Apple ID to issue a development certificate so downloaded IPAs can install on your iPhone. Free and paid developer accounts both work. Your password is never stored.'}
+              : 'Orbit uses your Apple ID to issue a development certificate so downloaded IPAs can install on your iPhone. Free and paid developer accounts both work. Your password is used once and not stored unless you choose to stay signed in.'}
           </Text>
         </Column>
 
@@ -292,6 +317,18 @@ const AppleIdAuth = () => {
                 modifiers={inputModifiers}
               />
             </FieldRow>
+          </Column>
+        )}
+
+        {isTwoFactor ? null : (
+          <Column>
+            <RNHostView matchContents>
+              <Checkbox
+                value={rememberPassword}
+                onValueChange={setRememberPassword}
+                label="Keep me signed in"
+              />
+            </RNHostView>
           </Column>
         )}
 

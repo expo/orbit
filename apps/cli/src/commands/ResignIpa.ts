@@ -1,3 +1,4 @@
+import { extractAppIconAsync } from 'eas-shared';
 import fs from 'fs';
 import { resignIpaAsync } from 'ipa-resign';
 import path from 'path';
@@ -37,6 +38,7 @@ export async function resignIpaCommandAsync(options: ResignIpaOptions) {
   // is what 7-day renewals re-sign) and move the resigned output next to it.
   let resignedIpaPath = result.resignedIpaPath;
   let originalIpaPath: string | undefined;
+  let iconPath: string | undefined;
   let dirName: string | undefined;
   if (options.managedDir) {
     dirName = recordDirName(result.bundleId, options.udid);
@@ -46,6 +48,13 @@ export async function resignIpaCommandAsync(options: ResignIpaOptions) {
     originalIpaPath = path.join(recordDir, 'original.ipa');
     if (path.resolve(options.ipa) !== path.resolve(originalIpaPath)) {
       fs.copyFileSync(options.ipa, originalIpaPath);
+    }
+
+    // The app icon for the menu bar's resigned-apps list; best effort, the
+    // list falls back to initials without it.
+    const iconCandidate = path.join(recordDir, 'icon.png');
+    if (await extractAppIconAsync(originalIpaPath, iconCandidate).catch(() => false)) {
+      iconPath = iconCandidate;
     }
 
     const managedResignedPath = path.join(recordDir, 'resigned.ipa');
@@ -61,6 +70,7 @@ export async function resignIpaCommandAsync(options: ResignIpaOptions) {
   return {
     resignedIpaPath,
     originalIpaPath,
+    iconPath,
     recordDirName: dirName,
     bundleId: result.bundleId,
     profileExpiresAt: result.profileExpiresAt.toISOString(),

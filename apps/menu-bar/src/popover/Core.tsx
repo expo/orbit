@@ -868,8 +868,8 @@ function Core(props: Props) {
   return (
     <View shrink="1" testID="popover-core">
       <BuildsSection installAppFromURI={installAppFromURI} tasks={tasks} />
-      <ProjectsSection apps={apps} />
       {attention ? <ResignedAppsAttentionRow attention={attention} /> : null}
+      <ProjectsSection apps={apps} />
       <View shrink="1" pt="tiny" overflow="hidden">
         {devicesError ? (
           <DevicesListError error={devicesError} />

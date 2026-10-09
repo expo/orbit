@@ -172,6 +172,10 @@ program
   .option('--apple-id <string>', 'Apple ID email (required except for --mode status)')
   .option('--code <string>', '2FA code (when --mode verify-2fa)')
   .option('--prefer-sms', 'Send the 2FA code by SMS instead of a trusted-device push')
+  .option(
+    '--remember-password',
+    'Save the password so later sessions can be renewed without signing in again'
+  )
   .action(async (...args) => {
     const { appleIdAuthAsync } = await import('./commands/AppleIdAuth');
     return returnLoggerMiddleware(appleIdAuthAsync)(...args);

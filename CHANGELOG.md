@@ -8,7 +8,7 @@
 
 - Add support for re-signing iOS builds for an iPhone or iPad with your Apple ID (free or paid developer account) when they are not provisioned for the device. ([#372](https://github.com/expo/orbit/pull/372) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Redesign the Settings window with a sidebar, using a native SwiftUI sidebar on macOS. ([#376](https://github.com/expo/orbit/pull/376) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Manage the App IDs registered to your Apple ID from Settings → Apple ID, with the free-account quota shown as a usage bar. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Renew apps signed with free Apple IDs automatically before their 7-day profile expires. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 

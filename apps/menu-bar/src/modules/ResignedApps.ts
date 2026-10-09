@@ -25,6 +25,8 @@ export type ResignedAppRecord = {
   /** Directory name under the managed dir; passed to cleanup-resigned-apps */
   recordDirName: string;
   sourceUri?: string;
+  /** Standard PNG of the app icon, extracted into the record dir by the CLI */
+  iconPath?: string;
   profileExpiresAt: string;
   lastRenewedAt: string;
   deviceUdid: string;
@@ -93,7 +95,13 @@ function saveRecords(records: ResignedAppRecord[]) {
 }
 
 export function upsertResignedApp(record: ResignedAppRecord) {
-  const records = listResignedApps().filter((r) => r.id !== record.id);
+  // One record per (original app, device): a renewal lands on a new identifier
+  // when Apple refuses the old one, and the stale record must not linger.
+  const records = listResignedApps().filter(
+    (r) =>
+      r.id !== record.id &&
+      !(r.originalBundleId === record.originalBundleId && r.deviceUdid === record.deviceUdid)
+  );
   records.push(record);
   saveRecords(records);
 }

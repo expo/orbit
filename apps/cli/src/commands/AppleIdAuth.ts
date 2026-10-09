@@ -1,6 +1,7 @@
 import {
   configureRetryPolicy,
   getSignedInAppleIdAsync,
+  hasSavedPasswordAsync,
   signInAsync,
   signOutAsync,
   submitTwoFactorCodeAsync,
@@ -25,13 +26,16 @@ type AppleIdAuthOptions = {
   appleId?: string;
   code?: string;
   preferSms?: boolean;
+  /** "Keep me signed in": save the password so ipa-resign can sign in again by itself. */
+  rememberPassword?: boolean;
 };
 
 export async function appleIdAuthAsync(options: AppleIdAuthOptions) {
   if (options.mode === 'status') {
     // Who holds a persisted session — lets the menu bar adopt an existing login
     // instead of prompting (fresh install, other app flavour, CLI sign-in).
-    return { appleId: await getSignedInAppleIdAsync() };
+    const appleId = await getSignedInAppleIdAsync();
+    return { appleId, passwordSaved: appleId ? await hasSavedPasswordAsync(appleId) : false };
   }
 
   const appleId = options.appleId;
@@ -46,12 +50,10 @@ export async function appleIdAuthAsync(options: AppleIdAuthOptions) {
 
   streamRetriesToStdout();
 
-  const password = process.env[PASSWORD_ENV];
-  if (!password) {
-    throw new Error(
-      `Password missing — set ${PASSWORD_ENV} env var when invoking the CLI (the menu-bar pipes it through spawnCliAsync.envVars).`
-    );
-  }
+  // The menu bar pipes the password through spawnCliAsync.envVars. It may be
+  // absent when the user chose to stay signed in: ipa-resign then uses the
+  // saved one (and throws APPLE_AUTH_REQUIRED when there is none either).
+  const password = process.env[PASSWORD_ENV] || undefined;
 
   if (options.mode === 'verify-2fa') {
     if (!options.code) {
@@ -62,10 +64,16 @@ export async function appleIdAuthAsync(options: AppleIdAuthOptions) {
       password,
       code: options.code,
       preferSms: options.preferSms,
+      rememberPassword: options.rememberPassword,
     });
     return { ok: true };
   }
 
-  await signInAsync({ appleId, password, preferSms: options.preferSms });
+  await signInAsync({
+    appleId,
+    password,
+    preferSms: options.preferSms,
+    rememberPassword: options.rememberPassword,
+  });
   return { ok: true };
 }

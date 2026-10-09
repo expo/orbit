@@ -4,7 +4,10 @@ import {
   AUTH_REASON_KEY,
   forgetAppleIdSession,
   markTrustInstructionsShown,
+  requestTwoFactorPrompt,
   resolveAppleIdAsync,
+  twoFactorAuthMode,
+  TwoFactorPrompt,
 } from './appleAccountAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { launchAppAsync, openDeviceManagementSettingsAsync } from './launchAppAsync';
@@ -32,6 +35,7 @@ import { openSettingsPane } from '../windows/SettingsPanes';
 export type ResignCliResult = {
   resignedIpaPath: string;
   originalIpaPath?: string;
+  iconPath?: string;
   recordDirName?: string;
   bundleId: string;
   profileExpiresAt: string;
@@ -79,9 +83,16 @@ export async function runResignCliAsync(opts: {
  * Open the Apple ID auth window and wait for it to finish. `reason` selects a
  * contextual banner in the window (e.g. after a session expiry).
  */
-export function ensureAppleAuthAsync(reason?: 'session-expired'): Promise<AppleAuthCompletedEvent> {
+export function ensureAppleAuthAsync(
+  reason?: 'session-expired',
+  twoFactor?: TwoFactorPrompt
+): Promise<AppleAuthCompletedEvent> {
   if (reason) {
     storage.set(AUTH_REASON_KEY, reason);
+  }
+  // The saved password signed in but Apple wants a code: open on the code step.
+  if (twoFactor) {
+    requestTwoFactorPrompt(twoFactor);
   }
   WindowsNavigator.open('AppleIdAuth');
   return waitForAppleAuthCompleteAsync();
@@ -205,6 +216,7 @@ function buildRecord(opts: {
     resignedIpaPath: result.resignedIpaPath,
     recordDirName: result.recordDirName,
     sourceUri: opts.sourceUri,
+    iconPath: result.iconPath,
     profileExpiresAt: result.profileExpiresAt,
     lastRenewedAt: nowIso,
     deviceUdid: opts.deviceUdid,
@@ -267,14 +279,16 @@ export async function resignAndRetryAsync(opts: {
   // Set when the CLI rejected a stored session, so the reopened auth window
   // explains why it is asking again.
   let authReason: 'session-expired' | undefined;
+  let twoFactor: TwoFactorPrompt | undefined;
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
     if (!appleId) {
       if (authPrompts >= MAX_AUTH_PROMPTS) break;
       authPrompts++;
       onProgress?.('waiting-for-auth');
-      const event = await ensureAppleAuthAsync(authReason);
+      const event = await ensureAppleAuthAsync(authReason, twoFactor);
       authReason = undefined;
+      twoFactor = undefined;
       if (event.status === 'cancelled') return;
       appleId = event.appleId;
     }
@@ -337,6 +351,13 @@ export async function resignAndRetryAsync(opts: {
         forgetAppleIdSession(); // expired session is a logout — reflect it everywhere
         appleId = null; // force the auth window on the next pass
         authReason = 'session-expired';
+        continue;
+      }
+      if (code === 'APPLE_TWO_FACTOR_REQUIRED' && authPrompts < MAX_AUTH_PROMPTS && appleId) {
+        // The saved password signed in again but Apple wants a code. Still
+        // signed in — only the code step is missing.
+        twoFactor = { appleId, authMode: twoFactorAuthMode(error) };
+        appleId = null; // force the auth window on the next pass
         continue;
       }
       if (code === 'APPLE_RESIGN_UNSUPPORTED_IPA' && !stripRetried) {

@@ -155,11 +155,32 @@ export function formatProfileExpiry(
   const remaining = expiresAt - now;
   if (remaining <= 0) return { label: 'Expired', critical: true };
   const days = Math.floor(remaining / DAY_MS);
-  const hours = Math.floor((remaining % DAY_MS) / HOUR_MS);
+  const hours = Math.max(1, Math.floor(remaining / HOUR_MS));
   return {
-    label: days > 0 ? `Expires in ${days}d ${hours}h` : `Expires in ${hours}h`,
+    label:
+      days > 0
+        ? `Expires in ${days} day${days === 1 ? '' : 's'}`
+        : `Expires in ${hours} hour${hours === 1 ? '' : 's'}`,
     critical: remaining < 48 * HOUR_MS,
   };
+}
+
+/**
+ * A renewal is in flight when the engine stamped `lastAttemptAt` after the last
+ * outcome (`lastRenewedAt` or `lastError.at`). Capped at 10 minutes so a run
+ * that died mid-way can't leave a row stuck on "Renewing…".
+ */
+export function isRenewing(
+  record: { lastAttemptAt?: string; lastRenewedAt: string; lastError?: { at: string } },
+  now: number = Date.now()
+): boolean {
+  const attempt = Date.parse(record.lastAttemptAt ?? '');
+  if (Number.isNaN(attempt) || now - attempt > 10 * 60 * 1000) return false;
+  const outcome = Math.max(
+    Date.parse(record.lastRenewedAt) || 0,
+    Date.parse(record.lastError?.at ?? '') || 0
+  );
+  return attempt > outcome;
 }
 
 export function extractDownloadProgress(string: string): number | undefined {

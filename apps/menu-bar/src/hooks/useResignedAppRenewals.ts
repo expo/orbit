@@ -2,10 +2,18 @@ import { InternalError } from 'common-types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { usePopoverFocusEffect } from './usePopoverFocus';
-import { forgetAppleIdSession } from '../commands/appleAccountAsync';
+import {
+  forgetAppleIdSession,
+  loadAppleId,
+  markTrustInstructionsShown,
+  requestTwoFactorPrompt,
+  twoFactorAuthMode,
+} from '../commands/appleAccountAsync';
 import { cleanupResignedAppsAsync } from '../commands/cleanupResignedAppsAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { renewResignedAppAsync } from '../commands/renewResignedAppAsync';
+import { handleUntrustedDeveloperAsync } from '../commands/resignAndRetryAsync';
+import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import {
   RESIGNED_APPS_CHANGED_EVENT,
@@ -57,9 +65,22 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
   const [attention, setAttentionState] = useState<ResignAttention | null>(getAttention());
 
   useEffect(() => {
-    const sub = DeviceEventEmitter.addListener(RESIGNED_APPS_CHANGED_EVENT, () => {
+    const reconcile = () => {
+      for (const record of listResignedApps()) {
+        if (record.lastError?.code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+          updateResignedApp(record.id, { lastError: undefined });
+        }
+      }
+      if (
+        getAttention()?.kind === 'renewal-failed' &&
+        !listResignedApps().some((record) => record.lastError)
+      ) {
+        setAttention(null);
+      }
       setAttentionState(getAttention());
-    });
+    };
+    reconcile();
+    const sub = DeviceEventEmitter.addListener(RESIGNED_APPS_CHANGED_EVENT, reconcile);
     return () => sub.remove();
   }, []);
 
@@ -82,7 +103,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
         message: `Renewing ${record.appName}…`,
       });
       try {
-        await renewResignedAppAsync(record, {
+        const { record: renewed, previousBundleId } = await renewResignedAppAsync(record, {
           deviceConnected: connectedUdidsRef.current.has(record.deviceUdid),
           onProgress: (step) =>
             updateTask({ id: taskId, message: `${record.appName}: ${describeResignStep(step)}` }),
@@ -90,16 +111,54 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
         if (getAttention()?.kind === 'renewal-failed') {
           setAttention(null);
         }
+        if (previousBundleId) {
+          // The old record dir is orphaned now, and the old copy on the device
+          // keeps the previous identifier — Orbit can't replace it in place.
+          cleanupResignedAppsAsync().catch(() => {});
+          Alert.alert(
+            `${record.appName} was signed with a new identifier`,
+            `‘${previousBundleId}’ can’t be used with the signed-in Apple ID, so Orbit signed it as ‘${renewed.assignedBundleId}’. ` +
+              `The old copy on ${record.deviceName} won’t open anymore — delete it from the Home Screen.`
+          );
+        }
         return true;
       } catch (error) {
         const code = error instanceof InternalError ? error.code : undefined;
         const at = new Date().toISOString();
+        // The resign step rebuilds the record (its id follows the bundle id), so a
+        // failure after it must be written to the record that exists now.
+        const current =
+          listResignedApps().find(
+            (r) =>
+              r.originalBundleId === record.originalBundleId && r.deviceUdid === record.deviceUdid
+          ) ?? record;
+        if (code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+          // Renewed and installed; iOS only refuses to open it until the developer
+          // is trusted on the device — the first run under a new team, and iOS
+          // prompts for it on launch anyway. Offer the walkthrough the resign
+          // flow uses, but this is not a failed renewal either way.
+          markTrustInstructionsShown(loadAppleId() ?? record.appleId, record.deviceUdid);
+          await handleUntrustedDeveloperAsync({
+            deviceId: record.deviceUdid,
+            bundleId: current.assignedBundleId,
+            launchURL: record.launchURL,
+          });
+          updateResignedApp(current.id, { lastError: undefined });
+          if (getAttention()?.kind === 'renewal-failed') setAttention(null);
+          return true;
+        }
         if (code === 'APPLE_AUTH_REQUIRED') {
           // Expired session is a logout: forget it so every "signed in as X"
           // surface updates, then surface the attention row to re-sign-in.
+          // Keep ipa-resign's reason (GSA error code, missing session, …) on the
+          // record: "session expired" alone can't be diagnosed later.
           forgetAppleIdSession();
-          updateResignedApp(record.id, {
-            lastError: { code, message: 'Apple ID session expired.', at },
+          updateResignedApp(current.id, {
+            lastError: {
+              code,
+              message: error instanceof Error ? error.message : 'Apple ID session expired.',
+              at,
+            },
           });
           setAttention({
             kind: 'auth-required',
@@ -108,8 +167,25 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
           });
           return false;
         }
+        if (code === 'APPLE_TWO_FACTOR_REQUIRED') {
+          // The saved password signed in again but Apple wants a code. The
+          // attention row opens the sign-in window on the code step.
+          requestTwoFactorPrompt({
+            appleId: loadAppleId() ?? record.appleId,
+            authMode: twoFactorAuthMode(error),
+          });
+          updateResignedApp(current.id, {
+            lastError: { code, message: 'Apple asked for a verification code.', at },
+          });
+          setAttention({
+            kind: 'auth-required',
+            message: 'Enter your Apple ID verification code to keep renewing resigned apps.',
+            at,
+          });
+          return false;
+        }
         const { message } = describeResignError(error);
-        updateResignedApp(record.id, { lastError: { code: code ?? 'UNKNOWN', message, at } });
+        updateResignedApp(current.id, { lastError: { code: code ?? 'UNKNOWN', message, at } });
         setAttention({ kind: 'renewal-failed', message: `Couldn’t renew ${record.appName}.`, at });
         return true;
       } finally {
