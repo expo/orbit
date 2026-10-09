@@ -12,9 +12,7 @@ import {
 
 const program = new Command();
 
-program
-  .name('expo-orbit-cli')
-  .description('The command-line tool used internally by Expo Orbit menu bar');
+program.name('orbit').description('The command-line tool used internally by Expo Orbit menu bar');
 
 program
   .command('download-build')
@@ -195,6 +193,31 @@ program
   .action(async (...args) => {
     const { resignIpaCommandAsync } = await import('./commands/ResignIpa');
     return returnLoggerMiddleware(resignIpaCommandAsync)(...args);
+  });
+
+program
+  .command('install-shell-command')
+  .description('Install the `orbit` command in PATH so the CLI can be run from any terminal')
+  .option('--refresh', 'Only re-point an already installed command at this copy of Orbit')
+  .action(async (options) => {
+    const { installShellCommandAsync } = await import('./commands/ShellCommand');
+    return returnLoggerMiddleware(() => installShellCommandAsync(options))();
+  });
+
+program
+  .command('uninstall-shell-command')
+  .description('Remove the `orbit` command from PATH')
+  .action(async () => {
+    const { uninstallShellCommandAsync } = await import('./commands/ShellCommand');
+    return returnLoggerMiddleware(() => uninstallShellCommandAsync())();
+  });
+
+program
+  .command('shell-command-status')
+  .description('Report whether the `orbit` command is installed in PATH')
+  .action(async () => {
+    const { getShellCommandStatusAsync } = await import('./commands/ShellCommand');
+    return returnLoggerMiddleware(() => getShellCommandStatusAsync())();
   });
 
 if (process.argv.length < 3) {
