@@ -12,6 +12,7 @@
 ### 🐛 Bug fixes
 
 - Fix simulators being listed as connected Apple devices with Xcode 27 `devicectl`. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Accept `devicectl` JSON version 5 to remove the unexpected version warning. (by [@krystofwoldrich](https://github.com/krystofwoldrich))
 
 ### 💡 Others
 
