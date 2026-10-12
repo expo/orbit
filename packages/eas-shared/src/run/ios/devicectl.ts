@@ -159,7 +159,7 @@ export async function getConnectedAppleDevicesAsync() {
   debug(devices.stdout);
   const devicesJson = await JsonFile.readAsync(tmpPath);
 
-  if (![2, 3, 4].includes((devicesJson as any)?.info?.jsonVersion)) {
+  if (![2, 3, 4, 5].includes((devicesJson as any)?.info?.jsonVersion)) {
     Log.warn(
       'Unexpected devicectl JSON version output from devicectl. Connecting to physical Apple devices may not work as expected.'
     );
