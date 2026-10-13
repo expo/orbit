@@ -6,6 +6,9 @@ import path from 'path';
 
 import { ClientManager } from './ClientManager';
 import { XcodeDeveloperDiskImagePrerequisite } from './XcodeDeveloperDiskImagePrerequisite';
+import { FreeProfileApp, freeProfileApps } from './freeAppLimit';
+import { delayAsync } from '../../../utils/delayAsync';
+import { CommandError } from '../../../utils/errors';
 import {
   APP_STORE_BUNDLE_IDENTIFIER,
   EXPO_GO_APP_STORE_URL,
@@ -13,7 +16,11 @@ import {
 } from '../constants';
 import * as devicectl from '../devicectl';
 import { xcrunAsync } from '../xcrun';
-import { IPLookupResult, OnInstallProgressCallback } from './client/InstallationProxyClient';
+import {
+  InstallationProxyClient,
+  IPLookupResult,
+  OnInstallProgressCallback,
+} from './client/InstallationProxyClient';
 import { LockdowndClient } from './client/LockdowndClient';
 import { UsbmuxdClient } from './client/UsbmuxdClient';
 import { AFC_STATUS, AFCError } from './protocol/AFCProtocol';
@@ -22,8 +29,6 @@ import {
   createUsbmuxdNotRunningError,
   isUsbmuxdNotRunningError,
 } from './usbmuxd';
-import { delayAsync } from '../../../utils/delayAsync';
-import { CommandError } from '../../../utils/errors';
 import { installExitHooks } from '../../../utils/exit';
 import { uniqBy } from '../../../utils/fn';
 import { parseBinaryPlistAsync } from '../../../utils/parseBinaryPlistAsync';
@@ -361,6 +366,85 @@ async function launchApp(
 
     // Fallback to devicectl for iOS 17 support
     return await launchAppWithDeviceCtl(deviceId, bundleId);
+  }
+}
+
+/** Installed apps among `bundleIds`, with their display names (installation_proxy `Lookup`). */
+async function lookupInstalledAsync(
+  installer: InstallationProxyClient,
+  bundleIds: string[]
+): Promise<Record<string, { name?: string }>> {
+  if (bundleIds.length === 0) return {};
+  const result = await installer.lookupApp(bundleIds, {
+    ReturnAttributes: ['CFBundleIdentifier', 'CFBundleDisplayName', 'CFBundleName'],
+    ApplicationsType: 'Any',
+  });
+  const installed: Record<string, { name?: string }> = {};
+  for (const bundleId of bundleIds) {
+    const entry = result[bundleId];
+    if (entry) installed[bundleId] = { name: entry.CFBundleDisplayName ?? entry.CFBundleName };
+  }
+  return installed;
+}
+
+/**
+ * Display names of installed apps, by bundle id, over usbmux (installation_proxy
+ * `Lookup`). Apps the device does not report are left out.
+ */
+export async function lookupAppNamesAsync(
+  udid: string,
+  bundleIds: string[]
+): Promise<Record<string, string>> {
+  if (bundleIds.length === 0) return {};
+  const clientManager = await ClientManager.create(udid);
+  try {
+    const installed = await lookupInstalledAsync(
+      await clientManager.getInstallationProxyClient(),
+      bundleIds
+    );
+    const names: Record<string, string> = {};
+    for (const [bundleId, { name }] of Object.entries(installed)) {
+      if (name) names[bundleId] = name;
+    }
+    return names;
+  } finally {
+    clientManager.end();
+  }
+}
+
+/**
+ * The apps on the device installed under a free Apple ID's development profile
+ * — the ones that count against the three-app limit — read from the device's
+ * provisioning-profile store (misagent) so the limit can be checked before an
+ * install. The store also keeps profiles of apps since removed, so only apps
+ * still installed count. Names are best effort.
+ */
+export async function listFreeProfileAppsAsync(udid: string): Promise<FreeProfileApp[]> {
+  const clientManager = await ClientManager.create(udid);
+  try {
+    const misagent = await clientManager.getMisagentClient();
+    const apps = freeProfileApps(await misagent.copyProvisioningProfiles());
+    const installed = await lookupInstalledAsync(
+      await clientManager.getInstallationProxyClient(),
+      apps.map((app) => app.bundleId)
+    ).catch((): Record<string, { name?: string }> | null => null);
+    if (!installed) return apps;
+    return apps
+      .filter((app) => app.bundleId in installed)
+      .map((app) => ({ ...app, name: installed[app.bundleId].name }));
+  } finally {
+    clientManager.end();
+  }
+}
+
+/** Remove an app from the device over usbmux (installation_proxy `Uninstall`). */
+export async function uninstallAppAsync({ udid, bundleId }: { udid: string; bundleId: string }) {
+  const clientManager = await ClientManager.create(udid);
+  try {
+    const installer = await clientManager.getInstallationProxyClient();
+    await installer.uninstallApp(bundleId);
+  } finally {
+    clientManager.end();
   }
 }
 

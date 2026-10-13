@@ -1,0 +1,445 @@
+import { InternalError } from 'common-types';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { usePopoverFocusEffect } from './usePopoverFocus';
+import {
+  forgetAppleIdSession,
+  loadAppleId,
+  markTrustInstructionsShown,
+  requestTwoFactorPrompt,
+  twoFactorAuthMode,
+} from '../commands/appleAccountAsync';
+import { cleanupResignedAppsAsync } from '../commands/cleanupResignedAppsAsync';
+import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
+import { renewResignedAppAsync } from '../commands/renewResignedAppAsync';
+import {
+  ensureFreeAppSlotAsync,
+  handleFreeAppLimitAsync,
+  handleUntrustedDeveloperAsync,
+} from '../commands/resignAndRetryAsync';
+import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
+import {
+  getAttention,
+  getRenewalBlockReason,
+  isActiveRecord,
+  isRenewalDue,
+  listResignedApps,
+  ResignAttention,
+  RESIGNED_APPS_CHANGED_EVENT,
+  RESIGNED_APPS_CHECK_REQUEST_EVENT,
+  RESIGNED_APPS_RENEW_REQUEST_EVENT,
+  ResignedAppRecord,
+  setAttention,
+  updateResignedApp,
+} from '../modules/ResignedApps';
+import { getUserPreferences } from '../modules/Storage';
+import { useListDevices } from '../providers/DevicesProvider';
+import { AppleAuthCompletedEvent, AppleAuthEmitter } from '../utils/appleAuthEvents';
+import { getDeviceId } from '../utils/device';
+import { MenuBarStatus, Task, describeResignStep } from '../utils/helpers';
+import { describeResignError } from '../utils/resignErrorCopy';
+
+const RENEWAL_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const DEVICE_SEEN_WRITE_THROTTLE_MS = 60 * 60 * 1000;
+
+// Renewals run strictly one at a time: ipa-resign shares a single state.json
+// and Apple session, so parallel resigns would race. Module-level so every
+// trigger (interval, focus, manual request, reconnect install) shares the queue.
+let engineQueue: Promise<void> = Promise.resolve();
+function runExclusive(fn: () => Promise<void>): Promise<void> {
+  engineQueue = engineQueue.then(fn, fn);
+  return engineQueue;
+}
+
+let cleanupRan = false;
+
+type TaskHandlers = {
+  createTask: (task: Task) => void;
+  updateTask: (task: Partial<Task> & Pick<Task, 'id'>) => void;
+  deleteTask: (id: Task['id']) => void;
+};
+
+/**
+ * The automatic 7-day renewal engine. Mounted once, in the popover's Core, so
+ * progress can surface through the existing tasks map. Returns the attention
+ * state the popover should surface (auth expired / renewal failed).
+ */
+export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: TaskHandlers) {
+  const { devicesPerPlatform, refetch } = useListDevices();
+  const [attention, setAttentionState] = useState<ResignAttention | null>(getAttention());
+
+  useEffect(() => {
+    const reconcile = () => {
+      for (const record of listResignedApps()) {
+        if (record.lastError?.code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+          updateResignedApp(record.id, { lastError: undefined });
+        }
+      }
+      if (
+        getAttention()?.kind === 'renewal-failed' &&
+        !listResignedApps().some((record) => record.lastError)
+      ) {
+        setAttention(null);
+      }
+      setAttentionState(getAttention());
+    };
+    reconcile();
+    const sub = DeviceEventEmitter.addListener(RESIGNED_APPS_CHANGED_EVENT, reconcile);
+    return () => sub.remove();
+  }, []);
+
+  const connectedUdidsRef = useRef<Set<string>>(new Set());
+  connectedUdidsRef.current = new Set(
+    [...devicesPerPlatform.ios.devices.values()]
+      .filter((device) => device.deviceType === 'device')
+      .map((device) => getDeviceId(device))
+  );
+
+  // Renew one record. Returns false when every further renewal would fail the
+  // same way (expired Apple session) so the caller stops the whole run.
+  const renewOneAsync = useCallback(
+    async (record: ResignedAppRecord, opts?: { interactive?: boolean }): Promise<boolean> => {
+      const taskId = `renew:${record.id}`;
+      createTask({
+        id: taskId,
+        status: MenuBarStatus.RESIGNING_APP,
+        progress: 0,
+        message: `Renewing ${record.appName}…`,
+      });
+      try {
+        // Asked for by the user with the device here: make sure a slot exists
+        // before the resign, instead of failing after the upload.
+        if (
+          opts?.interactive &&
+          connectedUdidsRef.current.has(record.deviceUdid) &&
+          !(await ensureFreeAppSlotAsync({
+            deviceId: record.deviceUdid,
+            deviceName: record.deviceName,
+            appName: record.appName,
+            originalBundleId: record.assignedBundleId,
+          }))
+        ) {
+          return true;
+        }
+        const {
+          record: renewed,
+          previousBundleId,
+          previousCopyRemoved,
+        } = await renewResignedAppAsync(record, {
+          deviceConnected: connectedUdidsRef.current.has(record.deviceUdid),
+          interactive: opts?.interactive,
+          onProgress: (step) =>
+            updateTask({ id: taskId, message: `${record.appName}: ${describeResignStep(step)}` }),
+        });
+        if (getAttention()?.kind === 'renewal-failed') {
+          setAttention(null);
+        }
+        if (previousBundleId) {
+          // The old record dir is orphaned now. (Cleanup leaves dirs written in
+          // the last hour alone, so a resign in flight elsewhere is safe.)
+          cleanupResignedAppsAsync().catch(() => {});
+        }
+        if (previousBundleId && !previousCopyRemoved) {
+          // An interactive renewal already asked about the old copy; otherwise
+          // it was left alone (replacing it would reset the app's data).
+          Alert.alert(
+            `${record.appName} was signed with a new identifier`,
+            `‘${previousBundleId}’ can’t be used with the signed-in Apple ID, so Orbit signed it as ‘${renewed.assignedBundleId}’. ` +
+              `The old copy on ${record.deviceName} keeps its data and stops opening when its profile expires; delete it from the Home Screen when you no longer need it.`
+          );
+        }
+        return true;
+      } catch (error) {
+        const code = error instanceof InternalError ? error.code : undefined;
+        const at = new Date().toISOString();
+        // The resign step rebuilds the record (its id follows the bundle id), so a
+        // failure after it must be written to the record that exists now.
+        const current =
+          listResignedApps().find(
+            (r) =>
+              r.originalBundleId === record.originalBundleId && r.deviceUdid === record.deviceUdid
+          ) ?? record;
+        if (code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+          // The app was re-signed but the device has no free slot. A renewal the
+          // user asked for gets the same chooser as the resign flow, then only
+          // the install is retried (the IPA is already signed). Unattended
+          // renewals just record it. A record that was inactive stays inactive
+          // unless the install goes through.
+          const wasActive = isActiveRecord(record);
+          const occupyingApps = (
+            (error as InternalError).details as
+              | { apps?: { bundleId: string; name?: string }[] }
+              | undefined
+          )?.apps;
+          const freed =
+            opts?.interactive === true &&
+            (await handleFreeAppLimitAsync({
+              deviceId: record.deviceUdid,
+              deviceName: record.deviceName,
+              appName: record.appName,
+              excludeBundleId: current.assignedBundleId,
+              occupyingApps,
+            }));
+          if (freed) {
+            try {
+              await installAndLaunchAppAsync({
+                appPath: current.resignedIpaPath,
+                deviceId: record.deviceUdid,
+                launchURL: record.launchURL,
+              });
+            } catch (retryError) {
+              const retryCode = retryError instanceof InternalError ? retryError.code : undefined;
+              if (retryCode !== 'APPLE_DEVELOPER_NOT_TRUSTED') {
+                updateResignedApp(current.id, {
+                  active: wasActive,
+                  lastError: {
+                    code: retryCode ?? 'UNKNOWN',
+                    message: describeResignError(retryError).message,
+                    at,
+                  },
+                });
+                setAttention({
+                  kind: 'renewal-failed',
+                  message: `Couldn’t install ${record.appName}.`,
+                  at,
+                });
+                return true;
+              }
+              await handleUntrustedDeveloperAsync({
+                deviceId: record.deviceUdid,
+                bundleId: current.assignedBundleId,
+                launchURL: record.launchURL,
+              });
+            }
+            updateResignedApp(current.id, {
+              active: true,
+              pendingInstall: false,
+              lastError: undefined,
+            });
+            if (getAttention()?.kind === 'renewal-failed') setAttention(null);
+            return true;
+          }
+          updateResignedApp(current.id, {
+            active: wasActive,
+            lastError: { code, message: describeResignError(error).message, at },
+          });
+          setAttention({
+            kind: 'renewal-failed',
+            message: `Couldn’t ${wasActive ? 'renew' : 'install'} ${record.appName}.`,
+            at,
+          });
+          return true;
+        }
+        if (code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+          // Renewed and installed; iOS only refuses to open it until the developer
+          // is trusted on the device — the first run under a new team, and iOS
+          // prompts for it on launch anyway. Offer the walkthrough the resign
+          // flow uses, but this is not a failed renewal either way.
+          markTrustInstructionsShown(loadAppleId() ?? record.appleId, record.deviceUdid);
+          await handleUntrustedDeveloperAsync({
+            deviceId: record.deviceUdid,
+            bundleId: current.assignedBundleId,
+            launchURL: record.launchURL,
+          });
+          updateResignedApp(current.id, { lastError: undefined, pendingInstall: false });
+          if (getAttention()?.kind === 'renewal-failed') setAttention(null);
+          return true;
+        }
+        if (code === 'APPLE_AUTH_REQUIRED') {
+          // Expired session is a logout: forget it so every "signed in as X"
+          // surface updates, then surface the attention row to re-sign-in.
+          // Keep ipa-resign's reason (GSA error code, missing session, …) on the
+          // record: "session expired" alone can't be diagnosed later.
+          forgetAppleIdSession();
+          updateResignedApp(current.id, {
+            lastError: {
+              code,
+              message: error instanceof Error ? error.message : 'Apple ID session expired.',
+              at,
+            },
+          });
+          setAttention({
+            kind: 'auth-required',
+            message: 'Sign in to your Apple ID to keep renewing resigned apps.',
+            at,
+          });
+          return false;
+        }
+        if (code === 'APPLE_TWO_FACTOR_REQUIRED') {
+          // The saved password signed in again but Apple wants a code. The
+          // attention row opens the sign-in window on the code step.
+          requestTwoFactorPrompt({
+            appleId: loadAppleId() ?? record.appleId,
+            authMode: twoFactorAuthMode(error),
+          });
+          updateResignedApp(current.id, {
+            lastError: { code, message: 'Apple asked for a verification code.', at },
+          });
+          setAttention({
+            kind: 'auth-required',
+            message: 'Enter your Apple ID verification code to keep renewing resigned apps.',
+            at,
+          });
+          return false;
+        }
+        // A failure after the resign leaves `pendingInstall` set (the renewal
+        // command only clears it once the install succeeds), so the device
+        // gets the new profile at the next reconnect or "Renew now".
+        const { message } = describeResignError(error);
+        updateResignedApp(current.id, { lastError: { code: code ?? 'UNKNOWN', message, at } });
+        setAttention({ kind: 'renewal-failed', message: `Couldn’t renew ${record.appName}.`, at });
+        return true;
+      } finally {
+        deleteTask(taskId);
+      }
+    },
+    [createTask, updateTask, deleteTask]
+  );
+
+  const runRenewalCheckAsync = useCallback(
+    () =>
+      runExclusive(async () => {
+        if (!getUserPreferences().autoRenewResignedApps) return;
+        const now = Date.now();
+        for (const record of listResignedApps()) {
+          if (!isActiveRecord(record) || !isRenewalDue(record, now)) continue;
+          const blocked = getRenewalBlockReason(record, now);
+          if (blocked === 'stale') {
+            if (record.lastError?.code !== 'STALE_DEVICE') {
+              updateResignedApp(record.id, {
+                lastError: {
+                  code: 'STALE_DEVICE',
+                  message: 'Device not seen for 30 days — automatic renewal paused.',
+                  at: new Date().toISOString(),
+                },
+              });
+            }
+            continue;
+          }
+          if (blocked) continue;
+          const keepGoing = await renewOneAsync(record);
+          if (!keepGoing) break;
+        }
+      }),
+    [renewOneAsync]
+  );
+
+  // Triggers: mount, 6-hour tick, popover focus, sign-in completion.
+  useEffect(() => {
+    if (!cleanupRan) {
+      cleanupRan = true;
+      cleanupResignedAppsAsync().catch(() => {});
+    }
+    runRenewalCheckAsync();
+    const interval = setInterval(() => {
+      // Reconnects are only visible through a device refetch; force one while
+      // an install is pending so it isn't gated on the user opening the popover.
+      if (listResignedApps().some((record) => record.pendingInstall)) {
+        refetch();
+      }
+      runRenewalCheckAsync();
+    }, RENEWAL_CHECK_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [runRenewalCheckAsync, refetch]);
+
+  usePopoverFocusEffect(
+    useCallback(() => {
+      runRenewalCheckAsync();
+    }, [runRenewalCheckAsync])
+  );
+
+  useEffect(() => {
+    const sub = AppleAuthEmitter.addListener(
+      'apple-id-auth:complete',
+      (event: AppleAuthCompletedEvent) => {
+        if (event.status === 'success') {
+          if (getAttention()?.kind === 'auth-required') {
+            setAttention(null);
+          }
+          runRenewalCheckAsync();
+        }
+      }
+    );
+    return () => sub.remove();
+  }, [runRenewalCheckAsync]);
+
+  // Manual "Renew now" from the Settings window (separate renderer on Electron).
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener(
+      RESIGNED_APPS_RENEW_REQUEST_EVENT,
+      ({ recordId }: { recordId: string }) => {
+        runExclusive(async () => {
+          const record = listResignedApps().find((r) => r.id === recordId);
+          if (record) await renewOneAsync(record, { interactive: true });
+        });
+      }
+    );
+    return () => sub.remove();
+  }, [renewOneAsync]);
+
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener(RESIGNED_APPS_CHECK_REQUEST_EVENT, () => {
+      runRenewalCheckAsync();
+    });
+    return () => sub.remove();
+  }, [runRenewalCheckAsync]);
+
+  // Install-on-reconnect + deviceLastSeenAt bookkeeping. Pending installs run
+  // for devices that just (re)appeared, not on every device refetch: a failed
+  // install would otherwise be retried each time the popover opens.
+  const seenUdidsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const udids = connectedUdidsRef.current;
+    const reconnected = new Set([...udids].filter((udid) => !seenUdidsRef.current.has(udid)));
+    seenUdidsRef.current = udids;
+    if (udids.size === 0) return;
+    runExclusive(async () => {
+      const now = Date.now();
+      for (const record of listResignedApps()) {
+        if (!udids.has(record.deviceUdid)) continue;
+        const lastSeen = Date.parse(record.deviceLastSeenAt);
+        if (Number.isNaN(lastSeen) || now - lastSeen > DEVICE_SEEN_WRITE_THROTTLE_MS) {
+          updateResignedApp(record.id, { deviceLastSeenAt: new Date(now).toISOString() });
+        }
+        if (record.pendingInstall && isActiveRecord(record) && reconnected.has(record.deviceUdid)) {
+          const taskId = `renew-install:${record.id}`;
+          createTask({
+            id: taskId,
+            status: MenuBarStatus.INSTALLING_APP,
+            progress: 0,
+            message: `Installing ${record.appName}…`,
+          });
+          try {
+            await installAndLaunchAppAsync({
+              appPath: record.resignedIpaPath,
+              deviceId: record.deviceUdid,
+              launchURL: record.launchURL,
+            });
+            updateResignedApp(record.id, { pendingInstall: false });
+          } catch (error) {
+            const code = error instanceof InternalError ? error.code : undefined;
+            if (code === 'APPLE_DEVELOPER_NOT_TRUSTED' || code === 'APPLE_DEVICE_LOCKED') {
+              // The app is installed; only the launch was refused (trust prompt,
+              // locked screen — see installOnDeviceAsync). Nothing to retry.
+              updateResignedApp(record.id, { pendingInstall: false });
+              if (code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+                markTrustInstructionsShown(loadAppleId() ?? record.appleId, record.deviceUdid);
+                await handleUntrustedDeveloperAsync({
+                  deviceId: record.deviceUdid,
+                  bundleId: record.assignedBundleId,
+                  launchURL: record.launchURL,
+                });
+              }
+            }
+            // Anything else (mid-boot, cable pulled): retried at the next reconnect.
+          } finally {
+            deleteTask(taskId);
+          }
+        }
+      }
+    });
+  }, [devicesPerPlatform, createTask, deleteTask]);
+
+  return { attention };
+}

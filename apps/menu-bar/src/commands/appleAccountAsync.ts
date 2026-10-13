@@ -13,10 +13,36 @@ const LAST_APPLE_ID_KEY = 'apple-resign:last-apple-id';
 // every re-auth. Cleared only on an explicit sign-out.
 const APPLE_ID_HINT_KEY = 'apple-resign:apple-id-hint';
 
+// Whether a password is saved for the signed-in Apple ID ("Keep me signed in"),
+// so Settings can say that Orbit signs in again by itself.
+const APPLE_PASSWORD_SAVED_KEY = 'apple-resign:password-saved';
+
 // Why the AppleIdAuth window shows a contextual banner. Written by whoever
 // opens the window, read (and cleared) by the window on mount — the window
 // navigator cannot pass props, so this rides through storage.
 export const AUTH_REASON_KEY = 'apple-resign:auth-reason';
+
+// A pending two-factor challenge the window should open on directly: the saved
+// password already passed Apple's check during a silent re-sign-in, only the
+// code is missing. Same read-and-clear handoff as AUTH_REASON_KEY.
+const AUTH_TWO_FACTOR_KEY = 'apple-resign:auth-two-factor';
+
+export type TwoFactorPrompt = { appleId: string; authMode: 'trustedDevice' | 'sms' };
+
+export function requestTwoFactorPrompt(prompt: TwoFactorPrompt) {
+  storage.set(AUTH_TWO_FACTOR_KEY, JSON.stringify(prompt));
+}
+
+export function consumeTwoFactorPrompt(): TwoFactorPrompt | null {
+  const raw = storage.getString(AUTH_TWO_FACTOR_KEY);
+  if (!raw) return null;
+  storage.delete(AUTH_TWO_FACTOR_KEY);
+  try {
+    return JSON.parse(raw) as TwoFactorPrompt;
+  } catch {
+    return null;
+  }
+}
 
 // Broadcast whenever the signed-in Apple ID changes (sign-in, sign-out, or an
 // automatic logout on session expiry). Every window that shows "signed in as X"
@@ -24,14 +50,21 @@ export const AUTH_REASON_KEY = 'apple-resign:auth-reason';
 // main-process DeviceEventEmitter broadcast.
 export const APPLE_ID_CHANGED_EVENT = 'apple-id:changed';
 
-export function rememberAppleId(appleId: string) {
+export function rememberAppleId(appleId: string, opts?: { passwordSaved?: boolean }) {
   storage.set(LAST_APPLE_ID_KEY, appleId);
   storage.set(APPLE_ID_HINT_KEY, appleId);
+  if (opts?.passwordSaved !== undefined) {
+    storage.set(APPLE_PASSWORD_SAVED_KEY, opts.passwordSaved);
+  }
   DeviceEventEmitter.emit(APPLE_ID_CHANGED_EVENT);
 }
 
 export function loadAppleId(): string | null {
   return storage.getString(LAST_APPLE_ID_KEY) ?? null;
+}
+
+export function isApplePasswordSaved(): boolean {
+  return storage.getBoolean(APPLE_PASSWORD_SAVED_KEY) ?? false;
 }
 
 /**
@@ -44,9 +77,9 @@ export function loadAppleId(): string | null {
 export async function resolveAppleIdAsync(): Promise<string | null> {
   const stored = loadAppleId();
   if (stored) return stored;
-  const persisted = await appleIdStatusAsync().catch(() => null);
-  if (persisted) rememberAppleId(persisted);
-  return persisted;
+  const status = await appleIdStatusAsync().catch(() => null);
+  if (status?.appleId) rememberAppleId(status.appleId, { passwordSaved: status.passwordSaved });
+  return status?.appleId ?? null;
 }
 
 /** The email to pre-fill in the sign-in form (survives expiry). */
@@ -63,6 +96,9 @@ export function loadAppleIdHint(): string | null {
 export function forgetAppleIdSession() {
   if (!storage.getString(LAST_APPLE_ID_KEY)) return;
   storage.delete(LAST_APPLE_ID_KEY);
+  // With a saved password ipa-resign signs in again by itself, so reaching here
+  // means there is none (or Apple rejected it and ipa-resign dropped it).
+  storage.delete(APPLE_PASSWORD_SAVED_KEY);
   DeviceEventEmitter.emit(APPLE_ID_CHANGED_EVENT);
 }
 
@@ -78,19 +114,35 @@ export async function clearAppleIdLoginAsync(): Promise<string | null> {
   }
   storage.delete(LAST_APPLE_ID_KEY);
   storage.delete(APPLE_ID_HINT_KEY);
+  storage.delete(APPLE_PASSWORD_SAVED_KEY);
   DeviceEventEmitter.emit(APPLE_ID_CHANGED_EVENT);
   return appleId;
 }
 
-/**
- * True when an error means the Apple session expired and re-auth is required.
- * Matches InternalError structurally: the code crosses the CLI boundary as JSON
- * and is rebuilt, so `instanceof` is unreliable.
- */
-export function isAppleAuthExpiredError(error: unknown): boolean {
-  if (error instanceof InternalError) return error.code === 'APPLE_AUTH_REQUIRED';
+// Matches InternalError structurally: the code crosses the CLI boundary as JSON
+// and is rebuilt, so `instanceof` is unreliable.
+function hasInternalCode(error: unknown, code: string): boolean {
+  if (error instanceof InternalError) return error.code === code;
   const maybe = error as { name?: string; code?: string } | null;
-  return !!maybe && maybe.name === 'InternalError' && maybe.code === 'APPLE_AUTH_REQUIRED';
+  return !!maybe && maybe.name === 'InternalError' && maybe.code === code;
+}
+
+/** True when an error means the Apple session expired and re-auth is required. */
+export function isAppleAuthExpiredError(error: unknown): boolean {
+  return hasInternalCode(error, 'APPLE_AUTH_REQUIRED');
+}
+
+/**
+ * True when a silent re-sign-in (saved password) got a two-factor challenge:
+ * the user only needs to enter the code — see requestTwoFactorPrompt.
+ */
+export function isAppleTwoFactorRequiredError(error: unknown): boolean {
+  return hasInternalCode(error, 'APPLE_TWO_FACTOR_REQUIRED');
+}
+
+export function twoFactorAuthMode(error: unknown): TwoFactorPrompt['authMode'] {
+  const details = (error as { details?: { authMode?: string } } | null)?.details;
+  return details?.authMode === 'sms' ? 'sms' : 'trustedDevice';
 }
 
 // iOS shows an "Untrusted Developer" prompt the first time an app signed by a

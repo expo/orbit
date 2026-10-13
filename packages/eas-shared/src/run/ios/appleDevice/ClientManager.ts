@@ -14,6 +14,7 @@ import { AFCClient } from './client/AFCClient';
 import { DebugserverClient } from './client/DebugserverClient';
 import { InstallationProxyClient } from './client/InstallationProxyClient';
 import { LockdowndClient } from './client/LockdowndClient';
+import { MisagentClient } from './client/MisagentClient';
 import { MobileImageMounterClient } from './client/MobileImageMounterClient';
 import { ServiceClient } from './client/ServiceClient';
 import { UsbmuxdClient, UsbmuxdDevice, UsbmuxdPairRecord } from './client/UsbmuxdClient';
@@ -91,6 +92,10 @@ export class ClientManager {
 
   async getMobileImageMounterClient() {
     return this.getServiceClient('com.apple.mobile.mobile_image_mounter', MobileImageMounterClient);
+  }
+
+  async getMisagentClient() {
+    return this.getServiceClient('com.apple.misagent', MisagentClient);
   }
 
   async getDebugserverClient() {

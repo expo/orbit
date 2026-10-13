@@ -1,6 +1,8 @@
 export type AppleAppInfo = {
   deviceType: 'device' | 'simulator';
   osType: 'iOS' | 'tvOS' | 'watchOS' | 'macOS';
+  /** CFBundleIdentifier from the app's Info.plist, when present. */
+  bundleIdentifier?: string;
   /**
    * From the app's embedded.mobileprovision; absent for simulator, macOS and
    * unsigned builds. Lets the host tell before installing whether the build can

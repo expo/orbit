@@ -1,6 +1,7 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
 import {
   Key16Regular,
+  MoreHorizontal16Regular,
   Options16Regular,
   PhoneLaptop16Regular,
   Settings16Regular,
@@ -8,9 +9,18 @@ import {
 import { CliCommands, Config } from 'common-types';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
 import { SymbolView } from 'expo-symbols';
-import React, { Fragment, useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 
+import { WindowsNavigator } from './index';
+import { Pane } from './settingsPane';
 import AutoUpdater from '../../modules/auto-updater';
 import {
   openAuthSessionAsync,
@@ -19,22 +29,43 @@ import {
 import {
   APPLE_ID_CHANGED_EVENT,
   clearAppleIdLoginAsync,
+  forgetAppleIdSession,
+  isAppleAuthExpiredError,
+  isAppleTwoFactorRequiredError,
   loadAppleId,
+  requestTwoFactorPrompt,
   resolveAppleIdAsync,
+  twoFactorAuthMode,
 } from '../commands/appleAccountAsync';
+import {
+  AppleAppId,
+  deleteAppleAppIdAsync,
+  listAppleAppIdsAsync,
+} from '../commands/appleAppIdsAsync';
+import { cleanupResignedAppsAsync } from '../commands/cleanupResignedAppsAsync';
 import { getTrustedSourcesAsync } from '../commands/getTrustesSourcesAsync';
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { setTrustedSourcesAsync } from '../commands/setTrustedSourcesAsync';
 import { Divider, Row, Text, View } from '../components';
 import { Avatar } from '../components/Avatar';
-import Button from '../components/Button';
+import Button, { getStylesForColor } from '../components/Button';
 import PathInput from '../components/PathInput';
+import { PlaceholderAppIcon } from '../components/PlaceholderAppIcon';
 import { Switch } from '../components/Switch';
 import TrustedSourcesInput from '../components/TrustedSourcesInput';
 import { useGetCurrentUserQuery } from '../generated/graphql';
 import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
+import {
+  isActiveRecord,
+  listResignedApps,
+  removeResignedApp,
+  RESIGNED_APPS_CHANGED_EVENT,
+  RESIGNED_APPS_RENEW_REQUEST_EVENT,
+  ResignedAppRecord,
+  updateResignedApp,
+} from '../modules/ResignedApps';
 import {
   UserPreferences,
   getUserPreferences,
@@ -44,11 +75,13 @@ import {
   sessionSecretStorageKey,
   resetApolloStore,
 } from '../modules/Storage';
-import { getCurrentUserDisplayName } from '../utils/helpers';
+import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppIdsEvents';
+import { waitForAppleAuthCompleteAsync } from '../utils/appleAuthEvents';
+import { formatProfileExpiry, getCurrentUserDisplayName, isRenewing } from '../utils/helpers';
+import { describeResignError } from '../utils/resignErrorCopy';
 import { addOpacity } from '../utils/theme';
-import { useCurrentTheme } from '../utils/useExpoTheme';
+import { useCurrentTheme, useExpoPalette, useExpoTheme } from '../utils/useExpoTheme';
 
-export type Pane = 'general' | 'platforms' | 'apple' | 'advanced';
 export type PaneItem = {
   key: Pane;
   label: string;
@@ -113,6 +146,7 @@ const platformList: PlatformItem[] = [
 export const hairline = addOpacity(lightTheme.border.default, 0.2);
 
 export function SettingsPane({ pane }: { pane: Pane }) {
+  const expoTheme = useExpoTheme();
   const [hasSessionSecret, setHasSessionSecret] = useState(
     Boolean(storage.getString(sessionSecretStorageKey))
   );
@@ -132,11 +166,15 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     Boolean(getUserPreferences().customSdkPath)
   );
   const [appleAccountId, setAppleAccountId] = useState<string | null>(loadAppleId());
+  const [resignedApps, setResignedApps] = useState<ResignedAppRecord[]>(listResignedApps());
 
   useEffect(() => {
-    // Cross-window: an Apple ID change (sign-in, sign-out, or an automatic logout
-    // on session expiry) can happen in the popover or another window; it
-    // broadcasts through the main-process DeviceEventEmitter.
+    // Cross-window: record writes and Apple ID changes (sign-in, sign-out, or an
+    // automatic logout on session expiry) can happen in the popover or another
+    // window; both broadcast through the main-process DeviceEventEmitter.
+    const recordsSub = DeviceEventEmitter.addListener(RESIGNED_APPS_CHANGED_EVENT, () => {
+      setResignedApps(listResignedApps());
+    });
     const appleIdSub = DeviceEventEmitter.addListener(APPLE_ID_CHANGED_EVENT, () => {
       setAppleAccountId(loadAppleId());
     });
@@ -144,6 +182,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     // CLI sign-in); it broadcasts APPLE_ID_CHANGED_EVENT, handled above.
     resolveAppleIdAsync().catch(() => {});
     return () => {
+      recordsSub.remove();
       appleIdSub.remove();
     };
   }, []);
@@ -162,6 +201,64 @@ export function SettingsPane({ pane }: { pane: Pane }) {
       Alert.alert('Could not sign out', error instanceof Error ? error.message : String(error));
     }
   };
+
+  const renewRecordNow = (record: ResignedAppRecord) => {
+    // The renewal engine lives in the popover's Core (separate renderer on
+    // Electron); ask it to renew and bring the popover forward for progress.
+    DeviceEventEmitter.emit(RESIGNED_APPS_RENEW_REQUEST_EVENT, { recordId: record.id });
+    MenuBarModule.openPopover();
+  };
+
+  const removeRecord = (record: ResignedAppRecord) => {
+    Alert.alert(
+      `Remove ${record.appName}?`,
+      'Orbit deletes its stored copies and stops renewing it. The app stays on your ' +
+        'device until its profile expires.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'default',
+          onPress: () => {
+            removeResignedApp(record.id);
+            setResignedApps(listResignedApps());
+            cleanupResignedAppsAsync().catch(() => {});
+          },
+        },
+      ]
+    );
+  };
+
+  const toggleRecordAutoRenew = (record: ResignedAppRecord, value: boolean) => {
+    updateResignedApp(record.id, { autoRenew: value });
+    setResignedApps(listResignedApps());
+  };
+
+  const toggleAutoRenewResignedApps = (value: boolean) => {
+    setUserPreferences((prev) => {
+      const newPreferences = { ...prev, autoRenewResignedApps: value };
+      saveUserPreferences(newPreferences);
+      return newPreferences;
+    });
+  };
+
+  // The row's "⋯" menu. An alert stands in for a popup menu: it works the same
+  // on macOS and Electron and needs no menu component.
+  const showRecordMenu = (record: ResignedAppRecord) => {
+    Alert.alert(record.appName, `${record.deviceName} · ${record.originalBundleId}`, [
+      {
+        text: record.autoRenew ? 'Turn off auto-renew' : 'Turn on auto-renew',
+        onPress: () => toggleRecordAutoRenew(record, !record.autoRenew),
+      },
+      {
+        text: isActiveRecord(record) ? 'Renew now' : 'Install',
+        onPress: () => renewRecordNow(record),
+      },
+      { text: 'Remove…', style: 'destructive', onPress: () => removeRecord(record) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   const [trustedSourcesEnabled, setTrustedSourcesEnabled] = useState(false);
   const [trustedSources, setTrustedSources] = useState<string>('');
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
@@ -300,6 +397,18 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     setUserPreferences(newPreferences);
   };
 
+  const keyIcon = (
+    <IconTile>
+      <SymbolView
+        name="key"
+        size={18}
+        tintColor={expoTheme.text.default}
+        fallback={<Key16Regular />}
+        style={styles.symbol}
+      />
+    </IconTile>
+  );
+
   return (
     <View flex="1">
       <View justify="center" px="6" style={[styles.header, { borderBottomColor: hairline }]}>
@@ -412,28 +521,130 @@ export function SettingsPane({ pane }: { pane: Pane }) {
             <Card>
               {appleAccountId ? (
                 <SettingRow
+                  leading={keyIcon}
                   title={appleAccountId}
                   subtitle="Used to re-sign builds for your iPhone">
                   <Button
                     title="Sign out"
-                    color="primary"
+                    color="danger"
                     onPress={signOutAppleId}
                     style={styles.button}
                   />
                 </SettingRow>
               ) : (
-                <View px="3.5" py="3">
-                  <Text size="tiny" color="secondary">
-                    Orbit asks for your Apple ID when it re-signs a build for your iPhone.
-                  </Text>
-                </View>
+                <SettingRow
+                  leading={keyIcon}
+                  title="No Apple ID saved"
+                  subtitle="Orbit will ask the next time it re-signs a build.">
+                  <Button
+                    title="Sign in…"
+                    onPress={() => WindowsNavigator.open('AppleIdAuth')}
+                    style={styles.button}
+                  />
+                </SettingRow>
               )}
             </Card>
+            {appleAccountId ? <AppleAppIdsSection appleId={appleAccountId} /> : null}
+            <Section title="Resigned apps">
+              <Card>
+                <SettingRow
+                  title="Renew automatically"
+                  subtitle="Apps signed with a free Apple ID stop opening after 7 days">
+                  <Switch
+                    value={userPreferences.autoRenewResignedApps}
+                    onValueChange={toggleAutoRenewResignedApps}
+                  />
+                </SettingRow>
+                {resignedApps.length === 0 ? (
+                  <>
+                    <Divider />
+                    <View px="3.5" py="3">
+                      <Text size="tiny" color="secondary">
+                        No resigned apps installed.
+                      </Text>
+                    </View>
+                  </>
+                ) : null}
+                {resignedApps.map((record) => {
+                  const expiry = formatProfileExpiry(record.profileExpiresAt);
+                  const busy = isRenewing(record);
+                  const inactive = !isActiveRecord(record);
+                  // Not-trusted is iOS's first-run prompt, not a failed renewal: records
+                  // written before the engine learned that still carry it.
+                  const failure =
+                    record.lastError?.code === 'APPLE_DEVELOPER_NOT_TRUSTED'
+                      ? undefined
+                      : record.lastError;
+                  // One meta line: a failure or pending install wins over the schedule.
+                  const meta = failure
+                    ? failure.message
+                    : inactive
+                      ? `Not installed on ${record.deviceName} · Install to put it back`
+                      : record.pendingInstall
+                        ? 'Renewed — installs when the device reconnects'
+                        : [
+                            record.deviceName,
+                            expiry.label,
+                            record.autoRenew && userPreferences.autoRenewResignedApps
+                              ? 'Auto-renews'
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ');
+                  const metaColor = failure
+                    ? 'error'
+                    : expiry.critical && !record.pendingInstall
+                      ? 'warning'
+                      : 'secondary';
+                  return (
+                    <Fragment key={record.id}>
+                      <Divider />
+                      <SettingRow
+                        leading={
+                          record.iconPath ? (
+                            <Image
+                              source={{ uri: `file://${encodeURI(record.iconPath)}` }}
+                              style={styles.appIcon}
+                            />
+                          ) : (
+                            <PlaceholderAppIcon size={36} />
+                          )
+                        }
+                        title={record.appName}
+                        subtitle={
+                          <Text
+                            size="tiny"
+                            color={metaColor}
+                            // Errors must be readable in full; the schedule line stays compact.
+                            numberOfLines={failure ? undefined : 1}>
+                            {meta}
+                          </Text>
+                        }>
+                        <Button
+                          title={inactive ? 'Install' : busy ? 'Renewing…' : 'Renew now'}
+                          color="primary"
+                          disabled={busy}
+                          onPress={() => renewRecordNow(record)}
+                          style={styles.smallButton}
+                        />
+                        <IconButton
+                          label="More"
+                          symbol="ellipsis"
+                          fallback={<MoreHorizontal16Regular />}
+                          onPress={() => showRecordMenu(record)}
+                        />
+                      </SettingRow>
+                    </Fragment>
+                  );
+                })}
+              </Card>
+            </Section>
             <Section title="How Orbit uses your Apple ID">
               <Text size="tiny" color="secondary">
                 Your Apple ID is used only to create a free signing certificate for your devices.
-                The password is never stored — it is passed once to a local signing process. Session
-                tokens stay on this computer in ~/.orbit/apple-resign.
+                The password is passed once to a local signing process and not stored, unless “Keep
+                me signed in” was checked: then it is saved, with the session tokens, in
+                ~/.orbit/apple-resign/secrets.json — a file readable only by your user account.
               </Text>
             </Section>
           </>
@@ -500,12 +711,218 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const FREE_APP_ID_QUOTA = 10;
+
+function formatShortDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/**
+ * The App IDs registered to the signed-in Apple ID, so the user can free quota
+ * slots (free teams: 10 App IDs per rolling 7 days). Loaded on request, not on
+ * mount: asking Apple can end in a 2FA prompt or an expired-session sign-out,
+ * which must follow a click, not navigating to this pane. Each deletion is
+ * reported on `apple-app-ids:done`, which the resign flow waits on.
+ */
+function AppleAppIdsSection({ appleId }: { appleId: string }) {
+  const expoTheme = useExpoTheme();
+  const palette = useExpoPalette();
+  const [appIds, setAppIds] = useState<AppleAppId[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  // Ask for a 2FA code at most once per load, so a persistent failure can't
+  // bounce the sign-in window in a loop.
+  const twoFactorPromptedRef = useRef(false);
+
+  // The saved password signed in again but Apple wants a code: open the sign-in
+  // window on the code step and report whether the user completed it.
+  const promptTwoFactorAsync = useCallback(
+    async (e: unknown): Promise<boolean> => {
+      if (twoFactorPromptedRef.current) return false;
+      twoFactorPromptedRef.current = true;
+      requestTwoFactorPrompt({ appleId, authMode: twoFactorAuthMode(e) });
+      WindowsNavigator.open('AppleIdAuth');
+      return (await waitForAppleAuthCompleteAsync()).status === 'success';
+    },
+    [appleId]
+  );
+
+  const load = useCallback(async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const rows = await listAppleAppIdsAsync(appleId);
+      rows.sort((a, b) => (a.expirationDate ?? '').localeCompare(b.expirationDate ?? ''));
+      setAppIds(rows);
+      twoFactorPromptedRef.current = false;
+    } catch (e) {
+      if (isAppleTwoFactorRequiredError(e) && (await promptTwoFactorAsync(e))) {
+        await load();
+        return;
+      }
+      if (isAppleAuthExpiredError(e)) {
+        // An expired session is a logout: the pane flips to its signed-out
+        // state (and this section unmounts) through APPLE_ID_CHANGED_EVENT.
+        forgetAppleIdSession();
+        return;
+      }
+      setError(describeResignError(e).message);
+      setAppIds((rows) => rows ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, [appleId, promptTwoFactorAsync]);
+
+  const onDelete = (row: AppleAppId) => {
+    Alert.alert(
+      `Delete "${row.name}"?`,
+      `${row.identifier}\n\nApps signed with this App ID keep working until their profile expires, but they can’t be renewed with it anymore.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'default',
+          onPress: async () => {
+            setBusyId(row.appIdId);
+            try {
+              await deleteAppleAppIdAsync(appleId, row.appIdId);
+              AppleAppIdsEmitter.emit(APPLE_APP_IDS_DONE_EVENT, { deletedCount: 1 });
+              await load();
+            } catch (e) {
+              if (isAppleTwoFactorRequiredError(e) && (await promptTwoFactorAsync(e))) {
+                await load();
+                return;
+              }
+              if (isAppleAuthExpiredError(e)) {
+                forgetAppleIdSession();
+                return;
+              }
+              setError(describeResignError(e).message);
+            } finally {
+              setBusyId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Free teams' App IDs expire 7 days after registration, so the list is the
+  // rolling-window usage. Paid teams' App IDs never expire and have no cap.
+  const quota = appIds !== null && appIds.every((row) => Boolean(row.expirationDate));
+  const used = appIds?.length ?? 0;
+
+  return (
+    <Section
+      title="App IDs"
+      trailing={
+        quota ? (
+          <Text size="tiny" color="secondary">
+            {used} of {FREE_APP_ID_QUOTA} used
+          </Text>
+        ) : null
+      }>
+      {quota ? (
+        <>
+          <Text size="tiny" color="secondary">
+            Free Apple IDs can register at most {FREE_APP_ID_QUOTA} App IDs per rolling 7-day
+            window. Delete ones you no longer use to free a slot.
+          </Text>
+          <Row style={styles.slots}>
+            {Array.from({ length: FREE_APP_ID_QUOTA }, (_, index) => (
+              <View
+                key={index}
+                flex="1"
+                style={[
+                  styles.slot,
+                  { backgroundColor: index < used ? expoTheme.link.default : palette.gray['300'] },
+                ]}
+              />
+            ))}
+          </Row>
+        </>
+      ) : null}
+      <Card>
+        {appIds === null ? (
+          <SettingRow
+            title="Registered App IDs"
+            subtitle="Orbit asks Apple for the list only when you need it. Apple may ask for a verification code.">
+            {loading ? (
+              <ActivityIndicator />
+            ) : (
+              <Button title="Load" color="primary" onPress={load} style={styles.smallButton} />
+            )}
+          </SettingRow>
+        ) : appIds.length === 0 ? (
+          <View px="3.5" py="3">
+            <Text size="tiny" color="secondary">
+              {quota
+                ? 'No App IDs registered in the last 7 days.'
+                : 'No App IDs are registered to this team.'}
+            </Text>
+          </View>
+        ) : (
+          appIds.map((row, index) => (
+            <Fragment key={row.appIdId}>
+              {index > 0 ? <Divider /> : null}
+              <SettingRow
+                title={row.name}
+                subtitle={
+                  <Row gap="1.5">
+                    <Text
+                      size="tiny"
+                      color="secondary"
+                      type="mono"
+                      numberOfLines={1}
+                      style={styles.shrink}>
+                      {row.identifier}
+                    </Text>
+                    {row.expirationDate ? (
+                      <Text size="tiny" color="secondary">
+                        · expires {formatShortDate(row.expirationDate)}
+                      </Text>
+                    ) : null}
+                  </Row>
+                }>
+                <Button
+                  title={busyId === row.appIdId ? 'Deleting…' : 'Delete'}
+                  color="danger"
+                  disabled={busyId !== null}
+                  onPress={() => onDelete(row)}
+                  style={styles.smallButton}
+                />
+              </SettingRow>
+            </Fragment>
+          ))
+        )}
+      </Card>
+      {error ? (
+        <Text size="tiny" color="error">
+          {error}
+        </Text>
+      ) : null}
+    </Section>
+  );
+}
+
+function Section({
+  title,
+  trailing,
+  children,
+}: {
+  title: string;
+  trailing?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <View gap="2">
-      <Text size="tiny" weight="semibold" color="secondary">
-        {title}
-      </Text>
+      <Row align="center" justify="between">
+        <Text size="tiny" weight="semibold" color="secondary">
+          {title}
+        </Text>
+        {trailing}
+      </Row>
       {children}
     </View>
   );
@@ -525,15 +942,55 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+function IconButton({
+  label,
+  symbol,
+  fallback,
+  onPress,
+}: {
+  label: string;
+  symbol: PaneItem['symbol'];
+  fallback: React.ReactElement;
+  onPress: () => void;
+}) {
+  const theme = useCurrentTheme();
+  const expoTheme = useExpoTheme();
+  return (
+    <TouchableOpacity
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={[styles.iconButton, getStylesForColor('primary', theme).touchableStyle]}>
+      <SymbolView
+        name={symbol}
+        size={14}
+        tintColor={expoTheme.text.default}
+        fallback={fallback}
+        style={styles.symbol14}
+      />
+    </TouchableOpacity>
+  );
+}
+
+function IconTile({ children }: { children: React.ReactNode }) {
+  const palette = useExpoPalette();
+  return (
+    <View align="centered" style={[styles.iconTile, { backgroundColor: palette.gray['200'] }]}>
+      {children}
+    </View>
+  );
+}
+
 function SettingRow({
+  leading,
   title,
   subtitle,
   disabled,
   below,
   children,
 }: {
+  leading?: React.ReactNode;
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   disabled?: boolean;
   below?: React.ReactNode;
   children: React.ReactNode;
@@ -541,13 +998,18 @@ function SettingRow({
   return (
     <View px="3.5" py="3" gap="2.5" style={disabled && styles.disabled}>
       <Row align="center" gap="3">
+        {leading}
         <View flex="1" gap="0.5">
-          <Text size="small">{title}</Text>
-          {subtitle ? (
+          <Text size="small" numberOfLines={1}>
+            {title}
+          </Text>
+          {typeof subtitle === 'string' ? (
             <Text size="tiny" color="secondary">
               {subtitle}
             </Text>
-          ) : null}
+          ) : (
+            subtitle
+          )}
         </View>
         {children}
       </Row>
@@ -580,5 +1042,40 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  shrink: {
+    flexShrink: 1,
+  },
+  iconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+  },
+  appIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+  },
+  symbol: {
+    width: 18,
+    height: 18,
+  },
+  symbol14: {
+    width: 14,
+    height: 14,
+  },
+  iconButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slots: {
+    gap: 3,
+  },
+  slot: {
+    height: 4,
+    borderRadius: 2,
   },
 });

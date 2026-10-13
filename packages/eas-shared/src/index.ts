@@ -39,3 +39,5 @@ export {
   ManifestUtils,
   Manifest,
 };
+export { extractAppIconAsync } from './run/ios/appIcon';
+export { FREE_APP_LIMIT } from './run/ios/appleDevice/freeAppLimit';

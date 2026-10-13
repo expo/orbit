@@ -113,10 +113,21 @@ export function describeResignError(
     // The CLI's message already carries the Settings steps.
     return { title: 'Trust the developer on your iPhone', message };
   }
+  if (code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+    // The CLI's message explains the three-app limit.
+    return { title: 'Free Apple ID app limit reached', message };
+  }
   if (code === 'APPLE_AUTH_REQUIRED') {
     return {
       title: 'Sign in again',
       message: 'Your Apple ID session expired. Sign in again to continue.',
+    };
+  }
+  if (code === 'APPLE_TWO_FACTOR_REQUIRED') {
+    return {
+      title: 'Verification code required',
+      message:
+        'Apple asked for a two-factor code to keep your Apple ID signed in. Enter it in the Apple ID window.',
     };
   }
   if (code === 'APPLE_BAD_CREDENTIALS') {
@@ -133,6 +144,14 @@ export function describeResignError(
         title: 'Re-signing failed',
         message:
           'Apple reports no teams for this account. Open developer.apple.com once with this Apple ID to accept the terms, then try again.',
+      };
+    }
+    // ipa-resign already retried with salted identifiers before giving up.
+    const refused = message.match(/App ID with Identifier '([^']+)' is not available/i);
+    if (refused) {
+      return {
+        title: 'App ID not available',
+        message: `Apple refused to register ‘${refused[1]}’ for your team, and the alternative identifiers Orbit tried were refused too. Signing in with a different Apple ID uses a new identifier.`,
       };
     }
     return { title: 'Re-signing failed', message: extractAppleUserString(message) ?? message };

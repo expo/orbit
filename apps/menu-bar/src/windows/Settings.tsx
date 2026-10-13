@@ -1,10 +1,10 @@
 import { Bug16Filled } from '@fluentui/react-icons';
 import { SymbolView } from 'expo-symbols';
-import { useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
-import { Pane, SettingsPane, hairline, panes } from './SettingsPanes';
+import { SettingsPane, hairline, panes } from './SettingsPanes';
 import { WindowsNavigator } from './index';
+import { useSettingsPane } from './settingsPane';
 import { withApolloProvider } from '../api/ApolloClient';
 import { Row, Text, View } from '../components';
 import MenuBarModule from '../modules/MenuBarModule';
@@ -13,7 +13,7 @@ import { useCurrentTheme, useExpoTheme } from '../utils/useExpoTheme';
 const Settings = () => {
   const theme = useCurrentTheme();
   const expoTheme = useExpoTheme();
-  const [pane, setPane] = useState<Pane>('general');
+  const [pane, setPane] = useSettingsPane();
 
   const sidebarStyle = {
     backgroundColor: theme === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)',

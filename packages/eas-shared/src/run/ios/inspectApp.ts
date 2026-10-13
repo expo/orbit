@@ -10,14 +10,29 @@ export type EmbeddedProvisioning = NonNullable<AppleAppInfo['provisioning']>;
 const PLIST_START = Buffer.from('<?xml');
 const PLIST_END = Buffer.from('</plist>');
 
-type RawProfile = {
+export type RawProfile = {
   Name?: string;
   TeamIdentifier?: string[];
+  CreationDate?: Date | string;
   ExpirationDate?: Date | string;
   ProvisionsAllDevices?: boolean;
   ProvisionedDevices?: string[];
   Entitlements?: Record<string, unknown>;
 };
+
+/**
+ * The plist inside a provisioning profile. A `.mobileprovision` is a CMS
+ * (PKCS#7) blob whose signed content is the XML plist, inline — slicing the
+ * `<?xml … </plist>` span out of the DER bytes yields it on every platform
+ * without a CMS parser. The signature is not verified. Undefined when the
+ * bytes hold no plist.
+ */
+export function readProvisioningProfilePlist(blob: Buffer): RawProfile | undefined {
+  const start = blob.indexOf(PLIST_START);
+  const end = start === -1 ? -1 : blob.indexOf(PLIST_END, start);
+  if (start === -1 || end === -1) return undefined;
+  return parsePlistBuffer(blob.subarray(start, end + PLIST_END.length)) as RawProfile;
+}
 
 /**
  * Read the app's `embedded.mobileprovision`. The profile is a CMS (PKCS#7)
@@ -32,11 +47,8 @@ export async function readEmbeddedProvisioningProfileAsync(
 ): Promise<EmbeddedProvisioning | undefined> {
   const file = path.join(appPath, 'embedded.mobileprovision');
   if (!fs.existsSync(file)) return undefined;
-  const blob = await fs.promises.readFile(file);
-  const start = blob.indexOf(PLIST_START);
-  const end = start === -1 ? -1 : blob.indexOf(PLIST_END, start);
-  if (start === -1 || end === -1) return undefined;
-  const profile = parsePlistBuffer(blob.subarray(start, end + PLIST_END.length)) as RawProfile;
+  const profile = readProvisioningProfilePlist(await fs.promises.readFile(file));
+  if (!profile) return undefined;
 
   const expiresAt =
     profile.ExpirationDate instanceof Date
@@ -78,7 +90,10 @@ export async function detectAppleAppType(appPath: string): Promise<AppleAppInfo>
     return { deviceType: 'device', osType: 'iOS' };
   }
 
-  const { DTPlatformName }: { DTPlatformName: string } =
+  const {
+    DTPlatformName,
+    CFBundleIdentifier,
+  }: { DTPlatformName: string; CFBundleIdentifier?: string } =
     await parseBinaryPlistAsync(builtInfoPlistPath);
 
   const deviceType: AppleAppInfo['deviceType'] = DTPlatformName.includes('simulator')
@@ -106,5 +121,11 @@ export async function detectAppleAppType(appPath: string): Promise<AppleAppInfo>
     }
   }
 
-  return provisioning ? { deviceType, osType, provisioning } : { deviceType, osType };
+  const bundleIdentifier = typeof CFBundleIdentifier === 'string' ? CFBundleIdentifier : undefined;
+  return {
+    deviceType,
+    osType,
+    ...(bundleIdentifier ? { bundleIdentifier } : {}),
+    ...(provisioning ? { provisioning } : {}),
+  };
 }

@@ -213,6 +213,11 @@ function getDeviceCtlErrorCodes(log: string): string[] {
 
 let hasEverBeenInstalled: boolean | undefined;
 
+/** Remove an installed app from a physical device (iOS 17+ devicectl). */
+export async function uninstallAppWithDeviceCtl(deviceId: string, bundleId: string) {
+  await devicectlAsync(['device', 'uninstall', 'app', '--device', deviceId, bundleId]);
+}
+
 export function hasDevicectlEverBeenInstalled() {
   if (hasEverBeenInstalled) return hasEverBeenInstalled;
   // It doesn't appear possible for devicectl to ever be uninstalled. We can just check once and store this result forever

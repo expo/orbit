@@ -4417,10 +4417,10 @@ ip-address@^9.0.5:
     jsbn "1.1.0"
     sprintf-js "^1.1.3"
 
-ipa-resign@^0.0.16:
-  version "0.0.16"
-  resolved "https://registry.yarnpkg.com/ipa-resign/-/ipa-resign-0.0.16.tgz#7ff6f77e2af15874ca0be84d1a583e02841a795f"
-  integrity sha512-qHtyMD+dPWYhE+bhAJe+ixKfmHdnMf/Brj8advpElmN6ju3V+ex0JUCkssR/30bvoy8wvxWL3eV1VP1gLChquQ==
+ipa-resign@^0.0.18:
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/ipa-resign/-/ipa-resign-0.0.18.tgz#eb90b3ebc6a8e30fa9ade18f7a58888ab40c6099"
+  integrity sha512-987EQm7Y32B9ESEFgnqqDaiIwO4t2MvPxbIf9RT2DFhidP9FL8Qmn1Sj3gGENHCfJnGW7hq2S5EZlTsY6Zd5XA==
   dependencies:
     "@expo/spawn-async" "^1.7.2"
     bplist-parser "^0.3.0"

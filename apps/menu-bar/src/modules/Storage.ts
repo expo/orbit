@@ -17,11 +17,16 @@ export type UserPreferences = {
   showTvosSimulators: boolean;
   showWatchosSimulators: boolean;
   showAndroidEmulators: boolean;
+  autoRenewResignedApps: boolean;
 };
 
 export const defaultUserPreferences: UserPreferences = {
   launchOnLogin: false,
   emulatorWithoutAudio: false,
+  // Re-sign free-Apple-ID apps automatically before their 7-day profile
+  // expires. On by default: renewing touches no device until it reconnects,
+  // and signing in was an explicit user action.
+  autoRenewResignedApps: true,
   // Controls the whole iOS section (simulators on macOS, physical iPhones on all
   // platforms). Enabled everywhere so connected iPhones are discoverable.
   showIosSimulators: true,

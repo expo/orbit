@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 
 import * as AppleDevice from './AppleDevice';
+import { FREE_APP_LIMIT_MESSAGE, freeAppLimitBundleIds } from './freeAppLimit';
 import { ensureDirectory } from '../../../utils/dir';
 import * as devicectl from '../devicectl';
 
@@ -61,6 +62,19 @@ export async function installOnDeviceAsync(props: {
         'APPLE_APP_VERIFICATION_FAILED',
         `Failed to verify code signature of ${appName}`
       );
+    } else if (error.code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+      // Re-wrap as InternalError so the code survives the CLI boundary, and
+      // hand the host the apps iOS listed as holding the three slots — with
+      // their display names, so the host can offer "Remove <name>" for apps it
+      // did not install itself. Best effort: a failed lookup leaves names out.
+      const bundleIds = freeAppLimitBundleIds(error.message);
+      const names = await AppleDevice.lookupAppNamesAsync(udid, bundleIds).catch(
+        (): Record<string, string> => ({})
+      );
+      throw new InternalError('APPLE_FREE_APP_LIMIT_REACHED', FREE_APP_LIMIT_MESSAGE, {
+        bundleIds,
+        apps: bundleIds.map((bundleId) => ({ bundleId, name: names[bundleId] })),
+      });
     }
 
     throw error;

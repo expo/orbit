@@ -58,7 +58,7 @@ yarn notarize     # Notarize for macOS distribution
 
 ## Verifying on Devices (agent-device)
 
-Use `agent-device` when available to verify app installs and Orbit features on iOS simulators, Android emulators, and physical devices. Read the device's UI yourself — snapshot or screenshot — instead of asking the user what their screen shows, and treat a snapshot that names the expected screen as the verification (a bare launch exit code is not).
+Use `agent-device` only on physical devices (iPhone, iPad, Android) to verify app installs and Orbit features. Do not drive the macOS menu bar app with it: its accessibility captures stall on Orbit's tree and the app stops answering Apple Events (`open -a` fails with -1712) while the runner is attached. Read the device's UI yourself — snapshot or screenshot — instead of asking the user what their screen shows, and treat a snapshot that names the expected screen as the verification (a bare launch exit code is not).
 
 - `agent-device help workflow|physical-device|ios-system-ui` has the full reference; `help <command>` the exact flags.
 - Physical iOS devices need the signed XCTest runner. Set `AGENT_DEVICE_IOS_TEAM_ID` (a team in Xcode's accounts) and `AGENT_DEVICE_IOS_BUNDLE_ID`, **plus a fresh `AGENT_DEVICE_STATE_DIR`**: the CLI talks to an already-running daemon, which keeps its own environment, so env set only on the CLI call is silently ignored (symptom: `No Account for Team`). Keep the same state dir for every call in that session.

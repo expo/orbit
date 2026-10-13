@@ -67,6 +67,22 @@ describe('xcrunAsync devicectl error mapping', () => {
     });
   });
 
+  it('maps the free Apple ID three-app limit on install', async () => {
+    mockSpawnAsync.mockRejectedValueOnce(
+      devicectlFailure(
+        'ERROR: The maximum number of apps for free development profiles has been reached. ' +
+          '(com.apple.dt.MobileDeviceErrorDomain error -402620383)'
+      )
+    );
+    await expect(
+      xcrunAsync(['devicectl', 'device', 'install', 'app', '--device', 'udid', 'x.ipa'])
+    ).rejects.toMatchObject({
+      name: 'InternalError',
+      code: 'APPLE_FREE_APP_LIMIT_REACHED',
+      message: expect.stringContaining('three apps'),
+    });
+  });
+
   it('keeps mapping an install integrity failure to the resign offer', async () => {
     mockSpawnAsync.mockRejectedValueOnce(devicectlFailure(INSTALL_INTEGRITY_FAILED));
     await expect(

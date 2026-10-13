@@ -10,6 +10,7 @@ import DeviceListSectionHeader from './DeviceListSectionHeader';
 import DevicesListError from './DevicesListError';
 import { FOOTER_HEIGHT } from './Footer';
 import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
+import ResignedAppsAttentionRow, { ATTENTION_ROW_HEIGHT } from './ResignedAppsAttentionRow';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import { useFileHandler } from '../../modules/file-handler';
 import { Analytics, Event } from '../analytics';
@@ -21,6 +22,7 @@ import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
 import {
+  handleFreeAppLimitAsync,
   handleUntrustedDeveloperAsync,
   resignAndRetryAsync,
 } from '../commands/resignAndRetryAsync';
@@ -30,6 +32,7 @@ import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
 import { usePopoverFocusEffect } from '../hooks/usePopoverFocus';
+import { useResignedAppRenewals } from '../hooks/useResignedAppRenewals';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
 import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
@@ -124,6 +127,8 @@ function Core(props: Props) {
   );
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
 
+  const { attention } = useResignedAppRenewals({ createTask, updateTask, deleteTask });
+
   // TODO: Extract into a hook
   const displayDimensions = useSafeDisplayDimensions();
   const estimatedAvailableSizeForDevices =
@@ -131,6 +136,7 @@ function Core(props: Props) {
     FOOTER_HEIGHT -
     BUILDS_SECTION_HEIGHT -
     getProjectSectionHeight(apps?.length) -
+    (attention ? ATTENTION_ROW_HEIGHT : 0) -
     5;
   const heightOfAllDevices =
     DEVICE_ITEM_HEIGHT * numberOfDevices + SECTION_HEADER_HEIGHT * (sections?.length || 0);
@@ -613,7 +619,9 @@ function Core(props: Props) {
                 localFilePath: ipaPath,
                 deviceId: resolvedDeviceId,
                 deviceName,
+                bundleId: appInfo?.bundleIdentifier,
                 launchURL,
+                sourceUri: appURI.startsWith('https://') ? appURI : undefined,
                 onProgress: (step) => {
                   clearCreep();
                   const target = resignStepProgress(step);
@@ -694,55 +702,77 @@ function Core(props: Props) {
           timing.push(appInfo?.provisioning ? 'pre-check n/a' : 'pre-check skipped (no profile)');
         }
 
-        try {
-          updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
-          await installAndLaunchAppAsync({
-            appPath: localFilePath,
-            deviceId: resolvedDeviceId,
-            launchURL,
-          });
-          mark('install');
-          logTiming('installed');
-        } catch (error) {
-          mark('install');
-          logTiming(
-            `install failed: ${error instanceof InternalError ? error.code : (error as Error)?.message}`
-          );
-          if (error instanceof InternalError) {
-            if (error.code === 'APPLE_DEVICE_LOCKED') {
-              Alert.alert(
-                'Please unlock your device and open the app manually',
-                'We were unable to launch your app because the device is currently locked.'
-              );
-            } else if (error.code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
-              // Installed, but iOS won't open it until the user trusts the
-              // developer certificate on the device (first run of a dev build
-              // signed with their own account). Walk them through it and launch.
-              await handleUntrustedDeveloperAsync({
-                appPath: localFilePath!,
-                deviceId: resolvedDeviceId,
-                launchURL,
-              });
-            } else if (error.code === 'APPLE_DEVICE_CONNECTION_LOST') {
-              // The CLI already retried the devicectl connection; the message
-              // carries the cable / Wi-Fi / unlock checks.
-              Alert.alert('Lost connection to your device', error.message);
-            } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
-              if (getDeviceOS(device) !== 'ios' || isVirtualDevice(device)) {
+        // One retry after freeing a free-Apple-ID app slot; every other outcome
+        // ends the loop, so the trust / locked handling below covers the retry.
+        for (let installAttempt = 0; ; installAttempt++) {
+          try {
+            updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
+            await installAndLaunchAppAsync({
+              appPath: localFilePath,
+              deviceId: resolvedDeviceId,
+              launchURL,
+            });
+            mark('install');
+            logTiming('installed');
+          } catch (error) {
+            mark('install');
+            logTiming(
+              `install failed: ${error instanceof InternalError ? error.code : (error as Error)?.message}`
+            );
+            if (error instanceof InternalError) {
+              if (error.code === 'APPLE_DEVICE_LOCKED') {
                 Alert.alert(
-                  error.message,
-                  'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
+                  'Please unlock your device and open the app manually',
+                  'We were unable to launch your app because the device is currently locked.'
                 );
-              } else {
-                offerResign(
-                  "This build isn't signed for your device",
-                  'Orbit can resign it with your Apple ID and retry.'
-                );
+              } else if (error.code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+                // Installed, but iOS won't open it until the user trusts the
+                // developer certificate on the device (first run of a dev build
+                // signed with their own account). Walk them through it and launch.
+                await handleUntrustedDeveloperAsync({
+                  appPath: localFilePath!,
+                  deviceId: resolvedDeviceId,
+                  launchURL,
+                });
+              } else if (error.code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+                // Three free-Apple-ID apps are already on the device. Offer to
+                // remove one Orbit installed, then install once more.
+                const freed =
+                  resolvedDeviceId &&
+                  (await handleFreeAppLimitAsync({
+                    deviceId: resolvedDeviceId,
+                    deviceName: device.name ?? 'iPhone',
+                    appName: localFilePath!
+                      .split(/[\\/]/)
+                      .pop()!
+                      .replace(/\.(ipa|app)$/i, ''),
+                    occupyingApps: (
+                      error.details as { apps?: { bundleId: string; name?: string }[] } | undefined
+                    )?.apps,
+                  }));
+                if (freed && installAttempt === 0) continue;
+              } else if (error.code === 'APPLE_DEVICE_CONNECTION_LOST') {
+                // The CLI already retried the devicectl connection; the message
+                // carries the cable / Wi-Fi / unlock checks.
+                Alert.alert('Lost connection to your device', error.message);
+              } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
+                if (getDeviceOS(device) !== 'ios' || isVirtualDevice(device)) {
+                  Alert.alert(
+                    error.message,
+                    'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
+                  );
+                } else {
+                  offerResign(
+                    "This build isn't signed for your device",
+                    'Orbit can resign it with your Apple ID and retry.'
+                  );
+                }
               }
+            } else {
+              throw error;
             }
-          } else {
-            throw error;
           }
+          break;
         }
       } catch (error) {
         if (
@@ -862,6 +892,7 @@ function Core(props: Props) {
   return (
     <View shrink="1" testID="popover-core">
       <BuildsSection installAppFromURI={installAppFromURI} tasks={tasks} />
+      {attention ? <ResignedAppsAttentionRow attention={attention} /> : null}
       <ProjectsSection apps={apps} />
       <View shrink="1" pt="tiny" overflow="hidden">
         {devicesError ? (

@@ -172,9 +172,32 @@ program
   .option('--apple-id <string>', 'Apple ID email (required except for --mode status)')
   .option('--code <string>', '2FA code (when --mode verify-2fa)')
   .option('--prefer-sms', 'Send the 2FA code by SMS instead of a trusted-device push')
+  .option(
+    '--remember-password',
+    'Save the password so later sessions can be renewed without signing in again'
+  )
   .action(async (...args) => {
     const { appleIdAuthAsync } = await import('./commands/AppleIdAuth');
     return returnLoggerMiddleware(appleIdAuthAsync)(...args);
+  });
+
+program
+  .command('free-app-slots')
+  .description('List the apps holding the three free-Apple-ID app slots on a physical iOS device')
+  .requiredOption('--device-id  <string>', 'UDID of the device')
+  .action(async (...args) => {
+    const { freeAppSlotsAsync } = await import('./commands/FreeAppSlots');
+    return returnLoggerMiddleware(freeAppSlotsAsync)(...args);
+  });
+
+program
+  .command('uninstall-app')
+  .description('Remove an app from a physical iOS device (frees a free-Apple-ID app slot)')
+  .requiredOption('--device-id  <string>', 'UDID of the device')
+  .requiredOption('--bundle-id  <string>', 'Bundle identifier of the installed app')
+  .action(async (...args) => {
+    const { uninstallAppAsync } = await import('./commands/UninstallApp');
+    return returnLoggerMiddleware(uninstallAppAsync)(...args);
   });
 
 program
@@ -192,9 +215,42 @@ program
     '--strip-extensions',
     'Remove PlugIns/*.appex and Watch/* before signing; each needs its own App ID (free accounts allow 10 per week)'
   )
+  .option(
+    '--managed-dir <string>',
+    'Managed resigned-apps dir; keeps a copy of the original ipa and the resigned output there for 7-day renewals'
+  )
   .action(async (...args) => {
     const { resignIpaCommandAsync } = await import('./commands/ResignIpa');
     return returnLoggerMiddleware(resignIpaCommandAsync)(...args);
+  });
+
+program
+  .command('cleanup-resigned-apps')
+  .description('Delete managed resigned-app directories that no longer back a record')
+  .requiredOption('--dir <string>', 'The managed resigned-apps directory')
+  .requiredOption('--keep <string>', 'JSON array of record directory names to keep')
+  .action(async (...args) => {
+    const { cleanupResignedAppsAsync } = await import('./commands/CleanupResignedApps');
+    return returnLoggerMiddleware(cleanupResignedAppsAsync)(...args);
+  });
+
+program
+  .command('list-app-ids')
+  .description('List the App IDs registered to the Apple ID (free accounts cap at 10 per 7 days)')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .action(async (...args) => {
+    const { listAppIdsAsync } = await import('./commands/AppleAppIds');
+    return returnLoggerMiddleware(listAppIdsAsync)(...args);
+  });
+
+program
+  .command('delete-app-id')
+  .description('Delete an App ID by its portal id (from list-app-ids) to free a slot')
+  .requiredOption('--apple-id <string>', 'Apple ID email')
+  .requiredOption('--app-id-id <string>', 'Portal App ID id (the appIdId from list-app-ids)')
+  .action(async (...args) => {
+    const { deleteAppIdAsync } = await import('./commands/AppleAppIds');
+    return returnLoggerMiddleware(deleteAppIdAsync)(...args);
   });
 
 if (process.argv.length < 3) {
