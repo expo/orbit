@@ -109,35 +109,57 @@ public class MenuBarModule: Module {
 
       let file = pipe.fileHandleForReading
       var accumulatedOutput = ""
+      // Bytes read so far that do not end a line yet. A chunk can stop mid-line or even
+      // mid-UTF-8 sequence, so only whole lines are decoded and forwarded.
+      var pendingData = Data()
+      // The process can exit before its last chunk (the return marker and the JSON result)
+      // has been read from the pipe, so wait for both the pipe EOF and the exit before
+      // parsing. The CLI never leaves a child holding its stdout open, so EOF always comes.
+      let done = DispatchGroup()
+      done.enter() // pipe EOF
+      done.enter() // process exit
 
-      file.readabilityHandler = { [weak self] handle in
-        guard let self else {
+      let consume = { [weak self] (data: Data) in
+        guard let wholeOutput = String(data: data, encoding: .utf8) else {
           return
         }
 
-        let availableData = handle.availableData
-        let wholeOutput = String(data: availableData, encoding: .utf8)
-        guard let outputs = wholeOutput?.components(separatedBy: .newlines) else {
-          return
-        }
-
-        for output in outputs {
+        for output in wholeOutput.components(separatedBy: .newlines) {
           if output.isEmpty {
             continue
           }
           accumulatedOutput.append(output + "\n")
 
-          if hasListeners && !output.isEmpty && output != "\n"
-              && !isCliOutputMarker(output) {
+          if let self, self.hasListeners, !isCliOutputMarker(output) {
             let eventData = ["listenerId": listenerId, "output": output]
-            sendEvent(onCLIOutput, eventData)
+            self.sendEvent(onCLIOutput, eventData)
           }
         }
       }
 
-      task.terminationHandler = { task in
-        file.readabilityHandler = nil
+      file.readabilityHandler = { handle in
+        let availableData = handle.availableData
+        if availableData.isEmpty {
+          // EOF: flush whatever did not end with a newline and stop reading.
+          handle.readabilityHandler = nil
+          consume(pendingData)
+          done.leave()
+          return
+        }
 
+        pendingData.append(availableData)
+        guard let newline = pendingData.lastIndex(of: UInt8(ascii: "\n")) else {
+          return
+        }
+        consume(pendingData[...newline])
+        pendingData = Data(pendingData[(newline + 1)...])
+      }
+
+      task.terminationHandler = { _ in
+        done.leave()
+      }
+
+      done.notify(queue: .global()) {
         let result = parseCliOutput(accumulatedOutput)
 
         if let error = result.error {
