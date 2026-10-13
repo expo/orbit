@@ -22,6 +22,7 @@ import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
 import {
+  handleFreeAppLimitAsync,
   handleUntrustedDeveloperAsync,
   resignAndRetryAsync,
 } from '../commands/resignAndRetryAsync';
@@ -729,6 +730,28 @@ function Core(props: Props) {
                 deviceId: resolvedDeviceId,
                 launchURL,
               });
+            } else if (error.code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+              // Three free-Apple-ID apps are already on the device. Offer to
+              // remove one Orbit installed, then install once more.
+              const freed =
+                resolvedDeviceId &&
+                (await handleFreeAppLimitAsync({
+                  deviceId: resolvedDeviceId,
+                  deviceName: device.name ?? 'iPhone',
+                  appName: localFilePath!
+                    .split(/[\\/]/)
+                    .pop()!
+                    .replace(/\.(ipa|app)$/i, ''),
+                  occupyingBundleIds: (error.details as { bundleIds?: string[] } | undefined)
+                    ?.bundleIds,
+                }));
+              if (freed) {
+                await installAndLaunchAppAsync({
+                  appPath: localFilePath!,
+                  deviceId: resolvedDeviceId,
+                  launchURL,
+                });
+              }
             } else if (error.code === 'APPLE_DEVICE_CONNECTION_LOST') {
               // The CLI already retried the devicectl connection; the message
               // carries the cable / Wi-Fi / unlock checks.

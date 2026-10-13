@@ -13,6 +13,7 @@ import { Socket } from 'net';
 import type { ProtocolWriter } from './AbstractProtocol';
 import { PlistProtocolReader, ProtocolClient, ProtocolReaderFactory } from './AbstractProtocol';
 import { CommandError } from '../../../../utils/errors';
+import { isFreeAppLimitError } from '../freeAppLimit';
 
 const debug = Debug('expo:apple-device:protocol:lockdown');
 export const LOCKDOWN_HEADER_SIZE = 4;
@@ -83,6 +84,12 @@ export class LockdownProtocolReader extends PlistProtocolReader {
             '\nTry reconnecting your device. You can also debug service logs with `export DEBUG=expo:xdl:ios:*`';
         }
         throw new CommandError('APPLE_DEVICE_LOCKDOWN', errorMessage);
+      }
+
+      if (isFreeAppLimitError(resp.ErrorDescription)) {
+        // Keep Apple's wording: it lists the bundle ids holding the slots, which
+        // installOnDeviceAsync turns into error details for the host.
+        throw new CommandError('APPLE_FREE_APP_LIMIT_REACHED', resp.ErrorDescription);
       }
 
       if (resp.Error === 'ApplicationVerificationFailed') {

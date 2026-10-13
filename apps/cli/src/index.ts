@@ -182,6 +182,16 @@ program
   });
 
 program
+  .command('uninstall-app')
+  .description('Remove an app from a physical iOS device (frees a free-Apple-ID app slot)')
+  .requiredOption('--device-id  <string>', 'UDID of the device')
+  .requiredOption('--bundle-id  <string>', 'Bundle identifier of the installed app')
+  .action(async (...args) => {
+    const { uninstallAppAsync } = await import('./commands/UninstallApp');
+    return returnLoggerMiddleware(uninstallAppAsync)(...args);
+  });
+
+program
   .command('resign-ipa')
   .description(
     'Resign an IPA for the given device with a development certificate issued to the Apple ID ' +

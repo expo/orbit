@@ -5,6 +5,7 @@ import {
   openExpoGoURLAsync,
   ensureExpoClientInstalledAsync,
   checkIfAppIsInstalled,
+  uninstallAppAsync as uninstallAppOverUsbmuxAsync,
 } from './appleDevice/AppleDevice';
 import { getAppDeltaDirectory, installOnDeviceAsync } from './appleDevice/installOnDeviceAsync';
 import {
@@ -12,7 +13,11 @@ import {
   isAppleUsbDeviceConnectedAsync,
   isUsbmuxdAvailableAsync,
 } from './appleDevice/usbmuxd';
-import { launchAppWithDeviceCtl } from './devicectl';
+import {
+  hasDevicectlEverBeenInstalled,
+  launchAppWithDeviceCtl,
+  uninstallAppWithDeviceCtl,
+} from './devicectl';
 import { installOnMacOSAsync, launchOnMacOSAsync } from './macOS';
 
 /**
@@ -31,11 +36,28 @@ async function launchAppAsync(options: { udid: string; bundleId: string; url?: s
   }
 }
 
+/**
+ * Remove an app from a physical device: usbmux first (every platform), falling
+ * back to devicectl when usbmux cannot reach the device — the same order as
+ * installOnDeviceAsync. Frees one of the three slots a free Apple ID gets.
+ */
+async function uninstallAppAsync(options: { udid: string; bundleId: string }) {
+  try {
+    await uninstallAppOverUsbmuxAsync(options);
+  } catch (error: any) {
+    if (error?.code === 'APPLE_DEVICE_USBMUXD' && hasDevicectlEverBeenInstalled()) {
+      return await uninstallAppWithDeviceCtl(options.udid, options.bundleId);
+    }
+    throw error;
+  }
+}
+
 const AppleDevice = {
   getConnectedDevicesAsync,
   getAppDeltaDirectory,
   installOnDeviceAsync,
   launchAppAsync,
+  uninstallAppAsync,
   getBundleIdentifierForBinaryAsync,
   openURLAsync,
   openExpoGoURLAsync,

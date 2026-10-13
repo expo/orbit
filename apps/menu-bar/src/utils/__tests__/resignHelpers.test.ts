@@ -133,6 +133,14 @@ describe(describeResignError, () => {
     expect(copy.title).toBe('App ID limit reached');
   });
 
+  it('maps the free Apple ID app limit by code, keeping the CLI message', () => {
+    const copy = describeResignError(
+      internalError('APPLE_FREE_APP_LIMIT_REACHED', 'This device already has three apps…')
+    );
+    expect(copy.title).toBe('Free Apple ID app limit reached');
+    expect(copy.message).toContain('three apps');
+  });
+
   it('explains an identifier Apple refuses to register, naming it', () => {
     const copy = describeResignError(
       internalError(

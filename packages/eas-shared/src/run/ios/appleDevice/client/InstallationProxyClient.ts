@@ -80,6 +80,8 @@ type IPInstallCompleteResponse = IPInstallCompleteResponseItem[];
 interface IPMessage extends LockdownCommand {
   Command: string;
   ClientOptions: IPOptions;
+  /** `Uninstall` names the app this way instead of through ClientOptions. */
+  ApplicationIdentifier?: string;
 }
 
 interface IPLookupResponseItem extends LockdownResponse {
@@ -199,6 +201,28 @@ export class InstallationProxyClient extends ServiceClient<LockdownProtocolClien
         } else {
           reject(
             new ResponseError('There was an error installing app: ' + util.inspect(resp), resp)
+          );
+        }
+      }
+    );
+  }
+
+  /** Remove an installed app (installation_proxy `Uninstall`); replies mirror installApp. */
+  async uninstallApp(bundleId: string) {
+    debug(`uninstallApp, bundleId: ${bundleId}`);
+
+    return this.protocolClient.sendMessage(
+      { Command: 'Uninstall', ApplicationIdentifier: bundleId, ClientOptions: {} },
+      (resp, resolve, reject) => {
+        if (resp && !Array.isArray(resp)) resp = [resp];
+
+        if (isIPInstallCompleteResponse(resp)) {
+          resolve();
+        } else if (isIPInstallPercentCompleteResponse(resp)) {
+          debug(`Uninstall status: ${resp[0].Status}, %${resp[0].PercentComplete}`);
+        } else {
+          reject(
+            new ResponseError('There was an error uninstalling app: ' + util.inspect(resp), resp)
           );
         }
       }

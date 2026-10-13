@@ -16,15 +16,16 @@ import { handleUntrustedDeveloperAsync } from '../commands/resignAndRetryAsync';
 import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import {
+  getAttention,
+  getRenewalBlockReason,
+  isActiveRecord,
+  isRenewalDue,
+  listResignedApps,
+  ResignAttention,
   RESIGNED_APPS_CHANGED_EVENT,
   RESIGNED_APPS_CHECK_REQUEST_EVENT,
   RESIGNED_APPS_RENEW_REQUEST_EVENT,
-  ResignAttention,
   ResignedAppRecord,
-  getAttention,
-  getRenewalBlockReason,
-  isRenewalDue,
-  listResignedApps,
   setAttention,
   updateResignedApp,
 } from '../modules/ResignedApps';
@@ -118,7 +119,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
           Alert.alert(
             `${record.appName} was signed with a new identifier`,
             `‘${previousBundleId}’ can’t be used with the signed-in Apple ID, so Orbit signed it as ‘${renewed.assignedBundleId}’. ` +
-              `The old copy on ${record.deviceName} won’t open anymore — delete it from the Home Screen.`
+              `The old copy on ${record.deviceName} was replaced.`
           );
         }
         return true;
@@ -201,7 +202,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
         if (!getUserPreferences().autoRenewResignedApps) return;
         const now = Date.now();
         for (const record of listResignedApps()) {
-          if (!isRenewalDue(record, now)) continue;
+          if (!isActiveRecord(record) || !isRenewalDue(record, now)) continue;
           const blocked = getRenewalBlockReason(record, now);
           if (blocked === 'stale') {
             if (record.lastError?.code !== 'STALE_DEVICE') {
@@ -295,7 +296,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
         if (Number.isNaN(lastSeen) || now - lastSeen > DEVICE_SEEN_WRITE_THROTTLE_MS) {
           updateResignedApp(record.id, { deviceLastSeenAt: new Date(now).toISOString() });
         }
-        if (record.pendingInstall) {
+        if (record.pendingInstall && isActiveRecord(record)) {
           const taskId = `renew-install:${record.id}`;
           createTask({
             id: taskId,

@@ -11,13 +11,17 @@ import {
 } from './appleAccountAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { launchAppAsync, openDeviceManagementSettingsAsync } from './launchAppAsync';
+import { uninstallAppAsync } from './uninstallAppAsync';
 import Alert from '../modules/Alert';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
-  ResignedAppRecord,
   buildResignedAppId,
   getResignedAppsDirectory,
+  isActiveRecord,
+  listResignedApps,
+  ResignedAppRecord,
   stripOrbitSuffix,
+  updateResignedApp,
   upsertResignedApp,
 } from '../modules/ResignedApps';
 import { getUserPreferences, storage } from '../modules/Storage';
@@ -181,6 +185,81 @@ export async function handleUntrustedDeveloperAsync(opts: {
   return false;
 }
 
+/**
+ * iOS allows three apps signed with a free Apple ID per device. When an install
+ * hits that limit, offer to free a slot the way AltStore does: deactivate one of
+ * the apps — Orbit removes it from the device but keeps its record and IPA, so
+ * "Install" in Settings brings it back later. On the usbmux path iOS names the
+ * bundle ids holding the slots, so apps Orbit did not install can be removed
+ * too. Resolves true when a slot was freed.
+ */
+export async function handleFreeAppLimitAsync(opts: {
+  deviceId: string;
+  deviceName: string;
+  appName: string;
+  /** The app being installed; never offered. */
+  excludeBundleId?: string;
+  /** Bundle ids iOS reported as holding the slots, when the wording had them. */
+  occupyingBundleIds?: string[];
+}): Promise<boolean> {
+  const records = listResignedApps().filter(
+    (record) =>
+      record.deviceUdid === opts.deviceId &&
+      isActiveRecord(record) &&
+      record.assignedBundleId !== opts.excludeBundleId &&
+      record.originalBundleId !== opts.excludeBundleId
+  );
+  const listed = (opts.occupyingBundleIds ?? []).filter((id) => id !== opts.excludeBundleId);
+  const choices: { label: string; bundleId: string; record?: ResignedAppRecord }[] =
+    listed.length > 0
+      ? listed.map((bundleId) => {
+          const record = records.find((r) => r.assignedBundleId === bundleId);
+          return record
+            ? { label: `Deactivate ${record.appName}`, bundleId, record }
+            : { label: `Remove ${bundleId}`, bundleId };
+        })
+      : records.map((record) => ({
+          label: `Deactivate ${record.appName}`,
+          bundleId: record.assignedBundleId,
+          record,
+        }));
+
+  const title = 'Free Apple ID app limit reached';
+  const intro = `Apple allows three apps signed with a free Apple ID on a device, and ${opts.deviceName} already has three. `;
+  if (choices.length === 0) {
+    Alert.alert(
+      title,
+      intro + `Delete one of them on the iPhone, then install ${opts.appName} again.`
+    );
+    return false;
+  }
+  const choice = await new Promise<(typeof choices)[number] | null>((resolve) => {
+    Alert.alert(
+      title,
+      intro +
+        `Free a slot for ${opts.appName}. Deactivated apps stay in Settings → Resigned apps, where “Install” puts them back.`,
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
+        ...choices.slice(0, 3).map((item) => ({
+          text: item.label,
+          style: 'destructive' as const,
+          onPress: () => resolve(item),
+        })),
+      ]
+    );
+  });
+  if (!choice) return false;
+  await uninstallAppAsync({ deviceId: opts.deviceId, bundleId: choice.bundleId });
+  if (choice.record) {
+    updateResignedApp(choice.record.id, {
+      active: false,
+      pendingInstall: false,
+      lastError: undefined,
+    });
+  }
+  return true;
+}
+
 function appNameFromIpaPath(ipaPath: string, fallback: string): string {
   const base = ipaPath
     .split(/[\\/]/)
@@ -304,31 +383,46 @@ export async function resignAndRetryAsync(opts: {
       // The CLI's last step is `done`; the install is a second CLI call, so tell
       // the task row what is actually happening instead of leaving "Finishing up".
       onProgress?.('installing');
-      try {
-        await installAndLaunchAppAsync({
-          appPath: resignResult.resignedIpaPath,
-          deviceId,
-          launchURL,
-        });
-      } catch (launchError) {
-        if (
-          !(
-            launchError instanceof InternalError &&
-            launchError.code === 'APPLE_DEVELOPER_NOT_TRUSTED'
-          )
-        ) {
-          throw launchError;
+      for (let installAttempt = 0; ; installAttempt++) {
+        try {
+          await installAndLaunchAppAsync({
+            appPath: resignResult.resignedIpaPath,
+            deviceId,
+            launchURL,
+          });
+          break;
+        } catch (launchError) {
+          const launchCode = launchError instanceof InternalError ? launchError.code : undefined;
+          if (launchCode === 'APPLE_FREE_APP_LIMIT_REACHED' && installAttempt === 0) {
+            // Three free-Apple-ID apps are already on the device. Offer to remove
+            // one Orbit installed, then install once more.
+            const freed = await handleFreeAppLimitAsync({
+              deviceId,
+              deviceName,
+              appName: appNameFromIpaPath(localFilePath, stripOrbitSuffix(resignResult.bundleId)),
+              excludeBundleId: resignResult.bundleId,
+              occupyingBundleIds: (
+                (launchError as InternalError).details as { bundleIds?: string[] } | undefined
+              )?.bundleIds,
+            });
+            if (freed) continue;
+            throw launchError;
+          }
+          if (launchCode !== 'APPLE_DEVELOPER_NOT_TRUSTED') {
+            throw launchError;
+          }
+          // Installed, but iOS won't open it until the developer is trusted — the
+          // expected first run of a development-signed app on a device. Walk the
+          // user through it and launch, instead of relying on the success alert's
+          // passive hint.
+          markTrustInstructionsShown(appleId, deviceId);
+          await handleUntrustedDeveloperAsync({
+            deviceId,
+            bundleId: resignResult.bundleId,
+            launchURL,
+          });
+          break;
         }
-        // Installed, but iOS won't open it until the developer is trusted — the
-        // expected first run of a development-signed app on a device. Walk the
-        // user through it and launch, instead of relying on the success alert's
-        // passive hint.
-        markTrustInstructionsShown(appleId, deviceId);
-        await handleUntrustedDeveloperAsync({
-          deviceId,
-          bundleId: resignResult.bundleId,
-          launchURL,
-        });
       }
       const record = buildRecord({
         result: resignResult,

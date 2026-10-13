@@ -364,6 +364,17 @@ async function launchApp(
   }
 }
 
+/** Remove an app from the device over usbmux (installation_proxy `Uninstall`). */
+export async function uninstallAppAsync({ udid, bundleId }: { udid: string; bundleId: string }) {
+  const clientManager = await ClientManager.create(udid);
+  try {
+    const installer = await clientManager.getInstallationProxyClient();
+    await installer.uninstallApp(bundleId);
+  } finally {
+    clientManager.end();
+  }
+}
+
 export async function getBundleIdentifierForBinaryAsync(binaryPath: string): Promise<string> {
   const builtInfoPlistPath = path.join(binaryPath, 'Info.plist');
   const { CFBundleIdentifier } = await parseBinaryPlistAsync(builtInfoPlistPath);

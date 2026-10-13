@@ -1,6 +1,7 @@
 import { loadAppleId } from './appleAccountAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { ResignProgressListener, runResignCliAsync } from './resignAndRetryAsync';
+import { uninstallAppAsync } from './uninstallAppAsync';
 import {
   ResignedAppRecord,
   buildResignedAppId,
@@ -56,10 +57,20 @@ export async function renewResignedAppAsync(
     lastAttemptAt: attemptedAt,
     lastRenewedAt: new Date().toISOString(),
     pendingInstall: !opts.deviceConnected,
+    active: true,
     lastError: undefined,
   };
   upsertResignedApp(renewed);
   if (opts.deviceConnected) {
+    if (identifierChanged) {
+      // The copy signed under the previous identifier can't be renewed in place
+      // and would count against the free-account three-app limit: drop it first.
+      // Best effort — the user can still delete it from the Home Screen.
+      await uninstallAppAsync({
+        deviceId: record.deviceUdid,
+        bundleId: record.assignedBundleId,
+      }).catch(() => {});
+    }
     await installAndLaunchAppAsync({
       appPath: result.resignedIpaPath,
       deviceId: record.deviceUdid,

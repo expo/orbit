@@ -49,6 +49,7 @@ import { Divider, Row, Text, View } from '../components';
 import { Avatar } from '../components/Avatar';
 import Button, { getStylesForColor } from '../components/Button';
 import PathInput from '../components/PathInput';
+import { PlaceholderAppIcon } from '../components/PlaceholderAppIcon';
 import { Switch } from '../components/Switch';
 import TrustedSourcesInput from '../components/TrustedSourcesInput';
 import { useGetCurrentUserQuery } from '../generated/graphql';
@@ -56,11 +57,12 @@ import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
+  isActiveRecord,
+  listResignedApps,
+  removeResignedApp,
   RESIGNED_APPS_CHANGED_EVENT,
   RESIGNED_APPS_RENEW_REQUEST_EVENT,
   ResignedAppRecord,
-  listResignedApps,
-  removeResignedApp,
   updateResignedApp,
 } from '../modules/ResignedApps';
 import {
@@ -289,7 +291,10 @@ export function SettingsPane({ pane }: { pane: Pane }) {
         text: record.autoRenew ? 'Turn off auto-renew' : 'Turn on auto-renew',
         onPress: () => toggleRecordAutoRenew(record, !record.autoRenew),
       },
-      { text: 'Renew now', onPress: () => renewRecordNow(record) },
+      {
+        text: isActiveRecord(record) ? 'Renew now' : 'Install',
+        onPress: () => renewRecordNow(record),
+      },
       { text: 'Remove…', style: 'destructive', onPress: () => removeRecord(record) },
       { text: 'Cancel', style: 'cancel' },
     ]);
@@ -611,6 +616,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                 {resignedApps.map((record) => {
                   const expiry = formatProfileExpiry(record.profileExpiresAt);
                   const busy = isRenewing(record);
+                  const inactive = !isActiveRecord(record);
                   // Not-trusted is iOS's first-run prompt, not a failed renewal: records
                   // written before the engine learned that still carry it.
                   const failure =
@@ -620,26 +626,24 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                   // One meta line: a failure or pending install wins over the schedule.
                   const meta = failure
                     ? failure.message
-                    : record.pendingInstall
-                      ? 'Renewed — installs when the device reconnects'
-                      : [
-                          record.deviceName,
-                          expiry.label,
-                          record.autoRenew && userPreferences.autoRenewResignedApps
-                            ? 'Auto-renews'
-                            : null,
-                        ]
-                          .filter(Boolean)
-                          .join(' · ');
+                    : inactive
+                      ? `Not installed on ${record.deviceName} · Install to put it back`
+                      : record.pendingInstall
+                        ? 'Renewed — installs when the device reconnects'
+                        : [
+                            record.deviceName,
+                            expiry.label,
+                            record.autoRenew && userPreferences.autoRenewResignedApps
+                              ? 'Auto-renews'
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ');
                   const metaColor = failure
                     ? 'error'
                     : expiry.critical && !record.pendingInstall
                       ? 'warning'
                       : 'secondary';
-                  const mark = record.appName
-                    .replace(/[^a-z0-9]/gi, '')
-                    .slice(0, 2)
-                    .toUpperCase();
                   return (
                     <Fragment key={record.id}>
                       <Divider />
@@ -651,11 +655,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                               style={styles.appIcon}
                             />
                           ) : (
-                            <IconTile>
-                              <Text size="small" weight="bold">
-                                {mark || '··'}
-                              </Text>
-                            </IconTile>
+                            <PlaceholderAppIcon size={36} />
                           )
                         }
                         title={record.appName}
@@ -669,7 +669,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                           </Text>
                         }>
                         <Button
-                          title={busy ? 'Renewing…' : 'Renew now'}
+                          title={inactive ? 'Install' : busy ? 'Renewing…' : 'Renew now'}
                           color="primary"
                           disabled={busy}
                           onPress={() => renewRecordNow(record)}

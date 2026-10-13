@@ -113,6 +113,10 @@ export function describeResignError(
     // The CLI's message already carries the Settings steps.
     return { title: 'Trust the developer on your iPhone', message };
   }
+  if (code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+    // The CLI's message explains the three-app limit.
+    return { title: 'Free Apple ID app limit reached', message };
+  }
   if (code === 'APPLE_AUTH_REQUIRED') {
     return {
       title: 'Sign in again',

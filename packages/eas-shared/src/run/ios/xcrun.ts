@@ -2,6 +2,11 @@ import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import chalk from 'chalk';
 import { InternalError } from 'common-types';
 
+import {
+  FREE_APP_LIMIT_MESSAGE,
+  freeAppLimitBundleIds,
+  isFreeAppLimitError,
+} from './appleDevice/freeAppLimit';
 import Log from '../../log';
 import { sleepAsync } from '../../utils/promise';
 
@@ -71,6 +76,11 @@ function throwXcrunError(e: any): never {
     e.stderr?.match(/CoreDeviceError error 10003/)
   ) {
     throw new InternalError('APPLE_DEVICE_LOCKED', 'Device is currently locked.');
+  } else if (isFreeAppLimitError(e.stderr)) {
+    throw new InternalError('APPLE_FREE_APP_LIMIT_REACHED', FREE_APP_LIMIT_MESSAGE, {
+      stderr: e.stderr,
+      bundleIds: freeAppLimitBundleIds(e.stderr),
+    });
   } else if (
     // devicectl code-signature / provisioning rejection. The usbmux install
     // path maps the same failure (LockdownProtocol's `ApplicationVerificationFailed`)

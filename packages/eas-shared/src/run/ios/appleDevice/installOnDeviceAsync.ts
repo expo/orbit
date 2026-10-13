@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 
 import * as AppleDevice from './AppleDevice';
+import { FREE_APP_LIMIT_MESSAGE, freeAppLimitBundleIds } from './freeAppLimit';
 import { ensureDirectory } from '../../../utils/dir';
 import * as devicectl from '../devicectl';
 
@@ -61,6 +62,12 @@ export async function installOnDeviceAsync(props: {
         'APPLE_APP_VERIFICATION_FAILED',
         `Failed to verify code signature of ${appName}`
       );
+    } else if (error.code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+      // Re-wrap as InternalError so the code survives the CLI boundary, and
+      // hand the host the bundle ids iOS listed as holding the three slots.
+      throw new InternalError('APPLE_FREE_APP_LIMIT_REACHED', FREE_APP_LIMIT_MESSAGE, {
+        bundleIds: freeAppLimitBundleIds(error.message),
+      });
     }
 
     throw error;

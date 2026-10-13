@@ -37,6 +37,12 @@ export type ResignedAppRecord = {
   autoRenew: boolean;
   /** Renewed while the device was away; install when it reappears */
   pendingInstall: boolean;
+  /**
+   * False once the app was deactivated — removed from the device to free one of
+   * the three free-Apple-ID slots. The record (and its IPA) stays so "Install"
+   * can bring it back; the renewal engine leaves it alone until then.
+   */
+  active?: boolean;
   lastAttemptAt?: string;
   lastError?: { code: string; message: string; at: string };
 };
@@ -68,6 +74,11 @@ function emitChanged() {
 
 export function buildResignedAppId(assignedBundleId: string, deviceUdid: string): string {
   return `${assignedBundleId}:${deviceUdid}`;
+}
+
+/** Installed (or meant to be): everything but a deactivated record. */
+export function isActiveRecord(record: Pick<ResignedAppRecord, 'active'>): boolean {
+  return record.active !== false;
 }
 
 /** Recover the original bundle id from the rewritten `<id>.orbit<hash8>` one. */
