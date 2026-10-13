@@ -182,6 +182,15 @@ program
   });
 
 program
+  .command('free-app-slots')
+  .description('List the apps holding the three free-Apple-ID app slots on a physical iOS device')
+  .requiredOption('--device-id  <string>', 'UDID of the device')
+  .action(async (...args) => {
+    const { freeAppSlotsAsync } = await import('./commands/FreeAppSlots');
+    return returnLoggerMiddleware(freeAppSlotsAsync)(...args);
+  });
+
+program
   .command('uninstall-app')
   .description('Remove an app from a physical iOS device (frees a free-Apple-ID app slot)')
   .requiredOption('--device-id  <string>', 'UDID of the device')

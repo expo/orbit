@@ -5,6 +5,7 @@ import {
   openExpoGoURLAsync,
   ensureExpoClientInstalledAsync,
   checkIfAppIsInstalled,
+  listFreeProfileAppsAsync,
   uninstallAppAsync as uninstallAppOverUsbmuxAsync,
 } from './appleDevice/AppleDevice';
 import { getAppDeltaDirectory, installOnDeviceAsync } from './appleDevice/installOnDeviceAsync';
@@ -58,6 +59,7 @@ const AppleDevice = {
   installOnDeviceAsync,
   launchAppAsync,
   uninstallAppAsync,
+  listFreeProfileAppsAsync,
   getBundleIdentifierForBinaryAsync,
   openURLAsync,
   openExpoGoURLAsync,

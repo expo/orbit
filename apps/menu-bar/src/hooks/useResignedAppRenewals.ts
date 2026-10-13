@@ -12,7 +12,11 @@ import {
 import { cleanupResignedAppsAsync } from '../commands/cleanupResignedAppsAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { renewResignedAppAsync } from '../commands/renewResignedAppAsync';
-import { handleUntrustedDeveloperAsync } from '../commands/resignAndRetryAsync';
+import {
+  ensureFreeAppSlotAsync,
+  handleFreeAppLimitAsync,
+  handleUntrustedDeveloperAsync,
+} from '../commands/resignAndRetryAsync';
 import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import {
@@ -95,7 +99,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
   // Renew one record. Returns false when every further renewal would fail the
   // same way (expired Apple session) so the caller stops the whole run.
   const renewOneAsync = useCallback(
-    async (record: ResignedAppRecord): Promise<boolean> => {
+    async (record: ResignedAppRecord, opts?: { interactive?: boolean }): Promise<boolean> => {
       const taskId = `renew:${record.id}`;
       createTask({
         id: taskId,
@@ -104,6 +108,20 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
         message: `Renewing ${record.appName}…`,
       });
       try {
+        // Asked for by the user with the device here: make sure a slot exists
+        // before the resign, instead of failing after the upload.
+        if (
+          opts?.interactive &&
+          connectedUdidsRef.current.has(record.deviceUdid) &&
+          !(await ensureFreeAppSlotAsync({
+            deviceId: record.deviceUdid,
+            deviceName: record.deviceName,
+            appName: record.appName,
+            originalBundleId: record.assignedBundleId,
+          }))
+        ) {
+          return true;
+        }
         const { record: renewed, previousBundleId } = await renewResignedAppAsync(record, {
           deviceConnected: connectedUdidsRef.current.has(record.deviceUdid),
           onProgress: (step) =>
@@ -133,6 +151,77 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
             (r) =>
               r.originalBundleId === record.originalBundleId && r.deviceUdid === record.deviceUdid
           ) ?? record;
+        if (code === 'APPLE_FREE_APP_LIMIT_REACHED') {
+          // The app was re-signed but the device has no free slot. A renewal the
+          // user asked for gets the same chooser as the resign flow, then only
+          // the install is retried (the IPA is already signed). Unattended
+          // renewals just record it. A record that was inactive stays inactive
+          // unless the install goes through.
+          const wasActive = isActiveRecord(record);
+          const occupyingApps = (
+            (error as InternalError).details as
+              | { apps?: { bundleId: string; name?: string }[] }
+              | undefined
+          )?.apps;
+          const freed =
+            opts?.interactive === true &&
+            (await handleFreeAppLimitAsync({
+              deviceId: record.deviceUdid,
+              deviceName: record.deviceName,
+              appName: record.appName,
+              excludeBundleId: current.assignedBundleId,
+              occupyingApps,
+            }));
+          if (freed) {
+            try {
+              await installAndLaunchAppAsync({
+                appPath: current.resignedIpaPath,
+                deviceId: record.deviceUdid,
+                launchURL: record.launchURL,
+              });
+            } catch (retryError) {
+              const retryCode = retryError instanceof InternalError ? retryError.code : undefined;
+              if (retryCode !== 'APPLE_DEVELOPER_NOT_TRUSTED') {
+                updateResignedApp(current.id, {
+                  active: wasActive,
+                  lastError: {
+                    code: retryCode ?? 'UNKNOWN',
+                    message: describeResignError(retryError).message,
+                    at,
+                  },
+                });
+                setAttention({
+                  kind: 'renewal-failed',
+                  message: `Couldn’t install ${record.appName}.`,
+                  at,
+                });
+                return true;
+              }
+              await handleUntrustedDeveloperAsync({
+                deviceId: record.deviceUdid,
+                bundleId: current.assignedBundleId,
+                launchURL: record.launchURL,
+              });
+            }
+            updateResignedApp(current.id, {
+              active: true,
+              pendingInstall: false,
+              lastError: undefined,
+            });
+            if (getAttention()?.kind === 'renewal-failed') setAttention(null);
+            return true;
+          }
+          updateResignedApp(current.id, {
+            active: wasActive,
+            lastError: { code, message: describeResignError(error).message, at },
+          });
+          setAttention({
+            kind: 'renewal-failed',
+            message: `Couldn’t ${wasActive ? 'renew' : 'install'} ${record.appName}.`,
+            at,
+          });
+          return true;
+        }
         if (code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
           // Renewed and installed; iOS only refuses to open it until the developer
           // is trusted on the device — the first run under a new team, and iOS
@@ -270,7 +359,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
       ({ recordId }: { recordId: string }) => {
         runExclusive(async () => {
           const record = listResignedApps().find((r) => r.id === recordId);
-          if (record) await renewOneAsync(record);
+          if (record) await renewOneAsync(record, { interactive: true });
         });
       }
     );

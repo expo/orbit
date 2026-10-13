@@ -9,6 +9,7 @@ import {
   twoFactorAuthMode,
   TwoFactorPrompt,
 } from './appleAccountAsync';
+import { freeAppSlotsAsync } from './freeAppSlotsAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { launchAppAsync, openDeviceManagementSettingsAsync } from './launchAppAsync';
 import { uninstallAppAsync } from './uninstallAppAsync';
@@ -199,8 +200,8 @@ export async function handleFreeAppLimitAsync(opts: {
   appName: string;
   /** The app being installed; never offered. */
   excludeBundleId?: string;
-  /** Bundle ids iOS reported as holding the slots, when the wording had them. */
-  occupyingBundleIds?: string[];
+  /** Apps iOS reported as holding the slots, when the wording listed them. */
+  occupyingApps?: { bundleId: string; name?: string }[];
 }): Promise<boolean> {
   const records = listResignedApps().filter(
     (record) =>
@@ -209,14 +210,14 @@ export async function handleFreeAppLimitAsync(opts: {
       record.assignedBundleId !== opts.excludeBundleId &&
       record.originalBundleId !== opts.excludeBundleId
   );
-  const listed = (opts.occupyingBundleIds ?? []).filter((id) => id !== opts.excludeBundleId);
+  const listed = (opts.occupyingApps ?? []).filter((app) => app.bundleId !== opts.excludeBundleId);
   const choices: { label: string; bundleId: string; record?: ResignedAppRecord }[] =
     listed.length > 0
-      ? listed.map((bundleId) => {
-          const record = records.find((r) => r.assignedBundleId === bundleId);
+      ? listed.map((app) => {
+          const record = records.find((r) => r.assignedBundleId === app.bundleId);
           return record
-            ? { label: `Deactivate ${record.appName}`, bundleId, record }
-            : { label: `Remove ${bundleId}`, bundleId };
+            ? { label: `Deactivate ${record.appName}`, bundleId: app.bundleId, record }
+            : { label: `Remove ${app.name ?? app.bundleId}`, bundleId: app.bundleId };
         })
       : records.map((record) => ({
           label: `Deactivate ${record.appName}`,
@@ -258,6 +259,52 @@ export async function handleFreeAppLimitAsync(opts: {
     });
   }
   return true;
+}
+
+const FREE_SLOT_CHECK_TIMEOUT_MS = 15_000;
+
+/**
+ * Check the three-app limit before any work: ask the device which apps hold
+ * the free-Apple-ID slots and, when it is full and `originalBundleId` is not
+ * already one of them (an update needs no new slot), run the chooser now rather
+ * than after a resign and a failed upload. Resolves true when the install can
+ * go ahead. A device that cannot be asked (devicectl-only setups) is assumed to
+ * have room; the install error path still covers it.
+ */
+export async function ensureFreeAppSlotAsync(opts: {
+  deviceId: string;
+  deviceName: string;
+  appName: string;
+  /** The build's own bundle id, to recognise an update of an app already in a slot. */
+  originalBundleId?: string;
+}): Promise<boolean> {
+  // Bounded: a device that never answers must not stall the resign — the
+  // install error path still handles a full device.
+  const slots = await Promise.race([
+    freeAppSlotsAsync(opts.deviceId).catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), FREE_SLOT_CHECK_TIMEOUT_MS)),
+  ]);
+  if (!slots || slots.apps.length < slots.limit) return true;
+  const installed = listResignedApps().find(
+    (record) =>
+      record.deviceUdid === opts.deviceId &&
+      isActiveRecord(record) &&
+      (record.originalBundleId === opts.originalBundleId ||
+        record.assignedBundleId === opts.originalBundleId)
+  );
+  if (installed && slots.apps.some((app) => app.bundleId === installed.assignedBundleId)) {
+    return true;
+  }
+  if (opts.originalBundleId && slots.apps.some((app) => app.bundleId === opts.originalBundleId)) {
+    return true;
+  }
+  return handleFreeAppLimitAsync({
+    deviceId: opts.deviceId,
+    deviceName: opts.deviceName,
+    appName: opts.appName,
+    excludeBundleId: installed?.assignedBundleId ?? opts.originalBundleId,
+    occupyingApps: slots.apps,
+  });
 }
 
 function appNameFromIpaPath(ipaPath: string, fallback: string): string {
@@ -345,9 +392,11 @@ export async function resignAndRetryAsync(opts: {
   deviceName: string;
   launchURL?: string;
   sourceUri?: string;
+  /** The build's bundle id (from detect-apple-app-type), for the free-slot pre-check. */
+  bundleId?: string;
   onProgress?: (step: string) => void;
 }): Promise<void> {
-  const { localFilePath, deviceId, deviceName, launchURL, sourceUri, onProgress } = opts;
+  const { localFilePath, deviceId, deviceName, launchURL, sourceUri, bundleId, onProgress } = opts;
 
   // Adopts a session the CLI already holds before ever showing the sign-in window.
   let appleId = await resolveAppleIdAsync();
@@ -359,6 +408,18 @@ export async function resignAndRetryAsync(opts: {
   // explains why it is asking again.
   let authReason: 'session-expired' | undefined;
   let twoFactor: TwoFactorPrompt | undefined;
+
+  // A full device is handled before the resign, not after a failed upload.
+  if (
+    !(await ensureFreeAppSlotAsync({
+      deviceId,
+      deviceName,
+      appName: appNameFromIpaPath(localFilePath, bundleId ?? 'this app'),
+      originalBundleId: bundleId,
+    }))
+  ) {
+    return;
+  }
 
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
     if (!appleId) {
@@ -401,9 +462,11 @@ export async function resignAndRetryAsync(opts: {
               deviceName,
               appName: appNameFromIpaPath(localFilePath, stripOrbitSuffix(resignResult.bundleId)),
               excludeBundleId: resignResult.bundleId,
-              occupyingBundleIds: (
-                (launchError as InternalError).details as { bundleIds?: string[] } | undefined
-              )?.bundleIds,
+              occupyingApps: (
+                (launchError as InternalError).details as
+                  | { apps?: { bundleId: string; name?: string }[] }
+                  | undefined
+              )?.apps,
             });
             if (freed) continue;
             throw launchError;

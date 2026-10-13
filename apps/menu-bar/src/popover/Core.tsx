@@ -619,6 +619,7 @@ function Core(props: Props) {
                 localFilePath: ipaPath,
                 deviceId: resolvedDeviceId,
                 deviceName,
+                bundleId: appInfo?.bundleIdentifier,
                 launchURL,
                 sourceUri: appURI.startsWith('https://') ? appURI : undefined,
                 onProgress: (step) => {
@@ -742,8 +743,9 @@ function Core(props: Props) {
                     .split(/[\\/]/)
                     .pop()!
                     .replace(/\.(ipa|app)$/i, ''),
-                  occupyingBundleIds: (error.details as { bundleIds?: string[] } | undefined)
-                    ?.bundleIds,
+                  occupyingApps: (
+                    error.details as { apps?: { bundleId: string; name?: string }[] } | undefined
+                  )?.apps,
                 }));
               if (freed) {
                 await installAndLaunchAppAsync({

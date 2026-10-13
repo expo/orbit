@@ -103,6 +103,9 @@ export interface IPLookupResult {
     CFBundleExecutable: string;
     CFBundleShortVersionString: string;
     Path: string;
+    /** Present when requested through ReturnAttributes. */
+    CFBundleDisplayName?: string;
+    CFBundleName?: string;
   };
 }
 
