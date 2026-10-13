@@ -250,7 +250,7 @@ const AppleIdAuth = () => {
               ? isSmsChallenge
                 ? 'Enter the 6-digit code Apple sent by SMS to your trusted phone number.'
                 : `Enter the 6-digit code sent to your trusted Apple devices for ${appleId}.`
-              : 'Orbit uses your Apple ID to issue a development certificate so downloaded IPAs can install on your iPhone. Free and paid developer accounts both work. Your password is used once and not stored unless you choose to stay signed in.'}
+              : 'Orbit uses your Apple ID to issue a development certificate so downloaded IPAs can install on your iPhone. Free and paid developer accounts both work. Your password is used once and not stored. With “Keep me signed in” it is saved in ~/.orbit/apple-resign/secrets.json (readable only by your user account) so Orbit can renew apps without asking again.'}
           </Text>
         </Column>
 

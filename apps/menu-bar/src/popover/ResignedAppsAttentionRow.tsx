@@ -3,6 +3,7 @@ import { Text } from '../components';
 import { ResignAttention } from '../modules/ResignedApps';
 import { useExpoTheme } from '../utils/useExpoTheme';
 import { WindowsNavigator } from '../windows';
+import { openSettingsPane } from '../windows/settingsPane';
 
 export const ATTENTION_ROW_HEIGHT = 30;
 
@@ -16,7 +17,7 @@ const ResignedAppsAttentionRow = ({ attention }: { attention: ResignAttention })
     if (attention.kind === 'auth-required') {
       WindowsNavigator.open('AppleIdAuth');
     } else {
-      WindowsNavigator.open('Settings');
+      openSettingsPane('apple');
     }
   };
   return (

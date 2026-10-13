@@ -14,6 +14,7 @@ import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { launchAppAsync, openDeviceManagementSettingsAsync } from './launchAppAsync';
 import { uninstallAppAsync } from './uninstallAppAsync';
 import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   buildResignedAppId,
@@ -26,6 +27,7 @@ import {
   upsertResignedApp,
 } from '../modules/ResignedApps';
 import { getUserPreferences, storage } from '../modules/Storage';
+import { WINDOW_CLOSED_EVENT } from '../modules/WindowManager/events';
 import {
   APPLE_APP_IDS_DONE_EVENT,
   AppleAppIdsDoneEvent,
@@ -35,7 +37,7 @@ import { AppleAuthCompletedEvent, waitForAppleAuthCompleteAsync } from '../utils
 import { parseCliJsonResult } from '../utils/helpers';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { WindowsNavigator } from '../windows';
-import { openSettingsPane } from '../windows/SettingsPanes';
+import { openSettingsPane } from '../windows/settingsPane';
 
 export type ResignCliResult = {
   resignedIpaPath: string;
@@ -103,19 +105,35 @@ export function ensureAppleAuthAsync(
   return waitForAppleAuthCompleteAsync();
 }
 
-function waitForAppIdCleanupAsync(): Promise<AppleAppIdsDoneEvent> {
+/**
+ * Resolve true as soon as the App IDs section deletes one (the resign can be
+ * retried right away), false when the user closes Settings without doing so.
+ * The close comes from the native window manager: on Electron a closing
+ * renderer runs no React cleanup, so Settings itself could never report it.
+ */
+function waitForAppIdCleanupAsync(): Promise<boolean> {
   return new Promise((resolve) => {
-    const sub = AppleAppIdsEmitter.addListener(
-      APPLE_APP_IDS_DONE_EVENT,
-      (event: AppleAppIdsDoneEvent) => {
-        sub.remove();
-        resolve(event);
-      }
+    let done: { remove(): void } | undefined;
+    let closed: { remove(): void } | undefined;
+    const finish = (deleted: boolean) => {
+      done?.remove();
+      closed?.remove();
+      resolve(deleted);
+    };
+    done = AppleAppIdsEmitter.addListener(APPLE_APP_IDS_DONE_EVENT, (_: AppleAppIdsDoneEvent) =>
+      finish(true)
     );
+    closed = DeviceEventEmitter.addListener(WINDOW_CLOSED_EVENT, (window: string) => {
+      if (window === 'Settings') finish(false);
+    });
   });
 }
 
-function confirmAsync(title: string, message: string, confirmLabel: string): Promise<boolean> {
+export function confirmAsync(
+  title: string,
+  message: string,
+  confirmLabel: string
+): Promise<boolean> {
   return new Promise((resolve) => {
     Alert.alert(title, message, [
       { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
@@ -441,52 +459,10 @@ export async function resignAndRetryAsync(opts: {
         stripExtensions,
         onProgress,
       });
-      // The CLI's last step is `done`; the install is a second CLI call, so tell
-      // the task row what is actually happening instead of leaving "Finishing up".
-      onProgress?.('installing');
-      for (let installAttempt = 0; ; installAttempt++) {
-        try {
-          await installAndLaunchAppAsync({
-            appPath: resignResult.resignedIpaPath,
-            deviceId,
-            launchURL,
-          });
-          break;
-        } catch (launchError) {
-          const launchCode = launchError instanceof InternalError ? launchError.code : undefined;
-          if (launchCode === 'APPLE_FREE_APP_LIMIT_REACHED' && installAttempt === 0) {
-            // Three free-Apple-ID apps are already on the device. Offer to remove
-            // one Orbit installed, then install once more.
-            const freed = await handleFreeAppLimitAsync({
-              deviceId,
-              deviceName,
-              appName: appNameFromIpaPath(localFilePath, stripOrbitSuffix(resignResult.bundleId)),
-              excludeBundleId: resignResult.bundleId,
-              occupyingApps: (
-                (launchError as InternalError).details as
-                  | { apps?: { bundleId: string; name?: string }[] }
-                  | undefined
-              )?.apps,
-            });
-            if (freed) continue;
-            throw launchError;
-          }
-          if (launchCode !== 'APPLE_DEVELOPER_NOT_TRUSTED') {
-            throw launchError;
-          }
-          // Installed, but iOS won't open it until the developer is trusted — the
-          // expected first run of a development-signed app on a device. Walk the
-          // user through it and launch, instead of relying on the success alert's
-          // passive hint.
-          markTrustInstructionsShown(appleId, deviceId);
-          await handleUntrustedDeveloperAsync({
-            deviceId,
-            bundleId: resignResult.bundleId,
-            launchURL,
-          });
-          break;
-        }
-      }
+      // Record the app before installing: the install's launch step can fail
+      // (locked device) with the app already on the phone, and an app on the
+      // phone without a record is never renewed. `pendingInstall` flips once the
+      // install goes through; until then the reconnect path retries it.
       const record = buildRecord({
         result: resignResult,
         ipaPath: localFilePath,
@@ -498,7 +474,69 @@ export async function resignAndRetryAsync(opts: {
         sourceUri,
       });
       if (record) {
-        upsertResignedApp(record);
+        upsertResignedApp({ ...record, pendingInstall: true });
+      }
+      // The CLI's last step is `done`; the install is a second CLI call, so tell
+      // the task row what is actually happening instead of leaving "Finishing up".
+      onProgress?.('installing');
+      try {
+        for (let installAttempt = 0; ; installAttempt++) {
+          try {
+            await installAndLaunchAppAsync({
+              appPath: resignResult.resignedIpaPath,
+              deviceId,
+              launchURL,
+            });
+            break;
+          } catch (launchError) {
+            const launchCode = launchError instanceof InternalError ? launchError.code : undefined;
+            if (launchCode === 'APPLE_FREE_APP_LIMIT_REACHED' && installAttempt === 0) {
+              // Three free-Apple-ID apps are already on the device. Offer to remove
+              // one Orbit installed, then install once more.
+              const freed = await handleFreeAppLimitAsync({
+                deviceId,
+                deviceName,
+                appName: appNameFromIpaPath(localFilePath, stripOrbitSuffix(resignResult.bundleId)),
+                excludeBundleId: resignResult.bundleId,
+                occupyingApps: (
+                  (launchError as InternalError).details as
+                    | { apps?: { bundleId: string; name?: string }[] }
+                    | undefined
+                )?.apps,
+              });
+              if (freed) continue;
+              throw launchError;
+            }
+            if (launchCode !== 'APPLE_DEVELOPER_NOT_TRUSTED') {
+              throw launchError;
+            }
+            // Installed, but iOS won't open it until the developer is trusted — the
+            // expected first run of a development-signed app on a device. Walk the
+            // user through it and launch, instead of relying on the success alert's
+            // passive hint.
+            markTrustInstructionsShown(appleId, deviceId);
+            await handleUntrustedDeveloperAsync({
+              deviceId,
+              bundleId: resignResult.bundleId,
+              launchURL,
+            });
+            break;
+          }
+        }
+      } catch (installError) {
+        if (record) {
+          updateResignedApp(record.id, {
+            lastError: {
+              code: installError instanceof InternalError ? installError.code : 'UNKNOWN',
+              message: describeResignError(installError).message,
+              at: new Date().toISOString(),
+            },
+          });
+        }
+        throw installError;
+      }
+      if (record) {
+        updateResignedApp(record.id, { pendingInstall: false });
         showResignSuccessAlert(record, resignResult.strippedEntitlements);
       }
       return;
@@ -542,14 +580,13 @@ export async function resignAndRetryAsync(opts: {
         const proceed = await confirmAsync(
           'Apple App ID limit reached',
           describeResignError(error).message +
-            '\n\nOrbit can show your registered App IDs in Settings so you can delete stale ones; it retries when you close Settings.',
+            '\n\nOrbit can show your registered App IDs in Settings so you can delete stale ones; it retries as soon as you delete one.',
           'Manage App IDs'
         );
         if (!proceed) throw error;
         onProgress?.('waiting-for-cleanup');
         openSettingsPane('apple');
-        const done = await waitForAppIdCleanupAsync();
-        if (done.deletedCount > 0) continue;
+        if (await waitForAppIdCleanupAsync()) continue;
         throw error;
       }
       throw error;

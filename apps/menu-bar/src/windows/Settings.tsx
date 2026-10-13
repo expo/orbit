@@ -2,8 +2,9 @@ import { Bug16Filled } from '@fluentui/react-icons';
 import { SymbolView } from 'expo-symbols';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
-import { SettingsPane, hairline, panes, useSettingsPane } from './SettingsPanes';
+import { SettingsPane, hairline, panes } from './SettingsPanes';
 import { WindowsNavigator } from './index';
+import { useSettingsPane } from './settingsPane';
 import { withApolloProvider } from '../api/ApolloClient';
 import { Row, Text, View } from '../components';
 import MenuBarModule from '../modules/MenuBarModule';

@@ -24,8 +24,9 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet } from 'react-native';
 
-import { Pane, SettingsPane, panes, useSettingsPane } from './SettingsPanes';
+import { SettingsPane, panes } from './SettingsPanes';
 import { WindowsNavigator } from './index';
+import { Pane, useSettingsPane } from './settingsPane';
 import { withApolloProvider } from '../api/ApolloClient';
 import MenuBarModule from '../modules/MenuBarModule';
 

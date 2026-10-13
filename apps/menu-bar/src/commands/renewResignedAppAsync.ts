@@ -2,6 +2,7 @@ import { loadAppleId } from './appleAccountAsync';
 import { installAndLaunchAppAsync } from './installAndLaunchAppAsync';
 import { ResignProgressListener, runResignCliAsync } from './resignAndRetryAsync';
 import { uninstallAppAsync } from './uninstallAppAsync';
+import Alert from '../modules/Alert';
 import {
   ResignedAppRecord,
   buildResignedAppId,
@@ -13,7 +14,31 @@ export type RenewResult = {
   record: ResignedAppRecord;
   /** Set when Apple refused the old identifier and the app was signed under a new one. */
   previousBundleId?: string;
+  /** With `previousBundleId`: the user chose to replace the copy signed under it. */
+  previousCopyRemoved?: boolean;
 };
+
+// A new identifier is a new data container on iOS: replacing the old copy
+// resets the app's data on the device, so only the user can decide that.
+function confirmReplaceAsync(opts: {
+  appName: string;
+  deviceName: string;
+  previousBundleId: string;
+  bundleId: string;
+}): Promise<boolean> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      `${opts.appName} was signed with a new identifier`,
+      `‘${opts.previousBundleId}’ can’t be used with the signed-in Apple ID, so Orbit signed it as ‘${opts.bundleId}’.\n\n` +
+        `Replace the copy on ${opts.deviceName}? Its data on the device is reset. ` +
+        'Keeping both leaves the old copy, with its data, until its profile expires.',
+      [
+        { text: 'Keep both', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Replace', style: 'destructive', onPress: () => resolve(true) },
+      ]
+    );
+  });
+}
 
 /**
  * Renew one resigned app: re-sign the preserved ORIGINAL ipa (never the
@@ -24,7 +49,12 @@ export type RenewResult = {
  */
 export async function renewResignedAppAsync(
   record: ResignedAppRecord,
-  opts: { deviceConnected: boolean; onProgress?: ResignProgressListener }
+  opts: {
+    deviceConnected: boolean;
+    /** The user asked for this renewal, so Orbit may ask them things. */
+    interactive?: boolean;
+    onProgress?: ResignProgressListener;
+  }
 ): Promise<RenewResult> {
   const attemptedAt = new Date().toISOString();
   updateResignedApp(record.id, { lastAttemptAt: attemptedAt });
@@ -56,29 +86,43 @@ export async function renewResignedAppAsync(
     profileExpiresAt: result.profileExpiresAt,
     lastAttemptAt: attemptedAt,
     lastRenewedAt: new Date().toISOString(),
-    pendingInstall: !opts.deviceConnected,
+    // The device still runs the previous profile until the install below goes
+    // through; cleared then, so a failed install is retried on reconnect.
+    pendingInstall: true,
     active: true,
     lastError: undefined,
   };
   upsertResignedApp(renewed);
+  let previousCopyRemoved = false;
   if (opts.deviceConnected) {
-    if (identifierChanged) {
-      // The copy signed under the previous identifier can't be renewed in place
-      // and would count against the free-account three-app limit: drop it first.
-      // Best effort — the user can still delete it from the Home Screen.
-      await uninstallAppAsync({
-        deviceId: record.deviceUdid,
-        bundleId: record.assignedBundleId,
-      }).catch(() => {});
+    if (identifierChanged && opts.interactive) {
+      // Automatic renewals never remove the old copy: that resets the app's
+      // data, which is the user's call. They get the new copy next to it and
+      // a note about the old one (see useResignedAppRenewals).
+      previousCopyRemoved = await confirmReplaceAsync({
+        appName: record.appName,
+        deviceName: record.deviceName,
+        previousBundleId: record.assignedBundleId,
+        bundleId: result.bundleId,
+      });
+      if (previousCopyRemoved) {
+        // Best effort — the user can still delete it from the Home Screen.
+        await uninstallAppAsync({
+          deviceId: record.deviceUdid,
+          bundleId: record.assignedBundleId,
+        }).catch(() => {});
+      }
     }
     await installAndLaunchAppAsync({
       appPath: result.resignedIpaPath,
       deviceId: record.deviceUdid,
       launchURL: record.launchURL,
     });
+    updateResignedApp(renewed.id, { pendingInstall: false });
   }
   return {
-    record: renewed,
+    record: opts.deviceConnected ? { ...renewed, pendingInstall: false } : renewed,
     previousBundleId: identifierChanged ? record.assignedBundleId : undefined,
+    previousCopyRemoved,
   };
 }

@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 
 import { WindowsNavigator } from './index';
+import { Pane } from './settingsPane';
 import AutoUpdater from '../../modules/auto-updater';
 import {
   openAuthSessionAsync,
@@ -81,7 +82,6 @@ import { describeResignError } from '../utils/resignErrorCopy';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme, useExpoPalette, useExpoTheme } from '../utils/useExpoTheme';
 
-export type Pane = 'general' | 'platforms' | 'apple' | 'advanced';
 export type PaneItem = {
   key: Pane;
   label: string;
@@ -104,35 +104,6 @@ export const panes: PaneItem[] = [
     fallback: <Options16Regular />,
   },
 ];
-
-const REQUESTED_PANE_KEY = 'settings:requested-pane';
-
-/** Open Settings on `pane` — e.g. the resign flow sends the user to Apple ID → App IDs. */
-export function openSettingsPane(pane: Pane) {
-  storage.set(REQUESTED_PANE_KEY, pane);
-  WindowsNavigator.open('Settings');
-}
-
-function consumeRequestedPane(): Pane | undefined {
-  const requested = storage.getString(REQUESTED_PANE_KEY);
-  if (!requested) return undefined;
-  storage.delete(REQUESTED_PANE_KEY);
-  return panes.some((item) => item.key === requested) ? (requested as Pane) : undefined;
-}
-
-/** Selected pane; honours openSettingsPane() on mount and while the window is already open. */
-export function useSettingsPane() {
-  const [pane, setPane] = useState<Pane>(() => consumeRequestedPane() ?? 'general');
-  useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
-      if (key !== REQUESTED_PANE_KEY) return;
-      const requested = consumeRequestedPane();
-      if (requested) setPane(requested);
-    });
-    return listener.remove;
-  }, []);
-  return [pane, setPane] as const;
-}
 
 type PlatformItem = {
   label: string;
@@ -215,18 +186,6 @@ export function SettingsPane({ pane }: { pane: Pane }) {
       appleIdSub.remove();
     };
   }, []);
-
-  // The resign flow parks on this event after sending the user here to free App
-  // ID quota (openSettingsPane('apple')); report what was freed once Settings closes.
-  const appIdsDeletedRef = useRef(0);
-  useEffect(
-    () => () => {
-      AppleAppIdsEmitter.emit(APPLE_APP_IDS_DONE_EVENT, {
-        deletedCount: appIdsDeletedRef.current,
-      });
-    },
-    []
-  );
 
   const signOutAppleId = async () => {
     try {
@@ -585,14 +544,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                 </SettingRow>
               )}
             </Card>
-            {appleAccountId ? (
-              <AppleAppIdsSection
-                appleId={appleAccountId}
-                onDeleted={() => {
-                  appIdsDeletedRef.current += 1;
-                }}
-              />
-            ) : null}
+            {appleAccountId ? <AppleAppIdsSection appleId={appleAccountId} /> : null}
             <Section title="Resigned apps">
               <Card>
                 <SettingRow
@@ -690,8 +642,9 @@ export function SettingsPane({ pane }: { pane: Pane }) {
             <Section title="How Orbit uses your Apple ID">
               <Text size="tiny" color="secondary">
                 Your Apple ID is used only to create a free signing certificate for your devices.
-                The password is never stored — it is passed once to a local signing process. Session
-                tokens stay on this computer in ~/.orbit/apple-resign.
+                The password is passed once to a local signing process and not stored, unless “Keep
+                me signed in” was checked: then it is saved, with the session tokens, in
+                ~/.orbit/apple-resign/secrets.json — a file readable only by your user account.
               </Text>
             </Section>
           </>
@@ -766,13 +719,16 @@ function formatShortDate(iso: string) {
 
 /**
  * The App IDs registered to the signed-in Apple ID, so the user can free quota
- * slots (free teams: 10 App IDs per rolling 7 days). `onDeleted` feeds the
- * `apple-app-ids:done` count the resign flow waits on.
+ * slots (free teams: 10 App IDs per rolling 7 days). Loaded on request, not on
+ * mount: asking Apple can end in a 2FA prompt or an expired-session sign-out,
+ * which must follow a click, not navigating to this pane. Each deletion is
+ * reported on `apple-app-ids:done`, which the resign flow waits on.
  */
-function AppleAppIdsSection({ appleId, onDeleted }: { appleId: string; onDeleted: () => void }) {
+function AppleAppIdsSection({ appleId }: { appleId: string }) {
   const expoTheme = useExpoTheme();
   const palette = useExpoPalette();
   const [appIds, setAppIds] = useState<AppleAppId[] | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   // Ask for a 2FA code at most once per load, so a persistent failure can't
@@ -794,6 +750,7 @@ function AppleAppIdsSection({ appleId, onDeleted }: { appleId: string; onDeleted
 
   const load = useCallback(async () => {
     setError(null);
+    setLoading(true);
     try {
       const rows = await listAppleAppIdsAsync(appleId);
       rows.sort((a, b) => (a.expirationDate ?? '').localeCompare(b.expirationDate ?? ''));
@@ -812,12 +769,10 @@ function AppleAppIdsSection({ appleId, onDeleted }: { appleId: string; onDeleted
       }
       setError(describeResignError(e).message);
       setAppIds((rows) => rows ?? []);
+    } finally {
+      setLoading(false);
     }
   }, [appleId, promptTwoFactorAsync]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const onDelete = (row: AppleAppId) => {
     Alert.alert(
@@ -832,7 +787,7 @@ function AppleAppIdsSection({ appleId, onDeleted }: { appleId: string; onDeleted
             setBusyId(row.appIdId);
             try {
               await deleteAppleAppIdAsync(appleId, row.appIdId);
-              onDeleted();
+              AppleAppIdsEmitter.emit(APPLE_APP_IDS_DONE_EVENT, { deletedCount: 1 });
               await load();
             } catch (e) {
               if (isAppleTwoFactorRequiredError(e) && (await promptTwoFactorAsync(e))) {
@@ -890,9 +845,15 @@ function AppleAppIdsSection({ appleId, onDeleted }: { appleId: string; onDeleted
       ) : null}
       <Card>
         {appIds === null ? (
-          <View px="3.5" py="3" align="centered">
-            <ActivityIndicator />
-          </View>
+          <SettingRow
+            title="Registered App IDs"
+            subtitle="Orbit asks Apple for the list only when you need it. Apple may ask for a verification code.">
+            {loading ? (
+              <ActivityIndicator />
+            ) : (
+              <Button title="Load" color="primary" onPress={load} style={styles.smallButton} />
+            )}
+          </SettingRow>
         ) : appIds.length === 0 ? (
           <View px="3.5" py="3">
             <Text size="tiny" color="secondary">

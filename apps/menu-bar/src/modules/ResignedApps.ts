@@ -90,14 +90,23 @@ export function getResignedAppsDirectory(): string {
   return `${StorageUtils.getExpoOrbitDirectory(MenuBarModule.homedir)}/resigned-apps`;
 }
 
-export function listResignedApps(): ResignedAppRecord[] {
+/**
+ * The stored records, or null when the stored JSON is unreadable. Callers that
+ * delete things keyed by the records (cleanup) must treat null as "unknown",
+ * not as "none".
+ */
+export function readResignedApps(): ResignedAppRecord[] | null {
   const raw = storage.getString(RESIGNED_APPS_KEY);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as ResignedAppRecord[];
   } catch {
-    return [];
+    return null;
   }
+}
+
+export function listResignedApps(): ResignedAppRecord[] {
+  return readResignedApps() ?? [];
 }
 
 function saveRecords(records: ResignedAppRecord[]) {

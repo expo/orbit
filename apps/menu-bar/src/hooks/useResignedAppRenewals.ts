@@ -122,8 +122,13 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
         ) {
           return true;
         }
-        const { record: renewed, previousBundleId } = await renewResignedAppAsync(record, {
+        const {
+          record: renewed,
+          previousBundleId,
+          previousCopyRemoved,
+        } = await renewResignedAppAsync(record, {
           deviceConnected: connectedUdidsRef.current.has(record.deviceUdid),
+          interactive: opts?.interactive,
           onProgress: (step) =>
             updateTask({ id: taskId, message: `${record.appName}: ${describeResignStep(step)}` }),
         });
@@ -131,13 +136,17 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
           setAttention(null);
         }
         if (previousBundleId) {
-          // The old record dir is orphaned now, and the old copy on the device
-          // keeps the previous identifier — Orbit can't replace it in place.
+          // The old record dir is orphaned now. (Cleanup leaves dirs written in
+          // the last hour alone, so a resign in flight elsewhere is safe.)
           cleanupResignedAppsAsync().catch(() => {});
+        }
+        if (previousBundleId && !previousCopyRemoved) {
+          // An interactive renewal already asked about the old copy; otherwise
+          // it was left alone (replacing it would reset the app's data).
           Alert.alert(
             `${record.appName} was signed with a new identifier`,
             `‘${previousBundleId}’ can’t be used with the signed-in Apple ID, so Orbit signed it as ‘${renewed.assignedBundleId}’. ` +
-              `The old copy on ${record.deviceName} was replaced.`
+              `The old copy on ${record.deviceName} keeps its data and stops opening when its profile expires; delete it from the Home Screen when you no longer need it.`
           );
         }
         return true;
@@ -233,7 +242,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
             bundleId: current.assignedBundleId,
             launchURL: record.launchURL,
           });
-          updateResignedApp(current.id, { lastError: undefined });
+          updateResignedApp(current.id, { lastError: undefined, pendingInstall: false });
           if (getAttention()?.kind === 'renewal-failed') setAttention(null);
           return true;
         }
@@ -274,6 +283,9 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
           });
           return false;
         }
+        // A failure after the resign leaves `pendingInstall` set (the renewal
+        // command only clears it once the install succeeds), so the device
+        // gets the new profile at the next reconnect or "Renew now".
         const { message } = describeResignError(error);
         updateResignedApp(current.id, { lastError: { code: code ?? 'UNKNOWN', message, at } });
         setAttention({ kind: 'renewal-failed', message: `Couldn’t renew ${record.appName}.`, at });
@@ -373,9 +385,14 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
     return () => sub.remove();
   }, [runRenewalCheckAsync]);
 
-  // Install-on-reconnect + deviceLastSeenAt bookkeeping.
+  // Install-on-reconnect + deviceLastSeenAt bookkeeping. Pending installs run
+  // for devices that just (re)appeared, not on every device refetch: a failed
+  // install would otherwise be retried each time the popover opens.
+  const seenUdidsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const udids = connectedUdidsRef.current;
+    const reconnected = new Set([...udids].filter((udid) => !seenUdidsRef.current.has(udid)));
+    seenUdidsRef.current = udids;
     if (udids.size === 0) return;
     runExclusive(async () => {
       const now = Date.now();
@@ -385,7 +402,7 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
         if (Number.isNaN(lastSeen) || now - lastSeen > DEVICE_SEEN_WRITE_THROTTLE_MS) {
           updateResignedApp(record.id, { deviceLastSeenAt: new Date(now).toISOString() });
         }
-        if (record.pendingInstall && isActiveRecord(record)) {
+        if (record.pendingInstall && isActiveRecord(record) && reconnected.has(record.deviceUdid)) {
           const taskId = `renew-install:${record.id}`;
           createTask({
             id: taskId,
@@ -400,8 +417,22 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
               launchURL: record.launchURL,
             });
             updateResignedApp(record.id, { pendingInstall: false });
-          } catch {
-            // Device may be locked or mid-boot; the next refetch retries.
+          } catch (error) {
+            const code = error instanceof InternalError ? error.code : undefined;
+            if (code === 'APPLE_DEVELOPER_NOT_TRUSTED' || code === 'APPLE_DEVICE_LOCKED') {
+              // The app is installed; only the launch was refused (trust prompt,
+              // locked screen — see installOnDeviceAsync). Nothing to retry.
+              updateResignedApp(record.id, { pendingInstall: false });
+              if (code === 'APPLE_DEVELOPER_NOT_TRUSTED') {
+                markTrustInstructionsShown(loadAppleId() ?? record.appleId, record.deviceUdid);
+                await handleUntrustedDeveloperAsync({
+                  deviceId: record.deviceUdid,
+                  bundleId: record.assignedBundleId,
+                  launchURL: record.launchURL,
+                });
+              }
+            }
+            // Anything else (mid-boot, cable pulled): retried at the next reconnect.
           } finally {
             deleteTask(taskId);
           }

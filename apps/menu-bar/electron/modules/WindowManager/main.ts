@@ -1,11 +1,13 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 
+import { WINDOW_CLOSED_EVENT } from '../../../src/modules/WindowManager/events';
 import {
   WindowOptions,
   WindowsManagerType,
   WindowStyleMask,
 } from '../../../src/modules/WindowManager/types';
+import DeviceEventEmitter from '../DeviceEventEmitter/main';
 
 const _windowsMap: { [key: string]: BrowserWindow } = {};
 
@@ -36,6 +38,9 @@ const openWindow = async (moduleName: string, options: WindowOptions) => {
     });
     window.on('close', function (_) {
       delete _windowsMap[moduleName];
+      // The renderer dies without running React cleanup, so this broadcast is
+      // how other windows learn the window went away.
+      DeviceEventEmitter.emit(WINDOW_CLOSED_EVENT, moduleName);
     });
     _windowsMap[moduleName] = window;
 

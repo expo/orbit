@@ -109,6 +109,21 @@
   });
 }
 
+// Mirrors the Electron WindowManager's `close` broadcast, so JS has one close
+// signal on both platforms (see src/modules/WindowManager/events.ts).
+- (void)windowWillClose:(NSNotification *)notification {
+  NSWindow *closingWindow = notification.object;
+
+  for (NSString *moduleName in self->_windowsMap) {
+    if (self->_windowsMap[moduleName] == closingWindow) {
+      [self->_callableJSModules invokeModule:@"RCTDeviceEventEmitter"
+                                      method:@"emit"
+                                    withArgs:@[@"windowClosed", moduleName]];
+      break;
+    }
+  }
+}
+
 - (void)windowDidBecomeKey:(NSNotification *)notification {
   NSWindow *keyWindow = notification.object;
 

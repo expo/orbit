@@ -19,6 +19,11 @@ describe(cleanupResignedAppsAsync, () => {
     fs.mkdirSync(path.join(root, 'keep-me'));
     fs.mkdirSync(path.join(root, 'orphan'));
     fs.writeFileSync(path.join(root, 'orphan', 'resigned.ipa'), 'x');
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    fs.utimesSync(path.join(root, 'orphan'), twoHoursAgo, twoHoursAgo);
+    // A resign in flight: directory just written, no record yet.
+    fs.mkdirSync(path.join(root, 'in-flight'));
+    fs.writeFileSync(path.join(root, 'in-flight', 'original.ipa'), 'x');
     fs.writeFileSync(path.join(root, 'a-file.txt'), 'not a dir');
 
     const result = await cleanupResignedAppsAsync({
@@ -29,6 +34,7 @@ describe(cleanupResignedAppsAsync, () => {
     expect(result.removed).toEqual(['orphan']);
     expect(fs.existsSync(path.join(root, 'keep-me'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'orphan'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'in-flight'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'a-file.txt'))).toBe(true);
   });
 
