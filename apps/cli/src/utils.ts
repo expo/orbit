@@ -53,6 +53,12 @@ export function returnLoggerMiddleware(fn: (...args: any[]) => any | Promise<any
         })
       );
     } catch (error) {
+      if (!isMenuBar()) {
+        // Run from a terminal: print a readable message and fail so scripts can detect errors.
+        console.error(error instanceof Error ? error.message : error);
+        process.exitCode = 1;
+        return;
+      }
       console.log('---- thrown error ----');
       // Detect InternalError structurally rather than with `instanceof`: some
       // dependencies (e.g. ipa-resign) ship their own binary-compatible
