@@ -46,6 +46,11 @@ import { cleanupResignedAppsAsync } from '../commands/cleanupResignedAppsAsync';
 import { getTrustedSourcesAsync } from '../commands/getTrustesSourcesAsync';
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { setTrustedSourcesAsync } from '../commands/setTrustedSourcesAsync';
+import {
+  getShellCommandStatusAsync,
+  installShellCommandAsync,
+  uninstallShellCommandAsync,
+} from '../commands/shellCommandAsync';
 import { Divider, Row, Text, View } from '../components';
 import { Avatar } from '../components/Avatar';
 import Button, { getStylesForColor } from '../components/Button';
@@ -262,6 +267,9 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   const [trustedSourcesEnabled, setTrustedSourcesEnabled] = useState(false);
   const [trustedSources, setTrustedSources] = useState<string>('');
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
+  const [shellCommandStatus, setShellCommandStatus] =
+    useState<CliCommands.ShellCommand.ShellCommandStatus>();
+  const [isUpdatingShellCommand, setIsUpdatingShellCommand] = useState(false);
   const [deviceCounts, setDeviceCounts] = useState<
     Partial<Record<keyof DevicesPerPlatform, string>>
   >({});
@@ -361,6 +369,28 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     setTrustedSourcesEnabled(value);
     if (!value) {
       setTrustedSourcesAsync('');
+    }
+  };
+
+  useEffect(() => {
+    getShellCommandStatusAsync()
+      .then(setShellCommandStatus)
+      .catch(() => {});
+  }, []);
+
+  const toggleShellCommand = async (value: boolean) => {
+    setIsUpdatingShellCommand(true);
+    try {
+      setShellCommandStatus(
+        await (value ? installShellCommandAsync() : uninstallShellCommandAsync())
+      );
+    } catch (error) {
+      Alert.alert(
+        value ? 'Could not install the orbit command' : 'Could not remove the orbit command',
+        error instanceof Error ? error.message : String(error)
+      );
+    } finally {
+      setIsUpdatingShellCommand(false);
     }
   };
 
@@ -677,6 +707,19 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                 </SettingRow>
               </Card>
             </Section>
+            <Section title="Command line">
+              <Card>
+                <SettingRow
+                  title="Install orbit command in PATH"
+                  subtitle={getShellCommandSubtitle(shellCommandStatus)}>
+                  <Switch
+                    value={Boolean(shellCommandStatus?.installed)}
+                    onValueChange={toggleShellCommand}
+                    disabled={!shellCommandStatus || isUpdatingShellCommand}
+                  />
+                </SettingRow>
+              </Card>
+            </Section>
             <Section title="Trusted sources">
               <Card>
                 <SettingRow
@@ -904,6 +947,22 @@ function AppleAppIdsSection({ appleId }: { appleId: string }) {
       ) : null}
     </Section>
   );
+}
+
+function getShellCommandSubtitle(status?: CliCommands.ShellCommand.ShellCommandStatus) {
+  if (!status) {
+    return 'Run Orbit from any terminal';
+  }
+  if (status.conflict) {
+    return status.conflict;
+  }
+  if (status.installed && !status.onPath) {
+    return `Installed at ${status.linkPath}, which isn't on your PATH yet`;
+  }
+  if (status.installed) {
+    return 'Available as orbit in new terminal windows';
+  }
+  return 'Run Orbit from any terminal';
 }
 
 function Section({
