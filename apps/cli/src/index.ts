@@ -12,7 +12,7 @@ import {
 
 const program = new Command();
 
-program.name('orbit').description('The command-line tool used internally by Expo Orbit menu bar');
+program.name('orbit').description('Expo Orbit command-line interface');
 
 program
   .command('download-build')
