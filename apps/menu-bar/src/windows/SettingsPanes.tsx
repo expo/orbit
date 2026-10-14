@@ -6,7 +6,7 @@ import {
   PhoneLaptop16Regular,
   Settings16Regular,
 } from '@fluentui/react-icons';
-import { CliCommands, Config } from 'common-types';
+import { CliCommands, Config, InternalError } from 'common-types';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
 import { SymbolView } from 'expo-symbols';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
@@ -269,6 +269,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   const [automaticallyChecksForUpdates, setAutomaticallyChecksForUpdates] = useState(false);
   const [shellCommandStatus, setShellCommandStatus] =
     useState<CliCommands.ShellCommand.ShellCommandStatus>();
+  const [shellCommandStatusError, setShellCommandStatusError] = useState<string>();
   const [isUpdatingShellCommand, setIsUpdatingShellCommand] = useState(false);
   const [deviceCounts, setDeviceCounts] = useState<
     Partial<Record<keyof DevicesPerPlatform, string>>
@@ -375,7 +376,9 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   useEffect(() => {
     getShellCommandStatusAsync()
       .then(setShellCommandStatus)
-      .catch(() => {});
+      .catch((error) =>
+        setShellCommandStatusError(error instanceof Error ? error.message : String(error))
+      );
   }, []);
 
   const toggleShellCommand = async (value: boolean) => {
@@ -385,10 +388,13 @@ export function SettingsPane({ pane }: { pane: Pane }) {
         await (value ? installShellCommandAsync() : uninstallShellCommandAsync())
       );
     } catch (error) {
-      Alert.alert(
-        value ? 'Could not install the orbit command' : 'Could not remove the orbit command',
-        error instanceof Error ? error.message : String(error)
-      );
+      // Clicking Cancel on the macOS administrator prompt isn't worth an alert.
+      if (!(error instanceof InternalError && error.code === 'SHELL_COMMAND_CANCELED')) {
+        Alert.alert(
+          value ? 'Could not install the orbit command' : 'Could not remove the orbit command',
+          error instanceof Error ? error.message : String(error)
+        );
+      }
     } finally {
       setIsUpdatingShellCommand(false);
     }
@@ -711,11 +717,16 @@ export function SettingsPane({ pane }: { pane: Pane }) {
               <Card>
                 <SettingRow
                   title="Install orbit command in PATH"
-                  subtitle={getShellCommandSubtitle(shellCommandStatus)}>
+                  subtitle={
+                    __DEV__
+                      ? 'Unavailable in development builds'
+                      : (shellCommandStatusError ?? getShellCommandSubtitle(shellCommandStatus))
+                  }>
                   <Switch
                     value={Boolean(shellCommandStatus?.installed)}
                     onValueChange={toggleShellCommand}
-                    disabled={!shellCommandStatus || isUpdatingShellCommand}
+                    // A dev build would point the command at the dev Electron and Vite output.
+                    disabled={__DEV__ || !shellCommandStatus || isUpdatingShellCommand}
                   />
                 </SettingRow>
               </Card>

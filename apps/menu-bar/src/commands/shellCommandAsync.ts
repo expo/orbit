@@ -24,5 +24,5 @@ export const refreshShellCommandAsync = async () => {
   if (__DEV__) {
     return;
   }
-  await runShellCommandCliAsync('install-shell-command', ['--refresh']);
+  await MenuBarModule.runCli('install-shell-command', ['--refresh'], console.log);
 };

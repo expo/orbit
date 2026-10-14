@@ -9,6 +9,7 @@ import {
   createWindowsShim,
   getShellCommandStatusAsync,
   installShellCommandAsync,
+  refreshShellCommandAsync,
   uninstallShellCommandAsync,
 } from './ShellCommand';
 
@@ -99,7 +100,7 @@ describe('createWindowsShim', () => {
 
 describe('installShellCommandAsync (POSIX)', () => {
   it('writes the shim and links it into PATH', async () => {
-    const status = await installShellCommandAsync({}, createContext());
+    const status = await installShellCommandAsync(createContext());
 
     expect(status).toEqual({
       installed: true,
@@ -113,26 +114,23 @@ describe('installShellCommandAsync (POSIX)', () => {
   });
 
   it('is idempotent', async () => {
-    await installShellCommandAsync({}, createContext());
-    await expect(installShellCommandAsync({}, createContext())).resolves.toMatchObject({
+    await installShellCommandAsync(createContext());
+    await expect(installShellCommandAsync(createContext())).resolves.toMatchObject({
       installed: true,
     });
   });
 
   it('restores a deleted shim behind an existing link', async () => {
-    await installShellCommandAsync({}, createContext());
+    await installShellCommandAsync(createContext());
     fs.rmSync(shimPath());
 
-    await expect(installShellCommandAsync({}, createContext())).resolves.toMatchObject({
+    await expect(installShellCommandAsync(createContext())).resolves.toMatchObject({
       installed: true,
     });
   });
 
   it('reports when the link directory is not on PATH', async () => {
-    const status = await installShellCommandAsync(
-      {},
-      createContext({ pathEntries: async () => [] })
-    );
+    const status = await installShellCommandAsync(createContext({ pathEntries: async () => [] }));
 
     expect(status).toMatchObject({ installed: true, onPath: false });
   });
@@ -141,7 +139,7 @@ describe('installShellCommandAsync (POSIX)', () => {
     fs.mkdirSync(path.dirname(linkPath()), { recursive: true });
     fs.writeFileSync(linkPath(), 'someone else');
 
-    await expect(installShellCommandAsync({}, createContext())).rejects.toMatchObject({
+    await expect(installShellCommandAsync(createContext())).rejects.toMatchObject({
       code: 'SHELL_COMMAND_CONFLICT',
     });
     await uninstallShellCommandAsync(createContext());
@@ -150,7 +148,7 @@ describe('installShellCommandAsync (POSIX)', () => {
   });
 
   it('removes the link and the shim on uninstall', async () => {
-    await installShellCommandAsync({}, createContext());
+    await installShellCommandAsync(createContext());
 
     const status = await uninstallShellCommandAsync(createContext());
 
@@ -160,25 +158,37 @@ describe('installShellCommandAsync (POSIX)', () => {
   });
 });
 
-describe('installShellCommandAsync({ refresh: true })', () => {
+describe('refreshShellCommandAsync', () => {
   it('does nothing when the command was never installed', async () => {
-    const status = await installShellCommandAsync({ refresh: true }, createContext());
+    await refreshShellCommandAsync(createContext());
 
-    expect(status.installed).toBe(false);
     expect(fs.existsSync(shimPath())).toBe(false);
   });
 
   it('re-points an installed shim at the running app', async () => {
-    await installShellCommandAsync({}, createContext());
+    await installShellCommandAsync(createContext());
 
-    await installShellCommandAsync(
-      { refresh: true },
+    await refreshShellCommandAsync(
       createContext({
         launcher: { command: ['/opt/Moved Orbit/expo-orbit', '/opt/cli/index.js'], env: {} },
       })
     );
 
     expect(fs.readFileSync(shimPath(), 'utf8')).toContain(`exec '/opt/Moved Orbit/expo-orbit'`);
+  });
+
+  it('never points the command at a translocated copy of the app', async () => {
+    await installShellCommandAsync(createContext());
+    const translocated = createContext({
+      launcher: {
+        command: ['/private/var/folders/x/T/AppTranslocation/1/d/Expo Orbit.app/orbit-cli'],
+        env: {},
+      },
+    });
+
+    await refreshShellCommandAsync(translocated);
+    await expect(installShellCommandAsync(translocated)).rejects.toThrow('Applications folder');
+    expect(fs.readFileSync(shimPath(), 'utf8')).toContain(`exec '/opt/Expo Orbit/expo-orbit'`);
   });
 });
 
@@ -208,25 +218,26 @@ describe('installShellCommandAsync (macOS without write access)', () => {
       pathEntries: async () => [linkDir],
     });
 
-    const status = await installShellCommandAsync({}, context);
+    const status = await installShellCommandAsync(context);
 
     expect(exec).toHaveBeenCalledWith('/usr/bin/osascript', expect.any(Array));
     expect(exec.mock.calls[0][1][7]).toContain(linkDir);
     expect(status).toMatchObject({ installed: true, onPath: true });
   });
 
-  it('reports a cancelled administrator prompt', async () => {
+  it.each([
+    ['User canceled. (-128)', 'SHELL_COMMAND_CANCELED'],
+    ['Not authorized. (-60005)', 'SHELL_COMMAND_PERMISSION_DENIED'],
+  ])('reports a failed administrator prompt: %s', async (message, code) => {
     const context = createContext({
       platform: 'darwin',
       linkDir,
       exec: jest.fn(async () => {
-        throw new Error('User canceled. (-128)');
+        throw new Error(message);
       }),
     });
 
-    await expect(installShellCommandAsync({}, context)).rejects.toMatchObject({
-      code: 'SHELL_COMMAND_PERMISSION_DENIED',
-    });
+    await expect(installShellCommandAsync(context)).rejects.toMatchObject({ code });
   });
 });
 
@@ -257,7 +268,7 @@ describe('installShellCommandAsync (Windows)', () => {
       pathEntries: async () => [],
     });
 
-    await installShellCommandAsync({}, context);
+    await installShellCommandAsync(context);
 
     expect(exec).toHaveBeenCalledWith('powershell.exe', expect.any(Array), {
       ORBIT_SHELL_COMMAND_MODE: 'add',
@@ -274,7 +285,7 @@ describe('installShellCommandAsync (Windows)', () => {
     });
 
     expect((await getShellCommandStatusAsync(context)).installed).toBe(false);
-    await installShellCommandAsync({}, context);
+    await installShellCommandAsync(context);
     expect((await getShellCommandStatusAsync(context)).installed).toBe(true);
   });
 });

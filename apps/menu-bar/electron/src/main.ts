@@ -1,3 +1,4 @@
+import { spawnSync } from 'child_process';
 import { app, BrowserWindow, protocol } from 'electron';
 import started from 'electron-squirrel-startup';
 import os from 'os';
@@ -10,6 +11,15 @@ import { MainModules } from '../modules/mainRegistry';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (process.platform === 'win32' && started) {
+  // The `orbit` command's launcher points into the app folder that Squirrel is about to delete,
+  // so remove it and its user PATH entry too.
+  if (process.argv[1] === '--squirrel-uninstall') {
+    spawnSync(
+      process.execPath,
+      [path.join(__dirname, './cli/index.js'), 'uninstall-shell-command'],
+      { env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }
+    );
+  }
   app.quit();
 }
 

@@ -1,5 +1,6 @@
 import { trustedSourcesValidatorMiddleware } from './commands/TrustedSources';
 import { getCustomTrustedSources } from './storage';
+import { returnLoggerMiddleware } from './utils';
 
 jest.mock('./storage', () => ({
   getCustomTrustedSources: jest.fn(() => []),
@@ -37,5 +38,39 @@ describe('trustedSourcesValidatorMiddleware', () => {
     const fn = jest.fn();
     await trustedSourcesValidatorMiddleware(fn)('https://internal.example/builds/app.ipa');
     expect(fn).toHaveBeenCalledWith('https://internal.example/builds/app.ipa');
+  });
+});
+
+describe('returnLoggerMiddleware', () => {
+  afterEach(() => {
+    delete process.env.EXPO_MENU_BAR;
+    process.exitCode = undefined;
+    jest.restoreAllMocks();
+  });
+
+  it('prints a readable error and fails when run from a terminal', async () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    await returnLoggerMiddleware(() => {
+      throw new Error('Device not found');
+    })();
+
+    expect(error).toHaveBeenCalledWith('Device not found');
+    expect(log).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('serializes the error for the menu bar', async () => {
+    process.env.EXPO_MENU_BAR = 'true';
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    await returnLoggerMiddleware(() => {
+      throw new Error('Device not found');
+    })();
+
+    expect(log.mock.calls[0][0]).toBe('---- thrown error ----');
+    expect(JSON.parse(log.mock.calls[1][0])).toMatchObject({ message: 'Device not found' });
+    expect(process.exitCode).toBeUndefined();
   });
 });

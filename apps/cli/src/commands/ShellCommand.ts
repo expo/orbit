@@ -101,6 +101,11 @@ function getPaths({ platform, homedir, linkDir: customLinkDir }: ShellCommandCon
   }
   // /usr/local/bin is on every macOS shell's PATH via /etc/paths. Linux distros put
   // ~/.local/bin on PATH instead, and writing there doesn't need root.
+  //
+  // The link points at a shim in the installing user's home, not into the app bundle like VS
+  // Code's `code`, so the app can re-point it on launch without an admin prompt. Trade-off:
+  // other accounts on the Mac, and `sudo orbit`, run a script that this user can edit. That user
+  // either already owns /usr/local/bin (Homebrew) or got past the admin prompt to create the link.
   const linkDir =
     customLinkDir ?? (platform === 'darwin' ? '/usr/local/bin' : p.join(homedir, '.local', 'bin'));
   return {
@@ -242,6 +247,10 @@ async function withAdminFallbackAsync(
         prompt,
       ]);
     } catch (adminError: any) {
+      // -128 is AppleScript's "User canceled", which isn't a failure worth reporting.
+      if (adminError.message.includes('(-128)')) {
+        throw new InternalError('SHELL_COMMAND_CANCELED', 'The administrator prompt was canceled.');
+      }
       throw new InternalError(
         'SHELL_COMMAND_PERMISSION_DENIED',
         `Administrator permission is required to change ${dir} (${adminError.message}).`
@@ -287,23 +296,41 @@ export async function getShellCommandStatusAsync(
   };
 }
 
+// A quarantined copy of Orbit (e.g. opened straight from ~/Downloads) runs from a temporary
+// App Translocation path that macOS removes when the app quits.
+function isTranslocated({ command }: Launcher) {
+  return command[0].includes('/AppTranslocation/');
+}
+
+/**
+ * Re-points an existing shim at this copy of Orbit, so moving Orbit.app or a Squirrel update
+ * (which installs into a new versioned folder) doesn't break the command. The app runs this on
+ * every launch, so it skips the status check, which starts PowerShell on Windows.
+ */
+export async function refreshShellCommandAsync(
+  context: ShellCommandContext = getDefaultContext()
+): Promise<void> {
+  if (isTranslocated(context.launcher)) {
+    return;
+  }
+  const shimExists = await fs
+    .access(getPaths(context).shimPath)
+    .then(() => true)
+    .catch(() => false);
+  if (shimExists) {
+    await writeShimAsync(context);
+  }
+}
+
 export async function installShellCommandAsync(
-  options: { refresh?: boolean } = {},
   context: ShellCommandContext = getDefaultContext()
 ): Promise<ShellCommandStatus> {
   const { shimPath, linkPath } = getPaths(context);
 
-  // On launch, the app only re-points an existing shim at itself, so moving Orbit.app or a
-  // Squirrel update (which installs into a new versioned folder) doesn't break the command.
-  if (options.refresh) {
-    const shimExists = await fs
-      .access(shimPath)
-      .then(() => true)
-      .catch(() => false);
-    if (shimExists) {
-      await writeShimAsync(context);
-    }
-    return getShellCommandStatusAsync(context);
+  if (isTranslocated(context.launcher)) {
+    throw new Error(
+      'Move Expo Orbit to the Applications folder and open it from there before installing the orbit command.'
+    );
   }
 
   const status = await getShellCommandStatusAsync(context);

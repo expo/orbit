@@ -139,7 +139,7 @@ program
   });
 
 program
-  .command('set-session')
+  .command('set-session', { hidden: true })
   .argument('<string>', 'Session secret')
   .action(async (...args) => {
     const { setSessionAsync } = await import('./commands/SetSession');
@@ -147,7 +147,7 @@ program
   });
 
 program
-  .command('detect-apple-app-type')
+  .command('detect-apple-app-type', { hidden: true })
   .argument('<string>', 'Local path of the app')
   .action(async (...args) => {
     const { detectAppleAppTypeAsync } = await import('./commands/DetectAppleAppType');
@@ -155,11 +155,11 @@ program
   });
 
 program
-  .command('get-custom-trusted-sources')
+  .command('get-custom-trusted-sources', { hidden: true })
   .action(returnLoggerMiddleware(getCustomTrustedSourcesAsync));
 
 program
-  .command('set-custom-trusted-sources')
+  .command('set-custom-trusted-sources', { hidden: true })
   .argument('<string>', 'Trusted sources')
   .action(returnLoggerMiddleware(setCustomTrustedSourcesAsync));
 
@@ -223,7 +223,7 @@ program
   });
 
 program
-  .command('cleanup-resigned-apps')
+  .command('cleanup-resigned-apps', { hidden: true })
   .description('Delete managed resigned-app directories that no longer back a record')
   .requiredOption('--dir <string>', 'The managed resigned-apps directory')
   .requiredOption('--keep <string>', 'JSON array of record directory names to keep')
@@ -256,8 +256,12 @@ program
   .description('Install the `orbit` command in PATH so the CLI can be run from any terminal')
   .option('--refresh', 'Only re-point an already installed command at this copy of Orbit')
   .action(async (options) => {
-    const { installShellCommandAsync } = await import('./commands/ShellCommand');
-    return returnLoggerMiddleware(() => installShellCommandAsync(options))();
+    const { installShellCommandAsync, refreshShellCommandAsync } = await import(
+      './commands/ShellCommand'
+    );
+    return returnLoggerMiddleware(() =>
+      options.refresh ? refreshShellCommandAsync() : installShellCommandAsync()
+    )();
   });
 
 program
