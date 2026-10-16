@@ -86,4 +86,16 @@ describe('getConnectedDevicesAsync', () => {
 
     await expect(getConnectedDevicesAsync()).resolves.toEqual([]);
   });
+
+  it('surfaces a wedged daemon (EAGAIN) as APPLE_DEVICE_USBMUXD_NOT_RUNNING', async () => {
+    // A running-but-wedged usbmuxd (accept queue full) rejects raw socket
+    // connects with EAGAIN. This must be reported, not hidden as an empty list.
+    mockConnectUsbmuxdSocketAsync.mockRejectedValueOnce(
+      Object.assign(new Error('connect EAGAIN /var/run/usbmuxd'), { code: 'EAGAIN' })
+    );
+
+    await expect(getConnectedDevicesAsync()).rejects.toMatchObject({
+      code: 'APPLE_DEVICE_USBMUXD_NOT_RUNNING',
+    });
+  });
 });
