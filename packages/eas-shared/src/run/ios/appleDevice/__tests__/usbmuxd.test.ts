@@ -40,13 +40,14 @@ describe('getUsbmuxdHelperGuidance', () => {
     existsSpy.mockRestore();
   });
 
-  it('tells Linux users to start usbmuxd when it is already installed', () => {
+  it('tells Linux users to restart usbmuxd when it is already installed', () => {
     const existsSpy = jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     withPlatform('linux', () => {
       const guidance = getUsbmuxdHelperGuidance();
       expect(guidance.label).toBe('usbmuxd');
       expect(guidance.installCommand).toBeUndefined();
-      expect(guidance.startCommand).toContain('usbmuxd');
+      // `restart` recovers both a stopped and a wedged (not responding) daemon.
+      expect(guidance.startCommand).toBe('sudo systemctl restart usbmuxd');
       expect(guidance.description).toMatch(/not running/i);
     });
     existsSpy.mockRestore();
@@ -62,7 +63,7 @@ describe('getUsbmuxdHelperGuidance', () => {
 });
 
 describe('isUsbmuxdNotRunningError', () => {
-  it.each(['ECONNREFUSED', 'ENOENT', 'ECONNRESET', 'EPIPE'])(
+  it.each(['ECONNREFUSED', 'ENOENT', 'ECONNRESET', 'EPIPE', 'EAGAIN'])(
     'treats %s as a not-running error',
     (code) => {
       expect(isUsbmuxdNotRunningError({ code })).toBe(true);
