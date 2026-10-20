@@ -1,19 +1,11 @@
 import { app, BrowserWindow } from 'electron';
 
+import { isLikelyFilePath } from './isLikelyFilePath';
+
 function sendOpenFile(url: string) {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('onOpenFile', { path: url });
   }
-}
-
-function isLikelyFilePath(str: string) {
-  // Check if the string contains slashes or backslashes (directory separators)
-  const hasSlashes = str.includes('/') || str.includes('\\');
-
-  // Check if the string ends with a file extension
-  const hasFileExtension = /\.\w+$/.test(str);
-
-  return hasSlashes && hasFileExtension;
 }
 
 app.on('second-instance', (_, argv) => {
