@@ -21,9 +21,9 @@
 //   macOS: Xcode toolchain (anisette uses the Swift helper); `git` + clang for zsign.
 // Windows and Linux need NO toolchain: anisette runs the anisette-js WASM emulator
 // (its assets ship in the ipa-resign package and are copied into electron/anisette/
-// below) and re-signing uses the in-process WASM zsign signer
-// (APPLE_RESIGN_SIGNER=wasm, set in electron/src/main.ts). Both ship inside the
-// ipa-resign package, so no native binary is built on Windows/Linux.
+// below) and re-signing uses the in-process WASM zsign signer (chosen in
+// apps/cli/src/commands/ResignIpa.ts). Both ship inside the ipa-resign package,
+// so no native binary is built on Windows/Linux.
 
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -158,10 +158,10 @@ function copyAnisetteWasmAssets() {
 }
 
 function buildZsign() {
-  // Windows and Linux re-sign with ipa-resign's in-process WASM signer (enabled
-  // via APPLE_RESIGN_SIGNER=wasm in electron/src/main.ts), which ships inside the
-  // ipa-resign package — no native zsign binary to build, bundle, or ship. Only
-  // macOS uses the native zsign binary.
+  // Windows and Linux re-sign with ipa-resign's in-process WASM signer (chosen in
+  // apps/cli/src/commands/ResignIpa.ts), which ships inside the ipa-resign
+  // package — no native zsign binary to build, bundle, or ship. Only macOS uses
+  // the native zsign binary.
   if (platform !== 'darwin') {
     return log('zsign: Windows/Linux use the WASM signer — skipping native zsign build.');
   }

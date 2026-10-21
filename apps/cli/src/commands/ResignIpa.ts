@@ -28,6 +28,10 @@ export async function resignIpaCommandAsync(options: ResignIpaOptions) {
     appleId: options.appleId,
     outputIpaPath: options.output,
     stripExtensions: options.stripExtensions,
+    // Windows/Linux ship no native zsign binary, so they sign with ipa-resign's
+    // in-process WASM signer. macOS keeps ipa-resign's default (native zsign,
+    // or APPLE_RESIGN_SIGNER when set).
+    signer: process.platform === 'darwin' ? undefined : 'wasm',
     onProgress: (step, detail) => {
       console.log(`step: ${step}${detail ? ` (${detail})` : ''}`);
     },
