@@ -40,15 +40,6 @@ process.env.ORBIT_ANISETTE_ASSETS_DIR = app.isPackaged
   ? path.join(process.resourcesPath, 'anisette')
   : path.join(app.getAppPath(), 'anisette');
 
-// On Windows/Linux, re-sign IPAs with ipa-resign's in-process WASM signer instead
-// of the native zsign binary. The WASM signer ships inside the ipa-resign package
-// (no binary to build, bundle, or extract from the asar), so packaged builds can
-// re-sign with no extra setup or toolchain. macOS keeps the native zsign binary.
-// Forked CLI processes inherit this via env.
-if (process.platform !== 'darwin') {
-  process.env.APPLE_RESIGN_SIGNER = 'wasm';
-}
-
 // Use a different protocol for macos so it doesn't conflict with the react-native-macos project
 const scheme = os.platform() !== 'darwin' ? 'expo-orbit' : 'orbit-debug';
 if (process.defaultApp) {
