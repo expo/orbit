@@ -81,6 +81,47 @@ describe('getConnectedDevicesAsync', () => {
     expect(devices.map((device) => device.udid)).toEqual(['REAL', 'LEGACY']);
   });
 
+  it('ignores Xcode 27.2 unavailable simulators with no platform', async () => {
+    mockGetConnectedAppleDevicesAsync.mockResolvedValueOnce([
+      // devicectl JSON v5: unavailable simulators have no `platform` or
+      // `osVersionNumber`. One entry omits `reality` entirely to prove the
+      // `platform` / `transportType` guards hold even if Apple drops the flag.
+      {
+        hardwareProperties: { udid: 'SIM-NO-PLATFORM', productType: 'iPad14,9' },
+        deviceProperties: { name: 'iPad Air 11-inch (M2)' },
+        connectionProperties: {
+          pairingState: 'paired',
+          tunnelState: 'disconnected',
+          transportType: 'sameMachine',
+          reality: 'simulated',
+        },
+      } as any,
+      // Same shape but with `reality` at the top level of hardwareProperties.
+      {
+        hardwareProperties: {
+          udid: 'SIM-NO-PLATFORM-2',
+          productType: 'iPhone15,5',
+          reality: 'simulated',
+        },
+        deviceProperties: { name: 'iPhone 15 Plus' },
+        connectionProperties: {
+          pairingState: 'paired',
+          tunnelState: 'disconnected',
+          transportType: 'sameMachine',
+        },
+      } as any,
+      mockDevicectlDevice({ udid: 'REAL', name: 'iPhone', reality: 'physical' }),
+    ]);
+    mockConnectUsbmuxdSocketAsync.mockRejectedValueOnce(new Error('transient blip'));
+
+    const devices = await getConnectedDevicesAsync();
+
+    expect(devices.map((device) => device.udid)).toEqual(['REAL']);
+    for (const device of devices) {
+      expect(device.osType).toBeDefined();
+    }
+  });
+
   it('swallows transient custom-tooling errors when native discovery succeeded', async () => {
     mockConnectUsbmuxdSocketAsync.mockRejectedValueOnce(new Error('transient blip'));
 
