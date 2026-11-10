@@ -18,6 +18,7 @@ export interface NativeMenuBarModule {
   setLoginItemEnabled: (enabled: boolean) => Promise<void>;
   setEnvVars: (envVars: { [key: string]: string }) => void;
   showMultiOptionAlert: (title: string, message: string, options: string[]) => Promise<number>;
+  showMenu: (items: MenuItem[]) => Promise<number>;
   openPopover(): void;
   closePopover(): void;
 }
@@ -49,3 +50,11 @@ export interface ElectronPreloadMenuBarModule extends Pick<NativeMenuBarModule, 
   name: string;
   addListener(type: string, listener: (data: any) => void): EmitterSubscription;
 }
+
+export type MenuItem = {
+  title?: string;
+  /** Shows after the title in a secondary color. */
+  detail?: string;
+  checked?: boolean;
+  separator?: boolean;
+};

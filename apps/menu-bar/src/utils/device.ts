@@ -7,6 +7,7 @@ import {
   TVosSimulator,
   WatchosSimulator,
   AndroidConnectedDevice,
+  RemoteSimulator,
 } from 'common-types/build/devices';
 import { SectionListData } from 'react-native';
 
@@ -44,6 +45,9 @@ export function getDeviceOS<T extends Device>(device: T): DeviceToPlatform<T> {
 }
 
 export function getDeviceId(device: Device): string {
+  if (device.deviceType === 'remote') {
+    return device.id;
+  }
   return device.osType === 'iOS' || device.osType === 'tvOS' || device.osType === 'watchOS'
     ? device.udid
     : device.name;
@@ -91,8 +95,70 @@ export function getSectionsFromDeviceList(
   );
 }
 
+/** An Expo Simulators row (a remote device). The local boot, install and device-selection code never handles one. */
+export function isRemoteDevice(device: Device): device is RemoteSimulator {
+  return device.deviceType === 'remote';
+}
+
+/**
+ * Whether `uri` is a build that an Expo Simulators session can download and install: a hosted iOS
+ * simulator tarball or Android APK. Returns its platform. Reads only the pathname, because
+ * signed URLs carry a query string.
+ */
+export function getRemoteArchivePlatform(uri: string): 'ios' | 'android' | undefined {
+  if (!uri.startsWith('https://')) {
+    return undefined;
+  }
+  let pathname: string;
+  try {
+    pathname = new URL(uri).pathname.toLowerCase();
+  } catch {
+    return undefined;
+  }
+  if (pathname.endsWith('.apk')) {
+    return 'android';
+  }
+  return pathname.endsWith('.tar.gz') || pathname.endsWith('.tgz') ? 'ios' : undefined;
+}
+
 export function isVirtualDevice(
   device: Device
 ): device is IosSimulator | TVosSimulator | WatchosSimulator | AndroidEmulator {
   return device.deviceType === 'simulator' || device.deviceType === 'emulator';
+}
+
+/**
+ * The order of a section: physical devices, then running virtual devices, then the other
+ * virtual devices from the most recent boot to the oldest. Devices with equal rank keep
+ * their order, so Android emulators, which report no boot time, stay as listed.
+ */
+export function sortDevicesByRecentUse(devices: Device[]): Device[] {
+  const rank = (device: Device) =>
+    !isVirtualDevice(device) ? 0 : device.state === 'Booted' ? 1 : 2;
+  const lastBootedAt = (device: Device) => ('lastBootedAt' in device && device.lastBootedAt) || 0;
+  return [...devices].sort(
+    (a, b) => rank(a) - rank(b) || (rank(a) === 2 ? lastBootedAt(b) - lastBootedAt(a) : 0)
+  );
+}
+
+/**
+ * The devices a section shows before the user asks for all of them: every physical device,
+ * every running virtual device and the selected one, then the virtual devices booted most
+ * recently, up to `limit` virtual devices. The order of `devices` is kept.
+ */
+export function getCollapsedDevices(devices: Device[], selectedId?: string, limit = 3): Device[] {
+  const isPinned = (device: Device) =>
+    !isVirtualDevice(device) || device.state === 'Booted' || getDeviceId(device) === selectedId;
+  const pinned = devices.filter(isPinned);
+  const rest = devices
+    .filter((device) => !isPinned(device))
+    .sort(
+      (a, b) =>
+        (('lastBootedAt' in b && b.lastBootedAt) || 0) -
+        (('lastBootedAt' in a && a.lastBootedAt) || 0)
+    );
+  const pinnedVirtual = pinned.filter(isVirtualDevice).length;
+  const shown = new Set([...pinned, ...rest.slice(0, Math.max(0, limit - pinnedVirtual))]);
+  // A "show 1 more" row would take the place of the one row it hides.
+  return devices.length - shown.size <= 1 ? devices : devices.filter((device) => shown.has(device));
 }

@@ -6,7 +6,7 @@ import {
   PhoneLaptop16Regular,
   Settings16Regular,
 } from '@fluentui/react-icons';
-import { CliCommands, Config, InternalError } from 'common-types';
+import { CliCommands, InternalError } from 'common-types';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
 import { SymbolView } from 'expo-symbols';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
@@ -22,10 +22,6 @@ import {
 import { WindowsNavigator } from './index';
 import { Pane } from './settingsPane';
 import AutoUpdater from '../../modules/auto-updater';
-import {
-  openAuthSessionAsync,
-  WebBrowserResultType,
-} from '../../modules/web-authentication-session';
 import {
   APPLE_ID_CHANGED_EVENT,
   clearAppleIdLoginAsync,
@@ -82,6 +78,7 @@ import {
 } from '../modules/Storage';
 import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppIdsEvents';
 import { waitForAppleAuthCompleteAsync } from '../utils/appleAuthEvents';
+import { authenticateAsync } from '../utils/auth';
 import { formatProfileExpiry, getCurrentUserDisplayName, isRenewing } from '../utils/helpers';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { addOpacity } from '../utils/theme';
@@ -400,25 +397,6 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     }
   };
 
-  const handleAuthentication = async (type: 'signup' | 'login') => {
-    const redirectBase = 'expo-orbit:///auth';
-    const authSessionURL = `${
-      Config.website.origin
-    }/${type}?confirm_account=1&app_redirect_uri=${encodeURIComponent(redirectBase)}`;
-    const result = await openAuthSessionAsync(authSessionURL);
-
-    if (result.type === WebBrowserResultType.SUCCESS) {
-      const resultURL = new URL(result.url);
-      const sessionSecret = resultURL.searchParams.get('session_secret');
-
-      if (!sessionSecret) {
-        throw new Error('session_secret is missing in auth redirect query');
-      }
-
-      saveSessionSecret(sessionSecret);
-    }
-  };
-
   const handleLogout = () => {
     saveSessionSecret(undefined);
     resetApolloStore();
@@ -489,12 +467,12 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                     <Button
                       title="Sign up"
                       color="primary"
-                      onPress={() => handleAuthentication('signup')}
+                      onPress={() => authenticateAsync('signup')}
                       style={styles.button}
                     />
                     <Button
                       title="Log in"
-                      onPress={() => handleAuthentication('login')}
+                      onPress={() => authenticateAsync('login')}
                       style={styles.button}
                     />
                   </Row>

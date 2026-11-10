@@ -1,6 +1,6 @@
 import JsonFile from '@expo/json-file';
 import { StorageUtils } from 'common-types';
-import { app, dialog, BrowserWindow } from 'electron';
+import { app, dialog, BrowserWindow, Menu } from 'electron';
 import os from 'os';
 import path from 'path';
 
@@ -54,17 +54,58 @@ const MenuBarModule: ElectronMainMenuBarModule = {
     app.setLoginItemSettings({ openAtLogin: enabled });
     return Promise.resolve();
   },
+  // Resolves with the index of the chosen option, and rejects on Cancel, as the macOS module
+  // does. Electron has no dialog with a list, so the options show in a menu after the message.
   showMultiOptionAlert: async (title: string, message: string, options: string[]) => {
     const { response } = await dialog.showMessageBox({
       title,
       message: title,
       detail: message,
       type: 'question',
-      buttons: ['Cancel', 'OK'],
+      buttons: ['Cancel', 'Choose…'],
+      defaultId: 1,
+      cancelId: 0,
     });
+    if (response !== 1) {
+      throw new Error('Cancelled');
+    }
 
-    return response;
+    return await new Promise<number>((resolve, reject) => {
+      let chosen: number | undefined;
+      Menu.buildFromTemplate(
+        options.map((label, index) => ({
+          label,
+          click: () => {
+            chosen = index;
+          },
+        }))
+      ).popup({
+        // `click` runs before the menu's close callback.
+        callback: () => (chosen === undefined ? reject(new Error('Cancelled')) : resolve(chosen)),
+      });
+    });
   },
+  showMenu: (items) =>
+    new Promise<number>((resolve) => {
+      let chosen = -1;
+      Menu.buildFromTemplate(
+        items.map((item, index) =>
+          item.separator
+            ? { type: 'separator' as const }
+            : {
+                label: item.detail ? `${item.title} · ${item.detail}` : (item.title ?? ''),
+                type: 'checkbox' as const,
+                checked: !!item.checked,
+                click: () => {
+                  chosen = index;
+                },
+              }
+        )
+      ).popup({
+        // `click` runs before the menu's close callback.
+        callback: () => resolve(chosen),
+      });
+    }),
   setEnvVars(envVars) {
     const userSettingsJsonFile = getUserSettingsJsonFile();
     userSettingsJsonFile.setAsync('envVars', envVars);

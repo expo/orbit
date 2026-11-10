@@ -52,5 +52,7 @@ export const useGetPinnedApps = () => {
     refetch,
     loading,
     apps,
+    pinnedApps,
+    accounts,
   };
 };

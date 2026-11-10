@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 
 import AppleIdAuth from './AppleIdAuth';
 import DebugMenu from './DebugMenu';
+import NewSimulator from './NewSimulator';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
 import Settings from './Settings';
@@ -43,12 +44,24 @@ export const WindowsNavigator = createWindowsNavigator({
   PairAndroidDevice: {
     component: PairAndroidDevice,
     options: {
-      title: 'Pair Android Device',
+      title: 'Pair Android Device over Wi-Fi',
       windowStyle: {
         mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
         titlebarAppearsTransparent: true,
-        height: 440,
+        height: 400,
         width: 500,
+      },
+    },
+  },
+  NewSimulator: {
+    component: NewSimulator,
+    options: {
+      title: 'Create new simulator',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        height: 500,
+        width: 400,
       },
     },
   },

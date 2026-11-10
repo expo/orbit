@@ -70,6 +70,13 @@ export const saveSelectedDevicesIds = (devicesIds: SelectedDevicesIds) => {
   storage.set(selectedDevicesIdsStorageKey, JSON.stringify(devicesIds));
 };
 
+const lastRemoteSimulatorAppIdStorageKey = 'last-remote-simulator-app-id';
+export const getLastRemoteSimulatorAppId = () =>
+  storage.getString(lastRemoteSimulatorAppIdStorageKey);
+export const saveLastRemoteSimulatorAppId = (appId: string) => {
+  storage.set(lastRemoteSimulatorAppIdStorageKey, appId);
+};
+
 export const resetStorage = () => {
   storage.clearAll();
 };

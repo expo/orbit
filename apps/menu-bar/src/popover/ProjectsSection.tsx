@@ -13,6 +13,8 @@ import MenuBarModule from '../modules/MenuBarModule';
 const PROJECTS_ITEM_HEIGHT = 50;
 const PROJECTS_ITEM_MARGIN_BOTTOM = spacing[1];
 const MAX_NUMBER_OF_VISIBLE_ITEMS = 3;
+// The same height as the "Show N more…" row of a device section.
+const SEE_ALL_HEIGHT = 24;
 
 export function getProjectSectionHeight(numberOfApps: number) {
   if (numberOfApps === 0) {
@@ -23,7 +25,9 @@ export function getProjectSectionHeight(numberOfApps: number) {
     SECTION_HEADER_HEIGHT +
     PROJECTS_ITEM_HEIGHT * Math.min(numberOfApps, MAX_NUMBER_OF_VISIBLE_ITEMS) +
     PROJECTS_ITEM_MARGIN_BOTTOM * Math.min(numberOfApps, MAX_NUMBER_OF_VISIBLE_ITEMS - 1) +
-    18
+    SEE_ALL_HEIGHT +
+    // The paddings of the section and the gaps between its three parts.
+    22
   );
 }
 
@@ -45,20 +49,7 @@ export const ProjectsSection = ({ apps }: Props) => {
 
   return (
     <View pt="2.5" pb="tiny" gap="1" style={styles.container}>
-      <SectionHeader
-        label="Projects"
-        accessoryRight={
-          <TouchableOpacity
-            onPress={() => {
-              Linking.openURL('https://expo.dev/accounts/[account]/projects/');
-              MenuBarModule.closePopover();
-            }}>
-            <Text size="tiny" color="default">
-              See all
-            </Text>
-          </TouchableOpacity>
-        }
-      />
+      <SectionHeader label="Projects" />
       <FlatList
         data={apps}
         contentContainerStyle={styles.listContentContainer}
@@ -82,6 +73,19 @@ export const ProjectsSection = ({ apps }: Props) => {
           </Item>
         )}
       />
+      <TouchableOpacity
+        style={styles.seeAll}
+        onPress={() => {
+          Linking.openURL('https://expo.dev/accounts/[account]/projects/');
+          MenuBarModule.closePopover();
+        }}
+        testID="projects-see-all">
+        <View px="medium">
+          <Text size="tiny" color="secondary">
+            See all…
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -95,6 +99,7 @@ const styles = StyleSheet.create({
   item: {
     height: PROJECTS_ITEM_HEIGHT,
   },
+  seeAll: { height: SEE_ALL_HEIGHT, justifyContent: 'center' },
   itemMargin: {
     marginBottom: spacing[1],
   },

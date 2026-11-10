@@ -1,6 +1,7 @@
 import { CodedError } from 'expo-modules-core';
 
 import MenuBarModule, { emitter } from './src/MenuBarModule';
+import { MenuItem } from './src/types';
 import Alert from '../../src/modules/Alert';
 import { Logs } from '../../src/modules/Logs';
 import { convertCliErrorMessageToError } from '../../src/utils/helpers';
@@ -72,6 +73,8 @@ export default {
   setEnvVars: (envVars: { [key: string]: string }) => MenuBarModule.setEnvVars(envVars),
   showMultiOptionAlert: (title: string, message: string, options: string[]) =>
     MenuBarModule.showMultiOptionAlert(title, message, options),
+  // Shows a menu at the pointer. Resolves with the index of the chosen item, or -1.
+  showMenu: (items: MenuItem[]): Promise<number> => MenuBarModule.showMenu(items),
   openPopover: () => MenuBarModule.openPopover(),
   closePopover: () => MenuBarModule.closePopover(),
   logs,

@@ -175,6 +175,36 @@ public class MenuBarModule: Module {
       throw MultiOptionError()
     }.runOnQueue(.main)
     
+    // Shows a menu at the pointer. Returns the index of the chosen item, or -1 when the user
+    // dismisses the menu.
+    AsyncFunction("showMenu") { (items: [[String: Any]]) -> Int in
+      let target = MenuTarget()
+      let menu = NSMenu()
+      menu.autoenablesItems = false
+      for (index, item) in items.enumerated() {
+        if item["separator"] as? Bool == true {
+          menu.addItem(.separator())
+          continue
+        }
+        let menuItem = NSMenuItem(title: item["title"] as? String ?? "", action: #selector(MenuTarget.choose(_:)), keyEquivalent: "")
+        menuItem.target = target
+        menuItem.tag = index
+        menuItem.state = item["checked"] as? Bool == true ? .on : .off
+        if let detail = item["detail"] as? String, !detail.isEmpty {
+          let title = NSMutableAttributedString(string: menuItem.title, attributes: [.font: NSFont.menuFont(ofSize: 0)])
+          title.append(NSAttributedString(string: " · \(detail)", attributes: [
+            .font: NSFont.menuFont(ofSize: 0),
+            .foregroundColor: NSColor.secondaryLabelColor
+          ]))
+          menuItem.attributedTitle = title
+        }
+        menu.addItem(menuItem)
+      }
+      // `popUp` returns when the menu closes; the item's action has run by then.
+      menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+      return target.chosenIndex
+    }.runOnQueue(.main)
+
     AsyncFunction("openSystemSettingsLoginItems") {
       if #available(macOS 13.0, *) {
         SMAppService.openSystemSettingsLoginItems()
@@ -207,4 +237,12 @@ public class MenuBarModule: Module {
     }
   }
   
+}
+
+private class MenuTarget: NSObject {
+  var chosenIndex = -1
+
+  @objc func choose(_ sender: NSMenuItem) {
+    chosenIndex = sender.tag
+  }
 }
