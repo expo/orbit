@@ -1,26 +1,27 @@
 import { SymbolView } from 'expo-symbols';
 
-import Item from './Item';
 import SectionHeader from './SectionHeader';
 import * as FilePicker from '../../modules/file-picker';
-import { ProgressIndicator } from '../../modules/progress-indicator';
 import { Analytics, Event } from '../analytics';
 import Earth02Icon from '../assets/icons/earth-02.svg';
 import File05Icon from '../assets/icons/file-05.svg';
-import { Text, View } from '../components';
+import { View } from '../components';
+import AddDeviceItem from '../components/AddDeviceItem';
+import { DEVICE_ITEM_HEIGHT } from '../components/DeviceItem';
 import MenuBarModule from '../modules/MenuBarModule';
 import { openProjectsSelectorURL } from '../utils/constants';
-import { MenuBarStatus, Task } from '../utils/helpers';
 import { useExpoTheme } from '../utils/useExpoTheme';
 
-export const BUILDS_SECTION_HEIGHT = 88;
+// The header, two rows, and the same gap below as a device section.
+export const BUILDS_SECTION_HEIGHT = 42 + DEVICE_ITEM_HEIGHT * 2;
 
 interface Props {
-  tasks: Map<string, Task>;
   installAppFromURI: (appURI: string) => Promise<void>;
+  /** Hides the section. */
+  onPressHide?: () => void;
 }
 
-const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
+const BuildsSection = ({ installAppFromURI, onPressHide }: Props) => {
   const theme = useExpoTheme();
 
   async function openFilePicker() {
@@ -33,75 +34,38 @@ const BuildsSection = ({ installAppFromURI, tasks }: Props) => {
   return (
     <View style={{ minHeight: BUILDS_SECTION_HEIGHT }} testID="builds-section">
       <View pt="2.5" pb="tiny">
-        <SectionHeader label="Builds" />
+        <SectionHeader label="Builds" onPressHide={onPressHide} />
       </View>
-      {tasks.size === 0 ? (
-        <>
-          <Item onPress={openProjectsSelectorURL} testID="select-build-eas">
-            <SymbolView
-              name="globe"
-              size={18}
-              tintColor={theme.text.default}
-              fallback={<Earth02Icon width={18} height={18} stroke={theme.text.default} />}
-            />
-            <Text>Select build from EAS…</Text>
-          </Item>
-          <Item onPress={openFilePicker} testID="select-build-local">
-            <SymbolView
-              name="text.document"
-              size={18}
-              tintColor={theme.text.default}
-              fallback={<File05Icon width={18} height={18} stroke={theme.text.default} />}
-            />
-            <Text>Select build from local file…</Text>
-          </Item>
-        </>
-      ) : (
-        [...tasks.values()].map((task) => {
-          const determinate =
-            task.status === MenuBarStatus.DOWNLOADING ||
-            (task.status === MenuBarStatus.RESIGNING_APP && task.progress > 0);
-          return (
-            <View px="medium" key={task.id}>
-              {task.status !== MenuBarStatus.WARNING && (
-                <ProgressIndicator
-                  progress={determinate ? task.progress : undefined}
-                  indeterminate={!determinate}
-                  key={`${task.status}-${determinate}`}
-                />
-              )}
-              <Text color={task.status === MenuBarStatus.WARNING ? 'warning' : undefined}>
-                {getDescription(task)}
-              </Text>
-            </View>
-          );
-        })
-      )}
+      <AddDeviceItem
+        title="Open from expo.dev"
+        subtitle="Choose a build of your projects"
+        onPress={openProjectsSelectorURL}
+        testID="select-build-eas"
+        icon={
+          <SymbolView
+            name="globe"
+            size={17}
+            tintColor={theme.text.default}
+            fallback={<Earth02Icon width={17} height={17} stroke={theme.text.default} />}
+          />
+        }
+      />
+      <AddDeviceItem
+        title="Open from a file"
+        subtitle=".app, .ipa, .apk or .tar.gz"
+        onPress={openFilePicker}
+        testID="select-build-local"
+        icon={
+          <SymbolView
+            name="text.document"
+            size={17}
+            tintColor={theme.text.default}
+            fallback={<File05Icon width={17} height={17} stroke={theme.text.default} />}
+          />
+        }
+      />
     </View>
   );
 };
 
 export default BuildsSection;
-
-function getDescription(task: Task): string {
-  switch (task.status) {
-    case MenuBarStatus.BOOTING_DEVICE:
-      return 'Initializing device...';
-    case MenuBarStatus.DOWNLOADING:
-      return 'Downloading build...';
-    case MenuBarStatus.INSTALLING_APP:
-      return task.message ?? 'Installing...';
-    case MenuBarStatus.INSTALLING_EXPO_GO:
-      return 'Installing Expo Go...';
-    case MenuBarStatus.OPENING_PROJECT_IN_EXPO_GO:
-      return 'Opening project in Expo Go...';
-    case MenuBarStatus.OPENING_UPDATE:
-      return 'Opening update...';
-    case MenuBarStatus.RESIGNING_APP:
-      return task.message ?? 'Re-signing app...';
-    case MenuBarStatus.WARNING:
-      return task.message ?? '';
-    default:
-      return '';
-  }
-}

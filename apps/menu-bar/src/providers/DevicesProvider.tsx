@@ -117,7 +117,7 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
   const sections = [
     ...getSectionsFromDeviceList(devicesPerPlatform, { alwaysShowAndroid: showAndroidEmulators }),
     // Always listed, also with no session: its header holds the button that starts one.
-    { data: remoteSessions as Device[], key: 'remote', label: 'Expo Simulators' },
+    { data: remoteSessions as Device[], key: 'remote', label: 'Remote devices' },
   ];
 
   const updateDevicesList = useCallback(async () => {

@@ -4,15 +4,19 @@ import { Device, RemoteSimulator } from 'common-types/build/devices';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { SectionList, TouchableOpacity } from 'react-native';
 
+import AccountRow, { ACCOUNT_ROW_HEIGHT } from './AccountRow';
 import AppleDeviceHelperPrompt from './AppleDeviceHelperPrompt';
 import BuildsSection, { BUILDS_SECTION_HEIGHT } from './BuildsSection';
 import DeviceListSectionHeader from './DeviceListSectionHeader';
 import DevicesListError from './DevicesListError';
+import EverythingHidden from './EverythingHidden';
 import { FOOTER_HEIGHT } from './Footer';
 import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
 import ResignedAppsAttentionRow, { ATTENTION_ROW_HEIGHT } from './ResignedAppsAttentionRow';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
+import TasksSection, { TASK_HEIGHT } from './TasksSection';
 import { useFileHandler } from '../../modules/file-handler';
+import type { MenuItem } from '../../modules/menu-bar/src/types';
 import { Analytics, Event } from '../analytics';
 import { withApolloProvider } from '../api/ApolloClient';
 import { bootDeviceAsync } from '../commands/bootDeviceAsync';
@@ -27,9 +31,12 @@ import {
   handleUntrustedDeveloperAsync,
   resignAndRetryAsync,
 } from '../commands/resignAndRetryAsync';
+import { stopDeviceAsync } from '../commands/stopDeviceAsync';
 import { Spacer, Text, View } from '../components';
 import AddDeviceItem from '../components/AddDeviceItem';
 import DeviceItem, { DEVICE_ITEM_HEIGHT, isValidDevice } from '../components/DeviceItem';
+import { secondaryText } from '../components/Text';
+import { useAccounts } from '../hooks/useAccounts';
 import { useDeepLinking } from '../hooks/useDeepLinking';
 import { useDeviceAudioPreferences } from '../hooks/useDeviceAudioPreferences';
 import { useGetPinnedApps } from '../hooks/useGetPinnedApps';
@@ -42,12 +49,16 @@ import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   SelectedDevicesIds,
+  getUserPreferences,
   getLastRemoteSimulatorAppId,
   getSelectedDevicesIds,
+  saveUserPreferences,
+  sectionPreferenceKeys,
   saveLastRemoteSimulatorAppId,
   saveSelectedDevicesIds,
   sessionSecretStorageKey,
   storage,
+  userPreferencesStorageKey,
 } from '../modules/Storage';
 import { useListDevices } from '../providers/DevicesProvider';
 import { authenticateAsync } from '../utils/auth';
@@ -73,9 +84,16 @@ import {
 import { describeResignReason, resignReasonForDevice } from '../utils/provisioning';
 import {
   RemoteSimulatorStartOptions,
+  SUGGESTED_REMOTE_DEVICES,
   START_REMOTE_SIMULATOR_EVENT,
   StartRemoteSimulatorRequest,
-  getRemoteSimulatorPreviewUrl,
+  getNewRemoteSession,
+  getNewRemoteSessionDevice,
+  getNewRemoteSessionId,
+  getPendingRemoteSession,
+  getRemoteSimulatorDeviceName,
+  getRemoteSimulatorSessionUrl,
+  isPendingRemoteSession,
   getRemoteSimulatorProjects,
   parseStartedRemoteSimulator,
 } from '../utils/remoteSimulator';
@@ -89,7 +107,7 @@ type Props = {
 const SECTION_TOGGLE_HEIGHT = 24;
 // Space under a section, so the next header does not touch the last row.
 const SECTION_GAP = 10;
-const LAST_SECTION_GAP = 4;
+const LAST_SECTION_GAP = 7;
 
 function alertUntrustedSource(error: InternalError) {
   Alert.alert(
@@ -114,7 +132,14 @@ function Core(props: Props) {
   const [selectedDevicesIds, setSelectedDevicesIds] =
     useState<SelectedDevicesIds>(getSelectedDevicesIds());
 
-  const { apps, pinnedApps, accounts, refetch: refetchApps } = useGetPinnedApps();
+  const accountState = useAccounts();
+  const selectedAccountName = accountState.selectedAccount?.name;
+  const {
+    apps,
+    pinnedApps,
+    accounts,
+    refetch: refetchApps,
+  } = useGetPinnedApps(selectedAccountName);
   usePopoverFocusEffect(
     useCallback(() => {
       refetchApps();
@@ -177,27 +202,56 @@ function Core(props: Props) {
 
   const { attention } = useResignedAppRenewals({ createTask, updateTask, deleteTask });
 
+  // The eye in a section header hides the section. Settings shows it again.
+  const [preferences, setPreferences] = useState(getUserPreferences());
+  useEffect(() => {
+    const listener = storage.addOnValueChangedListener((key) => {
+      if (key === userPreferencesStorageKey) {
+        setPreferences(getUserPreferences());
+      }
+    });
+    return () => listener.remove();
+  }, []);
+  const hideSection = (key: string) => {
+    const preferenceKey = sectionPreferenceKeys[key];
+    if (!preferenceKey) {
+      return;
+    }
+    saveUserPreferences({ ...getUserPreferences(), [preferenceKey]: false });
+    // The device list reads the preferences when it loads.
+    refetch();
+  };
+  const showProjects = preferences.showProjects;
+  const showBuilds = preferences.showBuilds;
+
   // TODO: Extract into a hook
   const displayDimensions = useSafeDisplayDimensions();
   const estimatedAvailableSizeForDevices =
     (displayDimensions.height || 0) -
     FOOTER_HEIGHT -
-    BUILDS_SECTION_HEIGHT -
-    getProjectSectionHeight(apps?.length) -
+    (showBuilds ? BUILDS_SECTION_HEIGHT : 0) -
+    ACCOUNT_ROW_HEIGHT -
+    tasks.size * TASK_HEIGHT -
+    (showProjects ? getProjectSectionHeight(apps?.length) : 0) -
     (attention ? ATTENTION_ROW_HEIGHT : 0) -
     5;
   // A long list of simulators pushes the other sections out of reach, so each section shows
   // its most relevant devices until the user asks for all of them.
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
-  const visibleSections = sections.map((section, index) => {
+  // The sessions that the user started and that have no id yet. Each shows as a row at once.
+  const [pendingRemoteSessions, setPendingRemoteSessions] = useState<RemoteSimulator[]>([]);
+  const shownSections = sections.filter(
+    ({ key }) => key !== 'remote' || preferences.showRemoteDevices
+  );
+  const visibleSections = shownSections.map((section, index) => {
     const key = section.key ?? '';
     const selectedId = selectedDevicesIds[key as DevicePlatform];
     const devices =
       key === 'remote'
-        ? (section.data as Device[])
+        ? [...pendingRemoteSessions, ...(section.data as Device[])]
         : sortDevicesByRecentUse(section.data as Device[]);
     const collapsed = getCollapsedDevices(devices, selectedId);
-    const hiddenCount = section.data.length - collapsed.length;
+    const hiddenCount = devices.length - collapsed.length;
     const isExpanded = expandedSections.has(key);
     const isLoading = key === 'remote' ? remoteStatus === 'loading' : !hasInitialized;
     const emptyText =
@@ -229,9 +283,17 @@ function Core(props: Props) {
       isExpanded,
       emptyText,
       addItem,
-      gap: index === sections.length - 1 ? LAST_SECTION_GAP : SECTION_GAP,
+      gap: index === shownSections.length - 1 ? LAST_SECTION_GAP : SECTION_GAP,
     };
   });
+  // The user hid every section that can be hidden. Projects with no project shows nothing.
+  const isEverythingHidden =
+    !showBuilds &&
+    tasks.size === 0 &&
+    !(showProjects && apps?.length) &&
+    visibleSections.length === 0 &&
+    !devicesError &&
+    hasInitialized;
   const heightOfAllDevices = visibleSections.reduce(
     (height, section) =>
       height +
@@ -313,7 +375,9 @@ function Core(props: Props) {
 
     setSelectedDevicesIds((prev) => {
       const platform = getDeviceOS(device);
-      return { ...prev, [platform]: getDeviceId(device) };
+      return getNewRemoteSessionDevice(prev[platform])
+        ? prev
+        : { ...prev, [platform]: getDeviceId(device) };
     });
 
     return device;
@@ -395,6 +459,15 @@ function Core(props: Props) {
           return;
         }
         const startedProject = project;
+        const pending = getPendingRemoteSession(
+          platform,
+          startedProject,
+          options?.deviceIdentifier
+        );
+        setPendingRemoteSessions((prev) => prev.concat(pending));
+        const hidePendingRow = () =>
+          setPendingRemoteSessions((prev) => prev.filter(({ id }) => id !== pending.id));
+        hideStartingRow = hidePendingRow;
 
         await bootDeviceAsync(
           {
@@ -412,10 +485,15 @@ function Core(props: Props) {
             if (!session) {
               return;
             }
+            session.deviceIdentifier = options?.deviceIdentifier;
             // Show and select the session now. The next launch then finds it as `Starting`
             // and does not start another one.
+            hidePendingRow();
             hideStartingRow = showStartingRemoteSimulator(session);
-            persistSelectedDevice(session);
+            // When each build gets a new session, that stays the default.
+            if (!getNewRemoteSessionDevice(getSelectedDevicesIds()[platform])) {
+              persistSelectedDevice(session);
+            }
           }
         );
       } catch (error) {
@@ -434,10 +512,16 @@ function Core(props: Props) {
   const getRemoteTarget = useCallback(
     (appURI: string, deviceId?: string): RemoteSimulator | undefined => {
       const platform = getRemoteArchivePlatform(appURI);
-      const id = deviceId ?? (platform && selectedDevicesIds[platform]);
-      return platform
-        ? remoteSessions.find((session) => session.id === id && getDeviceOS(session) === platform)
-        : undefined;
+      if (!platform) {
+        return undefined;
+      }
+      const id = deviceId ?? selectedDevicesIds[platform];
+      if (getNewRemoteSessionDevice(id)) {
+        return getNewRemoteSession(platform);
+      }
+      return remoteSessions.find(
+        (session) => session.id === id && getDeviceOS(session) === platform
+      );
     },
     [remoteSessions, selectedDevicesIds]
   );
@@ -483,6 +567,8 @@ function Core(props: Props) {
       ({ platform, project, options }: StartRemoteSimulatorRequest) => {
         saveLastRemoteSimulatorAppId(project.id);
         setRemoteProjectId(project.id);
+        // Show the session while it starts.
+        MenuBarModule.openPopover();
         bootRemoteSimulator(platform, undefined, project, options);
       }
     );
@@ -506,7 +592,14 @@ function Core(props: Props) {
       const platform = getDeviceOS(target) as 'ios' | 'android';
       if (target.state === 'Shutdown') {
         createTask({ id: appURI, status: MenuBarStatus.BOOTING_DEVICE, progress: 0 });
-        await bootRemoteSimulator(platform, { url: appURI, launchURL });
+        // The default can name the device model of the new session.
+        const deviceIdentifier = getNewRemoteSessionDevice(getSelectedDevicesIds()[platform]);
+        await bootRemoteSimulator(
+          platform,
+          { url: appURI, launchURL },
+          undefined,
+          deviceIdentifier ? { deviceIdentifier } : undefined
+        );
         return;
       }
       if (target.state === 'Starting') {
@@ -557,7 +650,9 @@ function Core(props: Props) {
       const selectedDevicesId = selectedDevicesIds[platform];
       // A selected Expo Simulators session cannot take what the local path launches, so it
       // gets the same warning as a device of the wrong type.
-      const selectedIsSession = remoteSessions.some(({ id }) => id === selectedDevicesId);
+      const selectsNewSession = !!getNewRemoteSessionDevice(selectedDevicesId);
+      const selectedIsSession =
+        selectsNewSession || remoteSessions.some(({ id }) => id === selectedDevicesId);
       if (selectedDevicesId && (devices.has(selectedDevicesId) || selectedIsSession)) {
         const device = devices.get(selectedDevicesId);
         if (device && (!deviceType || device.deviceType === deviceType)) {
@@ -581,11 +676,14 @@ function Core(props: Props) {
           (deviceType === 'device' && device.deviceType === deviceType) ||
           (deviceType !== 'device' && isVirtualDevice(device) && device.state === 'Booted')
         ) {
-          setSelectedDevicesIds((prev) => {
-            const newValue = { ...prev, [platform]: getDeviceId(device) };
-            saveSelectedDevicesIds(newValue);
-            return newValue;
-          });
+          // "New session for each build" stays the default: this launch is an exception.
+          if (!selectsNewSession) {
+            setSelectedDevicesIds((prev) => {
+              const newValue = { ...prev, [platform]: getDeviceId(device) };
+              saveSelectedDevicesIds(newValue);
+              return newValue;
+            });
+          }
           return device as PlatformToDevice<P>;
         }
       }
@@ -597,7 +695,9 @@ function Core(props: Props) {
         return;
       }
 
-      setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
+      if (!selectsNewSession) {
+        setSelectedDevicesIds((prev) => ({ ...prev, [platform]: getDeviceId(firstDevice) }));
+      }
       return firstDevice as PlatformToDevice<P>;
     },
     [createTask, deleteTask, devicesPerPlatform, selectedDevicesIds, remoteSessions]
@@ -1202,9 +1302,7 @@ function Core(props: Props) {
 
   // The label of a device in the Default control and in its menu.
   const getDefaultDeviceTitle = (device: Device) =>
-    isRemoteDevice(device)
-      ? `${device.osType === 'iOS' ? 'iOS Simulator' : 'Android Emulator'} (Expo Simulators)`
-      : device.name;
+    isRemoteDevice(device) ? `${getRemoteSimulatorDeviceName(device)} (remote)` : device.name;
 
   // The devices that can be the default of a section: all its devices, not only the visible
   // ones, then the Expo Simulators sessions of the same platform.
@@ -1215,27 +1313,92 @@ function Core(props: Props) {
     ...remoteSessions.filter((session) => getDeviceOS(session) === key),
   ];
 
-  const chooseDefaultDevice = async (key: string) => {
-    const platform = key as DevicePlatform;
-    const candidates = getDefaultCandidates(key);
-    const index = await MenuBarModule.showMenu([
-      ...candidates.map((device) => ({
-        title: getDefaultDeviceTitle(device),
-        detail: 'osVersion' in device ? device.osVersion : undefined,
-        checked: getDeviceId(device) === selectedDevicesIds[platform],
-      })),
-      { separator: true },
-      { title: 'None', checked: !selectedDevicesIds[platform] },
-    ]);
-    if (index < 0) {
+  // A click on the icon of a row: the device becomes the default of its platform. A click on
+  // the icon of the default device removes the default.
+  const toggleDefaultDevice = (device: Device) => {
+    if (!isValidDevice(device)) {
       return;
     }
-    const device = candidates[index];
-    if (device && !isValidDevice(device)) {
+    const platform = getDeviceOS(device);
+    const id = getDeviceId(device);
+    setSelectedDevicesIds((prev) => {
+      const newValue = { ...prev, [platform]: prev[platform] === id ? undefined : id };
+      saveSelectedDevicesIds(newValue);
+      return newValue;
+    });
+  };
+
+  // Expo Simulators can be the default of a platform that a session can run.
+  const canDefaultToRemote = (key: string) =>
+    remoteStatus === 'ready' && (key === 'ios' || key === 'android');
+
+  const getDefaultLabel = (key: string) => {
+    const selectedId = selectedDevicesIds[key as DevicePlatform];
+    const newSessionDevice = getNewRemoteSessionDevice(selectedId);
+    if (newSessionDevice) {
+      const model = SUGGESTED_REMOTE_DEVICES[key as 'ios' | 'android']?.find(
+        ({ id }) => id === newSessionDevice
+      );
+      return canDefaultToRemote(key) ? `${model?.label ?? newSessionDevice} (remote)` : undefined;
+    }
+    const device = getDefaultCandidates(key).find((device) => getDeviceId(device) === selectedId);
+    return device && getDefaultDeviceTitle(device);
+  };
+
+  // The menu of the default device: the local devices, then the Expo Simulators choices.
+  const chooseDefaultDevice = async (key: string) => {
+    const platform = key as DevicePlatform;
+    const selectedId = selectedDevicesIds[platform];
+    const sectionLabel = sections.find((section) => section.key === key)?.label ?? '';
+    const choices: (MenuItem & { id?: string; device?: Device })[] = [
+      // The title of the menu.
+      { title: `Default ${sectionLabel} device`, header: true },
+      ...getDefaultCandidates(key)
+        .filter((device) => !isRemoteDevice(device))
+        .map((device) => ({
+          title: device.name,
+          detail: 'osVersion' in device ? device.osVersion : undefined,
+          id: getDeviceId(device),
+          device,
+        })),
+    ];
+    if (canDefaultToRemote(key)) {
+      choices.push(
+        { separator: true },
+        { title: 'Remote devices', header: true },
+        // A new session on this device model for each build.
+        ...SUGGESTED_REMOTE_DEVICES[key as 'ios' | 'android'].map(({ id, label }) => ({
+          title: label,
+          detail: 'new session for each build',
+          id: getNewRemoteSessionId(id),
+        })),
+        ...remoteSessions
+          .filter((session) => getDeviceOS(session) === key)
+          .map((session) => ({
+            title: session.state === 'Starting' ? 'Starting session' : 'Running session',
+            detail:
+              session.accountName && session.projectSlug
+                ? `${session.accountName}/${session.projectSlug}`
+                : undefined,
+            id: session.id,
+            device: session as Device,
+          }))
+      );
+    }
+    choices.push({ separator: true }, { title: 'None' });
+
+    const index = await MenuBarModule.showMenu(
+      choices.map(({ id, device, ...item }) => ({
+        ...item,
+        checked: !item.separator && !item.header && id === selectedId,
+      }))
+    );
+    const choice = choices[index];
+    if (!choice || (choice.device && !isValidDevice(choice.device))) {
       return;
     }
     setSelectedDevicesIds((prev) => {
-      const newValue = { ...prev, [platform]: device ? getDeviceId(device) : undefined };
+      const newValue = { ...prev, [platform]: choice.id };
       saveSelectedDevicesIds(newValue);
       return newValue;
     });
@@ -1243,9 +1406,24 @@ function Core(props: Props) {
 
   return (
     <View shrink="1" testID="popover-core">
-      <BuildsSection installAppFromURI={installAppFromURI} tasks={tasks} />
+      <AccountRow {...accountState} />
+      <TasksSection tasks={tasks} />
+      {showProjects ? (
+        <ProjectsSection
+          apps={apps}
+          accountName={selectedAccountName}
+          installAppFromURI={installAppFromURI}
+          onPressHide={() => hideSection('projects')}
+        />
+      ) : null}
+      {showBuilds ? (
+        <BuildsSection
+          installAppFromURI={installAppFromURI}
+          onPressHide={() => hideSection('builds')}
+        />
+      ) : null}
+      {isEverythingHidden ? <EverythingHidden /> : null}
       {attention ? <ResignedAppsAttentionRow attention={attention} /> : null}
-      <ProjectsSection apps={apps} />
       <View shrink="1" pt="tiny" overflow="hidden">
         {devicesError ? (
           <DevicesListError error={devicesError} />
@@ -1257,16 +1435,16 @@ function Core(props: Props) {
             showsHorizontalScrollIndicator={false}
             SectionSeparatorComponent={Separator}
             renderSectionHeader={({ section: { key, label, error } }) => {
-              const candidates = key === 'remote' ? [] : getDefaultCandidates(key);
-              const defaultDevice = candidates.find(
-                (device) => getDeviceId(device) === selectedDevicesIds[key as DevicePlatform]
-              );
+              const hasChoices =
+                key !== 'remote' &&
+                (getDefaultCandidates(key).length > 0 || canDefaultToRemote(key));
               return (
                 <DeviceListSectionHeader
                   label={label}
                   errorMessage={error?.message}
-                  defaultLabel={defaultDevice && getDefaultDeviceTitle(defaultDevice)}
-                  onPressDefault={candidates.length ? () => chooseDefaultDevice(key) : undefined}
+                  defaultLabel={getDefaultLabel(key)}
+                  onPressDefault={hasChoices ? () => chooseDefaultDevice(key) : undefined}
+                  onPressHide={() => hideSection(key)}
                 />
               );
             }}
@@ -1279,7 +1457,7 @@ function Core(props: Props) {
                     px="medium"
                     style={{ height: SECTION_TOGGLE_HEIGHT, justifyContent: 'center' }}
                     testID={`empty-section-${key}`}>
-                    <Text size="tiny" color="secondary">
+                    <Text size="tiny" style={secondaryText}>
                       {emptyText}
                     </Text>
                   </View>
@@ -1296,7 +1474,7 @@ function Core(props: Props) {
                     }
                     testID={`toggle-section-${key}`}>
                     <View px="medium">
-                      <Text size="tiny" color="secondary">
+                      <Text size="tiny" style={secondaryText}>
                         {isExpanded ? 'Show fewer' : `Show ${hiddenCount} more…`}
                       </Text>
                     </View>
@@ -1326,6 +1504,12 @@ function Core(props: Props) {
                 <DeviceItem
                   device={device}
                   key={device.name}
+                  isDefault={selectedDevicesIds[platform] === id}
+                  onPressDefault={
+                    isRemoteDevice(device) && isPendingRemoteSession(device)
+                      ? undefined
+                      : () => toggleDefaultDevice(device)
+                  }
                   onPressLaunch={async () => {
                     Analytics.track(Event.LAUNCH_SIMULATOR);
                     if (isRemoteDevice(device)) {
@@ -1335,21 +1519,44 @@ function Core(props: Props) {
                     await bootDeviceAsync({ platform, id, audio: !emulatorWithoutAudio });
                     refetch();
                   }}
-                  {...(isRemoteDevice(device) && {
+                  {...(isVirtualDevice(device) && {
+                    // A local simulator or emulator that runs: show its window, or stop it.
                     onPressOpen: () => {
-                      const url = getRemoteSimulatorPreviewUrl(device);
-                      if (url) Linking.openURL(url);
+                      bootDeviceAsync({ platform, id, audio: !emulatorWithoutAudio }).catch(
+                        (error) => Alert.alert('Could not show the device', error.message)
+                      );
+                      MenuBarModule.closePopover();
                     },
-                    onPressStop: () =>
-                      Alert.alert('Stop this Expo Simulators session?', device.name, [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                          text: 'Stop',
-                          style: 'destructive',
-                          onPress: () => stopRemoteSimulator(device),
-                        },
-                      ]),
+                    onPressStop: async () => {
+                      try {
+                        await stopDeviceAsync({ platform, id });
+                      } catch (error) {
+                        if (error instanceof Error) {
+                          Alert.alert('Could not stop the device', error.message);
+                        }
+                      }
+                      refetch();
+                    },
                   })}
+                  {...(isRemoteDevice(device) &&
+                    !isPendingRemoteSession(device) && {
+                      onPressOpen: () => {
+                        const url = getRemoteSimulatorSessionUrl(device);
+                        if (url) {
+                          Linking.openURL(url);
+                          MenuBarModule.closePopover();
+                        }
+                      },
+                      onPressStop: () =>
+                        Alert.alert('Stop this Expo Simulators session?', device.name, [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Stop',
+                            style: 'destructive',
+                            onPress: () => stopRemoteSimulator(device),
+                          },
+                        ]),
+                    })}
                 />
               );
             }}

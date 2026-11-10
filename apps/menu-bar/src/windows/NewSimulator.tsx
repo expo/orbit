@@ -22,11 +22,17 @@ import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import { PlatformColor } from '../modules/PlatformColor';
-import { getLastRemoteSimulatorAppId } from '../modules/Storage';
+import {
+  getLastRemoteSimulatorAppId,
+  getLastRemoteSimulatorController,
+  getSelectedAccountName,
+  saveLastRemoteSimulatorController,
+} from '../modules/Storage';
 import { useTheme } from '../providers/ThemeProvider';
 import {
   RemoteSimulatorProject,
   START_REMOTE_SIMULATOR_EVENT,
+  SUGGESTED_REMOTE_DEVICES,
   StartRemoteSimulatorRequest,
   formatRelativeTime,
   getRemoteSimulatorProjects,
@@ -45,6 +51,7 @@ const BUILD_SOURCES: { id: BuildSource; label: string }[] = [
 ];
 // Orbit installs builds on a session only through Agent Device.
 const CONTROLLERS = [
+  { id: 'web-preview-only', label: 'None (web preview only)' },
   { id: 'agent-device', label: 'Agent Device' },
   { id: 'argent', label: 'Argent' },
   { id: 'appium', label: 'Appium' },
@@ -78,7 +85,16 @@ const NewSimulator = () => {
   );
 
   const [projectId, setProjectId] = useState<string>();
-  const project = projects.find(({ id }) => id === projectId) ?? projects[0];
+  // With no choice: the last project if it is in the account that is selected in the
+  // popover, then the first project of that account, then the first project.
+  const selectedAccountName = getSelectedAccountName();
+  const isInSelectedAccount = ({ label }: RemoteSimulatorProject) =>
+    !!selectedAccountName && label.startsWith(`${selectedAccountName}/`);
+  const project =
+    projects.find(({ id }) => id === projectId) ??
+    (projects[0] && isInSelectedAccount(projects[0]) ? projects[0] : undefined) ??
+    projects.find(isInSelectedAccount) ??
+    projects[0];
 
   const [options, setOptions] = useState<RemoteSimulatorOptions>();
   const [optionsError, setOptionsError] = useState(false);
@@ -106,14 +122,27 @@ const NewSimulator = () => {
   const [sdkVersion, setSdkVersion] = useState<string>();
   const [archiveUrl, setArchiveUrl] = useState('');
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [controller, setController] = useState(CONTROLLERS[0].id);
+  // No controller at first. After that, the controller that the user chose last.
+  const [controller, setController] = useState(() => {
+    const last = getLastRemoteSimulatorController();
+    return CONTROLLERS.find(({ id }) => id === last)?.id ?? CONTROLLERS[0].id;
+  });
   const [launchArgs, setLaunchArgs] = useState('');
   const [tags, setTags] = useState('');
 
-  const devices = options?.devices[platform] ?? [];
+  // The suggested models come first, in their order. The other models keep the order of the API.
+  const suggestedIds = SUGGESTED_REMOTE_DEVICES[platform].map(({ id }) => id);
+  const devices = [...(options?.devices[platform] ?? [])].sort((a, b) => {
+    const rank = (id: string) => suggestedIds.indexOf(id) + 1 || suggestedIds.length + 1;
+    return rank(a.id) - rank(b.id);
+  });
   const builds = options?.builds[platform] ?? [];
   const sdkVersions = options?.expoGoSdkVersions ?? [];
-  const device = devices.find(({ id }) => id === deviceId);
+  // With no choice, the device is the first suggested model that Expo Simulators has.
+  const device =
+    devices.find(({ id }) => id === deviceId) ??
+    devices.find(({ id }) => id === SUGGESTED_REMOTE_DEVICES[platform][0].id) ??
+    devices[0];
   const build = builds.find(({ id }) => id === buildId) ?? builds[0];
   const sdk = sdkVersions.find(({ id }) => id === sdkVersion) ?? sdkVersions[0];
 
@@ -267,14 +296,9 @@ const NewSimulator = () => {
         <View style={styles.gap} />
         {optionsUnavailable ??
           menuField(
-            device?.label ?? 'Select device (optional)',
+            device?.label ?? 'No device found',
             () =>
-              choose(
-                devices,
-                device?.id,
-                (item?: RemoteSimulatorOption) => setDeviceId(item?.id),
-                'Default device'
-              ),
+              choose(devices, device?.id, (item?: RemoteSimulatorOption) => setDeviceId(item?.id)),
             !device
           )}
 
@@ -316,7 +340,12 @@ const NewSimulator = () => {
           <>
             <Text style={[styles.label, styles.firstLabel]}>Controller</Text>
             {menuField(CONTROLLERS.find(({ id }) => id === controller)!.label, () =>
-              choose(CONTROLLERS, controller, (item) => item && setController(item.id))
+              choose(CONTROLLERS, controller, (item) => {
+                if (item) {
+                  setController(item.id);
+                  saveLastRemoteSimulatorController(item.id);
+                }
+              })
             )}
             {controller === 'agent-device' ? null : (
               <Text style={styles.hint}>

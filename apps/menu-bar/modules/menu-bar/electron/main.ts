@@ -92,14 +92,16 @@ const MenuBarModule: ElectronMainMenuBarModule = {
         items.map((item, index) =>
           item.separator
             ? { type: 'separator' as const }
-            : {
-                label: item.detail ? `${item.title} · ${item.detail}` : (item.title ?? ''),
-                type: 'checkbox' as const,
-                checked: !!item.checked,
-                click: () => {
-                  chosen = index;
-                },
-              }
+            : item.header
+              ? { label: item.title ?? '', enabled: false }
+              : {
+                  label: item.detail ? `${item.title} · ${item.detail}` : (item.title ?? ''),
+                  type: 'checkbox' as const,
+                  checked: !!item.checked,
+                  click: () => {
+                    chosen = index;
+                  },
+                }
         )
       ).popup({
         // `click` runs before the menu's close callback.

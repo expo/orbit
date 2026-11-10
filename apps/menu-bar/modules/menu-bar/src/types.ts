@@ -57,4 +57,6 @@ export type MenuItem = {
   detail?: string;
   checked?: boolean;
   separator?: boolean;
+  /** A title for the items below it. It cannot be chosen. */
+  header?: boolean;
 };

@@ -72,6 +72,64 @@ export function parseStartedRemoteSimulator(
   };
 }
 
+/**
+ * The page of the session on expo.dev. It shows the status of the session, also while the
+ * session starts. It needs a browser login and carries no token.
+ */
+export function getRemoteSimulatorSessionUrl(device: RemoteSimulator): string | undefined {
+  if (!device.accountName || !device.projectSlug || isPendingRemoteSession(device)) {
+    return undefined;
+  }
+  const sessionId = device.id.slice(REMOTE_SIMULATOR_ID_PREFIX.length);
+  return `https://expo.dev/accounts/${device.accountName}/projects/${device.projectSlug}/simulator-sessions/${sessionId}`;
+}
+
+/**
+ * The name of the device that a session runs: its model when the session has one, for example
+ * "iPhone 18 Pro" or "Pixel 9 Pro XL". An Android identifier has the form `pixel_9_pro_xl`.
+ */
+export function getRemoteSimulatorDeviceName(device: RemoteSimulator): string {
+  const { deviceIdentifier } = device;
+  if (!deviceIdentifier) {
+    return device.osType === 'iOS' ? 'iOS Simulator' : 'Android Emulator';
+  }
+  if (!deviceIdentifier.includes('_')) {
+    return deviceIdentifier;
+  }
+  return deviceIdentifier
+    .split('_')
+    .map((word) => (word === 'xl' ? 'XL' : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join(' ');
+}
+
+const PENDING_REMOTE_SESSION_PREFIX = `${REMOTE_SIMULATOR_ID_PREFIX}pending:`;
+
+/**
+ * The row that shows from the moment the user starts a session until Expo Simulators gives the
+ * session an id. It has no page and cannot be stopped.
+ */
+export function getPendingRemoteSession(
+  platform: 'ios' | 'android',
+  project: RemoteSimulatorProject,
+  deviceIdentifier?: string
+): RemoteSimulator {
+  const [accountName, projectSlug] = project.label.split('/');
+  return {
+    id: `${PENDING_REMOTE_SESSION_PREFIX}${platform}`,
+    name: 'Started from Orbit',
+    osType: platform === 'android' ? 'Android' : 'iOS',
+    deviceType: 'remote',
+    state: 'Starting',
+    accountName,
+    projectSlug,
+    deviceIdentifier,
+  };
+}
+
+export function isPendingRemoteSession(device: RemoteSimulator) {
+  return device.id.startsWith(PENDING_REMOTE_SESSION_PREFIX);
+}
+
 /** The session's page that shows the device. It needs a browser login and carries no token. */
 export function getRemoteSimulatorPreviewUrl(device: RemoteSimulator): string | undefined {
   if (!device.accountName || !device.projectSlug) {
@@ -79,6 +137,46 @@ export function getRemoteSimulatorPreviewUrl(device: RemoteSimulator): string | 
   }
   const sessionId = device.id.slice(REMOTE_SIMULATOR_ID_PREFIX.length);
   return `https://expo.dev/accounts/${device.accountName}/projects/${device.projectSlug}/simulator-sessions/${sessionId}/preview`;
+}
+
+/**
+ * The device models that Orbit suggests for a new session, and shows first. The first one of a
+ * platform is the model that the "Create new simulator" window selects. The iOS models are the
+ * ones that are pre-warmed on the virtual machines. The ids are device identifiers of
+ * Expo Simulators.
+ */
+export const SUGGESTED_REMOTE_DEVICES = {
+  ios: [
+    { id: 'iPhone 18 Pro', label: 'iPhone 18 Pro' },
+    { id: 'iPhone Duo', label: 'iPhone Duo' },
+  ],
+  android: [{ id: 'pixel_9', label: 'Pixel 9' }],
+};
+
+// A default device id with this prefix means "start a new session on this device model for
+// each build". It is not the id of a session.
+const NEW_REMOTE_SESSION_PREFIX = `${REMOTE_SIMULATOR_ID_PREFIX}new:`;
+
+export function getNewRemoteSessionId(deviceIdentifier: string) {
+  return `${NEW_REMOTE_SESSION_PREFIX}${deviceIdentifier}`;
+}
+
+/** The device model of a "new session for each build" default, or undefined for other ids. */
+export function getNewRemoteSessionDevice(deviceId: string | undefined): string | undefined {
+  return deviceId?.startsWith(NEW_REMOTE_SESSION_PREFIX)
+    ? deviceId.slice(NEW_REMOTE_SESSION_PREFIX.length)
+    : undefined;
+}
+
+/** The device a build goes to when the default is a new session: a session that is not started. */
+export function getNewRemoteSession(platform: 'ios' | 'android'): RemoteSimulator {
+  return {
+    id: `${REMOTE_SIMULATOR_ID_PREFIX}${platform}`,
+    name: 'Expo Simulators',
+    osType: platform === 'ios' ? 'iOS' : 'Android',
+    deviceType: 'remote',
+    state: 'Shutdown',
+  };
 }
 
 /** The choices of the "Create new simulator" window, besides the platform and the project. */

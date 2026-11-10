@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Pressable } from 'react-native';
 
 import { DEVICE_ITEM_HEIGHT } from './DeviceItem';
-import { Text } from './Text';
+import { Text, secondaryText } from './Text';
 import { Row, View } from './View';
 import { PlatformColor } from '../modules/PlatformColor';
 import { useTheme } from '../providers/ThemeProvider';
@@ -12,10 +12,13 @@ interface Props {
   subtitle: string;
   onPress: () => void;
   testID?: string;
+  /** Shows in the circle in place of the plus. */
+  icon?: React.ReactNode;
 }
 
-// A row with the shape of a device row that adds a device to its section.
-const AddDeviceItem = ({ title, subtitle, onPress, testID }: Props) => {
+// A row with the shape of a device row for an action: it adds a device to its section, or it
+// opens a build.
+const AddDeviceItem = ({ title, subtitle, onPress, testID, icon }: Props) => {
   const currentTheme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -23,6 +26,8 @@ const AddDeviceItem = ({ title, subtitle, onPress, testID }: Props) => {
     <Pressable
       style={[
         styles.row,
+        // The whole row is a button.
+        styles.pointer,
         isHovered && {
           backgroundColor: currentTheme === 'dark' ? 'rgba(255,255,255,.11)' : 'rgba(0,0,0,.12)',
         },
@@ -44,12 +49,16 @@ const AddDeviceItem = ({ title, subtitle, onPress, testID }: Props) => {
                 currentTheme === 'dark' ? 'rgba(255,255,255,.23)' : 'rgba(0,0,0,.16)',
             },
           ]}>
-          <View style={[styles.plus, styles.plusHorizontal]} />
-          <View style={[styles.plus, styles.plusVertical]} />
+          {icon ?? (
+            <>
+              <View style={[styles.plus, styles.plusHorizontal]} />
+              <View style={[styles.plus, styles.plusVertical]} />
+            </>
+          )}
         </View>
         <View flex="1" justify="center" style={!isHovered && styles.dimmed}>
           <Text numberOfLines={1}>{title}</Text>
-          <Text style={styles.description} color="secondary" leading="small" numberOfLines={1}>
+          <Text style={[styles.description, secondaryText]} leading="small" numberOfLines={1}>
             {subtitle}
           </Text>
         </View>
@@ -83,6 +92,7 @@ const styles = StyleSheet.create({
   plusHorizontal: { width: 12, height: 1.5 },
   plusVertical: { width: 1.5, height: 12 },
   dimmed: { opacity: 0.75 },
+  pointer: { cursor: 'pointer' },
   description: {
     fontSize: 11,
     opacity: 0.8,

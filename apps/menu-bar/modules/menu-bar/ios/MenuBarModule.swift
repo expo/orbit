@@ -186,6 +186,17 @@ public class MenuBarModule: Module {
           menu.addItem(.separator())
           continue
         }
+        if item["header"] as? Bool == true {
+          let title = item["title"] as? String ?? ""
+          if #available(macOS 14.0, *) {
+            menu.addItem(.sectionHeader(title: title))
+          } else {
+            let header = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            header.isEnabled = false
+            menu.addItem(header)
+          }
+          continue
+        }
         let menuItem = NSMenuItem(title: item["title"] as? String ?? "", action: #selector(MenuTarget.choose(_:)), keyEquivalent: "")
         menuItem.target = target
         menuItem.tag = index

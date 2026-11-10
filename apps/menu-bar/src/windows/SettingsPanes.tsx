@@ -72,6 +72,7 @@ import {
   getUserPreferences,
   saveSessionSecret,
   saveUserPreferences,
+  userPreferencesStorageKey,
   storage,
   sessionSecretStorageKey,
   resetApolloStore,
@@ -94,7 +95,7 @@ export const panes: PaneItem[] = [
   { key: 'general', label: 'General', symbol: 'gearshape', fallback: <Settings16Regular /> },
   {
     key: 'platforms',
-    label: 'Platforms',
+    label: 'Menu',
     symbol: 'macbook.and.iphone',
     fallback: <PhoneLaptop16Regular />,
   },
@@ -153,17 +154,22 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     Boolean(storage.getString(sessionSecretStorageKey))
   );
 
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
+
   useEffect(() => {
     const listener = storage.addOnValueChangedListener((key) => {
       if (key === sessionSecretStorageKey) {
         setHasSessionSecret(Boolean(storage.getString(sessionSecretStorageKey)));
+      }
+      // The popover hides a section through the same preferences.
+      if (key === userPreferencesStorageKey) {
+        setUserPreferences(getUserPreferences());
       }
     });
 
     return listener.remove;
   }, []);
 
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
     Boolean(getUserPreferences().customSdkPath)
   );
@@ -403,8 +409,9 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   };
 
   const toggleOS = async (key: keyof UserPreferences, value: boolean) => {
+    // Read the stored value: the popover can hide a section while this window is open.
     const newPreferences = {
-      ...userPreferences,
+      ...getUserPreferences(),
       [key]: value,
     };
     saveUserPreferences(newPreferences);
@@ -508,7 +515,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
         {pane === 'platforms' ? (
           <View gap="2">
             <Text size="tiny" color="secondary">
-              Only devices for enabled platforms are listed in the menu bar.
+              The device sections that show in the menu. Only devices of these platforms are listed.
             </Text>
             <Card>
               {platformList.map((item, index) => (
@@ -526,6 +533,31 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                   </SettingRow>
                 </Fragment>
               ))}
+            </Card>
+            <Text size="tiny" color="secondary">
+              The other sections that show in the menu.
+            </Text>
+            <Card>
+              <SettingRow title="Remote devices">
+                <Switch
+                  value={userPreferences.showRemoteDevices}
+                  onValueChange={(value) => toggleOS('showRemoteDevices', value)}
+                />
+              </SettingRow>
+              <Divider />
+              <SettingRow title="Projects">
+                <Switch
+                  value={userPreferences.showProjects}
+                  onValueChange={(value) => toggleOS('showProjects', value)}
+                />
+              </SettingRow>
+              <Divider />
+              <SettingRow title="Builds">
+                <Switch
+                  value={userPreferences.showBuilds}
+                  onValueChange={(value) => toggleOS('showBuilds', value)}
+                />
+              </SettingRow>
             </Card>
           </View>
         ) : null}

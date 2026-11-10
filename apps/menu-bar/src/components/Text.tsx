@@ -5,6 +5,12 @@ import { PlatformColor } from '../modules/PlatformColor';
 import { create } from '../utils/create-component-primitive';
 import { text, textDark, padding, rounded } from '../utils/theme';
 
+/**
+ * The style of secondary text in the popover. A system color, so the text stays readable on the
+ * popover material in light and dark.
+ */
+export const secondaryText = { color: PlatformColor('labelColor'), opacity: 0.65 };
+
 export const Text = create(RNText, {
   base: {
     fontSize: 14,

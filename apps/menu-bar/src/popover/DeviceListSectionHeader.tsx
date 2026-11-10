@@ -1,7 +1,7 @@
-import { SymbolView } from 'expo-symbols';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 
 import SectionHeader from './SectionHeader';
+import SectionHeaderMenu from './SectionHeaderMenu';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import { Row, Text } from '../components';
 import { View } from '../components/View';
@@ -13,9 +13,11 @@ type Props = {
   label: string;
   errorMessage?: string;
   onPressAdd?: () => void;
-  /** The name of the default device of the section. Shows a control that opens a menu. */
+  /** The name of the default device of the section. It shows after the label and opens a menu. */
   defaultLabel?: string;
   onPressDefault?: () => void;
+  /** Hides the section. */
+  onPressHide?: () => void;
 };
 
 const DeviceListSectionHeader = ({
@@ -24,6 +26,7 @@ const DeviceListSectionHeader = ({
   onPressAdd,
   defaultLabel,
   onPressDefault,
+  onPressHide,
 }: Props) => {
   const theme = useCurrentTheme();
   const iconOpacity = theme === 'dark' ? 0.65 : 0.85;
@@ -32,32 +35,14 @@ const DeviceListSectionHeader = ({
     <View>
       <SectionHeader
         label={label}
+        onPressHide={onPressHide}
         accessoryLeft={
           onPressDefault ? (
-            <TouchableOpacity
-              style={[
-                styles.defaultButton,
-                { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.1)' },
-              ]}
+            <SectionHeaderMenu
+              label={defaultLabel ?? 'No default device'}
               onPress={onPressDefault}
-              testID="section-default-device">
-              <Text size="tiny" style={styles.defaultCaption}>
-                Default
-              </Text>
-              <Text size="tiny" numberOfLines={1} style={styles.defaultName}>
-                {defaultLabel ?? 'None'}
-              </Text>
-              <SymbolView
-                name="chevron.up.chevron.down"
-                size={9}
-                tintColor={PlatformColor('labelColor')}
-                fallback={
-                  <Text size="tiny" color="secondary">
-                    ▾
-                  </Text>
-                }
-              />
-            </TouchableOpacity>
+              testID="section-default-device"
+            />
           ) : null
         }
         accessoryRight={
@@ -97,16 +82,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // A small pill. System colors, so the text stays readable when the popover material changes
-  // between light and dark.
-  defaultButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    height: 18,
-    paddingHorizontal: 6,
-    borderRadius: 5,
-  },
-  defaultCaption: { color: PlatformColor('labelColor'), opacity: 0.6 },
-  defaultName: { maxWidth: 180, flexShrink: 1, color: PlatformColor('labelColor') },
 });

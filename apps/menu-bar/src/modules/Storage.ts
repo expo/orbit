@@ -17,6 +17,9 @@ export type UserPreferences = {
   showTvosSimulators: boolean;
   showWatchosSimulators: boolean;
   showAndroidEmulators: boolean;
+  showRemoteDevices: boolean;
+  showProjects: boolean;
+  showBuilds: boolean;
   autoRenewResignedApps: boolean;
 };
 
@@ -33,6 +36,20 @@ export const defaultUserPreferences: UserPreferences = {
   showTvosSimulators: false,
   showWatchosSimulators: Platform.OS === 'macos',
   showAndroidEmulators: true,
+  showRemoteDevices: true,
+  showProjects: true,
+  showBuilds: true,
+};
+
+/** The preference that shows or hides each section of the popover. */
+export const sectionPreferenceKeys: Record<string, keyof UserPreferences> = {
+  ios: 'showIosSimulators',
+  android: 'showAndroidEmulators',
+  tvos: 'showTvosSimulators',
+  watchos: 'showWatchosSimulators',
+  remote: 'showRemoteDevices',
+  projects: 'showProjects',
+  builds: 'showBuilds',
 };
 
 export const getUserPreferences = () => {
@@ -71,6 +88,28 @@ export const saveSelectedDevicesIds = (devicesIds: SelectedDevicesIds) => {
 };
 
 const lastRemoteSimulatorAppIdStorageKey = 'last-remote-simulator-app-id';
+// The controller that the user chose last in the "Create new simulator" window.
+const lastRemoteSimulatorControllerStorageKey = 'last-remote-simulator-controller';
+export const getLastRemoteSimulatorController = () =>
+  storage.getString(lastRemoteSimulatorControllerStorageKey);
+export const saveLastRemoteSimulatorController = (controller: string) => {
+  storage.set(lastRemoteSimulatorControllerStorageKey, controller);
+};
+
+// What a click on a project tile does: `page` (the default), `development` or `preview`.
+const projectActionStorageKey = 'project-action';
+export const getProjectAction = () => storage.getString(projectActionStorageKey);
+export const saveProjectAction = (action: string) => {
+  storage.set(projectActionStorageKey, action);
+};
+
+// The account that the user selected in the account row of the popover.
+export const selectedAccountNameStorageKey = 'selected-account-name';
+export const getSelectedAccountName = () => storage.getString(selectedAccountNameStorageKey);
+export const saveSelectedAccountName = (name: string) => {
+  storage.set(selectedAccountNameStorageKey, name);
+};
+
 export const getLastRemoteSimulatorAppId = () =>
   storage.getString(lastRemoteSimulatorAppIdStorageKey);
 export const saveLastRemoteSimulatorAppId = (appId: string) => {

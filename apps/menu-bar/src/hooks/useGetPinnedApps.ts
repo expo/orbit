@@ -2,13 +2,15 @@ import { useMemo } from 'react';
 
 import { AppForPinnedListFragment, useGetAppsForPinnedListQuery } from '../generated/graphql';
 
-export const minNumberOfApps = 3;
+// The Projects row has space for this number of projects.
+export const minNumberOfApps = 4;
 
 export type PinnedApp = AppForPinnedListFragment & {
   isPinned: boolean;
 };
 
-export const useGetPinnedApps = () => {
+/** With `accountName`, `apps` holds only the projects of that account. */
+export const useGetPinnedApps = (accountName?: string) => {
   const { data, loading, refetch } = useGetAppsForPinnedListQuery({
     fetchPolicy: 'cache-and-network',
   });
@@ -19,8 +21,11 @@ export const useGetPinnedApps = () => {
   const apps = useMemo(() => {
     let apps: PinnedApp[] = [];
 
+    const isInAccount = (app: AppForPinnedListFragment) =>
+      !accountName || app.ownerAccount.name === accountName;
+
     if (pinnedApps?.length) {
-      apps = apps.concat(pinnedApps.map((app) => ({ ...app, isPinned: true })));
+      apps = apps.concat(pinnedApps.filter(isInAccount).map((app) => ({ ...app, isPinned: true })));
     }
 
     if (apps.length < minNumberOfApps) {
@@ -38,7 +43,7 @@ export const useGetPinnedApps = () => {
 
       const appsToAdd = minNumberOfApps - apps.length;
       appsByLatestActivity
-        ?.filter((app) => !apps.find(({ id }) => id === app.id))
+        ?.filter((app) => isInAccount(app) && !apps.find(({ id }) => id === app.id))
         ?.slice(0, appsToAdd)
         ?.forEach((app) => {
           apps.push(app);
@@ -46,7 +51,7 @@ export const useGetPinnedApps = () => {
     }
 
     return apps;
-  }, [accounts, pinnedApps]);
+  }, [accounts, pinnedApps, accountName]);
 
   return {
     refetch,
