@@ -200,6 +200,15 @@ export async function getAdbNameForEmulatorIdAsync(emulatorPid: string): Promise
   return sanitizeAdbDeviceName(stdout) ?? null;
 }
 
+/**
+ * Whether an `adb devices` serial is a Wi-Fi connection: an `ipAddress:port`
+ * from `adb connect` (what {@link connectAndroidDeviceAsync} uses after
+ * pairing), or an mDNS service name like `adb-<serial>-<id>._adb-tls-connect._tcp`.
+ */
+function isNetworkAdbSerial(serial: string): boolean {
+  return /:\d+$/.test(serial) || serial.includes('._tcp');
+}
+
 // TODO: This is very expensive for some operations.
 export async function getRunningDevicesAsync(): Promise<
   (AndroidConnectedDevice | AndroidEmulator)[]
@@ -227,7 +236,7 @@ export async function getRunningDevicesAsync(): Promise<
           deviceType,
           model,
           osType: 'Android',
-          connectionType: line.includes('tcp') ? 'Network' : 'USB',
+          connectionType: isNetworkAdbSerial(pid) ? 'Network' : 'USB',
         };
 
         return result;
