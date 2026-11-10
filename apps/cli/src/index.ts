@@ -46,10 +46,20 @@ program
   .option('--sdk-version <string>', 'Expo Simulators: SDK version of Expo Go')
   .option('--launch-args <json>', 'Expo Simulators: launch arguments, as a JSON array of strings')
   .option('--tags <json>', 'Expo Simulators: tags, as a JSON array of strings')
-  .option('--session-type <string>', 'Expo Simulators: agent-device, argent or appium')
+  .option('--session-type <string>', 'Expo Simulators: agent-device, argent, appium or web-preview-only')
   .action(async (...args) => {
     const { bootDeviceAsync } = await import('./commands/BootDevice');
     return returnLoggerMiddleware(bootDeviceAsync)(...args);
+  });
+
+program
+  .command('stop-device')
+  .description('Stop a local simulator or emulator')
+  .requiredOption('-p, --platform <string>', 'Selected platform')
+  .requiredOption('--id  <string>', 'UDID or name of the device')
+  .action(async (...args) => {
+    const { stopDeviceAsync } = await import('./commands/StopDevice');
+    return returnLoggerMiddleware(stopDeviceAsync)(...args);
   });
 
 program

@@ -72,6 +72,8 @@ export interface RemoteSimulator {
   /** Sessions only: the account and project the session runs under. */
   accountName?: string;
   projectSlug?: string;
+  /** Sessions only: the device model, for example `iPhone 18 Pro` or `pixel_9`. */
+  deviceIdentifier?: string;
 }
 
 export const REMOTE_SIMULATOR_ID_PREFIX = 'eas:';

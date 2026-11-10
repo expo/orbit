@@ -1768,6 +1768,13 @@ export type CreateAndroidDeviceRunSessionInput = {
   /** AVD hardware profile id to use for the emulator (e.g. "pixel_9"). Defaults to "medium_phone". */
   deviceIdentifier?: InputMaybe<Scalars['String']['input']>;
   /**
+   * Logs to record during the session and upload afterward: emulator-output and device-logcat. Defaults to
+   * ["emulator-output"]. An empty list disables recording and uploading both sources. Device-wide logcat can contain
+   * credentials and personal data; include device-logcat only when you want to retain it.
+   * Logs are not redacted and follow the artifact retention policy.
+   */
+  logSources?: InputMaybe<Array<Scalars['String']['input']>>;
+  /**
    * Android SDK system image package to use for the emulator (e.g.
    * "system-images;android-35;google_apis;x86_64").
    */
@@ -3871,7 +3878,7 @@ export type GetAccountDeviceRunSessionsQueryVariables = Exact<{
 }>;
 
 
-export type GetAccountDeviceRunSessionsQuery = { __typename?: 'RootQuery', account: { __typename?: 'AccountQuery', byId: { __typename?: 'Account', id: string, deviceRunSessionsPaginated: { __typename?: 'AccountDeviceRunSessionsConnection', edges: Array<{ __typename?: 'AccountDeviceRunSessionsEdge', node: { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, initiatingActor?: { __typename?: 'PartnerActor', id: string } | { __typename?: 'Robot', id: string } | { __typename?: 'SSOUser', id: string } | { __typename?: 'User', id: string } | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null } } } } };
+export type GetAccountDeviceRunSessionsQuery = { __typename?: 'RootQuery', account: { __typename?: 'AccountQuery', byId: { __typename?: 'Account', id: string, deviceRunSessionsPaginated: { __typename?: 'AccountDeviceRunSessionsConnection', edges: Array<{ __typename?: 'AccountDeviceRunSessionsEdge', node: { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, deviceIdentifier?: string | null, initiatingActor?: { __typename?: 'PartnerActor', id: string } | { __typename?: 'Robot', id: string } | { __typename?: 'SSOUser', id: string } | { __typename?: 'User', id: string } | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null } } } } };
 
 export type GetDeviceRunSessionStatusQueryVariables = Exact<{
   deviceRunSessionId: Scalars['ID']['input'];
@@ -4013,6 +4020,7 @@ export const GetAccountDeviceRunSessionsDocument = gql`
             status
             type
             platform
+            deviceIdentifier
             initiatingActor {
               id
             }

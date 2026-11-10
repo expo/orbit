@@ -317,6 +317,18 @@ function getUnixPID(port: number | string) {
     .trim();
 }
 
+/** Stops the running emulator with this AVD name. Does nothing when it does not run. */
+export async function stopEmulatorAsync(name: string): Promise<void> {
+  const { getRunningDevicesAsync } = await import('./adb');
+  const running = await getRunningDevicesAsync();
+  const emulator = running.find(
+    (device) => device.deviceType === 'emulator' && device.name === name
+  );
+  if (emulator?.pid) {
+    await adbAsync('-s', emulator.pid, 'emu', 'kill');
+  }
+}
+
 export async function activateEmulatorWindowAsync(
   device: Pick<AndroidEmulator, 'deviceType' | 'pid'>
 ) {

@@ -29,6 +29,7 @@ query getAccountDeviceRunSessions($accountId: String!, $after: String) {
             status
             type
             platform
+            deviceIdentifier
             initiatingActor {
               id
             }

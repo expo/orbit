@@ -108,6 +108,7 @@ export async function listRemoteSimulatorsAsync(): Promise<RemoteSimulatorList> 
             installable: node.type === DeviceRunSessionType.AgentDevice,
             accountName: node.app.ownerAccount.name,
             projectSlug: node.app.slug,
+            deviceIdentifier: node.deviceIdentifier ?? undefined,
           });
         }
         after = page.pageInfo.hasNextPage ? (page.pageInfo.endCursor ?? undefined) : undefined;
@@ -133,6 +134,7 @@ const SESSION_TYPES: Record<string, DeviceRunSessionType> = {
   'agent-device': DeviceRunSessionType.AgentDevice,
   argent: DeviceRunSessionType.Argent,
   appium: DeviceRunSessionType.Appium,
+  'web-preview-only': DeviceRunSessionType.WebPreviewOnly,
 };
 /** The builds the "Create new simulator" window offers for each platform. */
 const MAX_BUILD_OPTIONS = 10;
@@ -239,7 +241,10 @@ type BootRemoteSimulatorOptions = {
   /** JSON arrays of strings. */
   launchArgs?: string;
   tags?: string;
-  /** `agent-device` (the default), `argent` or `appium`. Orbit installs builds only through agent-device. */
+  /**
+   * `agent-device` (the default), `argent`, `appium` or `web-preview-only` (no controller). Orbit
+   * installs builds only through agent-device.
+   */
   sessionType?: string;
 };
 
@@ -287,7 +292,7 @@ export async function bootRemoteSimulatorAsync({
   }
   const type = SESSION_TYPES[sessionType];
   if (!type) {
-    throw failed('--session-type must be agent-device, argent or appium.');
+    throw failed('--session-type must be agent-device, argent, appium or web-preview-only.');
   }
   const launchArgsList = parseStringList(launchArgs, '--launch-args');
   const tagsList = parseStringList(tags, '--tags');

@@ -104,6 +104,18 @@ export async function ensureSimulatorBootedAsync(simulator: IosSimulator): Promi
   }
 }
 
+export async function shutdownSimulatorAsync(simulatorUdid: string): Promise<void> {
+  try {
+    await simctlAsync(['shutdown', simulatorUdid]);
+  } catch (error: any) {
+    // The simulator can stop by itself in the meantime.
+    if (error.message?.includes('Unable to shutdown device in current state: Shutdown')) {
+      return;
+    }
+    throw error;
+  }
+}
+
 export async function openSimulatorAppAsync(simulatorUdid: string): Promise<void> {
   const appName = await getSimulatorAppNameAsync();
 

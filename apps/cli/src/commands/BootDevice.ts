@@ -31,11 +31,18 @@ export async function bootDeviceAsync({ platform, id, audio, ...remote }: BootDe
       udid: id,
     } as IosSimulator);
 
-    return await Simulator.ensureSimulatorAppOpenedAsync(id);
+    await Simulator.ensureSimulatorAppOpenedAsync(id);
+    // Also for a simulator that runs: bring its window to the front.
+    return await Simulator.activateSimulatorWindowAsync(id);
   }
 
   const runningEmulators = await Emulator.getRunningDevicesAsync();
-  if (runningEmulators.some(({ name }) => name === id)) {
+  const runningEmulator = runningEmulators.find(({ name }) => name === id);
+  if (runningEmulator) {
+    // Bring its window to the front.
+    if (runningEmulator.deviceType === 'emulator') {
+      await Emulator.activateEmulatorWindowAsync(runningEmulator);
+    }
     return;
   }
 
