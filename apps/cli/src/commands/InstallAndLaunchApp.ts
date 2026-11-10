@@ -7,6 +7,7 @@ import {
 } from 'eas-shared';
 import { Platform } from 'common-types/build/cli-commands';
 
+import { installOnRemoteSimulatorAsync, isRemoteSimulatorId } from './RemoteSimulator';
 import { getPlatformFromURI } from '../utils';
 
 type InstallAndLaunchAppAsyncOptions = {
@@ -16,6 +17,15 @@ type InstallAndLaunchAppAsyncOptions = {
 };
 
 export async function installAndLaunchAppAsync(options: InstallAndLaunchAppAsyncOptions) {
+  if (options.deviceId && isRemoteSimulatorId(options.deviceId)) {
+    // The session downloads the build itself, so `appPath` is the build's URL.
+    return await installOnRemoteSimulatorAsync({
+      deviceId: options.deviceId,
+      url: options.appPath,
+      launchUrl: options.launchUrl,
+    });
+  }
+
   let appPath = options.appPath;
   if (!appPath.endsWith('.app') && !appPath.endsWith('.apk')) {
     appPath = await extractAppFromLocalArchiveAsync(appPath);

@@ -1,0 +1,173 @@
+# The list queries never select `remoteConfig`: it holds the session's tokens.
+
+query getRemoteSimulatorAccounts {
+  meUserActor {
+    id
+    accounts {
+      id
+      name
+      subscription {
+        planId
+      }
+    }
+  }
+}
+
+query getAccountDeviceRunSessions($accountId: String!, $after: String) {
+  account {
+    byId(accountId: $accountId) {
+      id
+      deviceRunSessionsPaginated(
+        first: 50
+        after: $after
+        filter: { statuses: [NEW, QUEUED, STARTING, IN_PROGRESS] }
+      ) {
+        edges {
+          node {
+            id
+            name
+            status
+            type
+            platform
+            initiatingActor {
+              id
+            }
+            app {
+              id
+              slug
+              ownerAccount {
+                id
+                name
+              }
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+
+query getDeviceRunSessionStatus($deviceRunSessionId: ID!) {
+  deviceRunSessions {
+    byId(deviceRunSessionId: $deviceRunSessionId) {
+      id
+      status
+    }
+  }
+}
+
+query getDeviceRunSessionController($deviceRunSessionId: ID!) {
+  deviceRunSessions {
+    byId(deviceRunSessionId: $deviceRunSessionId) {
+      id
+      status
+      platform
+      remoteConfig {
+        __typename
+        ... on AgentDeviceRunSessionRemoteConfig {
+          agentDeviceRemoteSessionUrl
+          agentDeviceRemoteSessionToken
+        }
+      }
+    }
+  }
+}
+
+mutation createDeviceRunSession($deviceRunSessionInput: CreateDeviceRunSessionInput!) {
+  deviceRunSession {
+    createDeviceRunSession(deviceRunSessionInput: $deviceRunSessionInput) {
+      id
+      status
+    }
+  }
+}
+
+mutation ensureDeviceRunSessionStopped($deviceRunSessionId: ID!) {
+  deviceRunSession {
+    ensureDeviceRunSessionStopped(deviceRunSessionId: $deviceRunSessionId) {
+      id
+      status
+    }
+  }
+}
+
+fragment RemoteSimulatorBuild on Build {
+  id
+  appBuildVersion
+  appVersion
+  artifacts {
+    applicationArchiveUrl
+  }
+  buildMode
+  createdAt
+  developmentClient
+  isForIosSimulator
+  platform
+  runtime {
+    id
+    version
+  }
+  runtimeVersion
+}
+
+# The choices of the "Create new simulator" window. Android has no APK-only build filter, so the
+# CLI filters the Android builds.
+query getRemoteSimulatorOptions($appId: String!) {
+  deviceRunSessions {
+    profiles {
+      android {
+        devices {
+          identifier
+          displayName
+        }
+      }
+      ios {
+        devices {
+          identifier
+          displayName
+        }
+      }
+    }
+  }
+  expoGoBuild {
+    supportedSdkVersions {
+      sdkVersion
+      isLatest
+      isBeta
+      isDeprecated
+    }
+  }
+  app {
+    byId(appId: $appId) {
+      id
+      iosBuilds: buildsPaginated(
+        first: 50
+        filter: { platforms: [IOS], simulator: true, statuses: [FINISHED], expired: false }
+      ) {
+        edges {
+          node {
+            __typename
+            id
+            ...RemoteSimulatorBuild
+          }
+        }
+      }
+      androidBuilds: buildsPaginated(
+        first: 50
+        filter: { platforms: [ANDROID], statuses: [FINISHED], expired: false }
+      ) {
+        edges {
+          node {
+            __typename
+            id
+            ...RemoteSimulatorBuild
+          }
+        }
+      }
+    }
+  }
+}
