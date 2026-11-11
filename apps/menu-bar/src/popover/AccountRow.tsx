@@ -108,7 +108,7 @@ const AccountRow = ({
         checked: account.id === selectedAccount?.id,
       })),
       { separator: true },
-      { title: 'Log in as another user…' },
+      { title: 'Switch user…' },
       { title: 'Log out' },
     ];
     actions[0] = () => {};

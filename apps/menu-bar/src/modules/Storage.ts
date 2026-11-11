@@ -18,6 +18,8 @@ export type UserPreferences = {
   showWatchosSimulators: boolean;
   showAndroidEmulators: boolean;
   showRemoteDevices: boolean;
+  /** Opens the page of a remote session in the browser when the session starts. */
+  openRemoteSessionInBrowser: 'always' | 'ask' | 'never';
   showProjects: boolean;
   showBuilds: boolean;
   autoRenewResignedApps: boolean;
@@ -37,6 +39,7 @@ export const defaultUserPreferences: UserPreferences = {
   showWatchosSimulators: Platform.OS === 'macos',
   showAndroidEmulators: true,
   showRemoteDevices: true,
+  openRemoteSessionInBrowser: 'always',
   showProjects: true,
   showBuilds: true,
 };
@@ -77,6 +80,8 @@ export const saveSelectedDevicesIds = (devicesIds: SelectedDevicesIds) => {
 };
 
 const lastRemoteSimulatorAppIdStorageKey = 'last-remote-simulator-app-id';
+// The sessions that ended and that the user did not archive, as a JSON list.
+export const endedRemoteSessionsStorageKey = 'ended-remote-sessions';
 // The default controller of a session. The header of the Remote devices section and the
 // "Create new simulator" window set it.
 const lastRemoteSimulatorControllerStorageKey = 'last-remote-simulator-controller';

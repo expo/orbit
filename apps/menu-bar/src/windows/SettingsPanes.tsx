@@ -82,6 +82,7 @@ import {
   sessionSecretStorageKey,
   resetApolloStore,
 } from '../modules/Storage';
+import SectionHeaderMenu from '../popover/SectionHeaderMenu';
 import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppIdsEvents';
 import { waitForAppleAuthCompleteAsync } from '../utils/appleAuthEvents';
 import { authenticateAsync } from '../utils/auth';
@@ -462,6 +463,21 @@ export function SettingsPane({ pane }: { pane: Pane }) {
       },
     });
 
+  const chooseOpenRemoteSession = async () => {
+    const index = await MenuBarModule.showMenu(
+      OPEN_REMOTE_SESSION_CHOICES.map(({ id, label }) => ({
+        title: label,
+        checked: id === userPreferences.openRemoteSessionInBrowser,
+      }))
+    );
+    const choice = OPEN_REMOTE_SESSION_CHOICES[index];
+    if (choice) {
+      const newPreferences = { ...getUserPreferences(), openRemoteSessionInBrowser: choice.id };
+      saveUserPreferences(newPreferences);
+      setUserPreferences(newPreferences);
+    }
+  };
+
   const toggleOS = async (key: keyof UserPreferences, value: boolean) => {
     // Read the stored value: the popover can hide a section while this window is open.
     const newPreferences = {
@@ -836,6 +852,23 @@ export function SettingsPane({ pane }: { pane: Pane }) {
 
         {pane === 'advanced' ? (
           <>
+            <Section title="Remote devices">
+              <Card>
+                <SettingRow
+                  title="Open a session in the browser"
+                  subtitle="When the session starts">
+                  <SectionHeaderMenu
+                    label={
+                      OPEN_REMOTE_SESSION_CHOICES.find(
+                        ({ id }) => id === userPreferences.openRemoteSessionInBrowser
+                      )?.label ?? ''
+                    }
+                    onPress={chooseOpenRemoteSession}
+                    testID="open-remote-session-in-browser"
+                  />
+                </SettingRow>
+              </Card>
+            </Section>
             <Section title="Android">
               <Card>
                 <SettingRow title="Run emulator without audio">
@@ -1197,6 +1230,15 @@ function IconTile({ children }: { children: React.ReactNode }) {
     </View>
   );
 }
+
+const OPEN_REMOTE_SESSION_CHOICES: {
+  id: UserPreferences['openRemoteSessionInBrowser'];
+  label: string;
+}[] = [
+  { id: 'always', label: 'Always' },
+  { id: 'ask', label: 'Ask each time' },
+  { id: 'never', label: 'Never' },
+];
 
 function SettingRow({
   leading,

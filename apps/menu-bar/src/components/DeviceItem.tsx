@@ -26,7 +26,11 @@ import { PlatformColor } from '../modules/PlatformColor';
 import { useTheme } from '../providers/ThemeProvider';
 import { isRemoteDevice, isVirtualDevice } from '../utils/device';
 import { capitalize } from '../utils/helpers';
-import { formatElapsedTime, getRemoteSimulatorDeviceName } from '../utils/remoteSimulator';
+import {
+  formatElapsedTime,
+  getRemoteSimulatorDeviceName,
+  isEndedRemoteSession,
+} from '../utils/remoteSimulator';
 
 export const DEVICE_ITEM_HEIGHT = 42;
 
@@ -55,6 +59,8 @@ interface Props {
    */
   onPressOpen?: () => void;
   onPressStop?: () => void;
+  /** For a session that ended: removes its row. */
+  onPressArchive?: () => void;
   /**
    * What Orbit does with the device now, for example `Installing...`. It shows in place of
    * the description, and the icon shows a spinner.
@@ -173,6 +179,7 @@ const DeviceItem = ({
   onPressLaunch,
   onPressOpen,
   onPressStop,
+  onPressArchive,
   status,
   isDefault = false,
   onPressDefault,
@@ -224,15 +231,18 @@ const DeviceItem = ({
   // half minute, so the text changes on the minute.
   const sessionStartedAt =
     isRemoteDevice(device) && device.state === 'Booted' ? device.startedAt : undefined;
+  // A session that ended shows when it ended.
+  const sessionEndedAt =
+    isRemoteDevice(device) && isEndedRemoteSession(device) ? device.endedAt : undefined;
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!sessionStartedAt) {
+    if (!sessionStartedAt && !sessionEndedAt) {
       return;
     }
     setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(interval);
-  }, [sessionStartedAt]);
+  }, [sessionStartedAt, sessionEndedAt]);
   const elapsedTime = sessionStartedAt
     ? ` · running for ${formatElapsedTime(sessionStartedAt, now)}`
     : '';
@@ -257,7 +267,8 @@ const DeviceItem = ({
   // A row is not a button. Its actions are buttons that show at the right on hover: Launch
   // for a local simulator or emulator that does not run, Open and Stop for a session.
   const canLaunchNow = isVirtual && device.state === 'Shutdown';
-  const hasSessionButtons = canLaunch && device.state !== 'Shutdown' && !!onPressOpen;
+  const hasSessionButtons =
+    canLaunch && (device.state !== 'Shutdown' || !!sessionEndedAt) && !!onPressOpen;
   const isRunning = canLaunch && device.state === 'Booted';
   // The icon shows the state: a spinner while the device starts or has a task, a green dot
   // while it runs.
@@ -323,10 +334,11 @@ const DeviceItem = ({
                   <Spinner color={iconTint ?? PlatformColor('labelColor')} />
                 ) : isRemote ? (
                   <SymbolView
-                    name="cloud"
+                    // A session that ended shows a cloud with a check mark.
+                    name={sessionEndedAt ? 'checkmark.icloud' : 'cloud'}
                     size={22}
                     tintColor={iconTint}
-                    style={styles.cloud}
+                    style={[styles.cloud, sessionEndedAt && styles.endedCloud]}
                     fallback={<CloudIcon width={22} height={22} />}
                   />
                 ) : device.osType === 'watchOS' ? (
@@ -367,11 +379,14 @@ const DeviceItem = ({
                   leading="small"
                   numberOfLines={1}>
                   {status ??
-                    (isRemote
-                      ? device.projectSlug
-                        ? `${device.accountName}/${device.projectSlug}`
-                        : 'Not running'
-                      : capitalize(device.deviceType))}
+                    (sessionEndedAt
+                      ? `Session ended ${formatElapsedTime(sessionEndedAt, now)} ago · `
+                      : '') +
+                      (isRemote
+                        ? device.projectSlug
+                          ? `${device.accountName}/${device.projectSlug}`
+                          : 'Not running'
+                        : capitalize(device.deviceType))}
                   {!status && 'osVersion' in device && ` · ${device.osVersion}`}
                 </Text>
                 {elapsedTime && !status ? (
@@ -408,8 +423,12 @@ const DeviceItem = ({
             <RowButtons>
               {hasSessionButtons && (
                 <>
-                  <RowButton title={isRemote ? 'Open' : 'Show'} onPress={onPressOpen} />
+                  <RowButton
+                    title={sessionEndedAt ? 'View' : isRemote ? 'Open' : 'Show'}
+                    onPress={onPressOpen}
+                  />
                   {onPressStop ? <RowButton title="Stop" danger onPress={onPressStop} /> : null}
+                  {onPressArchive ? <RowButton title="Archive" onPress={onPressArchive} /> : null}
                 </>
               )}
               {canLaunchNow && !isDeviceLaunching && <RowButton title="Launch" onPress={launch} />}
@@ -454,6 +473,8 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', alignItems: 'center' },
   // The cloud symbol looks left of center in its frame. This moves it 0.5 pt to the right.
   cloud: { marginLeft: 1 },
+  // The cloud with the check mark looks low in its frame. This moves it 1.5 pt up.
+  endedCloud: { marginTop: -3 },
   // At the lower right of the icon circle, which is 32 wide at the start of the row.
   runningDot: {
     position: 'absolute',

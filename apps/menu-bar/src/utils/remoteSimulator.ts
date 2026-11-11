@@ -128,6 +128,13 @@ export function getPendingRemoteSession(
   };
 }
 
+/** A session that ended. Its row stays in the list until the user archives it. */
+export type EndedRemoteSession = RemoteSimulator & { endedAt: string };
+
+export function isEndedRemoteSession(device: RemoteSimulator): device is EndedRemoteSession {
+  return 'endedAt' in device;
+}
+
 export function isPendingRemoteSession(device: RemoteSimulator) {
   return device.id.startsWith(PENDING_REMOTE_SESSION_PREFIX);
 }
@@ -142,7 +149,7 @@ export function isPendingRemoteSession(device: RemoteSimulator) {
 // Agent Device. A build that a session starts with needs no controller.
 export const REMOTE_SIMULATOR_CONTROLLERS = [
   { id: 'agent-device', label: 'Agent Device' },
-  { id: 'web-preview-only', label: 'None (web preview only)' },
+  { id: 'web-preview-only', label: 'Web preview only' },
   { id: 'argent', label: 'Argent' },
   { id: 'appium', label: 'Appium' },
 ];

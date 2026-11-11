@@ -104,6 +104,7 @@ import {
   parseStartedRemoteSimulator,
   REMOTE_SIMULATOR_CONTROLLERS,
   getRemoteSimulatorController,
+  isEndedRemoteSession,
 } from '../utils/remoteSimulator';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { WindowsNavigator } from '../windows';
@@ -135,6 +136,37 @@ function alertRemoteSimulatorError(error: unknown) {
     Alert.alert('Expo Simulators', error.message);
   }
 }
+
+// The sessions in the order of their rows: by start time, the newest first. A session that
+// starts has no start time yet and comes first, where its pending row was. A session keeps
+// its place when it ends, so the rows do not move when the user stops a session.
+const orderRemoteSessions = (sessions: RemoteSimulator[]): Device[] => {
+  const startTime = ({ startedAt }: RemoteSimulator) =>
+    startedAt ? new Date(startedAt).getTime() : Infinity;
+  return [...sessions].sort((a, b) => startTime(b) - startTime(a));
+};
+
+// A session started: opens its page on expo.dev in the browser, or asks first, as the user
+// chose in Settings. The page shows the screen of the device.
+const openRemoteSessionInBrowser = (session: RemoteSimulator) => {
+  const url = getRemoteSimulatorSessionUrl(session);
+  const { openRemoteSessionInBrowser: choice } = getUserPreferences();
+  if (!url || choice === 'never') {
+    return;
+  }
+  if (choice === 'always') {
+    Linking.openURL(url);
+    return;
+  }
+  Alert.alert(
+    'Open the session in the browser?',
+    'The page of the session on expo.dev shows the screen of the device.',
+    [
+      { text: 'Not now', style: 'cancel' },
+      { text: 'Open', onPress: () => Linking.openURL(url) },
+    ]
+  );
+};
 
 // The id of the task of a build that goes to a session.
 const getRemoteTaskId = (appURI: string) => `remote:${appURI}`;
@@ -202,6 +234,7 @@ function Core(props: Props) {
     remoteAccounts,
     remoteSessions,
     showStartingRemoteSimulator,
+    archiveRemoteSession,
   } = useListDevices();
   const [remoteProjectId, setRemoteProjectId] = useState(getLastRemoteSimulatorAppId());
   // The default controller of a session. The "Create new simulator" window can change it too.
@@ -288,7 +321,7 @@ function Core(props: Props) {
     const selectedId = selectedDevicesIds[key as DevicePlatform];
     const devices =
       key === 'remote'
-        ? [...pendingRemoteSessions, ...(section.data as Device[])]
+        ? [...pendingRemoteSessions, ...orderRemoteSessions(section.data as RemoteSimulator[])]
         : getOrderedDevices(key, section.data as Device[]);
     const collapsed = getCollapsedDevices(
       devices,
@@ -506,6 +539,8 @@ function Core(props: Props) {
   // The sessions that the user stopped. A session that stops while it starts makes the start
   // fail, and that failure needs no alert.
   const stoppedRemoteSessions = useRef(new Set<string>());
+  // The key of the row of a session that Orbit started: the id of its pending row.
+  const remoteRowKeys = useRef(new Map<string, string>());
   const bootRemoteSimulator = useCallback(
     async (
       platform: 'ios' | 'android',
@@ -561,8 +596,12 @@ function Core(props: Props) {
             }
             // Show and select the session now. The next launch then finds it as `Starting`
             // and does not start another one.
+            // The row of the session takes the place of the pending row and keeps its key, so
+            // the row and its spinner do not start again.
+            remoteRowKeys.current.set(session.id, pending.id);
             hidePendingRow();
             hideStartingRow = showStartingRemoteSimulator(session);
+            openRemoteSessionInBrowser(session);
             // When each build gets a new session, that stays the default. A session that
             // cannot take a build does not replace the default device.
             if (
@@ -664,11 +703,26 @@ function Core(props: Props) {
     return () => listener.remove();
   }, [bootRemoteSimulator, props.isDevWindow]);
 
+  // The devices that Orbit stops now. The row of each shows a spinner and "Stopping...".
+  const [stoppingDeviceIds, setStoppingDeviceIds] = useState<Set<string>>(new Set());
+  const setIsStopping = useCallback((id: string, isStopping: boolean) => {
+    setStoppingDeviceIds((prev) => {
+      const next = new Set(prev);
+      if (isStopping) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+
   // Returns whether the session stopped.
   const stopRemoteSimulator = useCallback(
     async (device: RemoteSimulator) => {
       let stopped = true;
       stoppedRemoteSessions.current.add(device.id);
+      setIsStopping(device.id, true);
       try {
         await stopRemoteSimulatorAsync(device.id);
       } catch (error) {
@@ -677,9 +731,14 @@ function Core(props: Props) {
         alertRemoteSimulatorError(error);
       }
       await refetch();
+      // A session that stopped keeps the mark: its row can stay for a moment, until the start
+      // that was in progress ends.
+      if (!stopped) {
+        setIsStopping(device.id, false);
+      }
       return stopped;
     },
-    [refetch]
+    [refetch, setIsStopping]
   );
 
   const installOnRemoteSimulator = useCallback(
@@ -1627,6 +1686,10 @@ function Core(props: Props) {
             style={{ minHeight: estimatedListHeight }}
             contentContainerStyle={{ width: '100%' }}
             showsHorizontalScrollIndicator={false}
+            keyExtractor={(device) => {
+              const id = getDeviceId(device);
+              return remoteRowKeys.current.get(id) ?? id;
+            }}
             SectionSeparatorComponent={Separator}
             renderSectionHeader={({ section: { key, label, error } }) => {
               const hasChoices =
@@ -1705,13 +1768,24 @@ function Core(props: Props) {
               const id = getDeviceId(device);
               const sectionKey = section.key;
               const canChange = sectionKey !== 'remote';
+              // A session that ended stays in the list until the user archives it.
+              const isEnded = isRemoteDevice(device) && isEndedRemoteSession(device);
+              const isStopping = !isEnded && stoppingDeviceIds.has(id);
               const isDragTarget =
                 drag?.key === sectionKey && drag.to === index && drag.to !== drag.from;
               return (
                 <DeviceItem
                   device={device}
                   key={device.name}
-                  status={deviceTasks.has(id) ? getDeviceStatus(deviceTasks.get(id)!) : undefined}
+                  status={
+                    isStopping
+                      ? 'Stopping...'
+                      : // The task of a launch stays for a moment after the launch ends. A session
+                        // that ended does not show it.
+                        deviceTasks.has(id) && !isEnded
+                        ? getDeviceStatus(deviceTasks.get(id)!)
+                        : undefined
+                  }
                   isDragged={drag?.key === sectionKey && drag.from === index}
                   dropLine={isDragTarget ? (drag.to < drag.from ? 'above' : 'below') : undefined}
                   reorder={
@@ -1737,9 +1811,9 @@ function Core(props: Props) {
                       : undefined
                   }
                   onContextMenu={canChange ? () => showDeviceMenu(sectionKey, device) : undefined}
-                  isDefault={selectedDevicesIds[platform] === id}
+                  isDefault={!isEnded && selectedDevicesIds[platform] === id}
                   onPressDefault={
-                    isRemoteDevice(device) && isPendingRemoteSession(device)
+                    isEnded || (isRemoteDevice(device) && isPendingRemoteSession(device))
                       ? undefined
                       : () => toggleDefaultDevice(device)
                   }
@@ -1761,6 +1835,7 @@ function Core(props: Props) {
                       MenuBarModule.closePopover();
                     },
                     onPressStop: async () => {
+                      setIsStopping(id, true);
                       try {
                         await stopDeviceAsync({ platform, id });
                       } catch (error) {
@@ -1768,11 +1843,13 @@ function Core(props: Props) {
                           Alert.alert('Could not stop the device', error.message);
                         }
                       }
-                      refetch();
+                      await refetch();
+                      setIsStopping(id, false);
                     },
                   })}
                   {...(isRemoteDevice(device) &&
                     !isPendingRemoteSession(device) && {
+                      // The page of the session on expo.dev. It also shows a session that ended.
                       onPressOpen: () => {
                         const url = getRemoteSimulatorSessionUrl(device);
                         if (url) {
@@ -1780,9 +1857,13 @@ function Core(props: Props) {
                           MenuBarModule.closePopover();
                         }
                       },
-                      // No question before the stop: the button says what it does.
-                      onPressStop: () => stopRemoteSimulator(device),
+                      ...(isEnded
+                        ? { onPressArchive: () => archiveRemoteSession(device.id) }
+                        : // No question before the stop: the button says what it does.
+                          { onPressStop: () => stopRemoteSimulator(device) }),
                     })}
+                  // No second stop while the first one runs.
+                  {...(isStopping && { onPressStop: undefined })}
                 />
               );
             }}
