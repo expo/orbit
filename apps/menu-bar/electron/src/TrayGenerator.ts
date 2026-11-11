@@ -97,6 +97,33 @@ export default class TrayGenerator {
       },
     });
   };
+  // The keyboard shortcuts of every window: Ctrl+, opens Settings, Ctrl+Q quits and Ctrl+W
+  // closes the window (Command on macOS). The windows hide their menu bar, so the handler
+  // gets the keys here and all platforms do the same thing.
+  handleShortcuts = (window: BrowserWindow) => {
+    window.webContents.on('before-input-event', (event, input) => {
+      const modifier = process.platform === 'darwin' ? input.meta : input.control;
+      if (input.type !== 'keyDown' || !modifier || input.alt || input.shift) {
+        return;
+      }
+      const key = input.key.toLowerCase();
+      if (key === ',') {
+        event.preventDefault();
+        this.openSettings();
+      } else if (key === 'q') {
+        event.preventDefault();
+        // The popover asks about running remote sessions before it exits.
+        this.mainWindow.webContents.send('quitRequested', {});
+      } else if (key === 'w') {
+        event.preventDefault();
+        if (window === this.mainWindow) {
+          this.hideWindow();
+        } else {
+          window.close();
+        }
+      }
+    });
+  };
   rightClickMenu = () => {
     const menu: MenuItemConstructorOptions[] = [
       {
@@ -124,15 +151,8 @@ export default class TrayGenerator {
     this.tray.on('click', this.toggleWindow);
     this.tray.on('right-click', this.rightClickMenu);
 
-    // Ctrl+, (Command-comma on macOS) opens Settings while the popover has the focus. The
-    // popover has no menu bar, so a menu accelerator does not get the key.
-    this.mainWindow.webContents.on('before-input-event', (event, input) => {
-      const modifier = process.platform === 'darwin' ? input.meta : input.control;
-      if (input.type === 'keyDown' && input.key === ',' && modifier && !input.alt) {
-        event.preventDefault();
-        this.openSettings();
-      }
-    });
+    this.handleShortcuts(this.mainWindow);
+    app.on('browser-window-created', (_, window) => this.handleShortcuts(window));
 
     ipcMain.handle('open-popover', () => this.showWindow());
     ipcMain.handle('close-popover', this.hideWindow);

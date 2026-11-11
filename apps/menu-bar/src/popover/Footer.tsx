@@ -59,7 +59,10 @@ const Footer = () => {
           testID="settings-button">
           <Text>Settings…</Text>
         </Item>
-        <Item onPress={quit} shortcut="⌘ Q" testID="quit-button">
+        <Item
+          onPress={quit}
+          shortcut={Platform.OS === 'macos' ? '⌘ Q' : 'Ctrl+Q'}
+          testID="quit-button">
           <Text>Quit</Text>
         </Item>
       </View>
