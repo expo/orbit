@@ -133,7 +133,7 @@ export default class TrayGenerator {
       }
     });
   };
-  rightClickMenu = () => {
+  contextMenu = () => {
     const menu: MenuItemConstructorOptions[] = [
       {
         label: 'Settings...',
@@ -147,7 +147,7 @@ export default class TrayGenerator {
         click: this.requestQuit,
       },
     ];
-    this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));
+    return Menu.buildFromTemplate(menu);
   };
   createTray = () => {
     this.tray = new Tray(getIconPath());
@@ -157,7 +157,13 @@ export default class TrayGenerator {
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
-    this.tray.on('right-click', this.rightClickMenu);
+    // Electron emits `right-click` only on macOS and Windows. On Linux, the tray shows the menu
+    // that `setContextMenu` sets.
+    if (process.platform === 'linux') {
+      this.tray.setContextMenu(this.contextMenu());
+    } else {
+      this.tray.on('right-click', () => this.tray?.popUpContextMenu(this.contextMenu()));
+    }
 
     this.handleShortcuts(this.mainWindow);
     app.on('browser-window-created', (_, window) => this.handleShortcuts(window));
