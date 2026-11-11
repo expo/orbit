@@ -1,4 +1,5 @@
 import { gql, useApolloClient } from '@apollo/client';
+import { Config } from 'common-types';
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 
@@ -301,7 +302,7 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressH
 
   const openProjectURL = (app: AppForPinnedListFragment) => {
     Linking.openURL(
-      `https://expo.dev/accounts/${app.ownerAccount.name}/projects/${app.slug}/builds`
+      `${Config.website.origin}/accounts/${app.ownerAccount.name}/projects/${app.slug}/builds`
     );
     MenuBarModule.closePopover();
   };
@@ -334,7 +335,9 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressH
           secondary
           onPress={() => {
             // `[account]` is literal: expo.dev then asks which account to open.
-            Linking.openURL(`https://expo.dev/accounts/${accountName ?? '[account]'}/projects/`);
+            Linking.openURL(
+              `${Config.website.origin}/accounts/${accountName ?? '[account]'}/projects/`
+            );
             MenuBarModule.closePopover();
           }}
           testID="projects-see-all">

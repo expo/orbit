@@ -106,8 +106,10 @@ export default class TrayGenerator {
         click: this.openSettings,
       },
       {
-        role: 'quit',
-        accelerator: 'Command+Q',
+        label: 'Quit',
+        accelerator: 'CommandOrControl+Q',
+        // The popover asks about running remote sessions before it exits.
+        click: () => this.mainWindow.webContents.send('quitRequested', {}),
       },
     ];
     this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));

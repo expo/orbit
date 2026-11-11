@@ -1,3 +1,4 @@
+import { Config } from 'common-types';
 import {
   REMOTE_SIMULATOR_ID_PREFIX,
   RemoteSimulator,
@@ -81,7 +82,7 @@ export function getRemoteSimulatorSessionUrl(device: RemoteSimulator): string | 
     return undefined;
   }
   const sessionId = device.id.slice(REMOTE_SIMULATOR_ID_PREFIX.length);
-  return `https://expo.dev/accounts/${device.accountName}/projects/${device.projectSlug}/simulator-sessions/${sessionId}`;
+  return `${Config.website.origin}/accounts/${device.accountName}/projects/${device.projectSlug}/simulator-sessions/${sessionId}`;
 }
 
 /**
@@ -115,7 +116,8 @@ export function getPendingRemoteSession(
 ): RemoteSimulator {
   const [accountName, projectSlug] = project.label.split('/');
   return {
-    id: `${PENDING_REMOTE_SESSION_PREFIX}${platform}`,
+    // More than one session of a platform can start at the same time.
+    id: `${PENDING_REMOTE_SESSION_PREFIX}${platform}:${Date.now()}`,
     name: 'Started from Orbit',
     osType: platform === 'android' ? 'Android' : 'iOS',
     deviceType: 'remote',
@@ -136,7 +138,7 @@ export function getRemoteSimulatorPreviewUrl(device: RemoteSimulator): string | 
     return undefined;
   }
   const sessionId = device.id.slice(REMOTE_SIMULATOR_ID_PREFIX.length);
-  return `https://expo.dev/accounts/${device.accountName}/projects/${device.projectSlug}/simulator-sessions/${sessionId}/preview`;
+  return `${Config.website.origin}/accounts/${device.accountName}/projects/${device.projectSlug}/simulator-sessions/${sessionId}/preview`;
 }
 
 /**

@@ -34,6 +34,13 @@ class PopoverManager: NSObject {
       settingsItem.action = #selector(settingsAction)
     }
 
+    // "Quit Orbit" (Command-Q) asks about running remote sessions, like the Quit row of the
+    // popover.
+    if let quitItem = items.first(where: { $0.keyEquivalent == "q" }) {
+      quitItem.target = self
+      quitItem.action = #selector(quitAction(_:))
+    }
+
     // Command-W closes the window that has the focus, for example Settings. The storyboard
     // has no File or Window menu, so the item goes into the app menu, before "Quit".
     if let appMenu = NSApp.mainMenu?.items.first?.submenu,
@@ -139,8 +146,20 @@ class PopoverManager: NSObject {
       ])
   }
 
+  // Quit goes to JavaScript, which asks about running remote sessions before it exits. This
+  // is the action of the right-click menu and of "Quit Orbit" (Command-Q) in the main menu.
   @objc private func quitAction(_ sender: Any?) {
-    NSApp.terminate(nil)
+    if let reactHost = reactNativeFactory.rootViewFactory.value(forKey: "reactHost"),
+      let wrapper = RCTHostWrapper(host: reactHost)
+    {
+      wrapper.callFunction(
+        onJSModule: "RCTDeviceEventEmitter",
+        method: "emit",
+        args: ["quitRequested", [:] as [String: Any]]
+      )
+    } else {
+      NSApp.terminate(nil)
+    }
   }
 
   // MARK: - Public Interface

@@ -328,10 +328,14 @@ export async function bootRemoteSimulatorAsync({
   try {
     const deadline = Date.now() + BOOT_TIMEOUT_MS;
     for (;;) {
-      const { deviceRunSessions } = await eas('Could not read the Expo Simulators session', () =>
+      // A failed status request, for example one network error, does not end the wait: the
+      // session can still start, and the user waited for it. The deadline ends the wait.
+      const status = await eas('Could not read the Expo Simulators session', () =>
         graphqlSdk.getDeviceRunSessionStatus({ deviceRunSessionId: sessionId })
+      ).then(
+        ({ deviceRunSessions }) => deviceRunSessions.byId.status,
+        () => undefined
       );
-      const { status } = deviceRunSessions.byId;
       if (status === DeviceRunSessionStatus.InProgress) {
         return { sessionId };
       }

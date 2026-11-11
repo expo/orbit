@@ -3,7 +3,7 @@ import { TouchableOpacity, StyleSheet } from 'react-native';
 import SectionHeader from './SectionHeader';
 import SectionHeaderMenu from './SectionHeaderMenu';
 import AlertIcon from '../assets/icons/AlertTriangle';
-import { Row, Text } from '../components';
+import { Row } from '../components';
 import { View } from '../components/View';
 import Alert from '../modules/Alert';
 import { PlatformColor } from '../modules/PlatformColor';
@@ -12,7 +12,6 @@ import { useCurrentTheme } from '../utils/useExpoTheme';
 type Props = {
   label: string;
   errorMessage?: string;
-  onPressAdd?: () => void;
   /** The name of the default device of the section. It shows after the label and opens a menu. */
   defaultLabel?: string;
   onPressDefault?: () => void;
@@ -23,7 +22,6 @@ type Props = {
 const DeviceListSectionHeader = ({
   label,
   errorMessage,
-  onPressAdd,
   defaultLabel,
   onPressDefault,
   onPressHide,
@@ -46,7 +44,7 @@ const DeviceListSectionHeader = ({
           ) : null
         }
         accessoryRight={
-          errorMessage || onPressAdd ? (
+          errorMessage ? (
             <Row align="center" gap="2">
               {errorMessage ? (
                 <TouchableOpacity
@@ -58,13 +56,6 @@ const DeviceListSectionHeader = ({
                     fill={PlatformColor('labelColor')}
                     style={{ opacity: iconOpacity }}
                   />
-                </TouchableOpacity>
-              ) : null}
-              {onPressAdd ? (
-                <TouchableOpacity style={styles.button} onPress={onPressAdd}>
-                  <Text size="medium" style={{ opacity: iconOpacity, lineHeight: 16 }}>
-                    +
-                  </Text>
                 </TouchableOpacity>
               ) : null}
             </Row>

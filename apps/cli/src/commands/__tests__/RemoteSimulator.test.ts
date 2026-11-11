@@ -262,6 +262,22 @@ describe(bootRemoteSimulatorAsync, () => {
     expect(sdk.ensureDeviceRunSessionStopped).toHaveBeenCalledWith({ deviceRunSessionId: 's1' });
   });
 
+  it('keeps the session when one status request fails before the session is ready', async () => {
+    jest.useFakeTimers();
+    try {
+      sdk.getDeviceRunSessionStatus
+        .mockRejectedValueOnce(new Error('network error'))
+        .mockResolvedValue(status('IN_PROGRESS') as any);
+      const boot = bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app' });
+      await jest.advanceTimersByTimeAsync(10 * 1000);
+      await expect(boot).resolves.toEqual({ sessionId: 's1' });
+      expect(sdk.getDeviceRunSessionStatus).toHaveBeenCalledTimes(2);
+      expect(sdk.ensureDeviceRunSessionStopped).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('stops a session that is still queued when the total limit expires', async () => {
     jest.useFakeTimers();
     try {

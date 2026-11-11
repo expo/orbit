@@ -1,3 +1,4 @@
+import { Config } from 'common-types';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet } from 'react-native';
@@ -198,7 +199,7 @@ const AccountRow = ({
           onHoverIn={() => setIsLinkHovered(true)}
           onHoverOut={() => setIsLinkHovered(false)}
           onPress={() => {
-            Linking.openURL(`https://expo.dev/accounts/${selectedAccount.name}/settings`);
+            Linking.openURL(`${Config.website.origin}/accounts/${selectedAccount.name}/settings`);
             MenuBarModule.closePopover();
           }}
           testID="account-settings-link">

@@ -1,4 +1,4 @@
-import { InternalError } from 'common-types';
+import { Config, InternalError } from 'common-types';
 import { MultipleAppsInTarballErrorDetails } from 'common-types/build/InternalError';
 import { Device, RemoteSimulator } from 'common-types/build/devices';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -484,13 +484,18 @@ function Core(props: Props) {
       platform: 'ios' | 'android',
       build?: { url: string; launchURL?: string },
       chosenProject?: { id: string; label: string },
-      options?: RemoteSimulatorStartOptions
+      options?: RemoteSimulatorStartOptions,
+      // The user asked for this session in the "Create new simulator" window.
+      isExplicit = false
     ) => {
-      // One start per platform at a time: a second request must not start a second session.
-      if (bootingRemotePlatforms.current.has(platform)) {
-        return;
+      // One start per platform at a time for a build that needs a session: a second request
+      // must not start a second session. An explicit start from the window always starts.
+      if (!isExplicit) {
+        if (bootingRemotePlatforms.current.has(platform)) {
+          return;
+        }
+        bootingRemotePlatforms.current.add(platform);
       }
-      bootingRemotePlatforms.current.add(platform);
       let hideStartingRow: (() => void) | undefined;
       try {
         const project = chosenProject ?? (await chooseRemoteProject());
@@ -538,7 +543,9 @@ function Core(props: Props) {
       } catch (error) {
         alertRemoteSimulatorError(error);
       } finally {
-        bootingRemotePlatforms.current.delete(platform);
+        if (!isExplicit) {
+          bootingRemotePlatforms.current.delete(platform);
+        }
         await refetch();
         hideStartingRow?.();
       }
@@ -589,7 +596,8 @@ function Core(props: Props) {
           // `[account]` is literal: expo.dev asks which account to open.
           {
             text: 'View plans',
-            onPress: () => Linking.openURL('https://expo.dev/accounts/[account]/settings/billing'),
+            onPress: () =>
+              Linking.openURL(`${Config.website.origin}/accounts/[account]/settings/billing`),
           },
         ]
       );
@@ -610,7 +618,7 @@ function Core(props: Props) {
         setRemoteProjectId(project.id);
         // Show the session while it starts.
         MenuBarModule.openPopover();
-        bootRemoteSimulator(platform, undefined, project, options);
+        bootRemoteSimulator(platform, undefined, project, options, true);
       }
     );
     return () => listener.remove();
