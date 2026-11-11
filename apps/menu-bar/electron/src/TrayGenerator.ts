@@ -134,18 +134,24 @@ export default class TrayGenerator {
     });
   };
   contextMenu = () => {
-    // Shortcut hints show only on macOS: on Windows and Linux, Electron writes `,` as
-    // "Comma". The shortcuts work from the windows, not from this menu.
+    // The accelerators are hints: the shortcuts work from the windows, not from this menu.
     const isMac = process.platform === 'darwin';
     const menu: MenuItemConstructorOptions[] = [
+      // On some Linux desktops (GNOME with AppIndicator), a click on a tray icon that has a
+      // menu opens the menu and does not send `click`. This item opens the popover there.
+      // No arguments: `showWindow` takes the bounds of the tray, not the menu item.
+      ...(process.platform === 'linux'
+        ? [{ label: 'Open Orbit', click: () => this.showWindow() }, { type: 'separator' as const }]
+        : []),
       {
         label: 'Settings...',
+        // Not on Windows and Linux: Electron writes `,` as "Comma" there.
         accelerator: isMac ? 'Command+,' : undefined,
         click: this.openSettings,
       },
       {
         label: 'Quit',
-        accelerator: isMac ? 'Command+Q' : undefined,
+        accelerator: 'CommandOrControl+Q',
         click: this.requestQuit,
       },
     ];
