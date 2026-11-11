@@ -109,6 +109,8 @@ export async function listRemoteSimulatorsAsync(): Promise<RemoteSimulatorList> 
             accountName: node.app.ownerAccount.name,
             projectSlug: node.app.slug,
             deviceIdentifier: node.deviceIdentifier ?? undefined,
+            // A session that is not ready yet has no start time.
+            startedAt: node.startedAt ?? node.createdAt ?? undefined,
           });
         }
         after = page.pageInfo.hasNextPage ? (page.pageInfo.endCursor ?? undefined) : undefined;

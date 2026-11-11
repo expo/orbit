@@ -3878,7 +3878,7 @@ export type GetAccountDeviceRunSessionsQueryVariables = Exact<{
 }>;
 
 
-export type GetAccountDeviceRunSessionsQuery = { __typename?: 'RootQuery', account: { __typename?: 'AccountQuery', byId: { __typename?: 'Account', id: string, deviceRunSessionsPaginated: { __typename?: 'AccountDeviceRunSessionsConnection', edges: Array<{ __typename?: 'AccountDeviceRunSessionsEdge', node: { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, deviceIdentifier?: string | null, initiatingActor?: { __typename?: 'PartnerActor', id: string } | { __typename?: 'Robot', id: string } | { __typename?: 'SSOUser', id: string } | { __typename?: 'User', id: string } | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null } } } } };
+export type GetAccountDeviceRunSessionsQuery = { __typename?: 'RootQuery', account: { __typename?: 'AccountQuery', byId: { __typename?: 'Account', id: string, deviceRunSessionsPaginated: { __typename?: 'AccountDeviceRunSessionsConnection', edges: Array<{ __typename?: 'AccountDeviceRunSessionsEdge', node: { __typename?: 'DeviceRunSession', id: string, name?: string | null, status: DeviceRunSessionStatus, type: DeviceRunSessionType, platform: AppPlatform, deviceIdentifier?: string | null, startedAt?: any | null, createdAt: any, initiatingActor?: { __typename?: 'PartnerActor', id: string } | { __typename?: 'Robot', id: string } | { __typename?: 'SSOUser', id: string } | { __typename?: 'User', id: string } | null, app: { __typename?: 'App', id: string, slug: string, ownerAccount: { __typename?: 'Account', id: string, name: string } } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor?: string | null } } } } };
 
 export type GetDeviceRunSessionStatusQueryVariables = Exact<{
   deviceRunSessionId: Scalars['ID']['input'];
@@ -4021,6 +4021,8 @@ export const GetAccountDeviceRunSessionsDocument = gql`
             type
             platform
             deviceIdentifier
+            startedAt
+            createdAt
             initiatingActor {
               id
             }

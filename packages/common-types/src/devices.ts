@@ -74,6 +74,8 @@ export interface RemoteSimulator {
   projectSlug?: string;
   /** Sessions only: the device model, for example `iPhone 18 Pro` or `pixel_9`. */
   deviceIdentifier?: string;
+  /** Sessions only: when the session started, as an ISO date. */
+  startedAt?: string;
 }
 
 export const REMOTE_SIMULATOR_ID_PREFIX = 'eas:';
