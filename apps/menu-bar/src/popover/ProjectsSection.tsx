@@ -61,8 +61,9 @@ const LATEST_BUILDS_QUERY = gql`
     $appId: String!
     $developmentIos: BuildFilterInput
     $developmentAndroid: BuildFilterInput
-    $previewIos: BuildFilterInput
-    $previewAndroid: BuildFilterInput
+    $releaseIos: BuildFilterInput
+    $releaseAndroidInternal: BuildFilterInput
+    $releaseAndroid: BuildFilterInput
   ) {
     app {
       byId(appId: $appId) {
@@ -73,10 +74,16 @@ const LATEST_BUILDS_QUERY = gql`
         developmentAndroid: buildsPaginated(first: 5, filter: $developmentAndroid) {
           ...LatestBuildsForProject
         }
-        previewIos: buildsPaginated(first: 5, filter: $previewIos) {
+        releaseIos: buildsPaginated(first: 5, filter: $releaseIos) {
           ...LatestBuildsForProject
         }
-        previewAndroid: buildsPaginated(first: 5, filter: $previewAndroid) {
+        # No filter selects an APK. An internal distribution build is an APK by default, so
+        # those come first. The app skips each AAB.
+        releaseAndroidInternal: buildsPaginated(first: 5, filter: $releaseAndroidInternal) {
+          ...LatestBuildsForProject
+        }
+        # Used when there is no internal distribution build with an APK.
+        releaseAndroid: buildsPaginated(first: 20, filter: $releaseAndroid) {
           ...LatestBuildsForProject
         }
       }
@@ -99,6 +106,8 @@ const LATEST_BUILDS_QUERY = gql`
     appVersion
     appBuildVersion
     createdAt
+    developmentClient
+    isForIosSimulator
     artifacts {
       applicationArchiveUrl
     }
@@ -108,6 +117,8 @@ type LatestBuild = {
   appVersion?: string | null;
   appBuildVersion?: string | null;
   createdAt?: string | null;
+  developmentClient?: boolean | null;
+  isForIosSimulator?: boolean | null;
   artifacts?: { applicationArchiveUrl?: string | null } | null;
 };
 type LatestBuilds = { edges: { node: LatestBuild }[] };
@@ -116,8 +127,9 @@ type LatestBuildsResult = {
     byId: {
       developmentIos: LatestBuilds;
       developmentAndroid: LatestBuilds;
-      previewIos: LatestBuilds;
-      previewAndroid: LatestBuilds;
+      releaseIos: LatestBuilds;
+      releaseAndroidInternal: LatestBuilds;
+      releaseAndroid: LatestBuilds;
     };
   };
 };
@@ -200,7 +212,7 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI }: Props)
     }
   };
 
-  // The latest finished development build and preview build of the project, for iOS and for
+  // The latest finished development build and release build of the project, for iOS and for
   // Android. With more than one, a menu asks which one to launch.
   const launchLatestBuild = async (app: AppForPinnedListFragment) => {
     type MenuItems = Parameters<typeof MenuBarModule.showMenu>[0];
@@ -222,7 +234,10 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI }: Props)
     try {
       const finished = { statuses: ['FINISHED'], expired: false };
       const development = { ...finished, developmentClient: true };
-      const preview = { ...finished, buildProfile: 'preview' };
+      // A release build is a build with no development client that a simulator or an emulator
+      // can run: for iOS a simulator build, for Android an APK. The name of the build profile
+      // does not matter.
+      const release = { ...finished, developmentClient: false };
       const { data } = await client.query<LatestBuildsResult>({
         query: LATEST_BUILDS_QUERY,
         fetchPolicy: 'no-cache',
@@ -230,18 +245,33 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI }: Props)
           appId: app.id,
           developmentIos: { ...development, platforms: ['IOS'] },
           developmentAndroid: { ...development, platforms: ['ANDROID'] },
-          previewIos: { ...preview, platforms: ['IOS'] },
-          previewAndroid: { ...preview, platforms: ['ANDROID'] },
+          releaseIos: { ...release, simulator: true, platforms: ['IOS'] },
+          releaseAndroidInternal: {
+            ...release,
+            distributions: ['INTERNAL'],
+            platforms: ['ANDROID'],
+          },
+          releaseAndroid: { ...release, platforms: ['ANDROID'] },
         },
       });
       // The latest build of each kind and platform that has a file to install.
-      const latest = (platform: string, { edges }: LatestBuilds) => {
+      // `isRelease` checks the build again, in case the server ignores a part of the filter.
+      const latest = (platform: string, { edges }: LatestBuilds, isRelease = false) => {
         const build = edges
           .map(({ node }) => node)
-          .find((item) => isInstallable(item.artifacts?.applicationArchiveUrl));
+          .find(
+            (item) =>
+              isInstallable(item.artifacts?.applicationArchiveUrl) &&
+              (!isRelease ||
+                (!item.developmentClient && (platform !== 'iOS' || !!item.isForIosSimulator)))
+          );
         return build ? [{ platform, build }] : [];
       };
       const result = data.app.byId;
+      const internalAndroidRelease = latest('Android', result.releaseAndroidInternal, true);
+      const latestAndroidRelease = internalAndroidRelease.length
+        ? internalAndroidRelease
+        : latest('Android', result.releaseAndroid, true);
       const groups = [
         {
           title: 'Development build',
@@ -251,11 +281,8 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI }: Props)
           ],
         },
         {
-          title: 'Preview build',
-          builds: [
-            ...latest('iOS', result.previewIos),
-            ...latest('Android', result.previewAndroid),
-          ],
+          title: 'Release build',
+          builds: [...latest('iOS', result.releaseIos, true), ...latestAndroidRelease],
         },
       ].filter((group) => group.builds.length);
       builds = groups.flatMap((group) => group.builds);
@@ -274,10 +301,11 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI }: Props)
         );
       }
       if (!builds.length) {
-        add({ title: 'No development build or preview build found', disabled: true });
-        add({ separator: true });
-        add({ title: 'Open on expo.dev' }, 'page');
+        add({ title: 'No development build or release build found', disabled: true });
       }
+      // The last item, also when the project has builds.
+      add({ separator: true });
+      add({ title: 'Open on expo.dev' }, 'page');
     } catch (error) {
       items = [title, { title: 'Could not get the builds', disabled: true }];
       choices = [];
