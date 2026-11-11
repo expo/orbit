@@ -7,6 +7,7 @@ import {
   isVirtualDevice,
 } from '../device';
 import {
+  formatElapsedTime,
   formatRelativeTime,
   getRemoteSimulatorPreviewUrl,
   getRemoteSimulatorProjects,
@@ -245,5 +246,22 @@ describe(formatRelativeTime, () => {
     expect(formatRelativeTime('2026-11-15T09:00:00Z', now)).toBe('3h ago');
     expect(formatRelativeTime('2026-11-13T12:00:00Z', now)).toBe('2d ago');
     expect(formatRelativeTime('2026-11-01T12:00:00Z', now)).toBe('2w ago');
+  });
+});
+
+describe(formatElapsedTime, () => {
+  const now = new Date('2026-11-10T12:00:00Z').getTime();
+  const since = (minutes: number) => new Date(now - minutes * 60000).toISOString();
+
+  it('uses minutes up to one hour, then hours and minutes', () => {
+    expect(formatElapsedTime(since(0), now)).toBe('<1 min');
+    expect(formatElapsedTime(since(1), now)).toBe('1 min');
+    expect(formatElapsedTime(since(12), now)).toBe('12 min');
+    expect(formatElapsedTime(since(60), now)).toBe('1 h');
+    expect(formatElapsedTime(since(65), now)).toBe('1 h 5 min');
+  });
+
+  it('does not go below zero when the clocks differ', () => {
+    expect(formatElapsedTime(since(-3), now)).toBe('<1 min');
   });
 });

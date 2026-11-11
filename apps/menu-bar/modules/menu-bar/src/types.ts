@@ -19,6 +19,11 @@ export interface NativeMenuBarModule {
   setEnvVars: (envVars: { [key: string]: string }) => void;
   showMultiOptionAlert: (title: string, message: string, options: string[]) => Promise<number>;
   showMenu: (items: MenuItem[]) => Promise<number>;
+  /**
+   * Replaces the items of the menu that `showMenu` opened, while it is open. Only on macOS:
+   * on the other platforms it does nothing, so open the menu there when the items are ready.
+   */
+  updateMenu: (items: MenuItem[]) => Promise<void>;
   openPopover(): void;
   closePopover(): void;
 }
@@ -59,4 +64,6 @@ export type MenuItem = {
   separator?: boolean;
   /** A title for the items below it. It cannot be chosen. */
   header?: boolean;
+  /** The item shows in grey and cannot be chosen. */
+  disabled?: boolean;
 };

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import Item from './Item';
 import { stopRemoteSimulatorAsync } from '../commands/remoteSimulatorAsync';
@@ -45,7 +45,10 @@ const Footer = () => {
         <Divider />
       </View>
       <View py="tiny" pb="1.5">
-        <Item onPress={() => WindowsNavigator.open('Settings')} testID="settings-button">
+        <Item
+          onPress={() => WindowsNavigator.open('Settings')}
+          shortcut={Platform.OS === 'macos' ? '⌘ ,' : 'Ctrl+,'}
+          testID="settings-button">
           <Text>Settings…</Text>
         </Item>
         <Item onPress={quit} shortcut="⌘ Q" testID="quit-button">

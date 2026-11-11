@@ -22,6 +22,31 @@ class PopoverManager: NSObject {
 
     self.setupPopover()
     self.setupStatusItem()
+    self.setupSettingsShortcut()
+  }
+
+  // Command-comma opens Settings, as in other macOS apps. The main menu of the storyboard has
+  // the "Settings…" item with that key. It has no action there, so it gets one here.
+  private func setupSettingsShortcut() {
+    let items = NSApp.mainMenu?.items.compactMap { $0.submenu }.flatMap { $0.items } ?? []
+    if let settingsItem = items.first(where: { $0.keyEquivalent == "," }) {
+      settingsItem.target = self
+      settingsItem.action = #selector(settingsAction)
+    }
+
+    // Command-W closes the window that has the focus, for example Settings. The storyboard
+    // has no File or Window menu, so the item goes into the app menu, before "Quit".
+    if let appMenu = NSApp.mainMenu?.items.first?.submenu,
+      !appMenu.items.contains(where: { $0.keyEquivalent == "w" })
+    {
+      let closeItem = NSMenuItem(
+        title: "Close Window",
+        action: #selector(NSWindow.performClose(_:)),
+        keyEquivalent: "w"
+      )
+      let quitIndex = appMenu.items.firstIndex(where: { $0.keyEquivalent == "q" })
+      appMenu.insertItem(closeItem, at: quitIndex ?? appMenu.items.count)
+    }
   }
 
   private func setupStatusItem() {
@@ -80,7 +105,7 @@ class PopoverManager: NSObject {
     let settingsItem = NSMenuItem(
       title: "Settings...",
       action: #selector(settingsAction),
-      keyEquivalent: ""
+      keyEquivalent: ","
     )
     settingsItem.target = self
 

@@ -25,7 +25,13 @@ const BuildsSection = ({ installAppFromURI, onPressHide }: Props) => {
   const theme = useExpoTheme();
 
   async function openFilePicker() {
-    const appPath = await FilePicker.getAppAsync();
+    let appPath: string;
+    try {
+      appPath = await FilePicker.getAppAsync();
+    } catch {
+      // The user closed the file picker with no file.
+      return;
+    }
     MenuBarModule.openPopover();
     Analytics.track(Event.LAUNCH_BUILD_FROM_LOCAL_FILE);
     await installAppFromURI(appPath);

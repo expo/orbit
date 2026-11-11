@@ -96,11 +96,23 @@ export const saveLastRemoteSimulatorController = (controller: string) => {
   storage.set(lastRemoteSimulatorControllerStorageKey, controller);
 };
 
-// What a click on a project tile does: `page` (the default), `development` or `preview`.
+// What a click on a project tile does: `page` (the default) or `latest`.
 const projectActionStorageKey = 'project-action';
 export const getProjectAction = () => storage.getString(projectActionStorageKey);
 export const saveProjectAction = (action: string) => {
   storage.set(projectActionStorageKey, action);
+};
+
+// The order that the user gave to the devices of each section, and the devices that the
+// user hid. Keys of `order` are section keys (`ios`, `android`, …). Values are device ids.
+export const deviceListStorageKey = 'device-list';
+export type DeviceListPreferences = { order: Record<string, string[]>; hidden: string[] };
+export const getDeviceListPreferences = (): DeviceListPreferences => {
+  const value = storage.getString(deviceListStorageKey);
+  return { order: {}, hidden: [], ...(value ? JSON.parse(value) : {}) };
+};
+export const saveDeviceListPreferences = (preferences: DeviceListPreferences) => {
+  storage.set(deviceListStorageKey, JSON.stringify(preferences));
 };
 
 // The account that the user selected in the account row of the popover.

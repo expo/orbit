@@ -2,7 +2,7 @@ import { StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '../components';
 import { secondaryText } from '../components/Text';
-import { WindowsNavigator } from '../windows';
+import { openSettingsPane } from '../windows/settingsPane';
 
 export const EVERYTHING_HIDDEN_HEIGHT = 132;
 
@@ -16,7 +16,7 @@ const EverythingHidden = () => (
     </Text>
     <TouchableOpacity
       style={styles.link}
-      onPress={() => WindowsNavigator.open('Settings')}
+      onPress={() => openSettingsPane('platforms')}
       testID="everything-hidden-settings">
       <Text size="tiny" color="link">
         Bring the sections back in Settings

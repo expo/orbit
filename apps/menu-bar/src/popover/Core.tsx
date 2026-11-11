@@ -48,7 +48,11 @@ import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
+  DeviceListPreferences,
   SelectedDevicesIds,
+  deviceListStorageKey,
+  getDeviceListPreferences,
+  saveDeviceListPreferences,
   getUserPreferences,
   getLastRemoteSimulatorAppId,
   getSelectedDevicesIds,
@@ -68,7 +72,8 @@ import {
   PlatformToDevice,
   getDeviceId,
   getCollapsedDevices,
-  sortDevicesByRecentUse,
+  moveItem,
+  orderDevices,
   getDeviceOS,
   getRemoteArchivePlatform,
   isRemoteDevice,
@@ -240,6 +245,31 @@ function Core(props: Props) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   // The sessions that the user started and that have no id yet. Each shows as a row at once.
   const [pendingRemoteSessions, setPendingRemoteSessions] = useState<RemoteSimulator[]>([]);
+  // The order that the user gave to the devices, and the devices that the user hid. The
+  // Settings window can change them too.
+  const [deviceList, setDeviceList] = useState(getDeviceListPreferences());
+  useEffect(() => {
+    const listener = storage.addOnValueChangedListener((key) => {
+      if (key === deviceListStorageKey) {
+        setDeviceList(getDeviceListPreferences());
+      }
+    });
+    return () => listener.remove();
+  }, []);
+  const updateDeviceList = (change: (prev: DeviceListPreferences) => DeviceListPreferences) => {
+    const next = change(getDeviceListPreferences());
+    saveDeviceListPreferences(next);
+    setDeviceList(next);
+  };
+  // The devices of a section that show, in the order of the section.
+  const getOrderedDevices = (key: string, devices: Device[]) =>
+    orderDevices(
+      devices.filter((device) => !deviceList.hidden.includes(getDeviceId(device))),
+      deviceList.order[key]
+    );
+  // The row that the user drags, and the position that it goes to.
+  const [drag, setDrag] = useState<{ key: string; from: number; to: number }>();
+
   const shownSections = sections.filter(
     ({ key }) => key !== 'remote' || preferences.showRemoteDevices
   );
@@ -249,8 +279,13 @@ function Core(props: Props) {
     const devices =
       key === 'remote'
         ? [...pendingRemoteSessions, ...(section.data as Device[])]
-        : sortDevicesByRecentUse(section.data as Device[]);
-    const collapsed = getCollapsedDevices(devices, selectedId);
+        : getOrderedDevices(key, section.data as Device[]);
+    const collapsed = getCollapsedDevices(
+      devices,
+      selectedId,
+      undefined,
+      !!deviceList.order[key]?.length
+    );
     const hiddenCount = devices.length - collapsed.length;
     const isExpanded = expandedSections.has(key);
     const isLoading = key === 'remote' ? remoteStatus === 'loading' : !hasInitialized;
@@ -260,6 +295,10 @@ function Core(props: Props) {
         : key === 'ios'
           ? 'No simulators or devices found'
           : '';
+    const allHiddenText =
+      key !== 'remote' && section.data.length && !devices.length
+        ? 'All devices are hidden. Settings shows them again.'
+        : '';
     // The Android section and the Expo Simulators section end with a row that adds a device.
     const addItem =
       key === 'android'
@@ -281,7 +320,7 @@ function Core(props: Props) {
       data: isExpanded ? devices : collapsed,
       hiddenCount,
       isExpanded,
-      emptyText,
+      emptyText: emptyText || allHiddenText,
       addItem,
       gap: index === shownSections.length - 1 ? LAST_SECTION_GAP : SECTION_GAP,
     };
@@ -556,6 +595,8 @@ function Core(props: Props) {
       );
     } else if (remoteStatus === 'ready') {
       WindowsNavigator.open('NewSimulator');
+      // The window has the focus now. The popover opens again when the session starts.
+      MenuBarModule.closePopover();
     }
   }, [remoteStatus, refetch]);
 
@@ -1307,7 +1348,8 @@ function Core(props: Props) {
   // The devices that can be the default of a section: all its devices, not only the visible
   // ones, then the Expo Simulators sessions of the same platform.
   const getDefaultCandidates = (key: string): Device[] => [
-    ...sortDevicesByRecentUse(
+    ...getOrderedDevices(
+      key,
       (sections.find((section) => section.key === key)?.data ?? []) as Device[]
     ),
     ...remoteSessions.filter((session) => getDeviceOS(session) === key),
@@ -1326,6 +1368,49 @@ function Core(props: Props) {
       saveSelectedDevicesIds(newValue);
       return newValue;
     });
+  };
+
+  // The user dropped a row at a new position. `visibleIds` are the rows that show. The devices
+  // behind "Show N more…" keep their order after them.
+  const moveDevice = (key: string, visibleIds: string[], from: number, to: number) => {
+    const allIds = getOrderedDevices(
+      key,
+      (sections.find((section) => section.key === key)?.data ?? []) as Device[]
+    ).map(getDeviceId);
+    const moved = moveItem(visibleIds, from, to);
+    updateDeviceList((prev) => ({
+      ...prev,
+      order: { ...prev.order, [key]: [...moved, ...allIds.filter((id) => !moved.includes(id))] },
+    }));
+  };
+
+  // The menu of a device row, on a click with the right mouse button.
+  const showDeviceMenu = async (key: string, device: Device) => {
+    const id = getDeviceId(device);
+    const hasOrder = !!deviceList.order[key]?.length;
+    const index = await MenuBarModule.showMenu([
+      { title: device.name, header: true },
+      { title: 'Hide from this list' },
+      ...(hasOrder ? [{ separator: true }, { title: 'Reset the order of this section' }] : []),
+    ]);
+    if (index === 1) {
+      updateDeviceList((prev) => ({ ...prev, hidden: [...prev.hidden, id] }));
+      // A hidden device is not the default device.
+      const platform = getDeviceOS(device);
+      setSelectedDevicesIds((prev) => {
+        if (prev[platform] !== id) {
+          return prev;
+        }
+        const newValue = { ...prev, [platform]: undefined };
+        saveSelectedDevicesIds(newValue);
+        return newValue;
+      });
+    } else if (index === 3) {
+      updateDeviceList((prev) => {
+        const { [key]: _removed, ...order } = prev.order;
+        return { ...prev, order };
+      });
+    }
   };
 
   // Expo Simulators can be the default of a platform that a session can run.
@@ -1497,13 +1582,42 @@ function Core(props: Props) {
                 <View style={{ height: gap }} />
               </>
             )}
-            renderItem={({ item: device }: { item: Device }) => {
+            renderItem={({ item: device, index, section }) => {
               const platform = getDeviceOS(device);
               const id = getDeviceId(device);
+              const sectionKey = section.key;
+              const canChange = sectionKey !== 'remote';
+              const isDragTarget =
+                drag?.key === sectionKey && drag.to === index && drag.to !== drag.from;
               return (
                 <DeviceItem
                   device={device}
                   key={device.name}
+                  isDragged={drag?.key === sectionKey && drag.from === index}
+                  dropLine={isDragTarget ? (drag.to < drag.from ? 'above' : 'below') : undefined}
+                  reorder={
+                    canChange && section.data.length > 1
+                      ? {
+                          onMove: (rows) => {
+                            const to = Math.max(0, Math.min(section.data.length - 1, index + rows));
+                            setDrag((prev) =>
+                              prev?.key === sectionKey && prev.from === index && prev.to === to
+                                ? prev
+                                : { key: sectionKey, from: index, to }
+                            );
+                          },
+                          onEnd: (rows) => {
+                            const to = Math.max(0, Math.min(section.data.length - 1, index + rows));
+                            setDrag(undefined);
+                            if (to !== index) {
+                              moveDevice(sectionKey, section.data.map(getDeviceId), index, to);
+                            }
+                          },
+                          onCancel: () => setDrag(undefined),
+                        }
+                      : undefined
+                  }
+                  onContextMenu={canChange ? () => showDeviceMenu(sectionKey, device) : undefined}
                   isDefault={selectedDevicesIds[platform] === id}
                   onPressDefault={
                     isRemoteDevice(device) && isPendingRemoteSession(device)
@@ -1547,15 +1661,8 @@ function Core(props: Props) {
                           MenuBarModule.closePopover();
                         }
                       },
-                      onPressStop: () =>
-                        Alert.alert('Stop this Expo Simulators session?', device.name, [
-                          { text: 'Cancel', style: 'cancel' },
-                          {
-                            text: 'Stop',
-                            style: 'destructive',
-                            onPress: () => stopRemoteSimulator(device),
-                          },
-                        ]),
+                      // No question before the stop: the button says what it does.
+                      onPressStop: () => stopRemoteSimulator(device),
                     })}
                 />
               );

@@ -75,6 +75,7 @@ export default {
     MenuBarModule.showMultiOptionAlert(title, message, options),
   // Shows a menu at the pointer. Resolves with the index of the chosen item, or -1.
   showMenu: (items: MenuItem[]): Promise<number> => MenuBarModule.showMenu(items),
+  updateMenu: (items: MenuItem[]): Promise<void> => MenuBarModule.updateMenu(items),
   openPopover: () => MenuBarModule.openPopover(),
   closePopover: () => MenuBarModule.closePopover(),
   logs,

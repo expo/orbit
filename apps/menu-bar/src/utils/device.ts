@@ -142,21 +142,52 @@ export function sortDevicesByRecentUse(devices: Device[]): Device[] {
 }
 
 /**
+ * The devices of a section in the order that the user gave them. Devices that are not in
+ * `order` come after, by recent use. With no order, all devices are by recent use.
+ */
+export function orderDevices(devices: Device[], order?: string[]): Device[] {
+  const sorted = sortDevicesByRecentUse(devices);
+  if (!order?.length) {
+    return sorted;
+  }
+  const position = (device: Device) => {
+    const index = order.indexOf(getDeviceId(device));
+    return index < 0 ? order.length : index;
+  };
+  return sorted.sort((a, b) => position(a) - position(b));
+}
+
+/** `items` with the item at `from` moved to `to`. */
+export function moveItem<T>(items: T[], from: number, to: number): T[] {
+  const result = [...items];
+  const [item] = result.splice(from, 1);
+  result.splice(to, 0, item);
+  return result;
+}
+
+/**
  * The devices a section shows before the user asks for all of them: every physical device,
  * every running virtual device and the selected one, then the virtual devices booted most
  * recently, up to `limit` virtual devices. The order of `devices` is kept.
  */
-export function getCollapsedDevices(devices: Device[], selectedId?: string, limit = 3): Device[] {
+export function getCollapsedDevices(
+  devices: Device[],
+  selectedId?: string,
+  limit = 3,
+  // The user gave the section an order: the first devices of that order show.
+  keepOrder = false
+): Device[] {
   const isPinned = (device: Device) =>
     !isVirtualDevice(device) || device.state === 'Booted' || getDeviceId(device) === selectedId;
   const pinned = devices.filter(isPinned);
-  const rest = devices
-    .filter((device) => !isPinned(device))
-    .sort(
-      (a, b) =>
-        (('lastBootedAt' in b && b.lastBootedAt) || 0) -
-        (('lastBootedAt' in a && a.lastBootedAt) || 0)
-    );
+  const unpinned = devices.filter((device) => !isPinned(device));
+  const rest = keepOrder
+    ? unpinned
+    : unpinned.sort(
+        (a, b) =>
+          (('lastBootedAt' in b && b.lastBootedAt) || 0) -
+          (('lastBootedAt' in a && a.lastBootedAt) || 0)
+      );
   const pinnedVirtual = pinned.filter(isVirtualDevice).length;
   const shown = new Set([...pinned, ...rest.slice(0, Math.max(0, limit - pinnedVirtual))]);
   // A "show 1 more" row would take the place of the one row it hides.

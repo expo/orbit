@@ -8,6 +8,7 @@ import {
 } from '@fluentui/react-icons';
 import { CliCommands, InternalError } from 'common-types';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
+import { Device } from 'common-types/build/devices';
 import { SymbolView } from 'expo-symbols';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -68,8 +69,12 @@ import {
   updateResignedApp,
 } from '../modules/ResignedApps';
 import {
+  DeviceListPreferences,
   UserPreferences,
+  deviceListStorageKey,
+  getDeviceListPreferences,
   getUserPreferences,
+  saveDeviceListPreferences,
   saveSessionSecret,
   saveUserPreferences,
   userPreferencesStorageKey,
@@ -80,7 +85,13 @@ import {
 import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppIdsEvents';
 import { waitForAppleAuthCompleteAsync } from '../utils/appleAuthEvents';
 import { authenticateAsync } from '../utils/auth';
-import { formatProfileExpiry, getCurrentUserDisplayName, isRenewing } from '../utils/helpers';
+import { getDeviceId, moveItem, orderDevices } from '../utils/device';
+import {
+  capitalize,
+  formatProfileExpiry,
+  getCurrentUserDisplayName,
+  isRenewing,
+} from '../utils/helpers';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme, useExpoPalette, useExpoTheme } from '../utils/useExpoTheme';
@@ -306,9 +317,47 @@ export function SettingsPane({ pane }: { pane: Pane }) {
           counts[devicesKey] = count ? `${count} ${unit}${count === 1 ? '' : 's'}` : '';
         });
         setDeviceCounts(counts);
+        setDeviceLists(
+          Object.fromEntries(
+            platformList.map(({ devicesKey }) => [
+              devicesKey,
+              (list[devicesKey]?.devices ?? []) as Device[],
+            ])
+          )
+        );
       })
       .catch(() => {});
   }, []);
+
+  // The devices of each platform, for the list where the user hides and orders them.
+  const [deviceLists, setDeviceLists] = useState<Record<string, Device[]>>({});
+  const [deviceList, setDeviceList] = useState(getDeviceListPreferences());
+  // The platforms whose device list is open. All are closed at first.
+  const [expandedPlatforms, setExpandedPlatforms] = useState<string[]>([]);
+  useEffect(() => {
+    // The popover changes the order and the hidden devices too.
+    const listener = storage.addOnValueChangedListener((key) => {
+      if (key === deviceListStorageKey) {
+        setDeviceList(getDeviceListPreferences());
+      }
+    });
+    return () => listener.remove();
+  }, []);
+  const updateDeviceList = (change: (prev: DeviceListPreferences) => DeviceListPreferences) => {
+    const next = change(getDeviceListPreferences());
+    saveDeviceListPreferences(next);
+    setDeviceList(next);
+  };
+  const setDeviceShown = (id: string, shown: boolean) =>
+    updateDeviceList((prev) => ({
+      ...prev,
+      hidden: shown ? prev.hidden.filter((item) => item !== id) : [...prev.hidden, id],
+    }));
+  const moveDeviceInList = (key: string, ids: string[], from: number, to: number) =>
+    updateDeviceList((prev) => ({
+      ...prev,
+      order: { ...prev.order, [key]: moveItem(ids, from, to) },
+    }));
 
   const onPressLaunchOnLogin = async (value: boolean) => {
     try {
@@ -516,23 +565,107 @@ export function SettingsPane({ pane }: { pane: Pane }) {
           <View gap="2">
             <Text size="tiny" color="secondary">
               The device sections that show in the menu. Only devices of these platforms are listed.
+              Open a platform to set the order of its devices with the arrows, and to hide a device
+              with its switch.
             </Text>
             <Card>
-              {platformList.map((item, index) => (
-                <Fragment key={item.key}>
-                  {index > 0 ? <Divider /> : null}
-                  <SettingRow title={item.label} disabled={!item.supported}>
-                    <Text size="tiny" color="secondary">
-                      {item.supported ? deviceCounts[item.devicesKey] : 'macOS only'}
-                    </Text>
-                    <Switch
-                      value={Boolean(userPreferences[item.key])}
-                      onValueChange={(value) => toggleOS(item.key, value)}
+              {platformList.map((item, index) => {
+                const devices = orderDevices(
+                  deviceLists[item.devicesKey] ?? [],
+                  deviceList.order[item.devicesKey]
+                );
+                const ids = devices.map(getDeviceId);
+                const canExpand = Boolean(userPreferences[item.key]) && devices.length > 0;
+                const isExpanded = canExpand && expandedPlatforms.includes(item.devicesKey);
+                return (
+                  <Fragment key={item.key}>
+                    {index > 0 ? <Divider /> : null}
+                    <SettingRow
+                      title={item.label}
                       disabled={!item.supported}
-                    />
-                  </SettingRow>
-                </Fragment>
-              ))}
+                      leading={
+                        // The devices of the platform are below its row. They show when the
+                        // user opens the row.
+                        <TouchableOpacity
+                          disabled={!canExpand}
+                          style={[styles.disclosure, !canExpand && styles.moveButtonDisabled]}
+                          onPress={() =>
+                            setExpandedPlatforms((prev) =>
+                              prev.includes(item.devicesKey)
+                                ? prev.filter((key) => key !== item.devicesKey)
+                                : [...prev, item.devicesKey]
+                            )
+                          }
+                          testID={`expand-${item.devicesKey}`}>
+                          <Text size="tiny">{isExpanded ? '▼' : '▶'}</Text>
+                        </TouchableOpacity>
+                      }>
+                      <Text size="tiny" color="secondary">
+                        {item.supported ? deviceCounts[item.devicesKey] : 'macOS only'}
+                      </Text>
+                      <Switch
+                        value={Boolean(userPreferences[item.key])}
+                        onValueChange={(value) => toggleOS(item.key, value)}
+                        disabled={!item.supported}
+                      />
+                    </SettingRow>
+                    {isExpanded
+                      ? devices.map((device, deviceIndex) => (
+                          <Fragment key={ids[deviceIndex]}>
+                            <Divider />
+                            <View style={styles.nestedDevice}>
+                              <SettingRow
+                                title={device.name}
+                                subtitle={[
+                                  capitalize(device.deviceType),
+                                  'osVersion' in device ? device.osVersion : undefined,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · ')}>
+                                <TouchableOpacity
+                                  disabled={deviceIndex === 0}
+                                  style={[
+                                    styles.moveButton,
+                                    deviceIndex === 0 && styles.moveButtonDisabled,
+                                  ]}
+                                  onPress={() =>
+                                    moveDeviceInList(
+                                      item.devicesKey,
+                                      ids,
+                                      deviceIndex,
+                                      deviceIndex - 1
+                                    )
+                                  }>
+                                  <Text size="small">↑</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  disabled={deviceIndex === devices.length - 1}
+                                  style={[
+                                    styles.moveButton,
+                                    deviceIndex === devices.length - 1 && styles.moveButtonDisabled,
+                                  ]}
+                                  onPress={() =>
+                                    moveDeviceInList(
+                                      item.devicesKey,
+                                      ids,
+                                      deviceIndex,
+                                      deviceIndex + 1
+                                    )
+                                  }>
+                                  <Text size="small">↓</Text>
+                                </TouchableOpacity>
+                                <Switch
+                                  value={!deviceList.hidden.includes(ids[deviceIndex])}
+                                  onValueChange={(value) => setDeviceShown(ids[deviceIndex], value)}
+                                />
+                              </SettingRow>
+                            </View>
+                          </Fragment>
+                        ))
+                      : null}
+                  </Fragment>
+                );
+              })}
             </Card>
             <Text size="tiny" color="secondary">
               The other sections that show in the menu.
@@ -1099,6 +1232,10 @@ function SettingRow({
 }
 
 const styles = StyleSheet.create({
+  moveButton: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  moveButtonDisabled: { opacity: 0.3 },
+  disclosure: { width: 16, height: 24, alignItems: 'center', justifyContent: 'center' },
+  nestedDevice: { paddingLeft: 28 },
   header: {
     // On macOS the header sits in the 52pt unified toolbar, next to the traffic lights.
     height: Platform.OS === 'macos' ? 52 : 48,

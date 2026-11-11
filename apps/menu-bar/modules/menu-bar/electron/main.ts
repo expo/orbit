@@ -98,6 +98,7 @@ const MenuBarModule: ElectronMainMenuBarModule = {
                   label: item.detail ? `${item.title} · ${item.detail}` : (item.title ?? ''),
                   type: 'checkbox' as const,
                   checked: !!item.checked,
+                  enabled: !item.disabled,
                   click: () => {
                     chosen = index;
                   },
@@ -108,6 +109,8 @@ const MenuBarModule: ElectronMainMenuBarModule = {
         callback: () => resolve(chosen),
       });
     }),
+  // An Electron menu cannot change while it is open.
+  updateMenu: async () => {},
   setEnvVars(envVars) {
     const userSettingsJsonFile = getUserSettingsJsonFile();
     userSettingsJsonFile.setAsync('envVars', envVars);

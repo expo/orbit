@@ -75,8 +75,8 @@ const TextButton = ({ title, onPress, testID }: TextButtonProps) => {
 
 /**
  * The first row of the popover: the selected account, with a menu to change it. It follows
- * the account selector of the expo.dev sidebar. The signed-in user shows at the right when
- * the selected account is not their personal account.
+ * the account selector of the expo.dev sidebar. The personal account is the first account in
+ * the menu.
  */
 const AccountRow = ({
   isSignedIn,
@@ -88,6 +88,7 @@ const AccountRow = ({
 }: Props) => {
   const theme = useCurrentTheme();
   const [isHovered, setIsHovered] = useState(false);
+  const [isLinkHovered, setIsLinkHovered] = useState(false);
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
   const getTitle = (account: OrbitAccount) =>
@@ -103,7 +104,6 @@ const AccountRow = ({
         checked: account.id === selectedAccount?.id,
       })),
       { separator: true },
-      { title: 'Create organization…' },
       { title: 'Log in as another user…' },
       { title: 'Log out' },
     ];
@@ -112,12 +112,8 @@ const AccountRow = ({
       actions[index + 1] = () => selectAccount(account);
     });
     const afterAccounts = accounts.length + 2;
-    actions[afterAccounts] = () => {
-      Linking.openURL('https://expo.dev/create-organization');
-      MenuBarModule.closePopover();
-    };
-    actions[afterAccounts + 1] = () => login('login');
-    actions[afterAccounts + 2] = () => {
+    actions[afterAccounts] = () => login('login');
+    actions[afterAccounts + 1] = () => {
       saveSessionSecret(undefined);
       resetApolloStore();
     };
@@ -165,7 +161,7 @@ const AccountRow = ({
     return <View style={styles.container} testID="account-row" />;
   }
 
-  const showsUser = !isPersonalAccount(selectedAccount);
+  const isOrganization = !isPersonalAccount(selectedAccount);
   return (
     <View style={styles.container} testID="account-row">
       <Row align="center" justify="between" style={styles.row}>
@@ -184,7 +180,7 @@ const AccountRow = ({
             name={selectedAccount.name}
             imageUrl={selectedAccount.profileImageUrl}
             size={22}
-            isOrganization={showsUser}
+            isOrganization={isOrganization}
           />
           <Text size="small" weight="medium" numberOfLines={1} style={styles.accountName}>
             {getTitle(selectedAccount)}
@@ -197,18 +193,31 @@ const AccountRow = ({
             fallback={<Text size="tiny">▾</Text>}
           />
         </Pressable>
-        {showsUser ? (
-          <Row align="center" gap="1.5">
-            <Text size="tiny" numberOfLines={1} style={secondaryText}>
-              {user.username}
-            </Text>
-            <AccountAvatar
-              name={user.username}
-              imageUrl={user.primaryAccountProfileImageUrl}
-              size={20}
-            />
-          </Row>
-        ) : null}
+        <Pressable
+          style={styles.settingsLink}
+          onHoverIn={() => setIsLinkHovered(true)}
+          onHoverOut={() => setIsLinkHovered(false)}
+          onPress={() => {
+            Linking.openURL(`https://expo.dev/accounts/${selectedAccount.name}/settings`);
+            MenuBarModule.closePopover();
+          }}
+          testID="account-settings-link">
+          {/* On hover, the link gets the full text color. */}
+          <Text size="tiny" style={isLinkHovered ? styles.linkHovered : secondaryText}>
+            Account settings
+          </Text>
+          <SymbolView
+            name="arrow.up.right"
+            size={8}
+            tintColor={PlatformColor('labelColor')}
+            style={isLinkHovered ? undefined : styles.dimmed}
+            fallback={
+              <Text size="tiny" style={secondaryText}>
+                ↗
+              </Text>
+            }
+          />
+        </Pressable>
       </Row>
       <View style={styles.divider}>
         <Divider />
@@ -233,7 +242,17 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     cursor: 'pointer',
   },
-  accountName: { flexShrink: 1, maxWidth: 200 },
+  // A long account name gets an ellipsis. The link at the right keeps its width.
+  accountName: { flexShrink: 1 },
+  linkHovered: { color: PlatformColor('labelColor') },
+  settingsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 12,
+    flexShrink: 0,
+    cursor: 'pointer',
+  },
   initial: { alignItems: 'center', justifyContent: 'center' },
   dimmed: { opacity: 0.6 },
   signedOut: { paddingLeft: 4 },

@@ -274,6 +274,22 @@ export function parseTags(input: string): Parsed {
 }
 
 /** A short age such as `5m ago`, `3h ago`, `2d ago` or `2w ago`. */
+/**
+ * The time since `isoDate`, for a running session: "<1 min", "12 min" or "1 h 5 min". No
+ * seconds.
+ */
+export function formatElapsedTime(isoDate: string, now = Date.now()): string {
+  const minutes = Math.max(0, Math.floor((now - new Date(isoDate).getTime()) / 60000));
+  if (minutes < 1) {
+    return '<1 min';
+  }
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
+}
+
 export function formatRelativeTime(isoDate: string, now = Date.now()): string {
   const minutes = Math.max(0, Math.floor((now - new Date(isoDate).getTime()) / 60000));
   if (minutes < 60) {

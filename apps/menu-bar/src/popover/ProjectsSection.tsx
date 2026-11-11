@@ -1,6 +1,6 @@
 import { gql, useApolloClient } from '@apollo/client';
 import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 
 import SectionHeader, { SECTION_HEADER_HEIGHT } from './SectionHeader';
 import SectionHeaderMenu from './SectionHeaderMenu';
@@ -13,6 +13,7 @@ import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import { PlatformColor } from '../modules/PlatformColor';
 import { getProjectAction, saveProjectAction } from '../modules/Storage';
+import { formatRelativeTime } from '../utils/remoteSimulator';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
 const TILE_ICON_SIZE = 48;
@@ -36,44 +37,86 @@ export function getProjectSectionHeight(numberOfApps: number) {
 // What a click on a project tile does. The user chooses it in the section header.
 const PROJECT_ACTIONS = [
   { id: 'page', label: 'Open on expo.dev' },
-  { id: 'development', label: 'Launch latest development build' },
-  { id: 'preview', label: 'Launch latest preview build' },
+  { id: 'latest', label: 'Launch latest app' },
 ] as const;
 type ProjectAction = (typeof PROJECT_ACTIONS)[number]['id'];
 
 // Not in the generated documents: the generated schema is older than the `statuses` and
 // `expired` filters. The archive URL is signed, so the query never goes to the cache.
 const LATEST_BUILDS_QUERY = gql`
-  query GetLatestBuildsForProject($appId: String!, $filter: BuildFilterInput) {
+  query GetLatestBuildsForProject(
+    $appId: String!
+    $developmentIos: BuildFilterInput
+    $developmentAndroid: BuildFilterInput
+    $previewIos: BuildFilterInput
+    $previewAndroid: BuildFilterInput
+  ) {
     app {
       byId(appId: $appId) {
         id
-        buildsPaginated(first: 10, filter: $filter) {
-          edges {
-            node {
-              __typename
-              ... on Build {
-                id
-                artifacts {
-                  applicationArchiveUrl
-                }
-              }
-            }
-          }
+        developmentIos: buildsPaginated(first: 5, filter: $developmentIos) {
+          ...LatestBuildsForProject
+        }
+        developmentAndroid: buildsPaginated(first: 5, filter: $developmentAndroid) {
+          ...LatestBuildsForProject
+        }
+        previewIos: buildsPaginated(first: 5, filter: $previewIos) {
+          ...LatestBuildsForProject
+        }
+        previewAndroid: buildsPaginated(first: 5, filter: $previewAndroid) {
+          ...LatestBuildsForProject
         }
       }
     }
   }
+
+  fragment LatestBuildsForProject on AppBuildsConnection {
+    edges {
+      node {
+        __typename
+        ... on Build {
+          ...LatestBuildForProject
+        }
+      }
+    }
+  }
+
+  fragment LatestBuildForProject on Build {
+    id
+    appVersion
+    appBuildVersion
+    createdAt
+    artifacts {
+      applicationArchiveUrl
+    }
+  }
 `;
+type LatestBuild = {
+  appVersion?: string | null;
+  appBuildVersion?: string | null;
+  createdAt?: string | null;
+  artifacts?: { applicationArchiveUrl?: string | null } | null;
+};
+type LatestBuilds = { edges: { node: LatestBuild }[] };
 type LatestBuildsResult = {
   app: {
     byId: {
-      buildsPaginated: {
-        edges: { node: { artifacts?: { applicationArchiveUrl?: string | null } | null } }[];
-      };
+      developmentIos: LatestBuilds;
+      developmentAndroid: LatestBuilds;
+      previewIos: LatestBuilds;
+      previewAndroid: LatestBuilds;
     };
   };
 };
+
+// The line of a build in the menu that asks for the platform: "1.2.0 (100) · 2w ago".
+const describeBuild = ({ appVersion, appBuildVersion, createdAt }: LatestBuild) =>
+  [
+    [appVersion, appBuildVersion ? `(${appBuildVersion})` : undefined].filter(Boolean).join(' '),
+    createdAt ? formatRelativeTime(createdAt) : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
 interface Props {
   apps?: PinnedApp[];
@@ -124,7 +167,8 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressH
   const theme = useCurrentTheme();
   const client = useApolloClient();
   const [action, setAction] = useState<ProjectAction>(
-    () => PROJECT_ACTIONS.find(({ id }) => id === getProjectAction())?.id ?? 'page'
+    // A stored value that is not `page` is a launch action, also from an earlier version.
+    () => (!getProjectAction() || getProjectAction() === 'page' ? 'page' : 'latest')
   );
 
   const chooseAction = async () => {
@@ -140,49 +184,120 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressH
     }
   };
 
-  // The latest finished build of the kind that the user chose, on any platform.
-  const launchLatestBuild = async (
-    app: AppForPinnedListFragment,
-    kind: 'development' | 'preview'
-  ) => {
+  // The latest finished development build and preview build of the project, for iOS and for
+  // Android. With more than one, a menu asks which one to launch.
+  const launchLatestBuild = async (app: AppForPinnedListFragment) => {
+    type MenuItems = Parameters<typeof MenuBarModule.showMenu>[0];
+    const title = { title: `${app.name} · latest builds`, header: true };
+    // On macOS the menu opens at once with a loading line, and the builds replace that line.
+    // On the other platforms a menu cannot change while it is open, so it opens after.
+    const canUpdateMenu = Platform.OS === 'macos';
+    const openMenu = canUpdateMenu
+      ? MenuBarModule.showMenu([title, { title: 'Loading builds…', disabled: true }])
+      : undefined;
+    let isMenuOpen = true;
+    openMenu?.then(() => {
+      isMenuOpen = false;
+    });
+
+    let builds: { platform: string; build: LatestBuild }[] = [];
+    let items: MenuItems = [];
+    let choices: ((typeof builds)[number] | 'page' | undefined)[] = [];
     try {
+      const finished = { statuses: ['FINISHED'], expired: false };
+      const development = { ...finished, developmentClient: true };
+      const preview = { ...finished, buildProfile: 'preview' };
       const { data } = await client.query<LatestBuildsResult>({
         query: LATEST_BUILDS_QUERY,
         fetchPolicy: 'no-cache',
         variables: {
           appId: app.id,
-          filter: {
-            ...(kind === 'development' ? { developmentClient: true } : { buildProfile: 'preview' }),
-            statuses: ['FINISHED'],
-            expired: false,
-          },
+          developmentIos: { ...development, platforms: ['IOS'] },
+          developmentAndroid: { ...development, platforms: ['ANDROID'] },
+          previewIos: { ...preview, platforms: ['IOS'] },
+          previewAndroid: { ...preview, platforms: ['ANDROID'] },
         },
       });
-      const url = data.app.byId.buildsPaginated.edges
-        .map(({ node }) => node.artifacts?.applicationArchiveUrl)
-        .find(Boolean);
-      if (!url) {
+      // The latest build of each kind and platform that has a file to install.
+      const latest = (platform: string, { edges }: LatestBuilds) => {
+        const build = edges
+          .map(({ node }) => node)
+          .find((item) => item.artifacts?.applicationArchiveUrl);
+        return build ? [{ platform, build }] : [];
+      };
+      const result = data.app.byId;
+      const groups = [
+        {
+          title: 'Development build',
+          builds: [
+            ...latest('iOS', result.developmentIos),
+            ...latest('Android', result.developmentAndroid),
+          ],
+        },
+        {
+          title: 'Preview build',
+          builds: [
+            ...latest('iOS', result.previewIos),
+            ...latest('Android', result.previewAndroid),
+          ],
+        },
+      ].filter((group) => group.builds.length);
+      builds = groups.flatMap((group) => group.builds);
+
+      // The items of the menu, and the choice that each item stands for.
+      const add = (item: MenuItems[number], choice?: (typeof choices)[number]) => {
+        items.push(item);
+        choices.push(choice);
+      };
+      add(title);
+      for (const group of groups) {
+        add({ separator: true });
+        add({ title: group.title, header: true });
+        group.builds.forEach((item) =>
+          add({ title: item.platform, detail: describeBuild(item.build) }, item)
+        );
+      }
+      if (!builds.length) {
+        add({ title: 'No development build or preview build found', disabled: true });
+        add({ separator: true });
+        add({ title: 'Open on expo.dev' }, 'page');
+      }
+    } catch (error) {
+      items = [title, { title: 'Could not get the builds', disabled: true }];
+      choices = [];
+      if (!canUpdateMenu) {
         Alert.alert(
-          `No ${kind} build found`,
-          `${app.name} has no finished ${kind} build that Orbit can launch.`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Open on expo.dev', onPress: () => openProjectURL(app) },
-          ]
+          'Could not get the latest build',
+          error instanceof Error ? error.message : String(error)
         );
         return;
       }
-      await installAppFromURI(url);
-    } catch (error) {
-      Alert.alert(
-        'Could not get the latest build',
-        error instanceof Error ? error.message : String(error)
-      );
+    }
+
+    let index: number;
+    if (openMenu) {
+      if (!isMenuOpen) {
+        return; // The user closed the menu before the builds came.
+      }
+      await MenuBarModule.updateMenu(items);
+      index = await openMenu;
+    } else if (builds.length === 1) {
+      // One build and no open menu: launch it with no question.
+      index = choices.indexOf(builds[0]);
+    } else {
+      index = await MenuBarModule.showMenu(items);
+    }
+
+    const choice = choices[index];
+    if (choice === 'page') {
+      openProjectURL(app);
+    } else if (choice?.build.artifacts?.applicationArchiveUrl) {
+      await installAppFromURI(choice.build.artifacts.applicationArchiveUrl);
     }
   };
 
   const onPressProject = (app: AppForPinnedListFragment) =>
-    action === 'page' ? openProjectURL(app) : launchLatestBuild(app, action);
+    action === 'page' ? openProjectURL(app) : launchLatestBuild(app);
 
   const openProjectURL = (app: AppForPinnedListFragment) => {
     Linking.openURL(

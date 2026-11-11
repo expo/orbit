@@ -86,21 +86,24 @@ export default class TrayGenerator {
       this.showWindow(bounds);
     }
   };
+  openSettings = () => {
+    WindowManager.openWindow('Settings', {
+      // Keep in sync with menu-bar/src/windows/index.ts
+      title: 'Settings',
+      windowStyle: {
+        titlebarAppearsTransparent: true,
+        height: 520,
+        width: 680,
+      },
+    });
+  };
   rightClickMenu = () => {
     const menu: MenuItemConstructorOptions[] = [
       {
         label: 'Settings...',
-        click() {
-          WindowManager.openWindow('Settings', {
-            // Keep in sync with menu-bar/src/windows/index.ts
-            title: 'Settings',
-            windowStyle: {
-              titlebarAppearsTransparent: true,
-              height: 520,
-              width: 680,
-            },
-          });
-        },
+        // Shown as Ctrl+, on Windows and Linux, and as Command-comma on macOS.
+        accelerator: 'CommandOrControl+,',
+        click: this.openSettings,
       },
       {
         role: 'quit',
@@ -118,6 +121,16 @@ export default class TrayGenerator {
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
     this.tray.on('right-click', this.rightClickMenu);
+
+    // Ctrl+, (Command-comma on macOS) opens Settings while the popover has the focus. The
+    // popover has no menu bar, so a menu accelerator does not get the key.
+    this.mainWindow.webContents.on('before-input-event', (event, input) => {
+      const modifier = process.platform === 'darwin' ? input.meta : input.control;
+      if (input.type === 'keyDown' && input.key === ',' && modifier && !input.alt) {
+        event.preventDefault();
+        this.openSettings();
+      }
+    });
 
     ipcMain.handle('open-popover', () => this.showWindow());
     ipcMain.handle('close-popover', this.hideWindow);
