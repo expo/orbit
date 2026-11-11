@@ -43,6 +43,11 @@ const runCli = async (
   return commandOutput;
 };
 
+// A menu that closes with no choice is a cancel. The order of the `click` of an item and the
+// close callback of the menu is not sure, so the cancel waits: a `click` settles the promise
+// first, and the later cancel then does nothing.
+const MENU_CANCEL_DELAY_MS = 250;
+
 const MenuBarModule: ElectronMainMenuBarModule = {
   name: 'MenuBar',
   appVersion: app.getVersion(),
@@ -71,23 +76,15 @@ const MenuBarModule: ElectronMainMenuBarModule = {
     }
 
     return await new Promise<number>((resolve, reject) => {
-      let chosen: number | undefined;
       Menu.buildFromTemplate(
-        options.map((label, index) => ({
-          label,
-          click: () => {
-            chosen = index;
-          },
-        }))
+        options.map((label, index) => ({ label, click: () => resolve(index) }))
       ).popup({
-        // `click` runs before the menu's close callback.
-        callback: () => (chosen === undefined ? reject(new Error('Cancelled')) : resolve(chosen)),
+        callback: () => setTimeout(() => reject(new Error('Cancelled')), MENU_CANCEL_DELAY_MS),
       });
     });
   },
   showMenu: (items) =>
     new Promise<number>((resolve) => {
-      let chosen = -1;
       Menu.buildFromTemplate(
         items.map((item, index) =>
           item.separator
@@ -99,14 +96,11 @@ const MenuBarModule: ElectronMainMenuBarModule = {
                   type: 'checkbox' as const,
                   checked: !!item.checked,
                   enabled: !item.disabled,
-                  click: () => {
-                    chosen = index;
-                  },
+                  click: () => resolve(index),
                 }
         )
       ).popup({
-        // `click` runs before the menu's close callback.
-        callback: () => resolve(chosen),
+        callback: () => setTimeout(() => resolve(-1), MENU_CANCEL_DELAY_MS),
       });
     }),
   // An Electron menu cannot change while it is open.

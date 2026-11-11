@@ -97,6 +97,16 @@ export default class TrayGenerator {
       },
     });
   };
+  // The popover asks about running remote sessions before it exits. A popover that crashed
+  // cannot ask, so the app quits directly.
+  requestQuit = () => {
+    const { webContents } = this.mainWindow;
+    if (this.mainWindow.isDestroyed() || webContents.isCrashed()) {
+      app.quit();
+    } else {
+      webContents.send('quitRequested', {});
+    }
+  };
   // The keyboard shortcuts of every window: Ctrl+, opens Settings, Ctrl+Q quits and Ctrl+W
   // closes the window (Command on macOS). The windows hide their menu bar, so the handler
   // gets the keys here and all platforms do the same thing.
@@ -112,8 +122,7 @@ export default class TrayGenerator {
         this.openSettings();
       } else if (key === 'q') {
         event.preventDefault();
-        // The popover asks about running remote sessions before it exits.
-        this.mainWindow.webContents.send('quitRequested', {});
+        this.requestQuit();
       } else if (key === 'w') {
         event.preventDefault();
         if (window === this.mainWindow) {
@@ -135,8 +144,7 @@ export default class TrayGenerator {
       {
         label: 'Quit',
         accelerator: 'CommandOrControl+Q',
-        // The popover asks about running remote sessions before it exits.
-        click: () => this.mainWindow.webContents.send('quitRequested', {}),
+        click: this.requestQuit,
       },
     ];
     this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));
