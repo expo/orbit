@@ -134,16 +134,18 @@ export default class TrayGenerator {
     });
   };
   rightClickMenu = () => {
+    // Shortcut hints show only on macOS: on Windows and Linux, Electron writes `,` as
+    // "Comma". The shortcuts work from the windows, not from this menu.
+    const isMac = process.platform === 'darwin';
     const menu: MenuItemConstructorOptions[] = [
       {
         label: 'Settings...',
-        // Shown as Ctrl+, on Windows and Linux, and as Command-comma on macOS.
-        accelerator: 'CommandOrControl+,',
+        accelerator: isMac ? 'Command+,' : undefined,
         click: this.openSettings,
       },
       {
         label: 'Quit',
-        accelerator: 'CommandOrControl+Q',
+        accelerator: isMac ? 'Command+Q' : undefined,
         click: this.requestQuit,
       },
     ];

@@ -7,6 +7,7 @@ import {
   Easing,
   GestureResponderEvent,
   PanResponder,
+  Platform,
   StyleSheet,
   Pressable,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { Text, secondaryText } from './Text';
 import { Row, View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
+import CloudCheckIcon from '../assets/icons/cloud-check.svg';
 import CloudIcon from '../assets/icons/cloud.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
 import TvosIcon from '../assets/icons/tvos.svg';
@@ -146,10 +148,15 @@ const Spinner = ({ color }: { color: ColorValue }) => {
   );
 };
 
-type RowButtonProps = { title: string; danger?: boolean; onPress?: () => void };
+type RowButtonProps = {
+  title: string;
+  danger?: boolean;
+  onPress?: () => void;
+  onHoverIn?: () => void;
+};
 
 // A button at the right of a row. Its fill changes while the pointer is on it.
-const RowButton = ({ title, danger, onPress }: RowButtonProps) => {
+const RowButton = ({ title, danger, onPress, onHoverIn }: RowButtonProps) => {
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const backgroundColor =
@@ -160,7 +167,10 @@ const RowButton = ({ title, danger, onPress }: RowButtonProps) => {
   return (
     <Pressable
       onPress={onPress}
-      onHoverIn={() => setIsHovered(true)}
+      onHoverIn={() => {
+        setIsHovered(true);
+        onHoverIn?.();
+      }}
       onHoverOut={() => setIsHovered(false)}
       style={[styles.button, { backgroundColor }]}
       testID={`device-item-${title.toLowerCase()}`}>
@@ -223,7 +233,8 @@ const DeviceItem = ({
   ).current;
 
   const currentTheme = useTheme();
-  const { isHovered, isFocused, opacity, onHoverIn, onHoverOut } = useLingeringHover();
+  const { isHovered, isFocused, opacity, onHoverIn, onHoverOut, onChildHoverIn } =
+    useLingeringHover();
   const [isDeviceLaunching, setDeviceLaunching] = useState(false);
   const [isIconHovered, setIsIconHovered] = useState(false);
 
@@ -277,7 +288,19 @@ const DeviceItem = ({
   const circleOpacity = opacity.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] });
 
   return (
-    <View {...panResponder.panHandlers} style={isDragged && styles.dragged}>
+    <View
+      {...panResponder.panHandlers}
+      {...(Platform.OS === 'web' && onContextMenu
+        ? // The responder system of react-native-web only takes the primary button, so the
+          // right click comes as the DOM contextmenu event.
+          {
+            onContextMenu: (event: { preventDefault: () => void }) => {
+              event.preventDefault();
+              onContextMenu();
+            },
+          }
+        : {})}
+      style={isDragged && styles.dragged}>
       {dropLine ? (
         <View
           style={[styles.dropLine, dropLine === 'above' ? styles.dropAbove : styles.dropBelow]}
@@ -309,7 +332,10 @@ const DeviceItem = ({
               <Pressable
                 disabled={!onPressDefault}
                 onPress={onPressDefault}
-                onHoverIn={() => setIsIconHovered(true)}
+                onHoverIn={() => {
+                  setIsIconHovered(true);
+                  onChildHoverIn();
+                }}
                 onHoverOut={() => setIsIconHovered(false)}
                 testID="device-item-default"
                 style={[
@@ -339,7 +365,13 @@ const DeviceItem = ({
                     size={22}
                     tintColor={iconTint}
                     style={[styles.cloud, sessionEndedAt && styles.endedCloud]}
-                    fallback={<CloudIcon width={22} height={22} />}
+                    fallback={
+                      sessionEndedAt ? (
+                        <CloudCheckIcon width={22} height={22} />
+                      ) : (
+                        <CloudIcon width={22} height={22} />
+                      )
+                    }
                   />
                 ) : device.osType === 'watchOS' ? (
                   <SymbolView
@@ -426,12 +458,28 @@ const DeviceItem = ({
                   <RowButton
                     title={sessionEndedAt ? 'View' : isRemote ? 'Open' : 'Show'}
                     onPress={onPressOpen}
+                    onHoverIn={onChildHoverIn}
                   />
-                  {onPressStop ? <RowButton title="Stop" danger onPress={onPressStop} /> : null}
-                  {onPressArchive ? <RowButton title="Archive" onPress={onPressArchive} /> : null}
+                  {onPressStop ? (
+                    <RowButton
+                      title="Stop"
+                      danger
+                      onPress={onPressStop}
+                      onHoverIn={onChildHoverIn}
+                    />
+                  ) : null}
+                  {onPressArchive ? (
+                    <RowButton
+                      title="Archive"
+                      onPress={onPressArchive}
+                      onHoverIn={onChildHoverIn}
+                    />
+                  ) : null}
                 </>
               )}
-              {canLaunchNow && !isDeviceLaunching && <RowButton title="Launch" onPress={launch} />}
+              {canLaunchNow && !isDeviceLaunching && (
+                <RowButton title="Launch" onPress={launch} onHoverIn={onChildHoverIn} />
+              )}
             </RowButtons>
           ) : null}
         </Row>
