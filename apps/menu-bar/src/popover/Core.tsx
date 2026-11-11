@@ -237,7 +237,7 @@ function Core(props: Props) {
     archiveRemoteSession,
   } = useListDevices();
   const [remoteProjectId, setRemoteProjectId] = useState(getLastRemoteSimulatorAppId());
-  // The default controller of a session. The "Create new simulator" window can change it too.
+  // The default controller of a session. The "New simulator session" window can change it too.
   const [remoteController, setRemoteController] = useState(() =>
     getRemoteSimulatorController(getLastRemoteSimulatorController())
   );
@@ -683,7 +683,7 @@ function Core(props: Props) {
     }
   }, [remoteStatus, refetch]);
 
-  // The "Create new simulator" window sends the choices; the popover starts the session, so
+  // The "New simulator session" window sends the choices; the popover starts the session, so
   // that the session shows in the list while it starts.
   useEffect(() => {
     const listener = DeviceEventEmitter.addListener(

@@ -83,7 +83,7 @@ const lastRemoteSimulatorAppIdStorageKey = 'last-remote-simulator-app-id';
 // The sessions that ended and that the user did not archive, as a JSON list.
 export const endedRemoteSessionsStorageKey = 'ended-remote-sessions';
 // The default controller of a session. The header of the Remote devices section and the
-// "Create new simulator" window set it.
+// "New simulator session" window set it.
 const lastRemoteSimulatorControllerStorageKey = 'last-remote-simulator-controller';
 export const getLastRemoteSimulatorController = () =>
   storage.getString(lastRemoteSimulatorControllerStorageKey);

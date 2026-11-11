@@ -200,7 +200,7 @@ describe(bootRemoteSimulatorAsync, () => {
     expect(sdk.ensureDeviceRunSessionStopped).not.toHaveBeenCalled();
   });
 
-  it('passes the choices of the "Create new simulator" window to the session', async () => {
+  it('passes the choices of the "New simulator session" window to the session', async () => {
     sdk.getDeviceRunSessionStatus.mockResolvedValue(status('IN_PROGRESS') as any);
 
     await bootRemoteSimulatorAsync({

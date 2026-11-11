@@ -141,7 +141,7 @@ export function isPendingRemoteSession(device: RemoteSimulator) {
 
 /**
  * The device models that Orbit suggests for a new session, and shows first. The first one of a
- * platform is the model that the "Create new simulator" window selects. The iOS models are the
+ * platform is the model that the "New simulator session" window selects. The iOS models are the
  * ones that are pre-warmed on the virtual machines. The ids are device identifiers of
  * Expo Simulators.
  */
@@ -191,7 +191,7 @@ export function getNewRemoteSession(platform: 'ios' | 'android'): RemoteSimulato
   };
 }
 
-/** The choices of the "Create new simulator" window, besides the platform and the project. */
+/** The choices of the "New simulator session" window, besides the platform and the project. */
 export type RemoteSimulatorStartOptions = {
   name?: string;
   deviceIdentifier?: string;
@@ -205,7 +205,7 @@ export type RemoteSimulatorStartOptions = {
   sessionType?: string;
 };
 
-/** The "Create new simulator" window sends this event to the popover, which starts the session. */
+/** The "New simulator session" window sends this event to the popover, which starts the session. */
 export const START_REMOTE_SIMULATOR_EVENT = 'startRemoteSimulator';
 export type StartRemoteSimulatorRequest = {
   platform: 'ios' | 'android';

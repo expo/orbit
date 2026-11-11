@@ -82,7 +82,7 @@ export const REMOTE_SIMULATOR_ID_PREFIX = 'eas:';
 
 export type RemoteSimulatorOption = { id: string; label: string; createdAt?: string };
 
-/** The choices of the "Create new simulator" window, for one project. */
+/** The choices of the "New simulator session" window, for one project. */
 export type RemoteSimulatorOptions = {
   devices: { ios: RemoteSimulatorOption[]; android: RemoteSimulatorOption[] };
   builds: { ios: RemoteSimulatorOption[]; android: RemoteSimulatorOption[] };

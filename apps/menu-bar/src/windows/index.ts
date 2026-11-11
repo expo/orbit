@@ -56,7 +56,7 @@ export const WindowsNavigator = createWindowsNavigator({
   NewSimulator: {
     component: NewSimulator,
     options: {
-      title: 'Create new simulator',
+      title: 'New simulator session',
       windowStyle: {
         mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
         titlebarAppearsTransparent: true,

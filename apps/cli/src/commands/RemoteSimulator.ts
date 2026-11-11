@@ -135,7 +135,7 @@ const SESSION_TYPES: Record<string, DeviceRunSessionType> = {
   appium: DeviceRunSessionType.Appium,
   'web-preview-only': DeviceRunSessionType.WebPreviewOnly,
 };
-/** The builds the "Create new simulator" window offers for each platform. */
+/** The builds the "New simulator session" window offers for each platform. */
 const MAX_BUILD_OPTIONS = 10;
 /** The Expo Go versions the window offers, as on expo.dev. */
 const MAX_EXPO_GO_OPTIONS = 3;
