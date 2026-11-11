@@ -81,10 +81,7 @@ export async function listRemoteSimulatorsAsync(): Promise<RemoteSimulatorList> 
     return { devices: [], accounts: [] };
   }
 
-  const devices: RemoteSimulator[] = [
-    idleRemoteSimulator('ios'),
-    idleRemoteSimulator('android'),
-  ];
+  const devices: RemoteSimulator[] = [idleRemoteSimulator('ios'), idleRemoteSimulator('android')];
 
   const sessionsPerAccount = await Promise.all(
     accounts.map(async (account) => {
@@ -189,7 +186,10 @@ export async function listRemoteSimulatorOptionsAsync({
   ) =>
     edges
       .map(({ node }) => node)
-      .filter((node): node is RemoteSimulatorBuildFragment & { __typename: 'Build' } => node.__typename === 'Build')
+      .filter(
+        (node): node is RemoteSimulatorBuildFragment & { __typename: 'Build' } =>
+          node.__typename === 'Build'
+      )
       .filter(isInstallable)
       .slice(0, MAX_BUILD_OPTIONS)
       .map(buildOption);
@@ -325,6 +325,7 @@ export async function bootRemoteSimulatorAsync({
   // The menu bar reads this line to show and select the session while it starts.
   console.log(JSON.stringify({ remoteSimulatorSessionId: sessionId }));
 
+  let timedOut = false;
   try {
     const deadline = Date.now() + BOOT_TIMEOUT_MS;
     for (;;) {
@@ -343,13 +344,25 @@ export async function bootRemoteSimulatorAsync({
         throw failed('The Expo Simulators session stopped before it was ready.');
       }
       if (Date.now() > deadline) {
-        throw failed('The Expo Simulators session did not start in 30 minutes. Orbit stopped it.');
+        timedOut = true;
+        throw failed('The Expo Simulators session did not start in 30 minutes.');
       }
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
     }
   } catch (error) {
-    // A session that is not ready still bills once it starts, so do not leave it behind.
-    await graphqlSdk.ensureDeviceRunSessionStopped({ deviceRunSessionId: sessionId }).catch(() => {});
+    // A session that is not ready still bills once it starts, so do not leave it behind. The
+    // message says whether the stop worked.
+    const stopped = await graphqlSdk
+      .ensureDeviceRunSessionStopped({ deviceRunSessionId: sessionId })
+      .then(
+        () => true,
+        () => false
+      );
+    if (error instanceof Error && !stopped) {
+      error.message += ' Orbit could not stop it. It can still run: stop it on expo.dev.';
+    } else if (error instanceof Error && timedOut) {
+      error.message += ' Orbit stopped it.';
+    }
     throw error;
   }
 }
@@ -440,7 +453,9 @@ export async function installOnRemoteSimulatorAsync({
     // Fall back to a normal launch, as a local install does.
   }
   if (typeof launchTarget !== 'string') {
-    throw failed('The build was installed, but the Expo Simulators session did not report which app to open.');
+    throw failed(
+      'The build was installed, but the Expo Simulators session did not report which app to open.'
+    );
   }
   const opened = await callControllerAsync(controller, 'agent_device.command', {
     command: 'open',
@@ -454,9 +469,7 @@ export async function installOnRemoteSimulatorAsync({
   }
 }
 
-type ControllerResult =
-  | { ok: true; data: Record<string, unknown> }
-  | { ok: false; code?: string };
+type ControllerResult = { ok: true; data: Record<string, unknown> } | { ok: false; code?: string };
 
 function describeCode(code: string | undefined) {
   return code ? ` (${code})` : '';

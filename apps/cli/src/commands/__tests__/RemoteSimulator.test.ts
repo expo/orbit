@@ -96,7 +96,10 @@ async function loggedFailure(promise: Promise<unknown>) {
     },
     (e) => e
   );
-  return { error, logged: JSON.stringify([error.message, error.details, error.stack, error.cause]) };
+  return {
+    error,
+    logged: JSON.stringify([error.message, error.details, error.stack, error.cause]),
+  };
 }
 
 beforeEach(() => {
@@ -115,7 +118,10 @@ describe(listRemoteSimulatorsAsync, () => {
 
   it('returns nothing and lists no sessions when no account is on a paid plan', async () => {
     sdk.getRemoteSimulatorAccounts.mockResolvedValue({
-      meUserActor: { id: 'me', accounts: [account('a1', false), { ...account('a2', true), subscription: null }] },
+      meUserActor: {
+        id: 'me',
+        accounts: [account('a1', false), { ...account('a2', true), subscription: null }],
+      },
     } as any);
     expect(await listRemoteSimulatorsAsync()).toEqual({ devices: [], accounts: [] });
     expect(sdk.getAccountDeviceRunSessions).not.toHaveBeenCalled();
@@ -129,7 +135,12 @@ describe(listRemoteSimulatorsAsync, () => {
       .mockResolvedValueOnce(page([session('s1', 'me'), session('s2', 'other')], 'cursor') as any)
       .mockResolvedValueOnce(
         page([
-          session('s3', 'me', { status: 'QUEUED', platform: 'ANDROID', type: 'APPIUM', name: 'QA' }),
+          session('s3', 'me', {
+            status: 'QUEUED',
+            platform: 'ANDROID',
+            type: 'APPIUM',
+            name: 'QA',
+          }),
         ]) as any
       );
 
@@ -234,7 +245,11 @@ describe(bootRemoteSimulatorAsync, () => {
 
   it('creates no session for a build URL that is not trusted, or without a project', async () => {
     await expect(
-      bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app', archiveUrl: 'https://evil.example/a.tar.gz' })
+      bootRemoteSimulatorAsync({
+        platform: 'ios',
+        appId: 'app',
+        archiveUrl: 'https://evil.example/a.tar.gz',
+      })
     ).rejects.toMatchObject({ code: 'UNTRUSTED_SOURCE' });
     await expect(bootRemoteSimulatorAsync({ platform: 'ios' })).rejects.toMatchObject({
       code: 'REMOTE_SIMULATOR_FAILED',
@@ -256,9 +271,11 @@ describe(bootRemoteSimulatorAsync, () => {
 
   it('stops the session when it ends before it is ready', async () => {
     sdk.getDeviceRunSessionStatus.mockResolvedValue(status('ERRORED') as any);
-    await expect(bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app' })).rejects.toMatchObject({
-      code: 'REMOTE_SIMULATOR_FAILED',
-    });
+    await expect(bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app' })).rejects.toMatchObject(
+      {
+        code: 'REMOTE_SIMULATOR_FAILED',
+      }
+    );
     expect(sdk.ensureDeviceRunSessionStopped).toHaveBeenCalledWith({ deviceRunSessionId: 's1' });
   });
 
@@ -283,10 +300,28 @@ describe(bootRemoteSimulatorAsync, () => {
     try {
       sdk.getDeviceRunSessionStatus.mockResolvedValue(status('QUEUED') as any);
       const boot = bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app' });
-      const failure = expect(boot).rejects.toThrow('did not start in 30 minutes');
+      const failure = expect(boot).rejects.toThrow(
+        'did not start in 30 minutes. Orbit stopped it.'
+      );
       await jest.advanceTimersByTimeAsync(31 * 60 * 1000);
       await failure;
       expect(sdk.ensureDeviceRunSessionStopped).toHaveBeenCalledWith({ deviceRunSessionId: 's1' });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('says that the session can still run when the stop fails', async () => {
+    jest.useFakeTimers();
+    try {
+      sdk.getDeviceRunSessionStatus.mockResolvedValue(status('QUEUED') as any);
+      sdk.ensureDeviceRunSessionStopped.mockRejectedValue(new Error('network error'));
+      const boot = bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app' });
+      const failure = expect(boot).rejects.toThrow(
+        'did not start in 30 minutes. Orbit could not stop it.'
+      );
+      await jest.advanceTimersByTimeAsync(31 * 60 * 1000);
+      await failure;
     } finally {
       jest.useRealTimers();
     }
@@ -344,7 +379,11 @@ describe(installOnRemoteSimulatorAsync, () => {
         : rpcOk({});
     });
 
-    await installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL, launchUrl: 'myapp://x' });
+    await installOnRemoteSimulatorAsync({
+      deviceId: 'eas:s1',
+      url: BUILD_URL,
+      launchUrl: 'myapp://x',
+    });
 
     expect(calls.slice(2).map((c) => c.body.params.positionals[0])).toEqual(['myapp://x', 'app']);
   });
@@ -365,7 +404,9 @@ describe(installOnRemoteSimulatorAsync, () => {
         { query: 'query', variables: {} }
       )
     );
-    const api = await loggedFailure(installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL }));
+    const api = await loggedFailure(
+      installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL })
+    );
     expect(api.error.code).toBe('REMOTE_SIMULATOR_UNAVAILABLE');
     expect(api.logged).not.toContain(TOKEN);
     expect(api.logged).not.toContain(BASE_URL);
@@ -374,9 +415,16 @@ describe(installOnRemoteSimulatorAsync, () => {
     mockFetch((url) =>
       url.endsWith('/health')
         ? healthy
-        : { result: { ok: false, error: { code: 'COMMAND_FAILED', message: `${BASE_URL} ${TOKEN}` } } }
+        : {
+            result: {
+              ok: false,
+              error: { code: 'COMMAND_FAILED', message: `${BASE_URL} ${TOKEN}` },
+            },
+          }
     );
-    const daemon = await loggedFailure(installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL }));
+    const daemon = await loggedFailure(
+      installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL })
+    );
     expect(daemon.error.code).toBe('REMOTE_SIMULATOR_FAILED');
     expect(daemon.error.message).toContain('(COMMAND_FAILED)');
     expect(daemon.logged).not.toContain(TOKEN);
@@ -385,14 +433,18 @@ describe(installOnRemoteSimulatorAsync, () => {
     global.fetch = jest.fn(async () => {
       throw new Error(`connect failed ${BASE_URL}?token=${TOKEN}`);
     }) as typeof fetch;
-    const network = await loggedFailure(installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL }));
+    const network = await loggedFailure(
+      installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL })
+    );
     expect(network.error.code).toBe('REMOTE_SIMULATOR_UNAVAILABLE');
     expect(network.logged).not.toContain(TOKEN);
   });
 
   it('reports the session as unavailable when it is not running or has no controller', async () => {
     const calls = mockFetch(() => healthy);
-    sdk.getDeviceRunSessionController.mockResolvedValue(controller({ status: 'STOPPED', remoteConfig: null }) as any);
+    sdk.getDeviceRunSessionController.mockResolvedValue(
+      controller({ status: 'STOPPED', remoteConfig: null }) as any
+    );
     await expect(
       installOnRemoteSimulatorAsync({ deviceId: 'eas:s1', url: BUILD_URL })
     ).rejects.toMatchObject({ code: 'REMOTE_SIMULATOR_UNAVAILABLE' });
@@ -451,7 +503,9 @@ describe(listRemoteSimulatorOptionsAsync, () => {
           },
           androidBuilds: {
             edges: [
-              build('apk', { artifacts: { applicationArchiveUrl: `https://expo.dev/a.apk?token=${TOKEN}` } }),
+              build('apk', {
+                artifacts: { applicationArchiveUrl: `https://expo.dev/a.apk?token=${TOKEN}` },
+              }),
               build('aab', { artifacts: { applicationArchiveUrl: 'https://expo.dev/a.aab' } }),
             ],
           },
