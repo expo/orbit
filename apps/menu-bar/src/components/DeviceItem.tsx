@@ -375,9 +375,6 @@ const DeviceItem = ({
                 </>
               )}
               {canLaunchNow && !isDeviceLaunching && <RowButton title="Launch" onPress={launch} />}
-              {isRemote && device.state === 'Shutdown' && !isDeviceLaunching && (
-                <RowButton title="Start" onPress={launch} />
-              )}
             </RowButtons>
           ) : null}
         </Row>

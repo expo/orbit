@@ -132,15 +132,6 @@ export function isPendingRemoteSession(device: RemoteSimulator) {
   return device.id.startsWith(PENDING_REMOTE_SESSION_PREFIX);
 }
 
-/** The session's page that shows the device. It needs a browser login and carries no token. */
-export function getRemoteSimulatorPreviewUrl(device: RemoteSimulator): string | undefined {
-  if (!device.accountName || !device.projectSlug) {
-    return undefined;
-  }
-  const sessionId = device.id.slice(REMOTE_SIMULATOR_ID_PREFIX.length);
-  return `${Config.website.origin}/accounts/${device.accountName}/projects/${device.projectSlug}/simulator-sessions/${sessionId}/preview`;
-}
-
 /**
  * The device models that Orbit suggests for a new session, and shows first. The first one of a
  * platform is the model that the "Create new simulator" window selects. The iOS models are the
@@ -275,7 +266,6 @@ export function parseTags(input: string): Parsed {
   return { value };
 }
 
-/** A short age such as `5m ago`, `3h ago`, `2d ago` or `2w ago`. */
 /**
  * The time since `isoDate`, for a running session: "<1 min", "12 min" or "1 h 5 min". No
  * seconds.
@@ -292,6 +282,7 @@ export function formatElapsedTime(isoDate: string, now = Date.now()): string {
   return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`;
 }
 
+/** A short age such as `5m ago`, `3h ago`, `2d ago` or `2w ago`. */
 export function formatRelativeTime(isoDate: string, now = Date.now()): string {
   const minutes = Math.max(0, Math.floor((now - new Date(isoDate).getTime()) / 60000));
   if (minutes < 60) {

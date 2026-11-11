@@ -11,7 +11,9 @@ import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import { PlatformColor } from '../modules/PlatformColor';
 import { resetApolloStore, saveSessionSecret } from '../modules/Storage';
+import { useListDevices } from '../providers/DevicesProvider';
 import { authenticateAsync } from '../utils/auth';
+import { leaveRemoteSessionsAsync } from '../utils/leaveRemoteSessions';
 import { getProjectBackgroundColor } from '../utils/theme';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
@@ -88,6 +90,7 @@ const AccountRow = ({
   selectAccount,
 }: Props) => {
   const theme = useCurrentTheme();
+  const { remoteSessions } = useListDevices();
   const [isHovered, setIsHovered] = useState(false);
   const [isLinkHovered, setIsLinkHovered] = useState(false);
 
@@ -113,11 +116,22 @@ const AccountRow = ({
       actions[index + 1] = () => selectAccount(account);
     });
     const afterAccounts = accounts.length + 2;
-    actions[afterAccounts] = () => login('login');
-    actions[afterAccounts + 1] = () => {
-      saveSessionSecret(undefined);
-      resetApolloStore();
-    };
+    // After each of these two actions, Orbit does not show the sessions of this user.
+    actions[afterAccounts] = () =>
+      leaveRemoteSessionsAsync({
+        label: 'Continue',
+        known: remoteSessions,
+        action: () => login('login'),
+      });
+    actions[afterAccounts + 1] = () =>
+      leaveRemoteSessionsAsync({
+        label: 'Log out',
+        known: remoteSessions,
+        action: () => {
+          saveSessionSecret(undefined);
+          resetApolloStore();
+        },
+      });
 
     const index = await MenuBarModule.showMenu(items);
     actions[index]?.();

@@ -100,6 +100,7 @@ import {
   getRemoteSimulatorSessionUrl,
   isPendingRemoteSession,
   getRemoteSimulatorProjects,
+  RemoteSimulatorProject,
   parseStartedRemoteSimulator,
 } from '../utils/remoteSimulator';
 import { describeResignError } from '../utils/resignErrorCopy';
@@ -256,6 +257,14 @@ function Core(props: Props) {
     });
     return () => listener.remove();
   }, []);
+  // On Windows and Linux a storage listener does not see a change from the Settings window. So
+  // read the stored values again each time the popover opens.
+  usePopoverFocusEffect(
+    useCallback(() => {
+      setPreferences(getUserPreferences());
+      setDeviceList(getDeviceListPreferences());
+    }, [])
+  );
   const updateDeviceList = (change: (prev: DeviceListPreferences) => DeviceListPreferences) => {
     const next = change(getDeviceListPreferences());
     saveDeviceListPreferences(next);
@@ -479,6 +488,9 @@ function Core(props: Props) {
   );
   // Starts an Expo Simulators session, optionally with a build. Every start goes through here.
   const bootingRemotePlatforms = useRef(new Set<string>());
+  // The sessions that the user stopped. A session that stops while it starts makes the start
+  // fail, and that failure needs no alert.
+  const stoppedRemoteSessions = useRef(new Set<string>());
   const bootRemoteSimulator = useCallback(
     async (
       platform: 'ios' | 'android',
@@ -492,11 +504,16 @@ function Core(props: Props) {
       // must not start a second session. An explicit start from the window always starts.
       if (!isExplicit) {
         if (bootingRemotePlatforms.current.has(platform)) {
+          Alert.alert(
+            'An Expo Simulators session is already starting',
+            'Launch the build again when the session shows as Running.'
+          );
           return;
         }
         bootingRemotePlatforms.current.add(platform);
       }
       let hideStartingRow: (() => void) | undefined;
+      let startedSessionId: string | undefined;
       try {
         const project = chosenProject ?? (await chooseRemoteProject());
         if (!project) {
@@ -530,24 +547,36 @@ function Core(props: Props) {
               return;
             }
             session.deviceIdentifier = options?.deviceIdentifier;
+            // Orbit installs builds only through Agent Device, which is also the controller
+            // of a session that starts with no choice.
+            session.installable = (options?.sessionType ?? 'agent-device') === 'agent-device';
+            startedSessionId = session.id;
             // Show and select the session now. The next launch then finds it as `Starting`
             // and does not start another one.
             hidePendingRow();
             hideStartingRow = showStartingRemoteSimulator(session);
-            // When each build gets a new session, that stays the default.
-            if (!getNewRemoteSessionDevice(getSelectedDevicesIds()[platform])) {
+            // When each build gets a new session, that stays the default. A session that
+            // cannot take a build does not replace the default device.
+            if (
+              session.installable &&
+              !getNewRemoteSessionDevice(getSelectedDevicesIds()[platform])
+            ) {
               persistSelectedDevice(session);
             }
           }
         );
       } catch (error) {
-        alertRemoteSimulatorError(error);
+        // No alert when the user stopped the session while it started.
+        if (!startedSessionId || !stoppedRemoteSessions.current.delete(startedSessionId)) {
+          alertRemoteSimulatorError(error);
+        }
       } finally {
         if (!isExplicit) {
           bootingRemotePlatforms.current.delete(platform);
         }
-        await refetch();
+        // First forget the row, so that the new list does not show a session that failed.
         hideStartingRow?.();
+        await refetch();
       }
     },
     [chooseRemoteProject, showStartingRemoteSimulator, persistSelectedDevice, refetch]
@@ -561,10 +590,12 @@ function Core(props: Props) {
       if (!platform) {
         return undefined;
       }
-      const id = deviceId ?? selectedDevicesIds[platform];
-      if (getNewRemoteSessionDevice(id)) {
+      // Only the default that the user selected can ask for a new session. A device id from
+      // a link cannot: a link must not start a session that uses the plan.
+      if (!deviceId && getNewRemoteSessionDevice(selectedDevicesIds[platform])) {
         return getNewRemoteSession(platform);
       }
+      const id = deviceId ?? selectedDevicesIds[platform];
       return remoteSessions.find(
         (session) => session.id === id && getDeviceOS(session) === platform
       );
@@ -614,6 +645,10 @@ function Core(props: Props) {
     const listener = DeviceEventEmitter.addListener(
       START_REMOTE_SIMULATOR_EVENT,
       ({ platform, project, options }: StartRemoteSimulatorRequest) => {
+        // The development window has a second popover. Only one of them starts the session.
+        if (props.isDevWindow) {
+          return;
+        }
         saveLastRemoteSimulatorAppId(project.id);
         setRemoteProjectId(project.id);
         // Show the session while it starts.
@@ -622,23 +657,40 @@ function Core(props: Props) {
       }
     );
     return () => listener.remove();
-  }, [bootRemoteSimulator]);
+  }, [bootRemoteSimulator, props.isDevWindow]);
 
+  // Returns whether the session stopped.
   const stopRemoteSimulator = useCallback(
     async (device: RemoteSimulator) => {
+      let stopped = true;
+      stoppedRemoteSessions.current.add(device.id);
       try {
         await stopRemoteSimulatorAsync(device.id);
       } catch (error) {
+        stopped = false;
+        stoppedRemoteSessions.current.delete(device.id);
         alertRemoteSimulatorError(error);
       }
       await refetch();
+      return stopped;
     },
     [refetch]
   );
 
   const installOnRemoteSimulator = useCallback(
-    async (target: RemoteSimulator, appURI: string, launchURL?: string) => {
+    async (
+      target: RemoteSimulator,
+      appURI: string,
+      launchURL?: string,
+      buildProject?: RemoteSimulatorProject
+    ) => {
       const platform = getDeviceOS(target) as 'ios' | 'android';
+      // A new session runs under the project of the build, when that project is known and its
+      // account can use Expo Simulators. If not, it runs under the project that was used last.
+      const project =
+        buildProject && remoteAccounts.some(({ name }) => buildProject.label.startsWith(`${name}/`))
+          ? buildProject
+          : undefined;
       if (target.state === 'Shutdown') {
         createTask({ id: appURI, status: MenuBarStatus.BOOTING_DEVICE, progress: 0 });
         // The default can name the device model of the new session.
@@ -646,7 +698,7 @@ function Core(props: Props) {
         await bootRemoteSimulator(
           platform,
           { url: appURI, launchURL },
-          undefined,
+          project,
           deviceIdentifier ? { deviceIdentifier } : undefined
         );
         return;
@@ -677,8 +729,10 @@ function Core(props: Props) {
             {
               text: 'Replace session',
               onPress: async () => {
-                await stopRemoteSimulator(target);
-                await bootRemoteSimulator(platform, { url: appURI, launchURL });
+                // A second session starts only when the first one stopped.
+                if (await stopRemoteSimulator(target)) {
+                  await bootRemoteSimulator(platform, { url: appURI, launchURL }, project);
+                }
               },
             },
           ]);
@@ -687,7 +741,7 @@ function Core(props: Props) {
         }
       }
     },
-    [bootRemoteSimulator, stopRemoteSimulator, createTask]
+    [bootRemoteSimulator, stopRemoteSimulator, createTask, remoteAccounts]
   );
 
   const getDeviceByPlatform = useCallback(
@@ -942,7 +996,13 @@ function Core(props: Props) {
   );
 
   const installAppFromURI = useCallback(
-    async (appURI: string, launchURL?: string, deviceId?: string) => {
+    async (
+      appURI: string,
+      launchURL?: string,
+      deviceId?: string,
+      // The project of the build, when the caller knows it.
+      project?: RemoteSimulatorProject
+    ) => {
       if (tasks.has(appURI)) {
         return;
       }
@@ -951,7 +1011,7 @@ function Core(props: Props) {
       if (remoteTarget) {
         // The session downloads the build itself, so nothing is downloaded here.
         try {
-          await installOnRemoteSimulator(remoteTarget, appURI, launchURL);
+          await installOnRemoteSimulator(remoteTarget, appURI, launchURL, project);
         } finally {
           setTimeout(() => {
             deleteTask(appURI);

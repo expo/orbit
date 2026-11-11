@@ -1,6 +1,6 @@
 import { RemoteSimulatorOption, RemoteSimulatorOptions } from 'common-types/build/devices';
 import { SymbolView } from 'expo-symbols';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -166,6 +166,7 @@ const NewSimulator = () => {
     onChoose(emptyLabel ? items[index - 2] : items[index]);
   };
 
+  const hasStarted = useRef(false);
   const onPressStart = () => {
     if (!project) {
       return;
@@ -200,6 +201,11 @@ const NewSimulator = () => {
         sessionType: controller,
       },
     };
+    // One request for each window: a second click must not start a second session.
+    if (hasStarted.current) {
+      return;
+    }
+    hasStarted.current = true;
     DeviceEventEmitter.emit(START_REMOTE_SIMULATOR_EVENT, request);
     WindowsNavigator.close('NewSimulator');
   };

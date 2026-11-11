@@ -10,10 +10,10 @@
 - Redesign the Settings window with a sidebar, using a native SwiftUI sidebar on macOS. ([#376](https://github.com/expo/orbit/pull/376) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Renew apps signed with free Apple IDs automatically before their 7-day profile expires. ([#378](https://github.com/expo/orbit/pull/378) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add an option in Settings to install the `orbit` command in PATH, so the CLI can be run from any terminal. ([#381](https://github.com/expo/orbit/pull/381) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Add Expo Simulators sessions as remote devices: start, open and stop a session, and launch builds on it. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
+- Add Expo Simulators sessions as remote devices: start, open and stop a session, and launch builds on it. Quit and log out ask first when sessions are still running. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
 - Rework the menu: an account selector, a row of project tiles that can launch the latest app, a default device for each platform, and actions on device rows to launch, show and stop a device. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
 - Add options to set the order of devices, to hide devices and to hide sections of the menu. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
-- Add the Command-comma shortcut to open Settings (Ctrl+comma on Windows and Linux) and Command-W to close a window. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
+- Add the Command-comma shortcut to open Settings and Command-W to close a window. On Windows and Linux, Ctrl+comma, Ctrl+W and Ctrl+Q work in every window. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
 
 ### 🐛 Bug fixes
 

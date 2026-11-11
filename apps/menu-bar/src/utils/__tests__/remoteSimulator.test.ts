@@ -9,7 +9,6 @@ import {
 import {
   formatElapsedTime,
   formatRelativeTime,
-  getRemoteSimulatorPreviewUrl,
   getRemoteSimulatorProjects,
   parseLaunchArgs,
   parseStartedRemoteSimulator,
@@ -113,35 +112,6 @@ describe(parseStartedRemoteSimulator, () => {
   it('ignores every other output line', () => {
     expect(parseStartedRemoteSimulator('Booting…', 'ios', project)).toBeUndefined();
     expect(parseStartedRemoteSimulator('{"other":1}', 'ios', project)).toBeUndefined();
-  });
-});
-
-describe(getRemoteSimulatorPreviewUrl, () => {
-  it('links to the session page that carries no token', () => {
-    const url = getRemoteSimulatorPreviewUrl({
-      id: 'eas:abc',
-      name: 'my-app',
-      osType: 'iOS',
-      deviceType: 'remote',
-      state: 'Booted',
-      accountName: 'gated',
-      projectSlug: 'my-app',
-    });
-    expect(url).toBe(
-      'https://expo.dev/accounts/gated/projects/my-app/simulator-sessions/abc/preview'
-    );
-  });
-
-  it('has no link for the row that starts a session', () => {
-    expect(
-      getRemoteSimulatorPreviewUrl({
-        id: 'eas:ios',
-        name: 'Expo Simulators',
-        osType: 'iOS',
-        deviceType: 'remote',
-        state: 'Shutdown',
-      })
-    ).toBeUndefined();
   });
 });
 

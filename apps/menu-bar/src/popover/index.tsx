@@ -48,7 +48,7 @@ function Popover(props: Props) {
       <ErrorBoundary fallback={Fallback}>
         <Core isDevWindow={props.isDevWindow} />
       </ErrorBoundary>
-      <Footer />
+      <Footer isDevWindow={props.isDevWindow} />
     </View>
   );
 }

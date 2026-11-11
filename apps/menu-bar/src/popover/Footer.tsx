@@ -2,50 +2,38 @@ import { memo, useCallback, useEffect } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 
 import Item from './Item';
-import { stopRemoteSimulatorAsync } from '../commands/remoteSimulatorAsync';
 import { Divider, Text, View } from '../components';
-import Alert from '../modules/Alert';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import { useListDevices } from '../providers/DevicesProvider';
+import { leaveRemoteSessionsAsync } from '../utils/leaveRemoteSessions';
 import { WindowsNavigator } from '../windows';
 
 export const FOOTER_HEIGHT = 62;
 
-const Footer = () => {
+const Footer = ({ isDevWindow }: { isDevWindow: boolean }) => {
   const { remoteSessions: sessions } = useListDevices();
 
   // A remote session keeps running, and uses the plan, after Orbit quits. So each way to quit
   // asks first: the Quit row, Command-Q and the Quit item of the menu bar icon.
-  const quit = useCallback(() => {
-    if (!sessions.length) {
-      MenuBarModule.exitApp();
-      return;
-    }
-    const one = sessions.length === 1;
-    Alert.alert(
-      one
-        ? 'A remote session is still running'
-        : `${sessions.length} remote sessions are still running`,
-      `${one ? 'It keeps' : 'They keep'} running, and ${one ? 'uses' : 'use'} your Expo plan, until you stop ${one ? 'it' : 'them'}. This includes sessions that you started on expo.dev or with EAS CLI.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Quit', onPress: () => MenuBarModule.exitApp() },
-        {
-          text: one ? 'Stop session and quit' : 'Stop sessions and quit',
-          onPress: async () => {
-            await Promise.allSettled(sessions.map(({ id }) => stopRemoteSimulatorAsync(id)));
-            MenuBarModule.exitApp();
-          },
-        },
-      ]
-    );
-  }, [sessions]);
+  const quit = useCallback(
+    () =>
+      leaveRemoteSessionsAsync({
+        label: 'Quit',
+        known: sessions,
+        action: () => MenuBarModule.exitApp(),
+      }),
+    [sessions]
+  );
 
   useEffect(() => {
+    // The development window has a second footer. Only one of them answers the request.
+    if (isDevWindow) {
+      return;
+    }
     const listener = DeviceEventEmitter.addListener('quitRequested', quit);
     return () => listener.remove();
-  }, [quit]);
+  }, [quit, isDevWindow]);
 
   return (
     <View style={styles.container} testID="popover-footer">

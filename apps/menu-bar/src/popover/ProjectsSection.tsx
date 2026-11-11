@@ -14,7 +14,7 @@ import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import { PlatformColor } from '../modules/PlatformColor';
 import { getProjectAction, saveProjectAction } from '../modules/Storage';
-import { formatRelativeTime } from '../utils/remoteSimulator';
+import { formatRelativeTime, RemoteSimulatorProject } from '../utils/remoteSimulator';
 import { useCurrentTheme } from '../utils/useExpoTheme';
 
 const TILE_ICON_SIZE = 48;
@@ -33,6 +33,18 @@ export function getProjectSectionHeight(numberOfApps: number) {
 
   // The paddings of the section and the gap between the header and the row.
   return SECTION_HEADER_HEIGHT + TILE_HEIGHT + 12;
+}
+
+// Orbit cannot install an Android App Bundle.
+function isInstallable(archiveUrl?: string | null) {
+  if (!archiveUrl) {
+    return false;
+  }
+  try {
+    return !new URL(archiveUrl).pathname.toLowerCase().endsWith('.aab');
+  } catch {
+    return false;
+  }
 }
 
 // What a click on a project tile does. The user chooses it in the section header.
@@ -124,7 +136,12 @@ interface Props {
   /** The selected account. "See all" opens its projects. */
   accountName?: string;
   /** Installs and launches a build, as for a build that the user opens from expo.dev. */
-  installAppFromURI: (appURI: string) => Promise<void>;
+  installAppFromURI: (
+    appURI: string,
+    launchURL?: string,
+    deviceId?: string,
+    project?: RemoteSimulatorProject
+  ) => Promise<void>;
   /** Hides the section. */
   onPressHide: () => void;
 }
@@ -223,7 +240,7 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressH
       const latest = (platform: string, { edges }: LatestBuilds) => {
         const build = edges
           .map(({ node }) => node)
-          .find((item) => item.artifacts?.applicationArchiveUrl);
+          .find((item) => isInstallable(item.artifacts?.applicationArchiveUrl));
         return build ? [{ platform, build }] : [];
       };
       const result = data.app.byId;
@@ -293,7 +310,11 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressH
     if (choice === 'page') {
       openProjectURL(app);
     } else if (choice?.build.artifacts?.applicationArchiveUrl) {
-      await installAppFromURI(choice.build.artifacts.applicationArchiveUrl);
+      // A new remote session for this build runs under this project.
+      await installAppFromURI(choice.build.artifacts.applicationArchiveUrl, undefined, undefined, {
+        id: app.id,
+        label: `${app.ownerAccount.name}/${app.slug}`,
+      });
     }
   };
 

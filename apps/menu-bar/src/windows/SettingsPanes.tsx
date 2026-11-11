@@ -92,6 +92,7 @@ import {
   getCurrentUserDisplayName,
   isRenewing,
 } from '../utils/helpers';
+import { leaveRemoteSessionsAsync } from '../utils/leaveRemoteSessions';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme, useExpoPalette, useExpoTheme } from '../utils/useExpoTheme';
@@ -452,10 +453,14 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     }
   };
 
-  const handleLogout = () => {
-    saveSessionSecret(undefined);
-    resetApolloStore();
-  };
+  const handleLogout = () =>
+    leaveRemoteSessionsAsync({
+      label: 'Log out',
+      action: () => {
+        saveSessionSecret(undefined);
+        resetApolloStore();
+      },
+    });
 
   const toggleOS = async (key: keyof UserPreferences, value: boolean) => {
     // Read the stored value: the popover can hide a section while this window is open.
