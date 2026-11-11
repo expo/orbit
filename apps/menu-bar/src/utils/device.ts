@@ -40,9 +40,7 @@ export type PlatformToDevice<P extends DevicePlatform> = P extends 'ios'
         : Device;
 
 export function getDeviceOS<T extends Device>(device: T): DeviceToPlatform<T> {
-  return (
-    ((device as { osType?: unknown }).osType as string | undefined) ?? 'iOS'
-  ).toLowerCase() as DeviceToPlatform<T>;
+  return device.osType.toLowerCase() as DeviceToPlatform<T>;
 }
 
 export function getDeviceId(device: Device): string {

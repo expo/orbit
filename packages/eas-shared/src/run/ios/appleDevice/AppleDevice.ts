@@ -87,14 +87,9 @@ async function getConnectedDevicesUsingNativeToolsAsync(): Promise<AppleConnecte
           // Xcode 26 `devicectl` (JSON v4) also lists simulators, flagged with
           // `reality: 'simulated'`. Older versions omit the field, so only
           // exclude entries explicitly marked as simulated.
-          // Xcode 27.2 (JSON v5) lists unavailable simulators the same way,
-          // with `transportType: 'sameMachine'` and no `platform` — see #385.
-          // Simulators already come from `simctl`, so skip anything that
-          // looks simulated and require the fields a real device always has.
+          // devicectl can list unavailable simulators without a `platform` (#385).
           device.hardwareProperties?.reality !== 'simulated' &&
-          device.connectionProperties?.transportType !== 'sameMachine' &&
           device.hardwareProperties?.platform != null &&
-          device.hardwareProperties?.udid != null &&
           device.connectionProperties.pairingState === 'paired' &&
           device.connectionProperties.tunnelState !== 'unavailable'
         );

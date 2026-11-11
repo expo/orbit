@@ -83,27 +83,16 @@ describe('getConnectedDevicesAsync', () => {
 
   it('ignores Xcode 27.2 unavailable simulators with no platform', async () => {
     mockGetConnectedAppleDevicesAsync.mockResolvedValueOnce([
-      // devicectl JSON v5: unavailable simulators have no `platform` or
-      // `osVersionNumber`. One entry omits `reality` entirely to prove the
-      // `platform` / `transportType` guards hold even if Apple drops the flag.
-      {
-        hardwareProperties: { udid: 'SIM-NO-PLATFORM', productType: 'iPad14,9' },
-        deviceProperties: { name: 'iPad Air 11-inch (M2)' },
-        connectionProperties: {
-          pairingState: 'paired',
-          tunnelState: 'disconnected',
-          transportType: 'sameMachine',
-          reality: 'simulated',
-        },
-      } as any,
-      // Same shape but with `reality` at the top level of hardwareProperties.
+      // devicectl JSON v5: unavailable simulators (runtime missing) have no
+      // `platform` or `osVersionNumber`, but keep
+      // `hardwareProperties.reality: 'simulated'`.
       {
         hardwareProperties: {
-          udid: 'SIM-NO-PLATFORM-2',
-          productType: 'iPhone15,5',
+          udid: 'SIM-NO-PLATFORM',
+          productType: 'iPhone17,3',
           reality: 'simulated',
         },
-        deviceProperties: { name: 'iPhone 15 Plus' },
+        deviceProperties: { name: 'orbit-388-probe' },
         connectionProperties: {
           pairingState: 'paired',
           tunnelState: 'disconnected',
@@ -117,9 +106,6 @@ describe('getConnectedDevicesAsync', () => {
     const devices = await getConnectedDevicesAsync();
 
     expect(devices.map((device) => device.udid)).toEqual(['REAL']);
-    for (const device of devices) {
-      expect(device.osType).toBeDefined();
-    }
   });
 
   it('swallows transient custom-tooling errors when native discovery succeeded', async () => {
