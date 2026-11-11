@@ -1,3 +1,21 @@
+diff --git a/node_modules/react-native-macos/Libraries/Animated/shouldUseTurboAnimatedModule.js b/node_modules/react-native-macos/Libraries/Animated/shouldUseTurboAnimatedModule.js
+index 2758cc7..66d8182 100644
+--- a/node_modules/react-native-macos/Libraries/Animated/shouldUseTurboAnimatedModule.js
++++ b/node_modules/react-native-macos/Libraries/Animated/shouldUseTurboAnimatedModule.js
+@@ -15,7 +15,12 @@ function shouldUseTurboAnimatedModule(): boolean {
+   if (ReactNativeFeatureFlags.cxxNativeAnimatedEnabled()) {
+     return false;
+   } else {
+-    return Platform.OS === 'ios' && global.RN$Bridgeless === true;
++    // [macOS: the legacy module does not run its operations without the bridge
++    return (
++      (Platform.OS === 'ios' || Platform.OS === 'macos') &&
++      global.RN$Bridgeless === true
++    );
++    // macOS]
+   }
+ }
+ 
 diff --git a/node_modules/react-native-macos/React/CoreModules/RCTWebSocketModule.mm b/node_modules/react-native-macos/React/CoreModules/RCTWebSocketModule.mm
 index 4914245..d8a5022 100644
 --- a/node_modules/react-native-macos/React/CoreModules/RCTWebSocketModule.mm
@@ -13,7 +31,7 @@ index 4914245..d8a5022 100644
  }
  
  RCT_EXPORT_MODULE()
-@@ -62,6 +66,7 @@ RCT_EXPORT_MODULE()
+@@ -62,6 +66,7 @@ - (void)invalidate
  {
    [super invalidate];
  
@@ -21,7 +39,7 @@ index 4914245..d8a5022 100644
    _contentHandlers = nil;
    for (SRWebSocket *socket in _sockets.allValues) {
      socket.delegate = nil;
-@@ -153,6 +158,10 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
+@@ -153,6 +158,10 @@ - (void)setContentHandler:(id<RCTWebSocketContentHandler>)handler forSocketID:(N
  
  - (void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(id)message
  {
@@ -32,7 +50,7 @@ index 4914245..d8a5022 100644
    NSString *type;
  
    NSNumber *socketID = [webSocket reactTag];
-@@ -173,12 +182,20 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
+@@ -173,12 +182,20 @@ - (void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(id)message
  
  - (void)webSocketDidOpen:(SRWebSocket *)webSocket
  {
@@ -53,7 +71,7 @@ index 4914245..d8a5022 100644
    NSNumber *socketID = [webSocket reactTag];
    _contentHandlers[socketID] = nil;
    _sockets[socketID] = nil;
-@@ -192,6 +209,10 @@ RCT_EXPORT_METHOD(close : (double)code reason : (NSString *)reason socketID : (d
+@@ -192,6 +209,10 @@ - (void)webSocket:(SRWebSocket *)webSocket
                reason:(NSString *)reason
              wasClean:(BOOL)wasClean
  {
