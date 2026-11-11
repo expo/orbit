@@ -2,8 +2,8 @@ import { Device } from 'common-types/build/devices';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
+  ColorValue,
   Easing,
   GestureResponderEvent,
   PanResponder,
@@ -55,6 +55,11 @@ interface Props {
    */
   onPressOpen?: () => void;
   onPressStop?: () => void;
+  /**
+   * What Orbit does with the device now, for example `Installing...`. It shows in place of
+   * the description, and the icon shows a spinner.
+   */
+  status?: string;
   /** The device is the default device of its platform. Its icon shows in blue. */
   isDefault?: boolean;
   /** A click on the icon makes the device the default, or removes the default. */
@@ -87,7 +92,8 @@ const DEFAULT_DEVICE_COLOR = '#007AFF';
 const RowButtons = ({ children }: { children: React.ReactNode }) => {
   const [scale] = useState(() => new Animated.Value(0.86));
   useEffect(() => {
-    // Not the native driver: it does not work for this app on macOS.
+    // Not the native driver: it did not work on macOS before the patch in `patches/README.md`.
+    // This animation was not tried with it again.
     Animated.timing(scale, {
       toValue: 1,
       duration: 170,
@@ -98,6 +104,39 @@ const RowButtons = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Animated.View style={[styles.buttons, { transform: [{ scale }] }]}>{children}</Animated.View>
+  );
+};
+
+const SPINNER_TURN_MS = 800;
+
+// The spinner in the icon of a row. The app draws it: the color of the native spinner of
+// macOS does not reach the native view in this app, so it showed white on the grey circle.
+// The native driver turns it, so the animation does not use the JavaScript thread. On macOS
+// the native driver needs the react-native-macos patch: see `patches/README.md`.
+const Spinner = ({ color }: { color: ColorValue }) => {
+  const [rotation] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: SPINNER_TURN_MS,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [rotation]);
+  const rotate = rotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+
+  // With the native driver on macOS, a view turns around its top left corner, not around its
+  // center. So the view that turns has no size and is at the center, and the arc is around it.
+  return (
+    <View style={styles.spinner}>
+      <Animated.View style={[styles.spinnerCenter, { transform: [{ rotate }] }]}>
+        <View style={[styles.spinnerArc, { borderTopColor: color, borderRightColor: color }]} />
+      </Animated.View>
+    </View>
   );
 };
 
@@ -134,6 +173,7 @@ const DeviceItem = ({
   onPressLaunch,
   onPressOpen,
   onPressStop,
+  status,
   isDefault = false,
   onPressDefault,
   reorder,
@@ -219,8 +259,9 @@ const DeviceItem = ({
   const canLaunchNow = isVirtual && device.state === 'Shutdown';
   const hasSessionButtons = canLaunch && device.state !== 'Shutdown' && !!onPressOpen;
   const isRunning = canLaunch && device.state === 'Booted';
-  // The icon shows the state: a spinner while the device starts, a green dot while it runs.
-  const isStarting = (isRemote && device.state === 'Starting') || isDeviceLaunching;
+  // The icon shows the state: a spinner while the device starts or has a task, a green dot
+  // while it runs.
+  const isStarting = (isRemote && device.state === 'Starting') || isDeviceLaunching || !!status;
   const iconTint = isDefault ? '#ffffff' : undefined;
   const circleOpacity = opacity.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] });
 
@@ -278,12 +319,8 @@ const DeviceItem = ({
                   },
                 ]}>
                 {isStarting ? (
-                  <ActivityIndicator
-                    size="small"
-                    // The color of the device symbols: dark on the grey circle, white on blue.
-                    color={iconTint ?? PlatformColor('labelColor')}
-                    style={styles.spinner}
-                  />
+                  // The color of the device symbols: dark on the grey circle, white on blue.
+                  <Spinner color={iconTint ?? PlatformColor('labelColor')} />
                 ) : isRemote ? (
                   <SymbolView
                     name="cloud"
@@ -316,7 +353,7 @@ const DeviceItem = ({
                 )}
               </Pressable>
             </Animated.View>
-            {isRunning ? (
+            {isRunning && !isStarting ? (
               // The device runs: a green dot on its icon.
               <View style={styles.runningDot} testID="device-item-running" />
             ) : null}
@@ -329,14 +366,15 @@ const DeviceItem = ({
                   style={[styles.description, styles.shrink, secondaryText]}
                   leading="small"
                   numberOfLines={1}>
-                  {isRemote
-                    ? device.projectSlug
-                      ? `${device.accountName}/${device.projectSlug}`
-                      : 'Not running'
-                    : capitalize(device.deviceType)}
-                  {'osVersion' in device && ` · ${device.osVersion}`}
+                  {status ??
+                    (isRemote
+                      ? device.projectSlug
+                        ? `${device.accountName}/${device.projectSlug}`
+                        : 'Not running'
+                      : capitalize(device.deviceType))}
+                  {!status && 'osVersion' in device && ` · ${device.osVersion}`}
                 </Text>
-                {elapsedTime ? (
+                {elapsedTime && !status ? (
                   // A separate text that does not get shorter: when the row has little space,
                   // the project name gets the ellipsis and the time stays in view.
                   <Text style={[styles.description, secondaryText]} leading="small">
@@ -439,5 +477,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     cursor: 'pointer',
   },
-  spinner: { transform: [{ scale: 0.7 }] },
+  spinner: { width: 16, height: 16 },
+  spinnerCenter: { position: 'absolute', left: 8, top: 8, width: 0, height: 0 },
+  spinnerArc: {
+    position: 'absolute',
+    left: -8,
+    top: -8,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
 });

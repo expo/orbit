@@ -17,11 +17,9 @@ export const BUILDS_SECTION_HEIGHT = 42 + DEVICE_ITEM_HEIGHT * 2;
 
 interface Props {
   installAppFromURI: (appURI: string) => Promise<void>;
-  /** Hides the section. */
-  onPressHide?: () => void;
 }
 
-const BuildsSection = ({ installAppFromURI, onPressHide }: Props) => {
+const BuildsSection = ({ installAppFromURI }: Props) => {
   const theme = useExpoTheme();
 
   async function openFilePicker() {
@@ -40,7 +38,7 @@ const BuildsSection = ({ installAppFromURI, onPressHide }: Props) => {
   return (
     <View style={{ minHeight: BUILDS_SECTION_HEIGHT }} testID="builds-section">
       <View pt="2.5" pb="tiny">
-        <SectionHeader label="Builds" onPressHide={onPressHide} />
+        <SectionHeader label="Builds" />
       </View>
       <AddDeviceItem
         title="Open from expo.dev"

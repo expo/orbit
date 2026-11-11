@@ -14,7 +14,7 @@ import { FOOTER_HEIGHT } from './Footer';
 import ProjectsSection, { getProjectSectionHeight } from './ProjectsSection';
 import ResignedAppsAttentionRow, { ATTENTION_ROW_HEIGHT } from './ResignedAppsAttentionRow';
 import { SECTION_HEADER_HEIGHT } from './SectionHeader';
-import TasksSection, { TASK_HEIGHT } from './TasksSection';
+import TasksSection, { TASK_HEIGHT, getDeviceStatus } from './TasksSection';
 import { useFileHandler } from '../../modules/file-handler';
 import type { MenuItem } from '../../modules/menu-bar/src/types';
 import { Analytics, Event } from '../analytics';
@@ -55,9 +55,9 @@ import {
   saveDeviceListPreferences,
   getUserPreferences,
   getLastRemoteSimulatorAppId,
+  getLastRemoteSimulatorController,
+  saveLastRemoteSimulatorController,
   getSelectedDevicesIds,
-  saveUserPreferences,
-  sectionPreferenceKeys,
   saveLastRemoteSimulatorAppId,
   saveSelectedDevicesIds,
   sessionSecretStorageKey,
@@ -102,6 +102,8 @@ import {
   getRemoteSimulatorProjects,
   RemoteSimulatorProject,
   parseStartedRemoteSimulator,
+  REMOTE_SIMULATOR_CONTROLLERS,
+  getRemoteSimulatorController,
 } from '../utils/remoteSimulator';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { WindowsNavigator } from '../windows';
@@ -133,6 +135,9 @@ function alertRemoteSimulatorError(error: unknown) {
     Alert.alert('Expo Simulators', error.message);
   }
 }
+
+// The id of the task of a build that goes to a session.
+const getRemoteTaskId = (appURI: string) => `remote:${appURI}`;
 
 function Core(props: Props) {
   const [selectedDevicesIds, setSelectedDevicesIds] =
@@ -199,6 +204,10 @@ function Core(props: Props) {
     showStartingRemoteSimulator,
   } = useListDevices();
   const [remoteProjectId, setRemoteProjectId] = useState(getLastRemoteSimulatorAppId());
+  // The default controller of a session. The "Create new simulator" window can change it too.
+  const [remoteController, setRemoteController] = useState(() =>
+    getRemoteSimulatorController(getLastRemoteSimulatorController())
+  );
   usePopoverFocusEffect(
     useCallback(() => {
       refetch();
@@ -208,7 +217,7 @@ function Core(props: Props) {
 
   const { attention } = useResignedAppRenewals({ createTask, updateTask, deleteTask });
 
-  // The eye in a section header hides the section. Settings shows it again.
+  // Settings shows or hides each section.
   const [preferences, setPreferences] = useState(getUserPreferences());
   useEffect(() => {
     const listener = storage.addOnValueChangedListener((key) => {
@@ -218,15 +227,6 @@ function Core(props: Props) {
     });
     return () => listener.remove();
   }, []);
-  const hideSection = (key: string) => {
-    const preferenceKey = sectionPreferenceKeys[key];
-    if (!preferenceKey) {
-      return;
-    }
-    saveUserPreferences({ ...getUserPreferences(), [preferenceKey]: false });
-    // The device list reads the preferences when it loads.
-    refetch();
-  };
   const showProjects = preferences.showProjects;
   const showBuilds = preferences.showBuilds;
 
@@ -237,7 +237,7 @@ function Core(props: Props) {
     FOOTER_HEIGHT -
     (showBuilds ? BUILDS_SECTION_HEIGHT : 0) -
     ACCOUNT_ROW_HEIGHT -
-    tasks.size * TASK_HEIGHT -
+    [...tasks.values()].filter(({ deviceId }) => !deviceId).length * TASK_HEIGHT -
     (showProjects ? getProjectSectionHeight(apps?.length) : 0) -
     (attention ? ATTENTION_ROW_HEIGHT : 0) -
     5;
@@ -263,6 +263,7 @@ function Core(props: Props) {
     useCallback(() => {
       setPreferences(getUserPreferences());
       setDeviceList(getDeviceListPreferences());
+      setRemoteController(getRemoteSimulatorController(getLastRemoteSimulatorController()));
     }, [])
   );
   const updateDeviceList = (change: (prev: DeviceListPreferences) => DeviceListPreferences) => {
@@ -334,6 +335,20 @@ function Core(props: Props) {
       gap: index === shownSections.length - 1 ? LAST_SECTION_GAP : SECTION_GAP,
     };
   });
+  // A task for a device shows in the row of that device. A task with no device, or with a
+  // device that has no row now, shows above the sections.
+  const shownDeviceIds = new Set(
+    visibleSections.flatMap((section) => (section.data as Device[]).map(getDeviceId))
+  );
+  const deviceTasks = new Map<string, Task>();
+  const otherTasks = new Map<string, Task>();
+  for (const task of tasks.values()) {
+    if (task.deviceId && shownDeviceIds.has(task.deviceId)) {
+      deviceTasks.set(task.deviceId, task);
+    } else {
+      otherTasks.set(task.id, task);
+    }
+  }
   // The user hid every section that can be hidden. Projects with no project shows nothing.
   const isEverythingHidden =
     !showBuilds &&
@@ -486,8 +501,8 @@ function Core(props: Props) {
     },
     [accounts, pinnedApps, remoteAccounts, remoteProjectId]
   );
-  // Starts an Expo Simulators session, optionally with a build. Every start goes through here.
-  const bootingRemotePlatforms = useRef(new Set<string>());
+  // Starts an Expo Simulators session, optionally with a build. Every start goes through here,
+  // and more than one session can start at the same time.
   // The sessions that the user stopped. A session that stops while it starts makes the start
   // fail, and that failure needs no alert.
   const stoppedRemoteSessions = useRef(new Set<string>());
@@ -496,22 +511,8 @@ function Core(props: Props) {
       platform: 'ios' | 'android',
       build?: { url: string; launchURL?: string },
       chosenProject?: { id: string; label: string },
-      options?: RemoteSimulatorStartOptions,
-      // The user asked for this session in the "Create new simulator" window.
-      isExplicit = false
+      options?: RemoteSimulatorStartOptions
     ) => {
-      // One start per platform at a time for a build that needs a session: a second request
-      // must not start a second session. An explicit start from the window always starts.
-      if (!isExplicit) {
-        if (bootingRemotePlatforms.current.has(platform)) {
-          Alert.alert(
-            'An Expo Simulators session is already starting',
-            'Launch the build again when the session shows as Running.'
-          );
-          return;
-        }
-        bootingRemotePlatforms.current.add(platform);
-      }
       let hideStartingRow: (() => void) | undefined;
       let startedSessionId: string | undefined;
       try {
@@ -529,6 +530,10 @@ function Core(props: Props) {
         const hidePendingRow = () =>
           setPendingRemoteSessions((prev) => prev.filter(({ id }) => id !== pending.id));
         hideStartingRow = hidePendingRow;
+        // The task of the build shows in the row of its session.
+        if (build) {
+          updateTask({ id: getRemoteTaskId(build.url), deviceId: pending.id });
+        }
 
         await bootDeviceAsync(
           {
@@ -551,6 +556,9 @@ function Core(props: Props) {
             // of a session that starts with no choice.
             session.installable = (options?.sessionType ?? 'agent-device') === 'agent-device';
             startedSessionId = session.id;
+            if (build) {
+              updateTask({ id: getRemoteTaskId(build.url), deviceId: session.id });
+            }
             // Show and select the session now. The next launch then finds it as `Starting`
             // and does not start another one.
             hidePendingRow();
@@ -571,15 +579,12 @@ function Core(props: Props) {
           alertRemoteSimulatorError(error);
         }
       } finally {
-        if (!isExplicit) {
-          bootingRemotePlatforms.current.delete(platform);
-        }
         // First forget the row, so that the new list does not show a session that failed.
         hideStartingRow?.();
         await refetch();
       }
     },
-    [chooseRemoteProject, showStartingRemoteSimulator, persistSelectedDevice, refetch]
+    [chooseRemoteProject, showStartingRemoteSimulator, persistSelectedDevice, refetch, updateTask]
   );
 
   // The session a build goes to: only the one the user selected or asked for, and only for a
@@ -653,7 +658,7 @@ function Core(props: Props) {
         setRemoteProjectId(project.id);
         // Show the session while it starts.
         MenuBarModule.openPopover();
-        bootRemoteSimulator(platform, undefined, project, options, true);
+        bootRemoteSimulator(platform, undefined, project, options);
       }
     );
     return () => listener.remove();
@@ -692,15 +697,19 @@ function Core(props: Props) {
           ? buildProject
           : undefined;
       if (target.state === 'Shutdown') {
-        createTask({ id: appURI, status: MenuBarStatus.BOOTING_DEVICE, progress: 0 });
+        createTask({
+          id: getRemoteTaskId(appURI),
+          status: MenuBarStatus.BOOTING_DEVICE,
+          progress: 0,
+        });
         // The default can name the device model of the new session.
         const deviceIdentifier = getNewRemoteSessionDevice(getSelectedDevicesIds()[platform]);
-        await bootRemoteSimulator(
-          platform,
-          { url: appURI, launchURL },
-          project,
-          deviceIdentifier ? { deviceIdentifier } : undefined
-        );
+        await bootRemoteSimulator(platform, { url: appURI, launchURL }, project, {
+          ...(deviceIdentifier ? { deviceIdentifier } : {}),
+          // The session gets the default controller. It starts with the build, so the build
+          // needs no Agent Device.
+          sessionType: getRemoteSimulatorController(getLastRemoteSimulatorController()).id,
+        });
         return;
       }
       if (target.state === 'Starting') {
@@ -718,7 +727,12 @@ function Core(props: Props) {
         return;
       }
 
-      createTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP, progress: 0 });
+      createTask({
+        id: getRemoteTaskId(appURI),
+        status: MenuBarStatus.INSTALLING_APP,
+        progress: 0,
+        deviceId: target.id,
+      });
       try {
         await installAndLaunchAppAsync({ appPath: appURI, deviceId: target.id, launchURL });
       } catch (error) {
@@ -731,7 +745,10 @@ function Core(props: Props) {
               onPress: async () => {
                 // A second session starts only when the first one stopped.
                 if (await stopRemoteSimulator(target)) {
-                  await bootRemoteSimulator(platform, { url: appURI, launchURL }, project);
+                  await bootRemoteSimulator(platform, { url: appURI, launchURL }, project, {
+                    sessionType: getRemoteSimulatorController(getLastRemoteSimulatorController())
+                      .id,
+                  });
                 }
               },
             },
@@ -831,6 +848,7 @@ function Core(props: Props) {
           id: url,
           status: MenuBarStatus.BOOTING_DEVICE,
           progress: 0,
+          deviceId: getDeviceId(device),
         });
         await ensureDeviceIsRunning(device);
         updateTask({ id: url, status: MenuBarStatus.OPENING_PROJECT_IN_EXPO_GO });
@@ -909,6 +927,7 @@ function Core(props: Props) {
           id: url,
           status: MenuBarStatus.BOOTING_DEVICE,
           progress: 0,
+          deviceId: getDeviceId(device),
         });
         await ensureDeviceIsRunning(device);
         updateTask({ id: url, status: MenuBarStatus.OPENING_UPDATE });
@@ -995,6 +1014,7 @@ function Core(props: Props) {
     ]
   );
 
+  const launchingBuilds = useRef(new Set<string>());
   const installAppFromURI = useCallback(
     async (
       appURI: string,
@@ -1003,18 +1023,25 @@ function Core(props: Props) {
       // The project of the build, when the caller knows it.
       project?: RemoteSimulatorProject
     ) => {
-      if (tasks.has(appURI)) {
+      const remoteTarget = getRemoteTarget(appURI, deviceId);
+      // A launch to a session and a launch to a local device are different tasks: a session
+      // that starts with a build must not stop a launch of that build on a local device.
+      const taskId = remoteTarget ? getRemoteTaskId(appURI) : appURI;
+      // One launch of a build to one kind of device at a time. The set is exact also for two
+      // clicks in one render: a second launch for a new session would start a second session.
+      if (tasks.has(taskId) || launchingBuilds.current.has(taskId)) {
         return;
       }
+      launchingBuilds.current.add(taskId);
 
-      const remoteTarget = getRemoteTarget(appURI, deviceId);
       if (remoteTarget) {
         // The session downloads the build itself, so nothing is downloaded here.
         try {
           await installOnRemoteSimulator(remoteTarget, appURI, launchURL, project);
         } finally {
+          launchingBuilds.current.delete(taskId);
           setTimeout(() => {
-            deleteTask(appURI);
+            deleteTask(taskId);
           }, 2000);
         }
         return;
@@ -1043,6 +1070,9 @@ function Core(props: Props) {
             id: appURI,
             status: MenuBarStatus.DOWNLOADING,
             progress: 0,
+            // The device that the build probably goes to. The task moves when the type of the
+            // build shows that it goes to another device.
+            deviceId: deviceId ?? selectedDevicesIds[getPlatformFromURI(appURI)],
           });
           const buildPath = await downloadBuildAsync(appURI, (progress) => {
             updateTask({ id: appURI, progress });
@@ -1061,7 +1091,8 @@ function Core(props: Props) {
           appType = appInfo.deviceType;
           if (appInfo.osType === 'macOS') {
             if (tasks.get(appURI)) {
-              updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP });
+              // A Mac app goes to no device row.
+              updateTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP, deviceId: undefined });
             } else {
               createTask({ id: appURI, status: MenuBarStatus.INSTALLING_APP, progress: 0 });
             }
@@ -1118,15 +1149,12 @@ function Core(props: Props) {
         }
         const resolvedDeviceId = getDeviceId(device);
 
-        if (tasks.get(appURI)) {
-          updateTask({ id: appURI, status: MenuBarStatus.BOOTING_DEVICE });
-        } else {
-          createTask({
-            id: appURI,
-            status: MenuBarStatus.BOOTING_DEVICE,
-            progress: 0,
-          });
-        }
+        createTask({
+          id: appURI,
+          status: MenuBarStatus.BOOTING_DEVICE,
+          progress: 0,
+          deviceId: resolvedDeviceId,
+        });
         await ensureDeviceIsRunning(device);
 
         // Offer to resign the build for this device. Used both before the install
@@ -1153,6 +1181,7 @@ function Core(props: Props) {
               status: MenuBarStatus.RESIGNING_APP,
               progress: 0,
               message: describeResignStep('inspecting'),
+              deviceId: resolvedDeviceId,
             });
             try {
               await resignAndRetryAsync({
@@ -1347,12 +1376,14 @@ function Core(props: Props) {
           Alert.alert('Something went wrong while installing the app.', error.message);
         }
       } finally {
+        launchingBuilds.current.delete(appURI);
         setTimeout(() => {
           deleteTask(appURI);
         }, 2000);
       }
     },
     [
+      selectedDevicesIds,
       ensureDeviceIsRunning,
       getDeviceByPlatform,
       getRemoteTarget,
@@ -1481,6 +1512,22 @@ function Core(props: Props) {
     }
   };
 
+  // The menu of the default controller, in the header of the Remote devices section.
+  const chooseRemoteController = async () => {
+    const index = await MenuBarModule.showMenu([
+      { title: 'Default controller', header: true },
+      ...REMOTE_SIMULATOR_CONTROLLERS.map(({ id, label }) => ({
+        title: label,
+        checked: id === remoteController.id,
+      })),
+    ]);
+    const controller = REMOTE_SIMULATOR_CONTROLLERS[index - 1];
+    if (controller) {
+      saveLastRemoteSimulatorController(controller.id);
+      setRemoteController(controller);
+    }
+  };
+
   // Expo Simulators can be the default of a platform that a session can run.
   const canDefaultToRemote = (key: string) =>
     remoteStatus === 'ready' && (key === 'ios' || key === 'android');
@@ -1560,21 +1607,15 @@ function Core(props: Props) {
   return (
     <View shrink="1" testID="popover-core">
       <AccountRow {...accountState} />
-      <TasksSection tasks={tasks} />
+      <TasksSection tasks={otherTasks} />
       {showProjects ? (
         <ProjectsSection
           apps={apps}
           accountName={selectedAccountName}
           installAppFromURI={installAppFromURI}
-          onPressHide={() => hideSection('projects')}
         />
       ) : null}
-      {showBuilds ? (
-        <BuildsSection
-          installAppFromURI={installAppFromURI}
-          onPressHide={() => hideSection('builds')}
-        />
-      ) : null}
+      {showBuilds ? <BuildsSection installAppFromURI={installAppFromURI} /> : null}
       {isEverythingHidden ? <EverythingHidden /> : null}
       {attention ? <ResignedAppsAttentionRow attention={attention} /> : null}
       <View shrink="1" pt="tiny" overflow="hidden">
@@ -1595,9 +1636,18 @@ function Core(props: Props) {
                 <DeviceListSectionHeader
                   label={label}
                   errorMessage={error?.message}
-                  defaultLabel={getDefaultLabel(key)}
-                  onPressDefault={hasChoices ? () => chooseDefaultDevice(key) : undefined}
-                  onPressHide={() => hideSection(key)}
+                  // The other sections show the default device. Remote devices shows the
+                  // default controller of a session.
+                  defaultLabel={key === 'remote' ? remoteController.label : getDefaultLabel(key)}
+                  onPressDefault={
+                    key === 'remote'
+                      ? remoteStatus === 'ready'
+                        ? chooseRemoteController
+                        : undefined
+                      : hasChoices
+                        ? () => chooseDefaultDevice(key)
+                        : undefined
+                  }
                 />
               );
             }}
@@ -1661,6 +1711,7 @@ function Core(props: Props) {
                 <DeviceItem
                   device={device}
                   key={device.name}
+                  status={deviceTasks.has(id) ? getDeviceStatus(deviceTasks.get(id)!) : undefined}
                   isDragged={drag?.key === sectionKey && drag.from === index}
                   dropLine={isDragTarget ? (drag.to < drag.from ? 'above' : 'below') : undefined}
                   reorder={

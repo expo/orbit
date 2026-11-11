@@ -12,20 +12,12 @@ import { useCurrentTheme } from '../utils/useExpoTheme';
 type Props = {
   label: string;
   errorMessage?: string;
-  /** The name of the default device of the section. It shows after the label and opens a menu. */
+  /** The default of the section: a device, or a controller. It shows after the label and opens a menu. */
   defaultLabel?: string;
   onPressDefault?: () => void;
-  /** Hides the section. */
-  onPressHide?: () => void;
 };
 
-const DeviceListSectionHeader = ({
-  label,
-  errorMessage,
-  defaultLabel,
-  onPressDefault,
-  onPressHide,
-}: Props) => {
+const DeviceListSectionHeader = ({ label, errorMessage, defaultLabel, onPressDefault }: Props) => {
   const theme = useCurrentTheme();
   const iconOpacity = theme === 'dark' ? 0.65 : 0.85;
 
@@ -33,7 +25,6 @@ const DeviceListSectionHeader = ({
     <View>
       <SectionHeader
         label={label}
-        onPressHide={onPressHide}
         accessoryLeft={
           onPressDefault ? (
             <SectionHeaderMenu

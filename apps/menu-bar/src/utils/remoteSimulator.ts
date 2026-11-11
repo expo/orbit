@@ -138,6 +138,18 @@ export function isPendingRemoteSession(device: RemoteSimulator) {
  * ones that are pre-warmed on the virtual machines. The ids are device identifiers of
  * Expo Simulators.
  */
+// The controllers of a session. Orbit installs a build on a running session only through
+// Agent Device. A build that a session starts with needs no controller.
+export const REMOTE_SIMULATOR_CONTROLLERS = [
+  { id: 'agent-device', label: 'Agent Device' },
+  { id: 'web-preview-only', label: 'None (web preview only)' },
+  { id: 'argent', label: 'Argent' },
+  { id: 'appium', label: 'Appium' },
+];
+/** The default controller: the one that the user chose, or Agent Device. */
+export const getRemoteSimulatorController = (stored?: string) =>
+  REMOTE_SIMULATOR_CONTROLLERS.find(({ id }) => id === stored) ?? REMOTE_SIMULATOR_CONTROLLERS[0];
+
 export const SUGGESTED_REMOTE_DEVICES = {
   ios: [
     { id: 'iPhone 18 Pro', label: 'iPhone 18 Pro' },

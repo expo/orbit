@@ -41,17 +41,6 @@ export const defaultUserPreferences: UserPreferences = {
   showBuilds: true,
 };
 
-/** The preference that shows or hides each section of the popover. */
-export const sectionPreferenceKeys: Record<string, keyof UserPreferences> = {
-  ios: 'showIosSimulators',
-  android: 'showAndroidEmulators',
-  tvos: 'showTvosSimulators',
-  watchos: 'showWatchosSimulators',
-  remote: 'showRemoteDevices',
-  projects: 'showProjects',
-  builds: 'showBuilds',
-};
-
 export const getUserPreferences = () => {
   const stringValue = storage.getString(userPreferencesStorageKey);
   const value = (stringValue ? JSON.parse(stringValue) : {}) as UserPreferences;
@@ -88,7 +77,8 @@ export const saveSelectedDevicesIds = (devicesIds: SelectedDevicesIds) => {
 };
 
 const lastRemoteSimulatorAppIdStorageKey = 'last-remote-simulator-app-id';
-// The controller that the user chose last in the "Create new simulator" window.
+// The default controller of a session. The header of the Remote devices section and the
+// "Create new simulator" window set it.
 const lastRemoteSimulatorControllerStorageKey = 'last-remote-simulator-controller';
 export const getLastRemoteSimulatorController = () =>
   storage.getString(lastRemoteSimulatorControllerStorageKey);

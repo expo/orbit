@@ -142,8 +142,6 @@ interface Props {
     deviceId?: string,
     project?: RemoteSimulatorProject
   ) => Promise<void>;
-  /** Hides the section. */
-  onPressHide: () => void;
 }
 
 type TileProps = {
@@ -181,7 +179,7 @@ const Tile = ({ label, secondary, onPress, testID, children }: TileProps) => {
   );
 };
 
-export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressHide }: Props) => {
+export const ProjectsSection = ({ apps, accountName, installAppFromURI }: Props) => {
   const theme = useCurrentTheme();
   const client = useApolloClient();
   const [action, setAction] = useState<ProjectAction>(
@@ -336,7 +334,6 @@ export const ProjectsSection = ({ apps, accountName, installAppFromURI, onPressH
     <View pt="2.5" style={styles.section}>
       <SectionHeader
         label="Projects"
-        onPressHide={onPressHide}
         accessoryLeft={
           <SectionHeaderMenu
             label={PROJECT_ACTIONS.find(({ id }) => id === action)!.label}

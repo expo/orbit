@@ -5,7 +5,7 @@ const FADE_IN_MS = 120;
 const FADE_OUT_MS = 200;
 // After the fade-in, the row waits this long before it is focused. So the buttons do not
 // show on each row when the pointer goes up or down across the rows.
-const FOCUS_DELAY_MS = 110;
+const FOCUS_DELAY_MS = 80;
 
 /**
  * Hover state for a row with actions that show on hover. The hover fades in when the pointer
@@ -26,7 +26,8 @@ export function useLingeringHover() {
   const fadeOut = useCallback(() => {
     clearTimeout(focusTimer.current);
     setIsFocused(false);
-    // Not the native driver: with it, the opacity stays at 0 in this app on macOS.
+    // Not the native driver: with it, the opacity stayed at 0 on macOS before the patch in
+    // `patches/README.md`. This animation was not tried with it again.
     Animated.timing(opacity, {
       toValue: 0,
       duration: FADE_OUT_MS,

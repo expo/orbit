@@ -10,8 +10,8 @@ interface Props {
 }
 
 /**
- * The progress of the builds that Orbit downloads, installs or launches. It shows above the
- * sections while there is a task, so no section goes away during an install.
+ * The progress of the tasks that have no device row to show in. It shows above the sections
+ * while there is such a task, so no section goes away during an install.
  */
 const TasksSection = ({ tasks }: Props) => {
   if (tasks.size === 0) {
@@ -21,9 +21,7 @@ const TasksSection = ({ tasks }: Props) => {
   return (
     <View pt="2.5" pb="1" gap="1.5" testID="tasks-section">
       {[...tasks.values()].map((task) => {
-        const determinate =
-          task.status === MenuBarStatus.DOWNLOADING ||
-          (task.status === MenuBarStatus.RESIGNING_APP && task.progress > 0);
+        const determinate = hasProgress(task);
         return (
           <View px="medium" key={task.id}>
             {task.status !== MenuBarStatus.WARNING && (
@@ -46,6 +44,18 @@ const TasksSection = ({ tasks }: Props) => {
 };
 
 export default TasksSection;
+
+const hasProgress = (task: Task) =>
+  task.status === MenuBarStatus.DOWNLOADING ||
+  (task.status === MenuBarStatus.RESIGNING_APP && task.progress > 0);
+
+/** The text of a task in the row of its device: the description, and the progress if known. */
+export function getDeviceStatus(task: Task): string {
+  const description = getDescription(task);
+  return hasProgress(task) && task.progress > 0
+    ? `${description} ${Math.round(task.progress)}%`
+    : description;
+}
 
 function getDescription(task: Task): string {
   switch (task.status) {

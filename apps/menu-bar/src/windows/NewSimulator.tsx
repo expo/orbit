@@ -30,11 +30,13 @@ import {
 } from '../modules/Storage';
 import { useTheme } from '../providers/ThemeProvider';
 import {
+  REMOTE_SIMULATOR_CONTROLLERS,
   RemoteSimulatorProject,
   START_REMOTE_SIMULATOR_EVENT,
   SUGGESTED_REMOTE_DEVICES,
   StartRemoteSimulatorRequest,
   formatRelativeTime,
+  getRemoteSimulatorController,
   getRemoteSimulatorProjects,
   parseLaunchArgs,
   parseTags,
@@ -48,13 +50,6 @@ const BUILD_SOURCES: { id: BuildSource; label: string }[] = [
   { id: 'expo-go', label: 'Expo Go' },
   { id: 'url', label: 'From URL' },
   { id: 'none', label: 'No build' },
-];
-// Orbit installs builds on a session only through Agent Device.
-const CONTROLLERS = [
-  { id: 'web-preview-only', label: 'None (web preview only)' },
-  { id: 'agent-device', label: 'Agent Device' },
-  { id: 'argent', label: 'Argent' },
-  { id: 'appium', label: 'Appium' },
 ];
 
 // The fields follow the "Create new simulator" dialog on expo.dev, plus the project, which the
@@ -123,10 +118,9 @@ const NewSimulator = () => {
   const [archiveUrl, setArchiveUrl] = useState('');
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   // No controller at first. After that, the controller that the user chose last.
-  const [controller, setController] = useState(() => {
-    const last = getLastRemoteSimulatorController();
-    return CONTROLLERS.find(({ id }) => id === last)?.id ?? CONTROLLERS[0].id;
-  });
+  const [controller, setController] = useState(
+    () => getRemoteSimulatorController(getLastRemoteSimulatorController()).id
+  );
   const [launchArgs, setLaunchArgs] = useState('');
   const [tags, setTags] = useState('');
 
@@ -345,8 +339,8 @@ const NewSimulator = () => {
         {isAdvancedOpen ? (
           <>
             <Text style={[styles.label, styles.firstLabel]}>Controller</Text>
-            {menuField(CONTROLLERS.find(({ id }) => id === controller)!.label, () =>
-              choose(CONTROLLERS, controller, (item) => {
+            {menuField(getRemoteSimulatorController(controller).label, () =>
+              choose(REMOTE_SIMULATOR_CONTROLLERS, controller, (item) => {
                 if (item) {
                   setController(item.id);
                   saveLastRemoteSimulatorController(item.id);
