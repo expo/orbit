@@ -148,15 +148,10 @@ const Spinner = ({ color }: { color: ColorValue }) => {
   );
 };
 
-type RowButtonProps = {
-  title: string;
-  danger?: boolean;
-  onPress?: () => void;
-  onHoverIn?: () => void;
-};
+type RowButtonProps = { title: string; danger?: boolean; onPress?: () => void };
 
 // A button at the right of a row. Its fill changes while the pointer is on it.
-const RowButton = ({ title, danger, onPress, onHoverIn }: RowButtonProps) => {
+const RowButton = ({ title, danger, onPress }: RowButtonProps) => {
   const theme = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const backgroundColor =
@@ -167,10 +162,7 @@ const RowButton = ({ title, danger, onPress, onHoverIn }: RowButtonProps) => {
   return (
     <Pressable
       onPress={onPress}
-      onHoverIn={() => {
-        setIsHovered(true);
-        onHoverIn?.();
-      }}
+      onHoverIn={() => setIsHovered(true)}
       onHoverOut={() => setIsHovered(false)}
       style={[styles.button, { backgroundColor }]}
       testID={`device-item-${title.toLowerCase()}`}>
@@ -233,8 +225,14 @@ const DeviceItem = ({
   ).current;
 
   const currentTheme = useTheme();
-  const { isHovered, isFocused, opacity, onHoverIn, onHoverOut, onChildHoverIn } =
-    useLingeringHover();
+  const { isHovered, isFocused, opacity, onHoverIn, onHoverOut } = useLingeringHover();
+  // On web, the pointer that enters a Pressable inside the row ends the hover of the row
+  // (react-native-web Pressable has `contain`), so the buttons of the row went away under the
+  // pointer. The DOM mouseenter and mouseleave events of the row do not end at a child.
+  const rowHoverProps =
+    Platform.OS === 'web'
+      ? { onMouseEnter: onHoverIn, onMouseLeave: onHoverOut }
+      : { onHoverIn, onHoverOut };
   const [isDeviceLaunching, setDeviceLaunching] = useState(false);
   const [isIconHovered, setIsIconHovered] = useState(false);
 
@@ -306,11 +304,7 @@ const DeviceItem = ({
           style={[styles.dropLine, dropLine === 'above' ? styles.dropAbove : styles.dropBelow]}
         />
       ) : null}
-      <Pressable
-        style={styles.row}
-        onHoverIn={onHoverIn}
-        onHoverOut={onHoverOut}
-        testID="device-item">
+      <Pressable style={styles.row} {...rowHoverProps} testID="device-item">
         {isHovered && (canLaunchNow || hasSessionButtons) ? (
           <Animated.View
             style={[
@@ -332,10 +326,7 @@ const DeviceItem = ({
               <Pressable
                 disabled={!onPressDefault}
                 onPress={onPressDefault}
-                onHoverIn={() => {
-                  setIsIconHovered(true);
-                  onChildHoverIn();
-                }}
+                onHoverIn={() => setIsIconHovered(true)}
                 onHoverOut={() => setIsIconHovered(false)}
                 testID="device-item-default"
                 style={[
@@ -458,28 +449,12 @@ const DeviceItem = ({
                   <RowButton
                     title={sessionEndedAt ? 'View' : isRemote ? 'Open' : 'Show'}
                     onPress={onPressOpen}
-                    onHoverIn={onChildHoverIn}
                   />
-                  {onPressStop ? (
-                    <RowButton
-                      title="Stop"
-                      danger
-                      onPress={onPressStop}
-                      onHoverIn={onChildHoverIn}
-                    />
-                  ) : null}
-                  {onPressArchive ? (
-                    <RowButton
-                      title="Archive"
-                      onPress={onPressArchive}
-                      onHoverIn={onChildHoverIn}
-                    />
-                  ) : null}
+                  {onPressStop ? <RowButton title="Stop" danger onPress={onPressStop} /> : null}
+                  {onPressArchive ? <RowButton title="Archive" onPress={onPressArchive} /> : null}
                 </>
               )}
-              {canLaunchNow && !isDeviceLaunching && (
-                <RowButton title="Launch" onPress={launch} onHoverIn={onChildHoverIn} />
-              )}
+              {canLaunchNow && !isDeviceLaunching && <RowButton title="Launch" onPress={launch} />}
             </RowButtons>
           ) : null}
         </Row>
