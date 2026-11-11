@@ -15,6 +15,7 @@ import { Text, secondaryText } from './Text';
 import { Row, View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
+import CloudCheckIcon from '../assets/icons/cloud-check.svg';
 import CloudIcon from '../assets/icons/cloud.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
 import TvosIcon from '../assets/icons/tvos.svg';
@@ -339,7 +340,13 @@ const DeviceItem = ({
                     size={22}
                     tintColor={iconTint}
                     style={[styles.cloud, sessionEndedAt && styles.endedCloud]}
-                    fallback={<CloudIcon width={22} height={22} />}
+                    fallback={
+                      sessionEndedAt ? (
+                        <CloudCheckIcon width={22} height={22} />
+                      ) : (
+                        <CloudIcon width={22} height={22} />
+                      )
+                    }
                   />
                 ) : device.osType === 'watchOS' ? (
                   <SymbolView
