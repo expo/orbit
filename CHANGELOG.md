@@ -6,9 +6,9 @@
 
 ### 🎉 New features
 
-- Add support for re-signing iOS builds for an iPhone or iPad with your Apple ID (free or paid developer account) when they are not provisioned for the device. macOS only for now. ([#372](https://github.com/expo/orbit/pull/372) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add support for re-signing iOS builds for an iPhone or iPad with your Apple ID (free or paid developer account) when they are not provisioned for the device. Disabled for now. ([#372](https://github.com/expo/orbit/pull/372) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Redesign the Settings window with a sidebar, using a native SwiftUI sidebar on macOS. ([#376](https://github.com/expo/orbit/pull/376) by [@gabrieldonadel](https://github.com/gabrieldonadel))
-- Renew apps signed with free Apple IDs automatically before their 7-day profile expires. macOS only for now. ([#378](https://github.com/expo/orbit/pull/378) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Renew apps signed with free Apple IDs automatically before their 7-day profile expires. Disabled for now. ([#378](https://github.com/expo/orbit/pull/378) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add an option in Settings to install the `orbit` command in PATH, so the CLI can be run from any terminal. ([#381](https://github.com/expo/orbit/pull/381) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add Expo Simulators sessions as remote devices: start, open and stop a session, and launch builds on it. More than one session can start at the same time, and a default controller applies to new sessions. A session can open in the browser when it starts, and a session that ended stays in the list until it is archived. Quit and log out ask first when sessions are still running. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
 - Rework the menu: an account selector, a row of project tiles that can launch the latest app, a default device for each platform, and actions on device rows to launch, show and stop a device. The progress of a launch shows in the row of its device. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))

@@ -1,5 +1,4 @@
-import { Platform } from 'react-native';
-
-// iOS re-signing (free Apple ID resign, auto-renewal, Apple ID settings) only
-// works on macOS for now. Flip on for Electron once it's supported there.
-export const RESIGN_ENABLED = Platform.OS === 'macos';
+// iOS re-signing (free Apple ID resign, auto-renewal, Apple ID settings) is
+// disabled on every platform for now. Set back to `Platform.OS === 'macos'`
+// (importing Platform from react-native) to re-enable it on macOS.
+export const RESIGN_ENABLED = false;
