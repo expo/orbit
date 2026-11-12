@@ -15,6 +15,7 @@ import { tarExtractAsync } from '../../download';
 import { downloadApkAsync } from '../../downloadApkAsync';
 import Log from '../../log';
 import { getTmpDirectory } from '../../paths';
+import { sleepAsync } from '../../utils/promise';
 import * as Versions from '../../versions';
 
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -317,15 +318,35 @@ function getUnixPID(port: number | string) {
     .trim();
 }
 
-/** Stops the running emulator with this AVD name. Does nothing when it does not run. */
+const STOP_EMULATOR_TIMEOUT_MS = 30000;
+const STOP_EMULATOR_INTERVAL_MS = 500;
+
+/**
+ * Stops the running emulator with this AVD name, and waits until adb does not list it. Does
+ * nothing when it does not run.
+ */
 export async function stopEmulatorAsync(name: string): Promise<void> {
   const { getRunningDevicesAsync } = await import('./adb');
   const running = await getRunningDevicesAsync();
   const emulator = running.find(
     (device) => device.deviceType === 'emulator' && device.name === name
   );
-  if (emulator?.pid) {
-    await adbAsync('-s', emulator.pid, 'emu', 'kill');
+  if (!emulator?.pid) {
+    return;
+  }
+  const serial = emulator.pid;
+  await adbAsync('-s', serial, 'emu', 'kill');
+
+  // `emu kill` returns at once, and adb lists the emulator as `offline` for some seconds
+  // after that. A list that is read in that time still shows the emulator as running.
+  const deadline = Date.now() + STOP_EMULATOR_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const { stdout } = await adbAsync('devices');
+    const isListed = stdout.split(/\r?\n/).some((line) => line.split(/\s+/)[0] === serial);
+    if (!isListed) {
+      return;
+    }
+    await sleepAsync(STOP_EMULATOR_INTERVAL_MS);
   }
 }
 
