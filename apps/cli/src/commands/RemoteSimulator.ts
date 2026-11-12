@@ -340,8 +340,16 @@ export async function bootRemoteSimulatorAsync({
       if (status === DeviceRunSessionStatus.InProgress) {
         return { sessionId };
       }
-      if (status === DeviceRunSessionStatus.Errored || status === DeviceRunSessionStatus.Stopped) {
-        throw failed('The Expo Simulators session stopped before it was ready.');
+      // Two different ends. The session page on expo.dev shows the reason of each.
+      if (status === DeviceRunSessionStatus.Errored) {
+        throw failed(
+          'The Expo Simulators session failed before it was ready. The page of the session on expo.dev shows the reason.'
+        );
+      }
+      if (status === DeviceRunSessionStatus.Stopped) {
+        throw failed(
+          'The Expo Simulators session was stopped before it was ready. The page of the session on expo.dev shows more.'
+        );
       }
       if (Date.now() > deadline) {
         timedOut = true;

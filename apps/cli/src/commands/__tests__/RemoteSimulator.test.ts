@@ -269,14 +269,25 @@ describe(bootRemoteSimulatorAsync, () => {
     expect(sdk.createDeviceRunSession).toHaveBeenCalledTimes(1);
   });
 
-  it('stops the session when it ends before it is ready', async () => {
+  it('stops the session when it fails before it is ready, and says that it failed', async () => {
     sdk.getDeviceRunSessionStatus.mockResolvedValue(status('ERRORED') as any);
     await expect(bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app' })).rejects.toMatchObject(
       {
         code: 'REMOTE_SIMULATOR_FAILED',
+        message: expect.stringContaining('failed before it was ready'),
       }
     );
     expect(sdk.ensureDeviceRunSessionStopped).toHaveBeenCalledWith({ deviceRunSessionId: 's1' });
+  });
+
+  it('says that the session was stopped when something stops it before it is ready', async () => {
+    sdk.getDeviceRunSessionStatus.mockResolvedValue(status('STOPPED') as any);
+    await expect(bootRemoteSimulatorAsync({ platform: 'ios', appId: 'app' })).rejects.toMatchObject(
+      {
+        code: 'REMOTE_SIMULATOR_FAILED',
+        message: expect.stringContaining('was stopped before it was ready'),
+      }
+    );
   });
 
   it('keeps the session when one status request fails before the session is ready', async () => {
