@@ -81,6 +81,7 @@ import {
   storage,
   sessionSecretStorageKey,
   resetApolloStore,
+  addStorageListener,
 } from '../modules/Storage';
 import SectionHeaderMenu from '../popover/SectionHeaderMenu';
 import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppIdsEvents';
@@ -170,7 +171,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
 
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
+    return addStorageListener((key) => {
       if (key === sessionSecretStorageKey) {
         setHasSessionSecret(Boolean(storage.getString(sessionSecretStorageKey)));
       }
@@ -179,8 +180,6 @@ export function SettingsPane({ pane }: { pane: Pane }) {
         setUserPreferences(getUserPreferences());
       }
     });
-
-    return listener.remove;
   }, []);
 
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
@@ -338,12 +337,11 @@ export function SettingsPane({ pane }: { pane: Pane }) {
   const [expandedPlatforms, setExpandedPlatforms] = useState<string[]>([]);
   useEffect(() => {
     // The popover changes the order and the hidden devices too.
-    const listener = storage.addOnValueChangedListener((key) => {
+    return addStorageListener((key) => {
       if (key === deviceListStorageKey) {
         setDeviceList(getDeviceListPreferences());
       }
     });
-    return () => listener.remove();
   }, []);
   const updateDeviceList = (change: (prev: DeviceListPreferences) => DeviceListPreferences) => {
     const next = change(getDeviceListPreferences());

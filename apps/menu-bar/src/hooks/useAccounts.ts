@@ -2,6 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { useEffect, useState } from 'react';
 
 import {
+  addStorageListener,
   getSelectedAccountName,
   saveSelectedAccountName,
   selectedAccountNameStorageKey,
@@ -59,7 +60,7 @@ export function useAccounts() {
   const [isSignedIn, setIsSignedIn] = useState(Boolean(storage.getString(sessionSecretStorageKey)));
   const [selectedName, setSelectedName] = useState(getSelectedAccountName());
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
+    return addStorageListener((key) => {
       if (key === sessionSecretStorageKey) {
         setIsSignedIn(Boolean(storage.getString(sessionSecretStorageKey)));
       }
@@ -67,7 +68,6 @@ export function useAccounts() {
         setSelectedName(getSelectedAccountName());
       }
     });
-    return () => listener.remove();
   }, []);
 
   const { data } = useQuery<AccountsResult>(ACCOUNTS_QUERY, {

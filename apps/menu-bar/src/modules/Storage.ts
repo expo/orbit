@@ -44,6 +44,29 @@ export const defaultUserPreferences: UserPreferences = {
   showBuilds: true,
 };
 
+/**
+ * Calls `onChange` with the key of each stored value that changes. Returns a function that
+ * removes the listener. In Electron, the listener of `storage` runs only in the window that
+ * made the change. The browser sends its `storage` event to the other windows, so this
+ * listens to that event too.
+ */
+export function addStorageListener(onChange: (key: string) => void): () => void {
+  const listener = storage.addOnValueChangedListener(onChange);
+  if (Platform.OS !== 'web') {
+    return () => listener.remove();
+  }
+  const onStorageEvent = ({ key }: StorageEvent) => {
+    if (key?.startsWith(webKeyPrefix)) {
+      onChange(key.slice(webKeyPrefix.length));
+    }
+  };
+  window.addEventListener('storage', onStorageEvent);
+  return () => {
+    listener.remove();
+    window.removeEventListener('storage', onStorageEvent);
+  };
+}
+
 export const getUserPreferences = () => {
   const stringValue = storage.getString(userPreferencesStorageKey);
   const value = (stringValue ? JSON.parse(stringValue) : {}) as UserPreferences;
@@ -170,6 +193,19 @@ export function saveSessionSecret(sessionSecret: string | undefined) {
     storage.set(sessionSecretStorageKey, sessionSecret);
   }
   setSessionAsync(sessionSecret ?? '');
+}
+
+// The prefix that react-native-mmkv gives each key in `localStorage`.
+const webKeyPrefix = `${StorageUtils.MMKVInstanceId}\\`;
+
+// In Electron each window has its own Apollo store. When another window logs in or out, the
+// data in the store of this window belongs to the old user.
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  window.addEventListener('storage', ({ key }) => {
+    if (key === `${webKeyPrefix}${sessionSecretStorageKey}`) {
+      apolloClient.resetStore();
+    }
+  });
 }
 
 export function resetApolloStore() {

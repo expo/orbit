@@ -48,6 +48,7 @@ import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
+  addStorageListener,
   DeviceListPreferences,
   SelectedDevicesIds,
   deviceListStorageKey,
@@ -246,6 +247,15 @@ function Core(props: Props) {
       refetch();
     }, [refetch])
   );
+  // The remote sessions are those of the user: read the list again after a log in or a log out.
+  const { isSignedIn } = accountState;
+  const wasSignedIn = useRef(isSignedIn);
+  useEffect(() => {
+    if (wasSignedIn.current !== isSignedIn) {
+      wasSignedIn.current = isSignedIn;
+      refetch();
+    }
+  }, [isSignedIn, refetch]);
   const { emulatorWithoutAudio } = useDeviceAudioPreferences();
 
   const { attention } = useResignedAppRenewals({ createTask, updateTask, deleteTask });
@@ -253,14 +263,14 @@ function Core(props: Props) {
   // Settings shows or hides each section.
   const [preferences, setPreferences] = useState(getUserPreferences());
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
+    return addStorageListener((key) => {
       if (key === userPreferencesStorageKey) {
         setPreferences(getUserPreferences());
       }
     });
-    return () => listener.remove();
   }, []);
-  const showProjects = preferences.showProjects;
+  // The projects are those of the user, so the section shows only when a user is logged in.
+  const showProjects = preferences.showProjects && accountState.isSignedIn;
   const showBuilds = preferences.showBuilds;
 
   // TODO: Extract into a hook
@@ -283,12 +293,11 @@ function Core(props: Props) {
   // Settings window can change them too.
   const [deviceList, setDeviceList] = useState(getDeviceListPreferences());
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
+    return addStorageListener((key) => {
       if (key === deviceListStorageKey) {
         setDeviceList(getDeviceListPreferences());
       }
     });
-    return () => listener.remove();
   }, []);
   // On Windows and Linux a storage listener does not see a change from the Settings window. So
   // read the stored values again each time the popover opens.

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { getUserPreferences, storage, userPreferencesStorageKey } from '../modules/Storage';
+import {
+  addStorageListener,
+  getUserPreferences,
+  userPreferencesStorageKey,
+} from '../modules/Storage';
 
 export const useDeviceAudioPreferences = () => {
   const [isEmulatorWithoutAudio, setEmulatorWithoutAudio] = useState<boolean>(
@@ -8,15 +12,11 @@ export const useDeviceAudioPreferences = () => {
   );
 
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
+    return addStorageListener((key) => {
       if (key === userPreferencesStorageKey) {
         setEmulatorWithoutAudio(getUserPreferences().emulatorWithoutAudio);
       }
     });
-
-    return () => {
-      listener.remove();
-    };
   }, []);
 
   return {
