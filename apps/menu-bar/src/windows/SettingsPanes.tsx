@@ -88,6 +88,7 @@ import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppI
 import { waitForAppleAuthCompleteAsync } from '../utils/appleAuthEvents';
 import { authenticateAsync } from '../utils/auth';
 import { getDeviceId, moveItem, orderDevices } from '../utils/device';
+import { RESIGN_ENABLED } from '../utils/featureFlags';
 import {
   capitalize,
   formatProfileExpiry,
@@ -105,7 +106,7 @@ export type PaneItem = {
   symbol: Extract<React.ComponentProps<typeof SymbolView>['name'], string>;
   fallback: React.ReactElement;
 };
-export const panes: PaneItem[] = [
+const allPanes: PaneItem[] = [
   { key: 'general', label: 'General', symbol: 'gearshape', fallback: <Settings16Regular /> },
   {
     key: 'platforms',
@@ -121,6 +122,7 @@ export const panes: PaneItem[] = [
     fallback: <Options16Regular />,
   },
 ];
+export const panes = allPanes.filter((item) => item.key !== 'apple' || RESIGN_ENABLED);
 
 type PlatformItem = {
   label: string;
@@ -714,7 +716,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
           </View>
         ) : null}
 
-        {pane === 'apple' ? (
+        {pane === 'apple' && RESIGN_ENABLED ? (
           <>
             <Card>
               {appleAccountId ? (

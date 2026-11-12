@@ -37,6 +37,7 @@ import { getUserPreferences } from '../modules/Storage';
 import { useListDevices } from '../providers/DevicesProvider';
 import { AppleAuthCompletedEvent, AppleAuthEmitter } from '../utils/appleAuthEvents';
 import { getDeviceId } from '../utils/device';
+import { RESIGN_ENABLED } from '../utils/featureFlags';
 import { MenuBarStatus, Task, describeResignStep } from '../utils/helpers';
 import { describeResignError } from '../utils/resignErrorCopy';
 
@@ -65,7 +66,7 @@ type TaskHandlers = {
  * progress can surface through the existing tasks map. Returns the attention
  * state the popover should surface (auth expired / renewal failed).
  */
-export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: TaskHandlers) {
+function useResignedAppRenewalsImpl({ createTask, updateTask, deleteTask }: TaskHandlers) {
   const { devicesPerPlatform, refetch } = useListDevices();
   const [attention, setAttentionState] = useState<ResignAttention | null>(getAttention());
 
@@ -443,3 +444,8 @@ export function useResignedAppRenewals({ createTask, updateTask, deleteTask }: T
 
   return { attention };
 }
+
+// Constant per build, so the hook order is stable.
+export const useResignedAppRenewals: typeof useResignedAppRenewalsImpl = RESIGN_ENABLED
+  ? useResignedAppRenewalsImpl
+  : () => ({ attention: null });

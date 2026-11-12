@@ -80,6 +80,7 @@ import {
   isRemoteDevice,
   isVirtualDevice,
 } from '../utils/device';
+import { RESIGN_ENABLED } from '../utils/featureFlags';
 import { MenuBarStatus, Task, describeResignStep, resignStepProgress } from '../utils/helpers';
 import {
   URLType,
@@ -1327,7 +1328,12 @@ function Core(props: Props) {
         // install on the device (expired, device not listed, App Store build).
         // A failing device install is slow, so skip it and offer the resign now.
         mark('device-ready');
-        if (getDeviceOS(device) === 'ios' && !isVirtualDevice(device) && appInfo?.provisioning) {
+        if (
+          RESIGN_ENABLED &&
+          getDeviceOS(device) === 'ios' &&
+          !isVirtualDevice(device) &&
+          appInfo?.provisioning
+        ) {
           const reason = resignReasonForDevice(appInfo.provisioning, resolvedDeviceId);
           if (reason) {
             logTiming(`pre-check: ${reason} (${appInfo.provisioning.kind}) → resign offer`);
@@ -1397,7 +1403,7 @@ function Core(props: Props) {
                 // carries the cable / Wi-Fi / unlock checks.
                 Alert.alert('Lost connection to your device', error.message);
               } else if (error.code === 'APPLE_APP_VERIFICATION_FAILED') {
-                if (getDeviceOS(device) !== 'ios' || isVirtualDevice(device)) {
+                if (!RESIGN_ENABLED || getDeviceOS(device) !== 'ios' || isVirtualDevice(device)) {
                   Alert.alert(
                     error.message,
                     'Confirm that this is an internal distribution build and that your device was provisioned to use this build.'
