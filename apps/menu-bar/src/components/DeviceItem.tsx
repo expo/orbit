@@ -228,9 +228,9 @@ const DeviceItem = ({
 
   const currentTheme = useTheme();
   const { isHovered, isFocused, opacity, onHoverIn, onHoverOut } = useLingeringHover();
-  // On web, the pointer that enters a Pressable inside the row ends the hover of the row
-  // (react-native-web Pressable has `contain`), so the buttons of the row went away under the
-  // pointer. The DOM mouseenter and mouseleave events of the row do not end at a child.
+  // On web, the hover of the row comes from the DOM mouseenter and mouseleave events. The
+  // hover of a react-native-web Pressable ends when the pointer enters a Pressable inside it
+  // (`contain`), and the buttons of the row are such Pressables.
   const rowHoverProps =
     Platform.OS === 'web'
       ? { onMouseEnter: onHoverIn, onMouseLeave: onHoverOut }
