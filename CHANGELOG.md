@@ -10,6 +10,8 @@
 
 ### 💡 Others
 
+- Start Expo Simulators sessions without a maximum duration of 30 minutes. A session now gets the maximum duration of the account's plan. ([#395](https://github.com/expo/orbit/pull/395) by [@brentvatne](https://github.com/brentvatne))
+
 ## 2.9.0 — 2026-11-12
 
 ### 🎉 New features
