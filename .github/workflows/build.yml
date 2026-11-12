@@ -11,7 +11,11 @@ permissions:
 
 jobs:
   build_on_linux:
-    runs-on: ubuntu-latest
+    # pinned because rpm 4.20+ (ubuntu-26.04 ships 6.0.1) runs %install
+    # from BUILD/<name>-<version>-build, and electron-installer-redhat's spec does
+    # `cp -r usr/*` relative to BUILD/. Unpin once the spec template is fixed upstream
+    # or replaced via MakerRpm's specTemplate option.
+    runs-on: ubuntu-24.04
     needs: create_release
     steps:
       - name: 👀 Checkout
