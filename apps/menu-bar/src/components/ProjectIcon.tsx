@@ -7,14 +7,18 @@ import ProjectBackgroundIcon from '../assets/icons/project-background-icon.svg';
 import { PinnedApp } from '../hooks/useGetPinnedApps.ts';
 import { getProjectBackgroundColor } from '../utils/theme';
 
-type Props = { app: PinnedApp };
+type Props = { app: PinnedApp; size?: number };
 
-export const ProjectIcon = ({ app: { name, isPinned, profileImageUrl } }: Props) => {
+export const ProjectIcon = ({ app: { name, isPinned, profileImageUrl }, size = 36 }: Props) => {
   const backgroundColor = getProjectBackgroundColor(name);
+  const iconStyle = { width: size, height: size };
 
   return (
-    <View style={styles.icon} align="centered">
-      <View rounded="small" overflow="hidden" style={styles.icon}>
+    <View style={iconStyle} align="centered">
+      <View
+        rounded="small"
+        overflow="hidden"
+        style={[iconStyle, size > 36 && { borderRadius: Math.round(size * 0.23) }]}>
         {profileImageUrl ? (
           <View bg="secondary" flex="1" align="centered">
             <Image source={{ uri: profileImageUrl }} style={StyleSheet.absoluteFill} />
@@ -24,7 +28,10 @@ export const ProjectIcon = ({ app: { name, isPinned, profileImageUrl } }: Props)
             <View inset="full">
               <ProjectBackgroundIcon />
             </View>
-            <Text weight="medium" size="large" style={styles.text}>
+            <Text
+              weight="medium"
+              size="large"
+              style={[styles.text, size > 36 && { fontSize: 22, lineHeight: 26 }]}>
               {name[0]?.toUpperCase()}
             </Text>
           </View>
@@ -38,10 +45,6 @@ export const ProjectIcon = ({ app: { name, isPinned, profileImageUrl } }: Props)
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-  },
-  icon: {
-    width: 36,
-    height: 36,
   },
   pin: {
     position: 'absolute',

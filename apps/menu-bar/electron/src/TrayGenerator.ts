@@ -86,28 +86,76 @@ export default class TrayGenerator {
       this.showWindow(bounds);
     }
   };
-  rightClickMenu = () => {
+  openSettings = () => {
+    WindowManager.openWindow('Settings', {
+      // Keep in sync with menu-bar/src/windows/index.ts
+      title: 'Settings',
+      windowStyle: {
+        titlebarAppearsTransparent: true,
+        height: 520,
+        width: 680,
+      },
+    });
+  };
+  // The popover asks about running remote sessions before it exits. A popover that crashed
+  // cannot ask, so the app quits directly.
+  requestQuit = () => {
+    const { webContents } = this.mainWindow;
+    if (this.mainWindow.isDestroyed() || webContents.isCrashed()) {
+      app.quit();
+    } else {
+      webContents.send('quitRequested', {});
+    }
+  };
+  // The keyboard shortcuts of every window: Ctrl+, opens Settings, Ctrl+Q quits and Ctrl+W
+  // closes the window (Command on macOS). The windows hide their menu bar, so the handler
+  // gets the keys here and all platforms do the same thing.
+  handleShortcuts = (window: BrowserWindow) => {
+    window.webContents.on('before-input-event', (event, input) => {
+      const modifier = process.platform === 'darwin' ? input.meta : input.control;
+      if (input.type !== 'keyDown' || !modifier || input.alt || input.shift) {
+        return;
+      }
+      const key = input.key.toLowerCase();
+      if (key === ',') {
+        event.preventDefault();
+        this.openSettings();
+      } else if (key === 'q') {
+        event.preventDefault();
+        this.requestQuit();
+      } else if (key === 'w') {
+        event.preventDefault();
+        if (window === this.mainWindow) {
+          this.hideWindow();
+        } else {
+          window.close();
+        }
+      }
+    });
+  };
+  contextMenu = () => {
+    // The accelerators are hints: the shortcuts work from the windows, not from this menu.
+    const isMac = process.platform === 'darwin';
     const menu: MenuItemConstructorOptions[] = [
+      // On some Linux desktops (GNOME with AppIndicator), a click on a tray icon that has a
+      // menu opens the menu and does not send `click`. This item opens the popover there.
+      // No arguments: `showWindow` takes the bounds of the tray, not the menu item.
+      ...(process.platform === 'linux'
+        ? [{ label: 'Open Orbit', click: () => this.showWindow() }, { type: 'separator' as const }]
+        : []),
       {
         label: 'Settings...',
-        click() {
-          WindowManager.openWindow('Settings', {
-            // Keep in sync with menu-bar/src/windows/index.ts
-            title: 'Settings',
-            windowStyle: {
-              titlebarAppearsTransparent: true,
-              height: 520,
-              width: 680,
-            },
-          });
-        },
+        // Not on Windows and Linux: Electron writes `,` as "Comma" there.
+        accelerator: isMac ? 'Command+,' : undefined,
+        click: this.openSettings,
       },
       {
-        role: 'quit',
-        accelerator: 'Command+Q',
+        label: 'Quit',
+        accelerator: 'CommandOrControl+Q',
+        click: this.requestQuit,
       },
     ];
-    this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));
+    return Menu.buildFromTemplate(menu);
   };
   createTray = () => {
     this.tray = new Tray(getIconPath());
@@ -117,7 +165,16 @@ export default class TrayGenerator {
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
-    this.tray.on('right-click', this.rightClickMenu);
+    // Electron emits `right-click` only on macOS and Windows. On Linux, the tray shows the menu
+    // that `setContextMenu` sets.
+    if (process.platform === 'linux') {
+      this.tray.setContextMenu(this.contextMenu());
+    } else {
+      this.tray.on('right-click', () => this.tray?.popUpContextMenu(this.contextMenu()));
+    }
+
+    this.handleShortcuts(this.mainWindow);
+    app.on('browser-window-created', (_, window) => this.handleShortcuts(window));
 
     ipcMain.handle('open-popover', () => this.showWindow());
     ipcMain.handle('close-popover', this.hideWindow);

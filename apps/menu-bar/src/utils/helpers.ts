@@ -203,4 +203,6 @@ export type Task = {
   status: MenuBarStatus;
   progress: number;
   message?: string;
+  /** The device that the task is for. The task then shows in the row of that device. */
+  deviceId?: string;
 };

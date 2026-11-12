@@ -15,19 +15,17 @@ export const getTrustedSources = () => {
   return [DEFAULT_TRUSTED_SOURCES, ...getCustomTrustedSources()];
 };
 
+export function assertTrustedSource(url: string) {
+  if (!getTrustedSources().some((source) => picomatch(source)(url))) {
+    throw new InternalError('UNTRUSTED_SOURCE', `This URL is from an untrusted source: ${url}`);
+  }
+}
+
 export const trustedSourcesValidatorMiddleware = (
   fn: (url: string, ...args: any[]) => any | Promise<any>
 ) => {
   return async function (url: string, ...args: any[]) {
-    const trustedSources = getTrustedSources();
-    if (!trustedSources) {
-      return fn(url, ...args);
-    }
-
-    if (!trustedSources.some((source) => picomatch(source)(url))) {
-      throw new InternalError('UNTRUSTED_SOURCE', `This URL is from an untrusted source: ${url}`);
-    }
-
+    assertTrustedSource(url);
     return fn(url, ...args);
   };
 };

@@ -1,8 +1,9 @@
 import { TouchableOpacity, StyleSheet } from 'react-native';
 
 import SectionHeader from './SectionHeader';
+import SectionHeaderMenu from './SectionHeaderMenu';
 import AlertIcon from '../assets/icons/AlertTriangle';
-import { Row, Text } from '../components';
+import { Row } from '../components';
 import { View } from '../components/View';
 import Alert from '../modules/Alert';
 import { PlatformColor } from '../modules/PlatformColor';
@@ -11,10 +12,12 @@ import { useCurrentTheme } from '../utils/useExpoTheme';
 type Props = {
   label: string;
   errorMessage?: string;
-  onPressAdd?: () => void;
+  /** The default of the section: a device, or a controller. It shows after the label and opens a menu. */
+  defaultLabel?: string;
+  onPressDefault?: () => void;
 };
 
-const DeviceListSectionHeader = ({ label, errorMessage, onPressAdd }: Props) => {
+const DeviceListSectionHeader = ({ label, errorMessage, defaultLabel, onPressDefault }: Props) => {
   const theme = useCurrentTheme();
   const iconOpacity = theme === 'dark' ? 0.65 : 0.85;
 
@@ -22,8 +25,17 @@ const DeviceListSectionHeader = ({ label, errorMessage, onPressAdd }: Props) => 
     <View>
       <SectionHeader
         label={label}
+        accessoryLeft={
+          onPressDefault ? (
+            <SectionHeaderMenu
+              label={defaultLabel ?? 'No default device'}
+              onPress={onPressDefault}
+              testID="section-default-device"
+            />
+          ) : null
+        }
         accessoryRight={
-          errorMessage || onPressAdd ? (
+          errorMessage ? (
             <Row align="center" gap="2">
               {errorMessage ? (
                 <TouchableOpacity
@@ -35,13 +47,6 @@ const DeviceListSectionHeader = ({ label, errorMessage, onPressAdd }: Props) => 
                     fill={PlatformColor('labelColor')}
                     style={{ opacity: iconOpacity }}
                   />
-                </TouchableOpacity>
-              ) : null}
-              {onPressAdd ? (
-                <TouchableOpacity style={styles.button} onPress={onPressAdd}>
-                  <Text size="medium" style={{ opacity: iconOpacity, lineHeight: 16 }}>
-                    +
-                  </Text>
                 </TouchableOpacity>
               ) : null}
             </Row>

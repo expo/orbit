@@ -6,8 +6,9 @@ import {
   PhoneLaptop16Regular,
   Settings16Regular,
 } from '@fluentui/react-icons';
-import { CliCommands, Config, InternalError } from 'common-types';
+import { CliCommands, InternalError } from 'common-types';
 import { DevicesPerPlatform } from 'common-types/build/cli-commands/listDevices';
+import { Device } from 'common-types/build/devices';
 import { SymbolView } from 'expo-symbols';
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -22,10 +23,6 @@ import {
 import { WindowsNavigator } from './index';
 import { Pane } from './settingsPane';
 import AutoUpdater from '../../modules/auto-updater';
-import {
-  openAuthSessionAsync,
-  WebBrowserResultType,
-} from '../../modules/web-authentication-session';
 import {
   APPLE_ID_CHANGED_EVENT,
   clearAppleIdLoginAsync,
@@ -72,17 +69,32 @@ import {
   updateResignedApp,
 } from '../modules/ResignedApps';
 import {
+  DeviceListPreferences,
   UserPreferences,
+  deviceListStorageKey,
+  getDeviceListPreferences,
   getUserPreferences,
+  saveDeviceListPreferences,
   saveSessionSecret,
   saveUserPreferences,
+  userPreferencesStorageKey,
   storage,
   sessionSecretStorageKey,
   resetApolloStore,
+  addStorageListener,
 } from '../modules/Storage';
+import SectionHeaderMenu from '../popover/SectionHeaderMenu';
 import { APPLE_APP_IDS_DONE_EVENT, AppleAppIdsEmitter } from '../utils/appleAppIdsEvents';
 import { waitForAppleAuthCompleteAsync } from '../utils/appleAuthEvents';
-import { formatProfileExpiry, getCurrentUserDisplayName, isRenewing } from '../utils/helpers';
+import { authenticateAsync } from '../utils/auth';
+import { getDeviceId, moveItem, orderDevices } from '../utils/device';
+import {
+  capitalize,
+  formatProfileExpiry,
+  getCurrentUserDisplayName,
+  isRenewing,
+} from '../utils/helpers';
+import { leaveRemoteSessionsAsync } from '../utils/leaveRemoteSessions';
 import { describeResignError } from '../utils/resignErrorCopy';
 import { addOpacity } from '../utils/theme';
 import { useCurrentTheme, useExpoPalette, useExpoTheme } from '../utils/useExpoTheme';
@@ -97,7 +109,7 @@ export const panes: PaneItem[] = [
   { key: 'general', label: 'General', symbol: 'gearshape', fallback: <Settings16Regular /> },
   {
     key: 'platforms',
-    label: 'Platforms',
+    label: 'Menu',
     symbol: 'macbook.and.iphone',
     fallback: <PhoneLaptop16Regular />,
   },
@@ -156,17 +168,20 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     Boolean(storage.getString(sessionSecretStorageKey))
   );
 
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
+
   useEffect(() => {
-    const listener = storage.addOnValueChangedListener((key) => {
+    return addStorageListener((key) => {
       if (key === sessionSecretStorageKey) {
         setHasSessionSecret(Boolean(storage.getString(sessionSecretStorageKey)));
       }
+      // The popover hides a section through the same preferences.
+      if (key === userPreferencesStorageKey) {
+        setUserPreferences(getUserPreferences());
+      }
     });
-
-    return listener.remove;
   }, []);
 
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(getUserPreferences());
   const [customSdkPathEnabled, setCustomSdkPathEnabled] = useState(
     Boolean(getUserPreferences().customSdkPath)
   );
@@ -303,9 +318,46 @@ export function SettingsPane({ pane }: { pane: Pane }) {
           counts[devicesKey] = count ? `${count} ${unit}${count === 1 ? '' : 's'}` : '';
         });
         setDeviceCounts(counts);
+        setDeviceLists(
+          Object.fromEntries(
+            platformList.map(({ devicesKey }) => [
+              devicesKey,
+              (list[devicesKey]?.devices ?? []) as Device[],
+            ])
+          )
+        );
       })
       .catch(() => {});
   }, []);
+
+  // The devices of each platform, for the list where the user hides and orders them.
+  const [deviceLists, setDeviceLists] = useState<Record<string, Device[]>>({});
+  const [deviceList, setDeviceList] = useState(getDeviceListPreferences());
+  // The platforms whose device list is open. All are closed at first.
+  const [expandedPlatforms, setExpandedPlatforms] = useState<string[]>([]);
+  useEffect(() => {
+    // The popover changes the order and the hidden devices too.
+    return addStorageListener((key) => {
+      if (key === deviceListStorageKey) {
+        setDeviceList(getDeviceListPreferences());
+      }
+    });
+  }, []);
+  const updateDeviceList = (change: (prev: DeviceListPreferences) => DeviceListPreferences) => {
+    const next = change(getDeviceListPreferences());
+    saveDeviceListPreferences(next);
+    setDeviceList(next);
+  };
+  const setDeviceShown = (id: string, shown: boolean) =>
+    updateDeviceList((prev) => ({
+      ...prev,
+      hidden: shown ? prev.hidden.filter((item) => item !== id) : [...prev.hidden, id],
+    }));
+  const moveDeviceInList = (key: string, ids: string[], from: number, to: number) =>
+    updateDeviceList((prev) => ({
+      ...prev,
+      order: { ...prev.order, [key]: moveItem(ids, from, to) },
+    }));
 
   const onPressLaunchOnLogin = async (value: boolean) => {
     try {
@@ -400,33 +452,34 @@ export function SettingsPane({ pane }: { pane: Pane }) {
     }
   };
 
-  const handleAuthentication = async (type: 'signup' | 'login') => {
-    const redirectBase = 'expo-orbit:///auth';
-    const authSessionURL = `${
-      Config.website.origin
-    }/${type}?confirm_account=1&app_redirect_uri=${encodeURIComponent(redirectBase)}`;
-    const result = await openAuthSessionAsync(authSessionURL);
+  const handleLogout = () =>
+    leaveRemoteSessionsAsync({
+      label: 'Log out',
+      action: () => {
+        saveSessionSecret(undefined);
+        resetApolloStore();
+      },
+    });
 
-    if (result.type === WebBrowserResultType.SUCCESS) {
-      const resultURL = new URL(result.url);
-      const sessionSecret = resultURL.searchParams.get('session_secret');
-
-      if (!sessionSecret) {
-        throw new Error('session_secret is missing in auth redirect query');
-      }
-
-      saveSessionSecret(sessionSecret);
+  const chooseOpenRemoteSession = async () => {
+    const index = await MenuBarModule.showMenu(
+      OPEN_REMOTE_SESSION_CHOICES.map(({ id, label }) => ({
+        title: label,
+        checked: id === userPreferences.openRemoteSessionInBrowser,
+      }))
+    );
+    const choice = OPEN_REMOTE_SESSION_CHOICES[index];
+    if (choice) {
+      const newPreferences = { ...getUserPreferences(), openRemoteSessionInBrowser: choice.id };
+      saveUserPreferences(newPreferences);
+      setUserPreferences(newPreferences);
     }
   };
 
-  const handleLogout = () => {
-    saveSessionSecret(undefined);
-    resetApolloStore();
-  };
-
   const toggleOS = async (key: keyof UserPreferences, value: boolean) => {
+    // Read the stored value: the popover can hide a section while this window is open.
     const newPreferences = {
-      ...userPreferences,
+      ...getUserPreferences(),
       [key]: value,
     };
     saveUserPreferences(newPreferences);
@@ -489,12 +542,12 @@ export function SettingsPane({ pane }: { pane: Pane }) {
                     <Button
                       title="Sign up"
                       color="primary"
-                      onPress={() => handleAuthentication('signup')}
+                      onPress={() => authenticateAsync('signup')}
                       style={styles.button}
                     />
                     <Button
                       title="Log in"
-                      onPress={() => handleAuthentication('login')}
+                      onPress={() => authenticateAsync('login')}
                       style={styles.button}
                     />
                   </Row>
@@ -530,24 +583,133 @@ export function SettingsPane({ pane }: { pane: Pane }) {
         {pane === 'platforms' ? (
           <View gap="2">
             <Text size="tiny" color="secondary">
-              Only devices for enabled platforms are listed in the menu bar.
+              The device sections that show in the menu. Only devices of these platforms are listed.
+              Open a platform to set the order of its devices with the arrows, and to hide a device
+              with its switch.
             </Text>
             <Card>
-              {platformList.map((item, index) => (
-                <Fragment key={item.key}>
-                  {index > 0 ? <Divider /> : null}
-                  <SettingRow title={item.label} disabled={!item.supported}>
-                    <Text size="tiny" color="secondary">
-                      {item.supported ? deviceCounts[item.devicesKey] : 'macOS only'}
-                    </Text>
-                    <Switch
-                      value={Boolean(userPreferences[item.key])}
-                      onValueChange={(value) => toggleOS(item.key, value)}
+              {platformList.map((item, index) => {
+                const devices = orderDevices(
+                  deviceLists[item.devicesKey] ?? [],
+                  deviceList.order[item.devicesKey]
+                );
+                const ids = devices.map(getDeviceId);
+                const canExpand = Boolean(userPreferences[item.key]) && devices.length > 0;
+                const isExpanded = canExpand && expandedPlatforms.includes(item.devicesKey);
+                return (
+                  <Fragment key={item.key}>
+                    {index > 0 ? <Divider /> : null}
+                    <SettingRow
+                      title={item.label}
                       disabled={!item.supported}
-                    />
-                  </SettingRow>
-                </Fragment>
-              ))}
+                      leading={
+                        // The devices of the platform are below its row. They show when the
+                        // user opens the row.
+                        <TouchableOpacity
+                          disabled={!canExpand}
+                          style={[styles.disclosure, !canExpand && styles.moveButtonDisabled]}
+                          onPress={() =>
+                            setExpandedPlatforms((prev) =>
+                              prev.includes(item.devicesKey)
+                                ? prev.filter((key) => key !== item.devicesKey)
+                                : [...prev, item.devicesKey]
+                            )
+                          }
+                          testID={`expand-${item.devicesKey}`}>
+                          <Text size="tiny">{isExpanded ? '▼' : '▶'}</Text>
+                        </TouchableOpacity>
+                      }>
+                      <Text size="tiny" color="secondary">
+                        {item.supported ? deviceCounts[item.devicesKey] : 'macOS only'}
+                      </Text>
+                      <Switch
+                        value={Boolean(userPreferences[item.key])}
+                        onValueChange={(value) => toggleOS(item.key, value)}
+                        disabled={!item.supported}
+                      />
+                    </SettingRow>
+                    {isExpanded
+                      ? devices.map((device, deviceIndex) => (
+                          <Fragment key={ids[deviceIndex]}>
+                            <Divider />
+                            <View style={styles.nestedDevice}>
+                              <SettingRow
+                                title={device.name}
+                                subtitle={[
+                                  capitalize(device.deviceType),
+                                  'osVersion' in device ? device.osVersion : undefined,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · ')}>
+                                <TouchableOpacity
+                                  disabled={deviceIndex === 0}
+                                  style={[
+                                    styles.moveButton,
+                                    deviceIndex === 0 && styles.moveButtonDisabled,
+                                  ]}
+                                  onPress={() =>
+                                    moveDeviceInList(
+                                      item.devicesKey,
+                                      ids,
+                                      deviceIndex,
+                                      deviceIndex - 1
+                                    )
+                                  }>
+                                  <Text size="small">↑</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  disabled={deviceIndex === devices.length - 1}
+                                  style={[
+                                    styles.moveButton,
+                                    deviceIndex === devices.length - 1 && styles.moveButtonDisabled,
+                                  ]}
+                                  onPress={() =>
+                                    moveDeviceInList(
+                                      item.devicesKey,
+                                      ids,
+                                      deviceIndex,
+                                      deviceIndex + 1
+                                    )
+                                  }>
+                                  <Text size="small">↓</Text>
+                                </TouchableOpacity>
+                                <Switch
+                                  value={!deviceList.hidden.includes(ids[deviceIndex])}
+                                  onValueChange={(value) => setDeviceShown(ids[deviceIndex], value)}
+                                />
+                              </SettingRow>
+                            </View>
+                          </Fragment>
+                        ))
+                      : null}
+                  </Fragment>
+                );
+              })}
+            </Card>
+            <Text size="tiny" color="secondary">
+              The other sections that show in the menu.
+            </Text>
+            <Card>
+              <SettingRow title="Remote devices">
+                <Switch
+                  value={userPreferences.showRemoteDevices}
+                  onValueChange={(value) => toggleOS('showRemoteDevices', value)}
+                />
+              </SettingRow>
+              <Divider />
+              <SettingRow title="Projects">
+                <Switch
+                  value={userPreferences.showProjects}
+                  onValueChange={(value) => toggleOS('showProjects', value)}
+                />
+              </SettingRow>
+              <Divider />
+              <SettingRow title="Builds">
+                <Switch
+                  value={userPreferences.showBuilds}
+                  onValueChange={(value) => toggleOS('showBuilds', value)}
+                />
+              </SettingRow>
             </Card>
           </View>
         ) : null}
@@ -688,6 +850,23 @@ export function SettingsPane({ pane }: { pane: Pane }) {
 
         {pane === 'advanced' ? (
           <>
+            <Section title="Remote devices">
+              <Card>
+                <SettingRow
+                  title="Open a session in the browser"
+                  subtitle="When the session starts">
+                  <SectionHeaderMenu
+                    label={
+                      OPEN_REMOTE_SESSION_CHOICES.find(
+                        ({ id }) => id === userPreferences.openRemoteSessionInBrowser
+                      )?.label ?? ''
+                    }
+                    onPress={chooseOpenRemoteSession}
+                    testID="open-remote-session-in-browser"
+                  />
+                </SettingRow>
+              </Card>
+            </Section>
             <Section title="Android">
               <Card>
                 <SettingRow title="Run emulator without audio">
@@ -1050,6 +1229,15 @@ function IconTile({ children }: { children: React.ReactNode }) {
   );
 }
 
+const OPEN_REMOTE_SESSION_CHOICES: {
+  id: UserPreferences['openRemoteSessionInBrowser'];
+  label: string;
+}[] = [
+  { id: 'always', label: 'Always' },
+  { id: 'ask', label: 'Ask each time' },
+  { id: 'never', label: 'Never' },
+];
+
 function SettingRow({
   leading,
   title,
@@ -1089,6 +1277,10 @@ function SettingRow({
 }
 
 const styles = StyleSheet.create({
+  moveButton: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  moveButtonDisabled: { opacity: 0.3 },
+  disclosure: { width: 16, height: 24, alignItems: 'center', justifyContent: 'center' },
+  nestedDevice: { paddingLeft: 28 },
   header: {
     // On macOS the header sits in the 52pt unified toolbar, next to the traffic lights.
     height: Platform.OS === 'macos' ? 52 : 48,

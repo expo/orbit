@@ -10,6 +10,10 @@
 - Redesign the Settings window with a sidebar, using a native SwiftUI sidebar on macOS. ([#376](https://github.com/expo/orbit/pull/376) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Renew apps signed with free Apple IDs automatically before their 7-day profile expires. ([#378](https://github.com/expo/orbit/pull/378) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add an option in Settings to install the `orbit` command in PATH, so the CLI can be run from any terminal. ([#381](https://github.com/expo/orbit/pull/381) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Add Expo Simulators sessions as remote devices: start, open and stop a session, and launch builds on it. More than one session can start at the same time, and a default controller applies to new sessions. A session can open in the browser when it starts, and a session that ended stays in the list until it is archived. Quit and log out ask first when sessions are still running. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
+- Rework the menu: an account selector, a row of project tiles that can launch the latest app, a default device for each platform, and actions on device rows to launch, show and stop a device. The progress of a launch shows in the row of its device. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
+- Add options to set the order of devices, to hide devices and to hide sections of the menu. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
+- Add the Command-comma shortcut to open Settings and Command-W to close a window. On Windows and Linux, Ctrl+comma, Ctrl+W and Ctrl+Q work in every window. ([#389](https://github.com/expo/orbit/pull/389) by [@brentvatne](https://github.com/brentvatne))
 
 ### 🐛 Bug fixes
 
@@ -17,6 +21,8 @@
 - Accept `devicectl` JSON version 5 to remove the unexpected version warning. (by [@krystofwoldrich](https://github.com/krystofwoldrich))
 - Fix "Open with Orbit" on Windows and Linux failing with `ENOENT` when the build URL ends with a file extension. ([#384](https://github.com/expo/orbit/pull/384) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix Android devices connected over Wi-Fi with `adb connect` showing as USB. ([#386](https://github.com/expo/orbit/pull/386) by [@Mohith26](https://github.com/Mohith26))
+- Fix the login not being saved for the CLI when `~/.expo/orbit` does not exist yet. ([#391](https://github.com/expo/orbit/pull/391) by [@brentvatne](https://github.com/brentvatne))
+- Fix the right-click menu of the tray icon not showing on Linux. ([#391](https://github.com/expo/orbit/pull/391) by [@brentvatne](https://github.com/brentvatne))
 
 ### 💡 Others
 

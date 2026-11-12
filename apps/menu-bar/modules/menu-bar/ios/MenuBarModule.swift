@@ -175,6 +175,44 @@ public class MenuBarModule: Module {
       throw MultiOptionError()
     }.runOnQueue(.main)
     
+    // Shows a menu at the pointer. Returns the index of the chosen item, or -1 when the user
+    // dismisses the menu.
+    AsyncFunction("showMenu") { (items: [[String: Any]]) -> Int in
+      let target = MenuTarget()
+      let menu = NSMenu()
+      menu.autoenablesItems = false
+      fillMenu(menu, items: items, target: target)
+      openMenu = menu
+      openMenuTarget = target
+      // `popUp` returns when the menu closes; the item's action has run by then.
+      menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+      if openMenu === menu {
+        openMenu = nil
+        openMenuTarget = nil
+      }
+      return target.chosenIndex
+    }.runOnQueue(.main)
+
+    // Replaces the items of the menu that `showMenu` opened, while it is open. For a menu that
+    // opens with a "Loading…" item. An empty list closes the menu. Does nothing when no menu
+    // is open.
+    AsyncFunction("updateMenu") { (items: [[String: Any]]) in
+      // An open menu runs the main run loop in the event tracking mode. A block for the
+      // common modes runs in that mode too, so the change gets to the open menu.
+      CFRunLoopPerformBlock(CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue) {
+        guard let menu = openMenu, let target = openMenuTarget else { return }
+        if items.isEmpty {
+          // No items: close the menu.
+          menu.cancelTracking()
+          return
+        }
+        menu.removeAllItems()
+        fillMenu(menu, items: items, target: target)
+        menu.update()
+      }
+      CFRunLoopWakeUp(CFRunLoopGetMain())
+    }
+
     AsyncFunction("openSystemSettingsLoginItems") {
       if #available(macOS 13.0, *) {
         SMAppService.openSystemSettingsLoginItems()
@@ -207,4 +245,50 @@ public class MenuBarModule: Module {
     }
   }
   
+}
+
+// The menu that `showMenu` opened and that is still open.
+private var openMenu: NSMenu?
+private var openMenuTarget: MenuTarget?
+
+private func fillMenu(_ menu: NSMenu, items: [[String: Any]], target: MenuTarget) {
+  for (index, item) in items.enumerated() {
+    if item["separator"] as? Bool == true {
+      menu.addItem(.separator())
+      continue
+    }
+    if item["header"] as? Bool == true {
+      let title = item["title"] as? String ?? ""
+      if #available(macOS 14.0, *) {
+        menu.addItem(.sectionHeader(title: title))
+      } else {
+        let header = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        header.isEnabled = false
+        menu.addItem(header)
+      }
+      continue
+    }
+    let menuItem = NSMenuItem(title: item["title"] as? String ?? "", action: #selector(MenuTarget.choose(_:)), keyEquivalent: "")
+    menuItem.target = target
+    menuItem.tag = index
+    menuItem.state = item["checked"] as? Bool == true ? .on : .off
+    menuItem.isEnabled = item["disabled"] as? Bool != true
+    if let detail = item["detail"] as? String, !detail.isEmpty {
+      let title = NSMutableAttributedString(string: menuItem.title, attributes: [.font: NSFont.menuFont(ofSize: 0)])
+      title.append(NSAttributedString(string: " · \(detail)", attributes: [
+        .font: NSFont.menuFont(ofSize: 0),
+        .foregroundColor: NSColor.secondaryLabelColor
+      ]))
+      menuItem.attributedTitle = title
+    }
+    menu.addItem(menuItem)
+  }
+}
+
+private class MenuTarget: NSObject {
+  var chosenIndex = -1
+
+  @objc func choose(_ sender: NSMenuItem) {
+    chosenIndex = sender.tag
+  }
 }

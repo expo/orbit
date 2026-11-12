@@ -8,6 +8,10 @@ const config: CodegenConfig = {
   generates: {
     './src/graphql/generated/graphql.ts': {
       plugins: ['typescript', 'typescript-operations', 'typescript-graphql-request'],
+      // Only the enums and inputs the documents use. The full schema no longer compiles:
+      // `AppObserve.navigationRoutes` and `AppObserveNavigation.routes` generate the same
+      // `AppObserveNavigationRoutesArgs` name.
+      config: { onlyOperationTypes: true },
     },
   },
 };

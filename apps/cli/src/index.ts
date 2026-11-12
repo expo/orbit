@@ -35,9 +35,57 @@ program
   .requiredOption('-p, --platform <string>', 'Selected platform')
   .requiredOption('--id  <string>', 'UDID or name of the device')
   .option('--no-audio', 'Launch Android emulator without audio')
+  .option('--app-id <string>', 'Expo Simulators: ID of the project the session runs under')
+  .option('--archive-url <string>', 'Expo Simulators: URL of a build to install when it starts')
+  .option('--open-url <string>', 'Expo Simulators: URL to open in the installed build')
+  .option('--max-run-time <number>', 'Expo Simulators: minutes until the session stops', '30')
+  .option('--name <string>', 'Expo Simulators: name of the session')
+  .option('--device-identifier <string>', 'Expo Simulators: device model of the session')
+  .option('--build-id <string>', 'Expo Simulators: ID of an EAS build to install when it starts')
+  .option('--expo-go', 'Expo Simulators: install Expo Go when it starts')
+  .option('--sdk-version <string>', 'Expo Simulators: SDK version of Expo Go')
+  .option('--launch-args <json>', 'Expo Simulators: launch arguments, as a JSON array of strings')
+  .option('--tags <json>', 'Expo Simulators: tags, as a JSON array of strings')
+  .option('--session-type <string>', 'Expo Simulators: agent-device, argent, appium or web-preview-only')
   .action(async (...args) => {
     const { bootDeviceAsync } = await import('./commands/BootDevice');
     return returnLoggerMiddleware(bootDeviceAsync)(...args);
+  });
+
+program
+  .command('stop-device')
+  .description('Stop a local simulator or emulator')
+  .requiredOption('-p, --platform <string>', 'Selected platform')
+  .requiredOption('--id  <string>', 'UDID or name of the device')
+  .action(async (...args) => {
+    const { stopDeviceAsync } = await import('./commands/StopDevice');
+    return returnLoggerMiddleware(stopDeviceAsync)(...args);
+  });
+
+program
+  .command('list-remote-simulators')
+  .description('List the Expo Simulators sessions you started, and the accounts that can start one')
+  .action(async (...args) => {
+    const { listRemoteSimulatorsAsync } = await import('./commands/RemoteSimulator');
+    return returnLoggerMiddleware(listRemoteSimulatorsAsync)(...args);
+  });
+
+program
+  .command('list-remote-simulator-options')
+  .description('List the device models, builds and Expo Go versions for a new Expo Simulators session')
+  .requiredOption('--app-id <string>', 'ID of the project the session runs under')
+  .action(async (...args) => {
+    const { listRemoteSimulatorOptionsAsync } = await import('./commands/RemoteSimulator');
+    return returnLoggerMiddleware(listRemoteSimulatorOptionsAsync)(...args);
+  });
+
+program
+  .command('stop-remote-simulator')
+  .description('Stop an Expo Simulators session')
+  .requiredOption('--id  <string>', 'ID of the session')
+  .action(async (...args) => {
+    const { stopRemoteSimulatorAsync } = await import('./commands/RemoteSimulator');
+    return returnLoggerMiddleware(stopRemoteSimulatorAsync)(...args);
   });
 
 program
