@@ -318,7 +318,9 @@ function getUnixPID(port: number | string) {
     .trim();
 }
 
-const STOP_EMULATOR_TIMEOUT_MS = 30000;
+// A stop is usually done in a few seconds. An emulator that saves its state when it exits can
+// take much longer, and an alert for a stop that then completes is worse than a longer wait.
+const STOP_EMULATOR_TIMEOUT_MS = 60000;
 const STOP_EMULATOR_INTERVAL_MS = 500;
 
 /**
@@ -326,7 +328,7 @@ const STOP_EMULATOR_INTERVAL_MS = 500;
  * when adb still lists it after the timeout. Does nothing when the emulator does not run.
  */
 export async function stopEmulatorAsync(name: string): Promise<void> {
-  const { getRunningDevicesAsync } = await import('./adb');
+  const { getAdbExecutableAsync, getRunningDevicesAsync } = await import('./adb');
   const running = await getRunningDevicesAsync();
   const emulator = running.find(
     (device) => device.deviceType === 'emulator' && device.name === name
@@ -339,17 +341,34 @@ export async function stopEmulatorAsync(name: string): Promise<void> {
 
   // `emu kill` returns at once, and adb lists the emulator as `offline` for some seconds
   // after that. A list that is read in that time still shows the emulator as running.
+  const adb = await getAdbExecutableAsync();
   const deadline = Date.now() + STOP_EMULATOR_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    const { stdout } = await adbAsync('devices');
-    const isListed = stdout.split(/\r?\n/).some((line) => line.split(/\s+/)[0] === serial);
-    if (!isListed) {
-      return;
+  let lastError: unknown;
+  // The last action before the timeout error is always a read of the list.
+  for (;;) {
+    try {
+      // A read that hangs must not make the wait longer than the timeout.
+      const timeout = Math.max(deadline - Date.now(), STOP_EMULATOR_INTERVAL_MS);
+      const { stdout } = await spawnAsync(adb, ['devices'], { timeout });
+      const isListed = stdout.split(/\r?\n/).some((line) => line.split(/\s+/)[0] === serial);
+      if (!isListed) {
+        return;
+      }
+      lastError = undefined;
+    } catch (error) {
+      // adb can fail for a moment, for example while its server starts again. The next read
+      // can work, so the wait goes on.
+      Log.debug(`adb devices failed while the emulator ${name} stops: ${error}`);
+      lastError = error;
+    }
+    if (Date.now() >= deadline) {
+      break;
     }
     await sleepAsync(STOP_EMULATOR_INTERVAL_MS);
   }
   throw new Error(
-    `The emulator ${name} did not stop in ${STOP_EMULATOR_TIMEOUT_MS / 1000} seconds.`
+    `The emulator ${name} did not stop in ${STOP_EMULATOR_TIMEOUT_MS / 1000} seconds.` +
+      (lastError ? ` The last adb error: ${(lastError as Error).message ?? lastError}` : '')
   );
 }
 
