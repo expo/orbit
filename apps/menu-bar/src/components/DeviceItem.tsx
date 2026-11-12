@@ -119,8 +119,8 @@ const SPINNER_TURN_MS = 800;
 
 // The spinner in the icon of a row. The app draws it: the color of the native spinner of
 // macOS does not reach the native view in this app, so it showed white on the grey circle.
-// The native driver turns it, so the animation does not use the JavaScript thread. On macOS
-// the native driver needs the react-native-macos patch: see `patches/README.md`.
+// On macOS the native driver turns it, so the animation does not use the JavaScript thread.
+// The native driver needs the react-native-macos patch there: see `patches/README.md`.
 const Spinner = ({ color }: { color: ColorValue }) => {
   const [rotation] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -129,7 +129,9 @@ const Spinner = ({ color }: { color: ColorValue }) => {
         toValue: 1,
         duration: SPINNER_TURN_MS,
         easing: Easing.linear,
-        useNativeDriver: true,
+        // Not in Electron: react-native-web has no native driver, and a loop that asks for
+        // it stops after one turn.
+        useNativeDriver: Platform.OS !== 'web',
       })
     );
     loop.start();
