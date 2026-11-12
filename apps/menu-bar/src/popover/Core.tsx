@@ -687,7 +687,8 @@ function Core(props: Props) {
       );
     } else if (remoteStatus === 'ready') {
       WindowsNavigator.open('NewSimulator');
-      // The window has the focus now. The popover opens again when the session starts.
+      // The window has the focus now. The popover opens again when the session starts, unless
+      // the session opens in the browser.
       MenuBarModule.closePopover();
     }
   }, [remoteStatus, refetch]);
@@ -704,8 +705,11 @@ function Core(props: Props) {
         }
         saveLastRemoteSimulatorAppId(project.id);
         setRemoteProjectId(project.id);
-        // Show the session while it starts.
-        MenuBarModule.openPopover();
+        // Show the session while it starts. Not when the session opens in the browser: the
+        // browser has the focus then, and the popover would close again at once.
+        if (getUserPreferences().openRemoteSessionInBrowser !== 'always') {
+          MenuBarModule.openPopover();
+        }
         bootRemoteSimulator(platform, undefined, project, options);
       }
     );
