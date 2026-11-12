@@ -11,6 +11,7 @@ export function getUserSettingsJsonFile() {
   return new JsonFile<StorageUtils.UserSettingsData>(StorageUtils.userSettingsFile(os.homedir()), {
     jsonParseErrorDefault: {},
     cantReadFileDefault: {},
+    ensureDir: true,
   });
 }
 

@@ -7,6 +7,7 @@ import {
   Easing,
   GestureResponderEvent,
   PanResponder,
+  Platform,
   StyleSheet,
   Pressable,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { Text, secondaryText } from './Text';
 import { Row, View } from './View';
 import AlertIcon from '../assets/icons/AlertTriangle';
 import CableConnectorIcon from '../assets/icons/cable-connector.svg';
+import CloudCheckIcon from '../assets/icons/cloud-check.svg';
 import CloudIcon from '../assets/icons/cloud.svg';
 import IphoneIcon from '../assets/icons/iphone.svg';
 import TvosIcon from '../assets/icons/tvos.svg';
@@ -117,8 +119,8 @@ const SPINNER_TURN_MS = 800;
 
 // The spinner in the icon of a row. The app draws it: the color of the native spinner of
 // macOS does not reach the native view in this app, so it showed white on the grey circle.
-// The native driver turns it, so the animation does not use the JavaScript thread. On macOS
-// the native driver needs the react-native-macos patch: see `patches/README.md`.
+// On macOS the native driver turns it, so the animation does not use the JavaScript thread.
+// The native driver needs the react-native-macos patch there: see `patches/README.md`.
 const Spinner = ({ color }: { color: ColorValue }) => {
   const [rotation] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -127,7 +129,9 @@ const Spinner = ({ color }: { color: ColorValue }) => {
         toValue: 1,
         duration: SPINNER_TURN_MS,
         easing: Easing.linear,
-        useNativeDriver: true,
+        // Not in Electron: react-native-web has no native driver, and a loop that asks for
+        // it stops after one turn.
+        useNativeDriver: Platform.OS !== 'web',
       })
     );
     loop.start();
@@ -224,6 +228,13 @@ const DeviceItem = ({
 
   const currentTheme = useTheme();
   const { isHovered, isFocused, opacity, onHoverIn, onHoverOut } = useLingeringHover();
+  // On web, the hover of the row comes from the DOM mouseenter and mouseleave events. The
+  // hover of a react-native-web Pressable ends when the pointer enters a Pressable inside it
+  // (`contain`), and the buttons of the row are such Pressables.
+  const rowHoverProps =
+    Platform.OS === 'web'
+      ? { onMouseEnter: onHoverIn, onMouseLeave: onHoverOut }
+      : { onHoverIn, onHoverOut };
   const [isDeviceLaunching, setDeviceLaunching] = useState(false);
   const [isIconHovered, setIsIconHovered] = useState(false);
 
@@ -277,17 +288,25 @@ const DeviceItem = ({
   const circleOpacity = opacity.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] });
 
   return (
-    <View {...panResponder.panHandlers} style={isDragged && styles.dragged}>
+    <View
+      {...panResponder.panHandlers}
+      {...(Platform.OS === 'web' && onContextMenu
+        ? // The responder system of react-native-web only takes the primary button, so the
+          // right click comes as the DOM contextmenu event.
+          {
+            onContextMenu: (event: { preventDefault: () => void }) => {
+              event.preventDefault();
+              onContextMenu();
+            },
+          }
+        : {})}
+      style={isDragged && styles.dragged}>
       {dropLine ? (
         <View
           style={[styles.dropLine, dropLine === 'above' ? styles.dropAbove : styles.dropBelow]}
         />
       ) : null}
-      <Pressable
-        style={styles.row}
-        onHoverIn={onHoverIn}
-        onHoverOut={onHoverOut}
-        testID="device-item">
+      <Pressable style={styles.row} {...rowHoverProps} testID="device-item">
         {isHovered && (canLaunchNow || hasSessionButtons) ? (
           <Animated.View
             style={[
@@ -339,7 +358,13 @@ const DeviceItem = ({
                     size={22}
                     tintColor={iconTint}
                     style={[styles.cloud, sessionEndedAt && styles.endedCloud]}
-                    fallback={<CloudIcon width={22} height={22} />}
+                    fallback={
+                      sessionEndedAt ? (
+                        <CloudCheckIcon width={22} height={22} />
+                      ) : (
+                        <CloudIcon width={22} height={22} />
+                      )
+                    }
                   />
                 ) : device.osType === 'watchOS' ? (
                   <SymbolView

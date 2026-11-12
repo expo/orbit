@@ -21,6 +21,8 @@
 - Accept `devicectl` JSON version 5 to remove the unexpected version warning. (by [@krystofwoldrich](https://github.com/krystofwoldrich))
 - Fix "Open with Orbit" on Windows and Linux failing with `ENOENT` when the build URL ends with a file extension. ([#384](https://github.com/expo/orbit/pull/384) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix Android devices connected over Wi-Fi with `adb connect` showing as USB. ([#386](https://github.com/expo/orbit/pull/386) by [@Mohith26](https://github.com/Mohith26))
+- Fix the login not being saved for the CLI when `~/.expo/orbit` does not exist yet. ([#391](https://github.com/expo/orbit/pull/391) by [@brentvatne](https://github.com/brentvatne))
+- Fix the right-click menu of the tray icon not showing on Linux. ([#391](https://github.com/expo/orbit/pull/391) by [@brentvatne](https://github.com/brentvatne))
 
 ### 💡 Others
 

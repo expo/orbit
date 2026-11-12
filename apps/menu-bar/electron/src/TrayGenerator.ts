@@ -133,12 +133,20 @@ export default class TrayGenerator {
       }
     });
   };
-  rightClickMenu = () => {
+  contextMenu = () => {
+    // The accelerators are hints: the shortcuts work from the windows, not from this menu.
+    const isMac = process.platform === 'darwin';
     const menu: MenuItemConstructorOptions[] = [
+      // On some Linux desktops (GNOME with AppIndicator), a click on a tray icon that has a
+      // menu opens the menu and does not send `click`. This item opens the popover there.
+      // No arguments: `showWindow` takes the bounds of the tray, not the menu item.
+      ...(process.platform === 'linux'
+        ? [{ label: 'Open Orbit', click: () => this.showWindow() }, { type: 'separator' as const }]
+        : []),
       {
         label: 'Settings...',
-        // Shown as Ctrl+, on Windows and Linux, and as Command-comma on macOS.
-        accelerator: 'CommandOrControl+,',
+        // Not on Windows and Linux: Electron writes `,` as "Comma" there.
+        accelerator: isMac ? 'Command+,' : undefined,
         click: this.openSettings,
       },
       {
@@ -147,7 +155,7 @@ export default class TrayGenerator {
         click: this.requestQuit,
       },
     ];
-    this.tray?.popUpContextMenu(Menu.buildFromTemplate(menu));
+    return Menu.buildFromTemplate(menu);
   };
   createTray = () => {
     this.tray = new Tray(getIconPath());
@@ -157,7 +165,13 @@ export default class TrayGenerator {
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
-    this.tray.on('right-click', this.rightClickMenu);
+    // Electron emits `right-click` only on macOS and Windows. On Linux, the tray shows the menu
+    // that `setContextMenu` sets.
+    if (process.platform === 'linux') {
+      this.tray.setContextMenu(this.contextMenu());
+    } else {
+      this.tray.on('right-click', () => this.tray?.popUpContextMenu(this.contextMenu()));
+    }
 
     this.handleShortcuts(this.mainWindow);
     app.on('browser-window-created', (_, window) => this.handleShortcuts(window));
