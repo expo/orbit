@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import { execFileSync } from 'child_process';
 import { AndroidConnectedDevice, AndroidEmulator } from 'common-types/build/devices';
 import fs from 'fs-extra';
-import os from 'os';
 import path from 'path';
 import semver from 'semver';
 
@@ -61,7 +60,7 @@ export async function getAvailableAndroidEmulatorsAsync(): Promise<
 
     return (
       stdout
-        .split(os.EOL)
+        .split(/\r?\n/)
         .filter(Boolean)
         /**
          * AVD names cannot contain spaces. This removes extra info lines from the output. e.g.

@@ -1,6 +1,5 @@
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import { AndroidConnectedDevice, AndroidEmulator } from 'common-types/build/devices';
-import os from 'os';
 import path from 'path';
 
 import { getAndroidSdkRootAsync } from './sdk';
@@ -215,7 +214,8 @@ export async function getRunningDevicesAsync(): Promise<
 > {
   const { stdout } = await adbAsync('devices', '-l');
 
-  const splitItems = stdout.trim().split(os.EOL);
+  // adb can print `\n` on Windows too, so the line ending of the host is not used.
+  const splitItems = stdout.trim().split(/\r?\n/);
 
   const attachedDevices = splitItems
     // First line is `"List of devices attached"`, remove it
