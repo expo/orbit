@@ -61,6 +61,30 @@ describe(stopEmulatorAsync, () => {
     ]);
   });
 
+  it('throws when adb still lists the emulator after the timeout', async () => {
+    mockSpawnAsync.mockImplementation(async (_adb: string, args: string[]) => {
+      const call = args.join(' ');
+      if (call === 'devices -l') {
+        return devices(['emulator-5554          device product:sdk model:sdk transport_id:1']);
+      }
+      if (call === '-s emulator-5554 emu avd name') {
+        return { stdout: 'Pixel_9\nOK\n', stderr: '' };
+      }
+      if (call === '-s emulator-5554 emu kill') {
+        return { stdout: '', stderr: '' };
+      }
+      return devices(['emulator-5554\toffline']);
+    });
+    // Each read of the clock is 10 seconds after the one before, so the timeout comes soon.
+    let now = 0;
+    const dateNow = jest.spyOn(Date, 'now').mockImplementation(() => (now += 10000));
+
+    await expect(stopEmulatorAsync('Pixel_9')).rejects.toThrow(
+      'The emulator Pixel_9 did not stop in 30 seconds.'
+    );
+    dateNow.mockRestore();
+  });
+
   it('does nothing when the emulator does not run', async () => {
     mockSpawnAsync.mockImplementation(async (_adb: string, args: string[]) => {
       if (args.join(' ') === 'devices -l') {

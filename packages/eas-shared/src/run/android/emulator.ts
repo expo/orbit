@@ -322,8 +322,8 @@ const STOP_EMULATOR_TIMEOUT_MS = 30000;
 const STOP_EMULATOR_INTERVAL_MS = 500;
 
 /**
- * Stops the running emulator with this AVD name, and waits until adb does not list it. Does
- * nothing when it does not run.
+ * Stops the running emulator with this AVD name, and waits until adb does not list it. Throws
+ * when adb still lists it after the timeout. Does nothing when the emulator does not run.
  */
 export async function stopEmulatorAsync(name: string): Promise<void> {
   const { getRunningDevicesAsync } = await import('./adb');
@@ -348,6 +348,9 @@ export async function stopEmulatorAsync(name: string): Promise<void> {
     }
     await sleepAsync(STOP_EMULATOR_INTERVAL_MS);
   }
+  throw new Error(
+    `The emulator ${name} did not stop in ${STOP_EMULATOR_TIMEOUT_MS / 1000} seconds.`
+  );
 }
 
 export async function activateEmulatorWindowAsync(
