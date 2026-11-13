@@ -7,6 +7,7 @@ class PopoverManager: NSObject {
 
   private var reactNativeFactory: RCTReactNativeFactory
   private var statusItem: NSStatusItem!
+  private var statusItemView: DragDropStatusItemView?
   @objc var popover: NSPopover!
 
   @objc public static func initializeShared(factory: RCTReactNativeFactory) -> PopoverManager {
@@ -63,6 +64,7 @@ class PopoverManager: NSObject {
     dragDropView.openPopoverAction = { [weak self] in
       self?.openPopover()
     }
+    statusItemView = dragDropView
 
     let button = statusItem.button!
     button.addSubview(dragDropView)
@@ -92,6 +94,17 @@ class PopoverManager: NSObject {
       name: Notification.Name("ExpoOrbit_ClosePopover"),
       object: nil
     )
+
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(setStatusItemBadge(_:)),
+      name: Notification.Name("ExpoOrbit_SetStatusItemBadge"),
+      object: nil
+    )
+  }
+
+  @objc private func setStatusItemBadge(_ notification: Notification) {
+    statusItemView?.badgeText = notification.object as? String
   }
 
   // MARK: - Event Handling

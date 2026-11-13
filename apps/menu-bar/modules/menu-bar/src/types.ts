@@ -24,6 +24,11 @@ export interface NativeMenuBarModule {
    * on the other platforms it does nothing, so open the menu there when the items are ready.
    */
   updateMenu: (items: MenuItem[]) => Promise<void>;
+  /**
+   * Shows `text` in a green badge on the menu bar icon. No text removes the badge. Only on
+   * macOS: the tray icon of the other platforms has no badge.
+   */
+  setStatusItemBadge: (text: string | null) => Promise<void>;
   openPopover(): void;
   closePopover(): void;
 }
