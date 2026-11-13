@@ -25,15 +25,16 @@ export interface NativeMenuBarModule {
    */
   updateMenu: (items: MenuItem[]) => Promise<void>;
   /**
-   * Shows `text` in a green badge on the menu bar icon. No text removes the badge. Only on
-   * macOS: the tray icon of the other platforms has no badge.
+   * Shows `text` in a green badge on the menu bar icon. No text removes the badge. The tray
+   * icon on Windows and Linux is too small for a text: it shows a green dot, and its tooltip
+   * has the text.
    */
   setStatusItemBadge: (text: string | null) => Promise<void>;
   openPopover(): void;
   closePopover(): void;
 }
 
-type PreloadKeys = 'initialScreenSize' | 'closePopover' | 'openPopover';
+type PreloadKeys = 'initialScreenSize' | 'closePopover' | 'openPopover' | 'setStatusItemBadge';
 
 export interface ElectronMainMenuBarModule
   extends Omit<

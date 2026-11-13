@@ -17,6 +17,8 @@ import WindowManager from '../modules/WindowManager/main';
 export default class TrayGenerator {
   mainWindow: BrowserWindow;
   tray: Tray | null;
+  // The text that the menu bar icon shows in a badge on macOS: the number of remote sessions.
+  badgeText: string | null = null;
 
   constructor(mainWindow: BrowserWindow) {
     this.tray = null;
@@ -157,11 +159,16 @@ export default class TrayGenerator {
     ];
     return Menu.buildFromTemplate(menu);
   };
+  // The tray icon is too small for the text of the badge. It shows a green dot, and the tooltip
+  // has the text. On Linux, the desktop decides whether a tray icon has a tooltip.
+  updateTrayIcon = () => {
+    this.tray?.setImage(getIconPath(this.badgeText !== null));
+    this.tray?.setToolTip(getToolTip(this.badgeText));
+  };
   createTray = () => {
-    this.tray = new Tray(getIconPath());
-    nativeTheme.addListener('updated', () => {
-      this.tray?.setImage(getIconPath());
-    });
+    this.tray = new Tray(getIconPath(false));
+    this.tray.setToolTip(getToolTip(null));
+    nativeTheme.addListener('updated', this.updateTrayIcon);
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
@@ -178,6 +185,10 @@ export default class TrayGenerator {
 
     ipcMain.handle('open-popover', () => this.showWindow());
     ipcMain.handle('close-popover', this.hideWindow);
+    ipcMain.handle('set-status-item-badge', (_, text: string | null) => {
+      this.badgeText = text || null;
+      this.updateTrayIcon();
+    });
 
     app.on('open-url', () => this.showWindow());
     app.on('second-instance', () => this.showWindow());
@@ -205,8 +216,15 @@ export default class TrayGenerator {
 }
 module.exports = TrayGenerator;
 
-const getIconPath = () => {
-  const iconName = getIconName();
+const getToolTip = (badgeText: string | null) => {
+  if (badgeText === null) {
+    return 'Expo Orbit';
+  }
+  return `Expo Orbit: ${badgeText} remote ${badgeText === '1' ? 'session' : 'sessions'}`;
+};
+
+const getIconPath = (hasBadge: boolean) => {
+  const iconName = getIconName(hasBadge);
 
   return path.join(
     path.dirname(__dirname),
@@ -214,12 +232,14 @@ const getIconPath = () => {
   );
 };
 
-const getIconName = () => {
+// The icons with `-badge` in the name have a green dot at the lower right.
+const getIconName = (hasBadge: boolean) => {
+  const badge = hasBadge ? '-badge' : '';
   if (process.platform === 'darwin' || process.platform === 'linux') {
-    return 'icon.png';
+    return `icon${badge}.png`;
   }
 
-  return `icon-${nativeTheme.shouldUseDarkColors ? 'dark' : 'light'}.${
+  return `icon-${nativeTheme.shouldUseDarkColors ? 'dark' : 'light'}${badge}.${
     process.platform === 'win32' ? 'ico' : 'png'
   }`;
 };

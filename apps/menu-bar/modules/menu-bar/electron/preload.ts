@@ -15,6 +15,7 @@ const MenuBarModule: ElectronPreloadMenuBarModule = {
   closePopover: () => {
     ipcRenderer.invoke('close-popover');
   },
+  setStatusItemBadge: (text) => ipcRenderer.invoke('set-status-item-badge', text),
   addListener: (event: string, callback: (...args: string[]) => void) => {
     const listener = (event: IpcRendererEvent, ...args: any[]) => {
       callback(...args);
