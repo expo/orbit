@@ -81,6 +81,33 @@ describe('getConnectedDevicesAsync', () => {
     expect(devices.map((device) => device.udid)).toEqual(['REAL', 'LEGACY']);
   });
 
+  it('ignores Xcode 27.2 unavailable simulators with no platform', async () => {
+    mockGetConnectedAppleDevicesAsync.mockResolvedValueOnce([
+      // devicectl JSON v5: unavailable simulators (runtime missing) have no
+      // `platform` or `osVersionNumber`, but keep
+      // `hardwareProperties.reality: 'simulated'`.
+      {
+        hardwareProperties: {
+          udid: 'SIM-NO-PLATFORM',
+          productType: 'iPhone17,3',
+          reality: 'simulated',
+        },
+        deviceProperties: { name: 'orbit-388-probe' },
+        connectionProperties: {
+          pairingState: 'paired',
+          tunnelState: 'disconnected',
+          transportType: 'sameMachine',
+        },
+      } as any,
+      mockDevicectlDevice({ udid: 'REAL', name: 'iPhone', reality: 'physical' }),
+    ]);
+    mockConnectUsbmuxdSocketAsync.mockRejectedValueOnce(new Error('transient blip'));
+
+    const devices = await getConnectedDevicesAsync();
+
+    expect(devices.map((device) => device.udid)).toEqual(['REAL']);
+  });
+
   it('swallows transient custom-tooling errors when native discovery succeeded', async () => {
     mockConnectUsbmuxdSocketAsync.mockRejectedValueOnce(new Error('transient blip'));
 
