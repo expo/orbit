@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		045175BE45C09A78501F3277 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D5B57287467FCE0C3AD2F77 /* libPods-ExpoMenuBar-macOS.a */; };
+		18B650340348882BBF025921 /* NapiSmokeTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2350936C0CEDD2735AC929CE /* NapiSmokeTest.mm */; settings = {COMPILER_FLAGS = "-I/tmp/hermes-napi-src/include -I/tmp/hermes-napi-src/API/napi"; }; };
 		1E86C311712A1366282D4A28 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6DF0AD98E1DDDB5E7C991DB8 /* PrivacyInfo.xcprivacy */; };
 		514201522437B4B40078DB4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 514201512437B4B40078DB4F /* Assets.xcassets */; };
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
@@ -51,6 +52,7 @@
 /* Begin PBXFileReference section */
 		02422F9FB6FF5F34B4E63E6F /* Pods-Shared-ExpoMenuBar-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-macOS.debug.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-macOS/Pods-Shared-ExpoMenuBar-macOS.debug.xcconfig"; sourceTree = "<group>"; };
 		214F660AED31B4554BE29100 /* Pods-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
+		2350936C0CEDD2735AC929CE /* NapiSmokeTest.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = NapiSmokeTest.mm; sourceTree = "<group>"; };
 		38423A3E24576CBC00BC2EAC /* main.jsbundle */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
 		3D5B57287467FCE0C3AD2F77 /* libPods-ExpoMenuBar-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoMenuBar-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D47B0298808748D37D9C46D /* Pods-ExpoMenuBar-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.debug.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.debug.xcconfig"; sourceTree = "<group>"; };
@@ -190,6 +192,7 @@
 				C06B8F912AAB77EC009F2BB5 /* DragDropStatusItemView.h */,
 				6DF0AD98E1DDDB5E7C991DB8 /* PrivacyInfo.xcprivacy */,
 				C0D440792DDB9B9E006B7C16 /* PopoverManager.swift */,
+				2350936C0CEDD2735AC929CE /* NapiSmokeTest.mm */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -518,6 +521,7 @@
 				C061C7A12A26B21C00A53D8D /* AutoResizerRootViewManager.m in Sources */,
 				77818F2A6E488E8B68D317B2 /* ExpoModulesProvider.swift in Sources */,
 				C0DA577B2F847C080063FF01 /* RCTHostWrapper.mm in Sources */,
+				18B650340348882BBF025921 /* NapiSmokeTest.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
