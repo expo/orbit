@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { listRemoteSimulatorsAsync } from '../commands/remoteSimulatorAsync';
+import MenuBarModule from '../modules/MenuBarModule';
 import {
   endedRemoteSessionsStorageKey,
   getUserPreferences,
@@ -16,7 +17,7 @@ import {
   storage,
 } from '../modules/Storage';
 import { DevicesPerPlatform, getDeviceId, getSectionsFromDeviceList } from '../utils/device';
-import { EndedRemoteSession } from '../utils/remoteSimulator';
+import { EndedRemoteSession, getRemoteSessionsBadge } from '../utils/remoteSimulator';
 
 type ListDevicesContext = {
   devicesPerPlatform: DevicesPerPlatform;
@@ -43,6 +44,7 @@ type ListDevicesContext = {
 // Orbit keeps this number of ended sessions, so the list stays short. It archives the oldest
 // ones above this number.
 const MAX_ENDED_SESSIONS = 5;
+const REMOTE_SESSIONS_POLL_INTERVAL_MS = 60 * 1000;
 
 function getEndedRemoteSessions(): EndedRemoteSession[] {
   try {
@@ -187,6 +189,23 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
     () => remote.devices.filter(({ state }) => state !== 'Shutdown'),
     [remote]
   );
+
+  // The menu bar icon shows how many sessions start or run.
+  const remoteSessionsBadge = getRemoteSessionsBadge(remoteSessions.length);
+  useEffect(() => {
+    MenuBarModule.setStatusItemBadge(remoteSessionsBadge);
+  }, [remoteSessionsBadge]);
+
+  // Orbit reads the list when the popover opens. With a session, it also reads the list on a
+  // timer, so that the badge goes away when a session ends by itself.
+  const hasRemoteSessions = remoteSessions.length > 0;
+  useEffect(() => {
+    if (!hasRemoteSessions) {
+      return;
+    }
+    const interval = setInterval(updateRemoteSimulators, REMOTE_SESSIONS_POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [hasRemoteSessions, updateRemoteSimulators]);
 
   const { showAndroidEmulators } = getUserPreferences();
   // Sessions are not in `devicesPerPlatform`: the local launch code reads that, and it must
