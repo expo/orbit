@@ -17,6 +17,9 @@ on:
       - apps/menu-bar/e2e/**
       - apps/menu-bar/electron/**
       - apps/menu-bar/macos/**
+      - apps/cli/**
+      - packages/eas-shared/**
+      - patches/**
       - .github/workflows/e2e-tests.yml
 
 concurrency:
@@ -201,6 +204,18 @@ jobs:
           key: ${{ runner.os }}-pods-${{ hashFiles('apps/menu-bar/macos/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
+
+      # hermes-node (which the CLI runs on) and the Hermes it pins are fetched and
+      # built by macos/scripts/hermes-node.sh; the pinned commit lives in that
+      # script, so its hash keys the cache.
+      - name: Cache hermes-node
+        uses: actions/cache@v4
+        with:
+          path: apps/menu-bar/macos/vendor/hermes-node
+          key: ${{ runner.os }}-hermes-node-${{ hashFiles('apps/menu-bar/macos/scripts/hermes-node.sh') }}
+
+      - name: Install build tools for hermes-node
+        run: for tool in cmake ninja; do command -v $tool >/dev/null || brew install $tool; done
 
       - name: Install CocoaPods
         working-directory: apps/menu-bar/macos

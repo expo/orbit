@@ -1,3 +1,6 @@
+// Must come first: installs globals other modules expect.
+import './polyfills';
+
 import { Command } from 'commander';
 
 import { returnLoggerMiddleware } from './utils';

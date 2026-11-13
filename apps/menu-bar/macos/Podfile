@@ -9,6 +9,16 @@ other_cflags = "$(inherited) "+ (showDevWindow ? " -D"+"SHOW_DEV_WINDOW" : "") +
 require File.join(File.dirname(`node --print "require.resolve('react-native-macos/package.json')"`), "scripts/react_native_pods")
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 
+# Hermes is built from source, from the facebook/hermes commit that hermes-node
+# (which the CLI runs on) pins, so the app and the CLI share one engine and the
+# CLI can link the app's hermesvm.framework. See scripts/hermes-node.sh.
+ENV['RCT_HERMES_V1_ENABLED'] = '1'
+ENV['REACT_NATIVE_OVERRIDE_HERMES_DIR'] ||= begin
+  hermes_dir = `"#{__dir__}/scripts/hermes-node.sh" fetch`.strip
+  raise 'scripts/hermes-node.sh fetch failed' unless $?.success? && !hermes_dir.empty?
+  hermes_dir
+end
+
 relative_rn_macos_path = ''
 
 # Delete the codegen build folder

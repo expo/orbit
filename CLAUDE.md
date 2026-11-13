@@ -34,7 +34,7 @@ yarn typecheck    # TypeScript type checking
 yarn build        # Compile TypeScript
 yarn test         # Run Jest tests
 yarn lint         # ESLint
-yarn archive      # Bundle standalone executable with pkg
+yarn archive      # macOS: build dist/ (orbit-cli launcher + orbit-cli.hbc); needs HERMES_NODE_OUT/HERMES_FW_DIR, normally run by Xcode's "Build CLI" phase
 yarn gql          # Generate GraphQL types
 ```
 
@@ -45,7 +45,7 @@ yarn start        # Start Metro bundler for development
 yarn macos        # Build macOS app with Xcode
 yarn test         # Run Jest tests (jest-expo preset)
 yarn lint         # ESLint
-yarn update-cli   # Copy compiled CLI into menu-bar app
+yarn update-cli   # Copy apps/cli/dist into menu-bar/cli (bundled as Contents/Resources/cli)
 yarn archive      # Build and archive for App Store
 yarn notarize     # Notarize for macOS distribution
 ```
@@ -54,7 +54,7 @@ yarn notarize     # Notarize for macOS distribution
 
 1. Start Metro bundler: `cd apps/menu-bar && yarn start`
 2. Build macOS app: `yarn macos` (app appears in menu bar)
-3. For CLI changes: `cd apps/cli && yarn build && cd ../menu-bar && yarn update-cli`
+3. For CLI changes: `cd apps/cli && yarn build`, then rebuild the app (the "Build CLI" phase rebuilds the bytecode and launcher)
 
 ## Verifying on Devices (agent-device)
 
@@ -75,7 +75,7 @@ Use `agent-device` only on physical devices (iPhone, iPad, Android) to verify ap
 ## Architecture Notes
 
 - Menu bar app uses React Context providers for state (DevicesProvider, ThemeProvider)
-- CLI commands are invoked by menu bar app for device/build operations
+- CLI commands are invoked by menu bar app for device/build operations. On macOS the CLI runs on the app's own Hermes via hermes-node: `Contents/Resources/cli/orbit-cli` (apps/cli/hermes-launcher) runs `orbit-cli.hbc`; Electron forks it with Node
 - GraphQL queries fetch EAS build data; local state manages device lists
 - Native modules in `src/modules/` bridge to Electron APIs (MenuBar, Storage, Alert, FileHandler, Linking)
 - Secondary windows (Settings, Onboarding) use react-native-multi-window
