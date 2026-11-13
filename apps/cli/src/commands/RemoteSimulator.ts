@@ -29,7 +29,6 @@ const FREE_PLAN_ID = 'price_free';
 const POLL_INTERVAL_MS = 5000;
 /** Queue wait plus boot. A boot alone can take 15 minutes. */
 const BOOT_TIMEOUT_MS = 30 * 60 * 1000;
-const DEFAULT_MAX_RUN_TIME_MINUTES = 30;
 
 type RemotePlatform = 'ios' | 'android';
 
@@ -284,8 +283,12 @@ export async function bootRemoteSimulatorAsync({
   if (archiveUrl) {
     assertTrustedSource(archiveUrl);
   }
-  const maxRunTimeMinutes = Number(maxRunTime ?? DEFAULT_MAX_RUN_TIME_MINUTES);
-  if (!Number.isInteger(maxRunTimeMinutes) || maxRunTimeMinutes <= 0) {
+  // With no value, the session can run for the maximum duration of the account's plan.
+  const maxRunTimeMinutes = maxRunTime === undefined ? undefined : Number(maxRunTime);
+  if (
+    maxRunTimeMinutes !== undefined &&
+    (!Number.isInteger(maxRunTimeMinutes) || maxRunTimeMinutes <= 0)
+  ) {
     throw failed('--max-run-time must be a whole number of minutes.');
   }
 
@@ -307,7 +310,7 @@ export async function bootRemoteSimulatorAsync({
         appId,
         platform: platform === 'android' ? AppPlatform.Android : AppPlatform.Ios,
         type,
-        maxRunTimeMinutes,
+        ...(maxRunTimeMinutes ? { maxRunTimeMinutes } : {}),
         name: name?.trim() || 'Started from Orbit',
         ...(deviceIdentifier
           ? { [platform === 'android' ? 'android' : 'ios']: { deviceIdentifier } }

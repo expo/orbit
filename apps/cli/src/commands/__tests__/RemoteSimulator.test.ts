@@ -220,7 +220,6 @@ describe(bootRemoteSimulatorAsync, () => {
         appId: 'app',
         platform: 'ANDROID',
         type: 'ARGENT',
-        maxRunTimeMinutes: 30,
         name: 'Checkout flow',
         android: { deviceIdentifier: 'pixel_9' },
         expoGo: true,
@@ -229,6 +228,10 @@ describe(bootRemoteSimulatorAsync, () => {
         tags: ['nightly'],
       },
     });
+    // With no duration in the request, the session gets the maximum duration of the plan.
+    expect(sdk.createDeviceRunSession.mock.calls[0][0].deviceRunSessionInput).not.toHaveProperty(
+      'maxRunTimeMinutes'
+    );
   });
 
   it('creates no session for two build sources, an unknown controller or a bad list', async () => {
