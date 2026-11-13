@@ -76,6 +76,8 @@ export default {
   // Shows a menu at the pointer. Resolves with the index of the chosen item, or -1.
   showMenu: (items: MenuItem[]): Promise<number> => MenuBarModule.showMenu(items),
   updateMenu: (items: MenuItem[]): Promise<void> => MenuBarModule.updateMenu(items),
+  setStatusItemBadge: (text: string | null): Promise<void> =>
+    MenuBarModule.setStatusItemBadge(text),
   openPopover: () => MenuBarModule.openPopover(),
   closePopover: () => MenuBarModule.closePopover(),
   logs,

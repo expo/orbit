@@ -9,6 +9,7 @@ import {
 import {
   formatElapsedTime,
   formatRelativeTime,
+  getRemoteSessionsBadge,
   getRemoteSimulatorProjects,
   parseLaunchArgs,
   parseStartedRemoteSimulator,
@@ -216,6 +217,19 @@ describe(formatRelativeTime, () => {
     expect(formatRelativeTime('2026-11-15T09:00:00Z', now)).toBe('3h ago');
     expect(formatRelativeTime('2026-11-13T12:00:00Z', now)).toBe('2d ago');
     expect(formatRelativeTime('2026-11-01T12:00:00Z', now)).toBe('2w ago');
+  });
+});
+
+describe(getRemoteSessionsBadge, () => {
+  it('shows the number of sessions, and nothing with no session', () => {
+    expect(getRemoteSessionsBadge(0)).toBeNull();
+    expect(getRemoteSessionsBadge(1)).toBe('1');
+    expect(getRemoteSessionsBadge(9)).toBe('9');
+  });
+
+  it('shows 9+ above nine sessions', () => {
+    expect(getRemoteSessionsBadge(10)).toBe('9+');
+    expect(getRemoteSessionsBadge(20)).toBe('9+');
   });
 });
 

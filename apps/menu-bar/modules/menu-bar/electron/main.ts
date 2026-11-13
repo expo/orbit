@@ -106,6 +106,8 @@ const MenuBarModule: ElectronMainMenuBarModule = {
     }),
   // An Electron menu cannot change while it is open.
   updateMenu: async () => {},
+  // The tray icon has no badge.
+  setStatusItemBadge: async () => {},
   setEnvVars(envVars) {
     const userSettingsJsonFile = getUserSettingsJsonFile();
     userSettingsJsonFile.setAsync('envVars', envVars);
