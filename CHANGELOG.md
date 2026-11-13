@@ -10,6 +10,7 @@
 - Renew apps signed with free Apple IDs automatically before their 7-day profile expires. ([#378](https://github.com/expo/orbit/pull/378) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Redesign the Debug Menu: filter logs by text or by errors, expand an entry to see its output with JSON in color, and copy or clear the logs. The list updates while commands run. Debug actions write their result to the log, and a click on a system color copies its name. ([#403](https://github.com/expo/orbit/pull/403) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add an experimental virtual camera for iOS simulators on macOS. Settings → Experiments turns it on and picks what the camera shows: the Mac's camera, an image, a video or a QR code, with a separate source for the front camera. Apps launched in a booted simulator see a back and a front camera through AVFoundation, including photo capture, QR scanning, movie recording and `UIImagePickerController`, with no change to their code. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Show the number of remote sessions that start or run in a badge on the menu bar icon, on macOS. ([#396](https://github.com/expo/orbit/pull/396) by [@brentvatne](https://github.com/brentvatne))
 
 ### 🐛 Bug fixes
 
