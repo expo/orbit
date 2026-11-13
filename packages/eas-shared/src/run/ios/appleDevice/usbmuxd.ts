@@ -16,8 +16,11 @@ const debug = Debug('expo:apple-device:usbmuxd');
 
 // Socket/connection error codes that indicate the usbmux service (the Apple
 // Mobile Device Service on Windows, or the usbmuxd daemon on macOS/Linux) is not
-// installed or not running.
-const NOT_RUNNING_SOCKET_ERROR_CODES = ['ECONNREFUSED', 'ENOENT', 'ECONNRESET', 'EPIPE'];
+// installed, not running, or wedged and no longer servicing its socket.
+// EAGAIN is emitted when the daemon is alive but its accept queue is full — i.e.
+// it has stopped accepting connections; from the caller's point of view this is
+// indistinguishable from "not running" and is fixed the same way (restart).
+const NOT_RUNNING_SOCKET_ERROR_CODES = ['ECONNREFUSED', 'ENOENT', 'ECONNRESET', 'EPIPE', 'EAGAIN'];
 
 export type UsbmuxdHelperGuidance = {
   /** Short, human-readable name of the helper software. */
@@ -71,8 +74,10 @@ export function getUsbmuxdHelperGuidance(): UsbmuxdHelperGuidance {
         ? {
             label: 'usbmuxd',
             description:
-              'usbmuxd is installed but not running. Connect and unlock your iPhone and tap "Trust". Usbmuxd should start automatically when a device is attached. If it still does not appear, run `sudo systemctl start usbmuxd`.',
-            startCommand: 'sudo systemctl start usbmuxd',
+              'usbmuxd is installed but not running or not responding. Connect and unlock your iPhone and tap "Trust". usbmuxd should start automatically when a device is attached. If it still does not appear, run `sudo systemctl restart usbmuxd`.',
+            // `restart` (not `start`) so it also recovers a daemon that is running
+            // but wedged — `start` is a no-op when the unit is already active.
+            startCommand: 'sudo systemctl restart usbmuxd',
           }
         : {
             label: 'usbmuxd',

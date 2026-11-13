@@ -18,12 +18,12 @@
 // 0, so `yarn start` is never blocked.
 //
 // Host build prerequisites:
-//   Linux:   `git`, `g++`, `make`, `pkg-config`, `libssl-dev` for zsign.
-//   macOS:   Xcode toolchain (anisette uses the Swift helper); `git` + clang for zsign.
-//   Windows: zsign is reused from a prebuilt binary if present (zsign build/windows/vs2022).
-// Anisette on Windows/Linux needs NO toolchain — it runs the anisette-js WASM
-// emulator, whose assets ship in the ipa-resign package and are copied into
-// electron/anisette/ below.
+//   macOS: Xcode toolchain (anisette uses the Swift helper); `git` + clang for zsign.
+// Windows and Linux need NO toolchain: anisette runs the anisette-js WASM emulator
+// (its assets ship in the ipa-resign package and are copied into electron/anisette/
+// below) and re-signing uses the in-process WASM zsign signer (chosen in
+// apps/cli/src/commands/ResignIpa.ts). Both ship inside the ipa-resign package,
+// so no native binary is built on Windows/Linux.
 
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -37,7 +37,6 @@ fs.mkdirSync(cacheDir, { recursive: true });
 
 const FORCE = !!process.env.FORCE;
 const platform = process.platform; // 'win32' | 'darwin' | 'linux'
-const archLabel = process.arch === 'arm64' ? 'arm64' : 'x64';
 
 const log = (m) => console.log(`> ${m}`);
 const warn = (m) => console.warn(`! ${m}`);
@@ -159,26 +158,15 @@ function copyAnisetteWasmAssets() {
 }
 
 function buildZsign() {
-  if (platform === 'win32') {
-    const artifact = `zsign-win-${archLabel}.exe`;
-    if (have(artifact)) return log(`${artifact} already present — skipping (FORCE=1 to rebuild)`);
-    const prebuilt = path.join(appleResign, 'bin', artifact);
-    if (fs.existsSync(prebuilt)) {
-      log(`Copying prebuilt ${artifact} from apple-resign/bin`);
-      copy(prebuilt, path.join(binDir, artifact));
-    } else {
-      warn(
-        `No ${artifact} found. Build zsign with VS2022 (zsign build/windows/vs2022) or download a release`
-      );
-      warn(
-        'from https://github.com/zhlynn/zsign/releases, drop it in apple-resign/bin/, then re-run.'
-      );
-      warn('Re-signing will be unavailable until then (Apple ID auth still works).');
-    }
-    return;
+  // Windows and Linux re-sign with ipa-resign's in-process WASM signer (chosen in
+  // apps/cli/src/commands/ResignIpa.ts), which ships inside the ipa-resign
+  // package — no native zsign binary to build, bundle, or ship. Only macOS uses
+  // the native zsign binary.
+  if (platform !== 'darwin') {
+    return log('zsign: Windows/Linux use the WASM signer — skipping native zsign build.');
   }
-  // linux / darwin: prebuilt if the package ships one, else clone + make.
-  const artifact = platform === 'darwin' ? 'zsign' : `zsign-linux-${archLabel}`;
+  // macOS: prebuilt if the package ships one, else clone + make.
+  const artifact = 'zsign';
   if (have(artifact)) return log(`${artifact} already present — skipping (FORCE=1 to rebuild)`);
   if (copyPrebuiltIfPresent(artifact)) return;
   const zsrc = path.join(cacheDir, 'zsign');
@@ -194,12 +182,12 @@ function buildZsign() {
       return;
     }
   }
-  const makeDir = path.join(zsrc, 'build', platform === 'darwin' ? 'macos' : 'linux');
+  const makeDir = path.join(zsrc, 'build', 'macos');
   if (run('make', [], { cwd: makeDir })) {
     copy(path.join(zsrc, 'bin', 'zsign'), path.join(binDir, artifact));
   } else {
     warn(
-      `Could not build zsign (${platform}) — re-signing will be unavailable until a zsign binary is on PATH.`
+      'Could not build zsign (macOS) — re-signing will be unavailable until a zsign binary is on PATH.'
     );
   }
 }
