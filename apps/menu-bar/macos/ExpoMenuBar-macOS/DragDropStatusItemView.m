@@ -3,16 +3,30 @@
 
 #import "DragDropStatusItemView.h"
 
-static const CGFloat kBadgeDiameter = 10;
+static const CGFloat kBadgeHeight = 10;
 // The clear ring between the badge and the icon.
 static const CGFloat kBadgeGap = 1.2;
+// The space at each side of a text that is wider than one digit.
+static const CGFloat kBadgeTextInset = 2.5;
 
-// A green circle with a short text, for example the number of running remote sessions.
+// A green badge with a short text, for example the number of running remote sessions. It is a
+// circle for one digit and a pill for a wider text.
 @interface StatusItemBadgeView : NSView
 @property (nonatomic, copy) NSString *text;
++ (CGFloat)widthForText:(NSString *)text;
 @end
 
 @implementation StatusItemBadgeView
+
++ (NSFont *)font {
+  return [NSFont systemFontOfSize:7.75 weight:NSFontWeightBold];
+}
+
++ (CGFloat)widthForText:(NSString *)text {
+  CGFloat textWidth = [text sizeWithAttributes:@{NSFontAttributeName: [self font]}].width;
+  // A whole number of pixels on a 2x display.
+  return MAX(kBadgeHeight, ceil((textWidth + 2 * kBadgeTextInset) * 2) / 2);
+}
 
 - (void)drawRect:(NSRect)dirtyRect {
   // The appearance is that of the menu bar, which can be dark while the system is light.
@@ -25,11 +39,11 @@ static const CGFloat kBadgeGap = 1.2;
   NSColor *ink = isDark ? [NSColor colorWithSRGBRed:0.02 green:0.17 blue:0.07 alpha:1]
                         : NSColor.whiteColor;
 
+  CGFloat radius = NSHeight(self.bounds) / 2;
   [fill setFill];
-  [[NSBezierPath bezierPathWithOvalInRect:self.bounds] fill];
+  [[NSBezierPath bezierPathWithRoundedRect:self.bounds xRadius:radius yRadius:radius] fill];
 
-  // Two characters, as in "9+", need a smaller size to fit.
-  NSFont *font = [NSFont systemFontOfSize:self.text.length > 1 ? 6 : 7.75 weight:NSFontWeightBold];
+  NSFont *font = [StatusItemBadgeView font];
   NSDictionary *attributes = @{NSFontAttributeName: font, NSForegroundColorAttributeName: ink};
   NSSize size = [self.text sizeWithAttributes:attributes];
   // Center the capital height, not the line box: digits have no descender.
@@ -90,11 +104,13 @@ static const CGFloat kBadgeGap = 1.2;
   }
 
   // The lower right corner of the view.
-  NSRect badgeFrame = NSMakeRect(NSWidth(self.bounds) - kBadgeDiameter, 0, kBadgeDiameter, kBadgeDiameter);
+  CGFloat badgeWidth = [StatusItemBadgeView widthForText:_badgeText];
+  NSRect badgeFrame = NSMakeRect(NSWidth(self.bounds) - badgeWidth, 0, badgeWidth, kBadgeHeight);
   if (!_badgeView) {
     _badgeView = [[StatusItemBadgeView alloc] initWithFrame:badgeFrame];
     [self addSubview:_badgeView];
   }
+  _badgeView.frame = badgeFrame;
   _badgeView.text = _badgeText;
   _badgeView.hidden = NO;
   _badgeView.needsDisplay = YES;
@@ -108,11 +124,12 @@ static const CGFloat kBadgeGap = 1.2;
                  -(NSWidth(self.bounds) - iconSize.width) / 2,
                  -(NSHeight(self.bounds) - iconSize.height) / 2),
     -kBadgeGap, -kBadgeGap);
+  CGFloat holeRadius = NSHeight(hole) / 2;
   NSImage *iconWithHole = [NSImage imageWithSize:iconSize flipped:NO drawingHandler:^BOOL(NSRect rect) {
     [icon drawInRect:rect];
     NSGraphicsContext.currentContext.compositingOperation = NSCompositingOperationDestinationOut;
     [NSColor.blackColor setFill];
-    [[NSBezierPath bezierPathWithOvalInRect:hole] fill];
+    [[NSBezierPath bezierPathWithRoundedRect:hole xRadius:holeRadius yRadius:holeRadius] fill];
     return YES;
   }];
   iconWithHole.template = YES;
