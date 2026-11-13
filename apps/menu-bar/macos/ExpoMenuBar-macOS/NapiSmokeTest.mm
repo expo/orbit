@@ -6,7 +6,7 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
-#include <jsi/hermes.h>
+#include <jsi/hermes-interfaces.h>
 #include <jsi/jsi.h>
 
 #include "hermes_napi.h"

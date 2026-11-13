@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		045175BE45C09A78501F3277 /* libPods-ExpoMenuBar-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D5B57287467FCE0C3AD2F77 /* libPods-ExpoMenuBar-macOS.a */; };
-		18B650340348882BBF025921 /* NapiSmokeTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2350936C0CEDD2735AC929CE /* NapiSmokeTest.mm */; settings = {COMPILER_FLAGS = "-I/tmp/hermes-napi-src/include -I/tmp/hermes-napi-src/API/napi"; }; };
+		18B650340348882BBF025921 /* NapiSmokeTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2350936C0CEDD2735AC929CE /* NapiSmokeTest.mm */; settings = {COMPILER_FLAGS = "-I/tmp/hermes-sh-src/include -I/tmp/hermes-sh-src/API/napi"; }; };
 		1E86C311712A1366282D4A28 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6DF0AD98E1DDDB5E7C991DB8 /* PrivacyInfo.xcprivacy */; };
 		514201522437B4B40078DB4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 514201512437B4B40078DB4F /* Assets.xcassets */; };
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
