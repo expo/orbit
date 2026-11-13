@@ -38,7 +38,7 @@ program
   .option('--app-id <string>', 'Expo Simulators: ID of the project the session runs under')
   .option('--archive-url <string>', 'Expo Simulators: URL of a build to install when it starts')
   .option('--open-url <string>', 'Expo Simulators: URL to open in the installed build')
-  .option('--max-run-time <number>', 'Expo Simulators: minutes until the session stops', '30')
+  .option('--max-run-time <number>', 'Expo Simulators: minutes until the session stops')
   .option('--name <string>', 'Expo Simulators: name of the session')
   .option('--device-identifier <string>', 'Expo Simulators: device model of the session')
   .option('--build-id <string>', 'Expo Simulators: ID of an EAS build to install when it starts')
