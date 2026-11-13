@@ -42,11 +42,7 @@ echo "[orbit-cli] compiling TypeScript"
 (cd "$CLI_DIR" && yarn -s build)
 
 echo "[orbit-cli] bundling and compiling to Hermes bytecode"
-# macos-export-certificate-and-key stays external: it is a native addon, and
-# ipa-resign requires it indirectly at runtime anyway.
-(cd "$CLI_DIR" && npx -y esbuild@0.25.12 build/index.js --bundle --minify --platform=node \
-  --target=node18 --format=cjs --external:macos-export-certificate-and-key \
-  --log-level=warning --outfile="$WORK/orbit-cli.js")
+(cd "$CLI_DIR" && node hermes-launcher/bundle.mjs "$WORK/orbit-cli.js")
 python3 "$HERMES_NODE_OUT/bin/wrap-cjs.py" "$WORK/orbit-cli.js" orbit-cli "$WORK/orbit-cli.wrapped.js"
 "$HERMES_NODE_OUT/bin/hermesc" -emit-binary -O -Xes6-block-scoping -Xasync-generators \
   -Wno-undefined-variable -out="$DIST/orbit-cli.hbc" "$WORK/orbit-cli.wrapped.js"
@@ -80,7 +76,8 @@ sed "s#require('bindings')('macos_export_certificate_and_key')#require('./macos_
 grep -q "require('./macos_export_certificate_and_key.node')" "$ADDON_OUT/index.js"
 
 echo "[orbit-cli] copying ipa-resign helpers"
-IPA_RESIGN=$(cd "$REPO_ROOT" && node -p "path.dirname(require.resolve('ipa-resign/package.json'))")
+# ipa-resign's "exports" hide package.json; its main is dist/index.js.
+IPA_RESIGN=$(cd "$REPO_ROOT" && node -p "path.resolve(path.dirname(require.resolve('ipa-resign')), '..')")
 cp "$IPA_RESIGN/bin/anisette" "$IPA_RESIGN/bin/zsign" "$DIST/bin/"
 
 rm -rf "$WORK"
