@@ -44,13 +44,9 @@ public func parseCliOutput(_ output: String) -> CLIOutputResult {
   )
 }
 
-public func getCliResourceNameForArch() -> String {
-  var sysinfo = utsname()
-  uname(&sysinfo)
-  let machine = withUnsafePointer(to: &sysinfo.machine) {
-    $0.withMemoryRebound(to: CChar.self, capacity: Int(_SYS_NAMELEN)) {
-      ptr in String(cString: ptr)
-    }
-  }
-  return machine == "arm64" ? "orbit-cli-arm64" : "orbit-cli-x64"
+/// The CLI launcher, a universal binary that runs the bundled CLI on the app's
+/// Hermes. It lives in Contents/Resources/cli/ next to the files it needs
+/// (orbit-cli.hbc, helper binaries, the N-API addon).
+public func getCliExecutableURL() -> URL? {
+  return Bundle.main.url(forResource: "orbit-cli", withExtension: nil, subdirectory: "cli")
 }

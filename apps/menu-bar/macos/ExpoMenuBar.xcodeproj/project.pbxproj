@@ -11,12 +11,11 @@
 		1E86C311712A1366282D4A28 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6DF0AD98E1DDDB5E7C991DB8 /* PrivacyInfo.xcprivacy */; };
 		514201522437B4B40078DB4F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 514201512437B4B40078DB4F /* Assets.xcassets */; };
 		514201552437B4B40078DB4F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 514201532437B4B40078DB4F /* Main.storyboard */; };
+		6EA8634447311B74F2961BED /* cli in Resources */ = {isa = PBXBuildFile; fileRef = 07A0ED6599B75FC88AAA32C7 /* cli */; };
 		77818F2A6E488E8B68D317B2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */; };
 		A961E5EFDD85D2BD61A876CD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8C8623B49FAF0AE99A5F7711 /* PrivacyInfo.xcprivacy */; };
 		C032EB582EBD108800D6F4A1 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = C032EB572EBD108800D6F4A1 /* AppIcon.icon */; };
 		C032EB5A2EBD116700D6F4A1 /* AppIconDebug.icon in Resources */ = {isa = PBXBuildFile; fileRef = C032EB592EBD116700D6F4A1 /* AppIconDebug.icon */; };
-		C032EDB72A1FE6F300FBC597 /* orbit-cli-arm64 in Resources */ = {isa = PBXBuildFile; fileRef = C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */; };
-		C051E6B62A83577800C6D615 /* orbit-cli-x64 in Resources */ = {isa = PBXBuildFile; fileRef = C051E6B52A83577800C6D615 /* orbit-cli-x64 */; };
 		C051EC0E2AA227C600C6D615 /* SwifterWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */; };
 		C0523ECC2A550983003371AF /* WindowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECB2A550983003371AF /* WindowManager.m */; };
 		C0523ED02A55980D003371AF /* WindowWithDeallocCallback.m in Sources */ = {isa = PBXBuildFile; fileRef = C0523ECF2A55980D003371AF /* WindowWithDeallocCallback.m */; };
@@ -50,6 +49,7 @@
 
 /* Begin PBXFileReference section */
 		02422F9FB6FF5F34B4E63E6F /* Pods-Shared-ExpoMenuBar-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Shared-ExpoMenuBar-macOS.debug.xcconfig"; path = "Target Support Files/Pods-Shared-ExpoMenuBar-macOS/Pods-Shared-ExpoMenuBar-macOS.debug.xcconfig"; sourceTree = "<group>"; };
+		07A0ED6599B75FC88AAA32C7 /* cli */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = cli; path = ../../cli; sourceTree = "<group>"; };
 		214F660AED31B4554BE29100 /* Pods-ExpoMenuBar-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ExpoMenuBar-macOS.release.xcconfig"; path = "Target Support Files/Pods-ExpoMenuBar-macOS/Pods-ExpoMenuBar-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		38423A3E24576CBC00BC2EAC /* main.jsbundle */ = {isa = PBXFileReference; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
 		3D5B57287467FCE0C3AD2F77 /* libPods-ExpoMenuBar-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoMenuBar-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,10 +66,8 @@
 		B02E22FAC6ED05060D31BB51 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ExpoMenuBar-macOS/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		C032EB572EBD108800D6F4A1 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		C032EB592EBD116700D6F4A1 /* AppIconDebug.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIconDebug.icon; sourceTree = "<group>"; };
-		C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "orbit-cli-arm64"; path = "../../cli/orbit-cli-arm64"; sourceTree = "<group>"; };
 		C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ExpoMenuBar-macOSRelease.entitlements"; sourceTree = "<group>"; };
 		C051E6B42A8340AF00C6D615 /* AutoLauncherRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AutoLauncherRelease.entitlements; sourceTree = "<group>"; };
-		C051E6B52A83577800C6D615 /* orbit-cli-x64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "orbit-cli-x64"; path = "../../cli/orbit-cli-x64"; sourceTree = "<group>"; };
 		C051EC0C2AA227C600C6D615 /* ExpoMenuBar-macOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ExpoMenuBar-macOS-Bridging-Header.h"; sourceTree = "<group>"; };
 		C051EC0D2AA227C600C6D615 /* SwifterWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwifterWrapper.swift; sourceTree = "<group>"; };
 		C0523ECB2A550983003371AF /* WindowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WindowManager.m; sourceTree = "<group>"; };
@@ -163,8 +161,6 @@
 				C032EB572EBD108800D6F4A1 /* AppIcon.icon */,
 				C051E6B32A83408800C6D615 /* ExpoMenuBar-macOSRelease.entitlements */,
 				C081507C2A610E2F00E8890F /* Resources */,
-				C032EDB62A1FE6F300FBC597 /* orbit-cli-arm64 */,
-				C051E6B52A83577800C6D615 /* orbit-cli-x64 */,
 				38423A3E24576CBC00BC2EAC /* main.jsbundle */,
 				C0D4407B2DDBD86F006B7C16 /* AppDelegate.swift */,
 				514201512437B4B40078DB4F /* Assets.xcassets */,
@@ -190,6 +186,7 @@
 				C06B8F912AAB77EC009F2BB5 /* DragDropStatusItemView.h */,
 				6DF0AD98E1DDDB5E7C991DB8 /* PrivacyInfo.xcprivacy */,
 				C0D440792DDB9B9E006B7C16 /* PopoverManager.swift */,
+				07A0ED6599B75FC88AAA32C7 /* cli */,
 			);
 			path = "ExpoMenuBar-macOS";
 			sourceTree = "<group>";
@@ -262,7 +259,8 @@
 			buildConfigurationList = 5142015A2437B4B40078DB4F /* Build configuration list for PBXNativeTarget "ExpoMenuBar-macOS" */;
 			buildPhases = (
 				1A938104A937498D81B3BD3B /* [CP] Check Pods Manifest.lock */,
-				C091563F2D7787B200FC1EB6 /* Archive and sign CLI  */,
+				22364981696E51352CCF4F94 /* Select Hermes flavor */,
+				C091563F2D7787B200FC1EB6 /* Build CLI */,
 				381D8A6F24576A6C00465D17 /* Start Packager */,
 				63FA8EA00DD165DC6FA0B487 /* [Expo] Configure project */,
 				514201452437B4B30078DB4F /* Sources */,
@@ -344,12 +342,11 @@
 			files = (
 				C032EB5A2EBD116700D6F4A1 /* AppIconDebug.icon in Resources */,
 				C032EB582EBD108800D6F4A1 /* AppIcon.icon in Resources */,
-				C051E6B62A83577800C6D615 /* orbit-cli-x64 in Resources */,
-				C032EDB72A1FE6F300FBC597 /* orbit-cli-arm64 in Resources */,
 				C081507F2A610E9C00E8890F /* fonts in Resources */,
 				514201522437B4B40078DB4F /* Assets.xcassets in Resources */,
 				514201552437B4B40078DB4F /* Main.storyboard in Resources */,
 				1E86C311712A1366282D4A28 /* PrivacyInfo.xcprivacy in Resources */,
+				6EA8634447311B74F2961BED /* cli in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -385,6 +382,25 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		22364981696E51352CCF4F94 /* Select Hermes flavor */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Select Hermes flavor";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$PODS_ROOT/../scripts/select-hermes-flavor.sh\"\n";
 		};
 		381D8A6E24576A4E00465D17 /* Bundle React Native code and images */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -463,7 +479,7 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ExpoMenuBar-macOS/expo-configure-project.sh\"\n";
 		};
-		C091563F2D7787B200FC1EB6 /* Archive and sign CLI  */ = {
+		C091563F2D7787B200FC1EB6 /* Build CLI */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -473,14 +489,14 @@
 			);
 			inputPaths = (
 			);
-			name = "Archive and sign CLI ";
+			name = "Build CLI";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" == \"Release\" ]; then \n    echo \"Archive and signing CLI...\"\n   \"$PODS_ROOT/../\"scripts/archive_cli.sh  \nelse\n    echo \"Skipping archiving CLI\"\nfi\n";
+			shellScript = "\"$PODS_ROOT/../scripts/archive_cli.sh\"\n";
 		};
 		DF76CD60CADE3DD346ABE802 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;

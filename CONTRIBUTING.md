@@ -7,12 +7,15 @@
    - [node](https://nodejs.org/) (Node 20 or higher is recommended)
    - [yarn](https://yarnpkg.com/) (1.22 or higher is recommended)
    - [ruby](https://www.ruby-lang.org/) (3.2 or higher is recommended)
+   - [cmake](https://cmake.org/) and [ninja](https://ninja-build.org/) (`brew install cmake ninja`), only needed when Hermes and [hermes-node](https://github.com/gabrieldonadel/hermes-node) (which the macOS CLI runs on) have to be built from source (see below)
 3. Install the Node packages (`yarn install`).
 4. Install the Ruby packages (`bundle install`) inside the `apps/menu-bar` directory.
-5. Install the Pods (`npx pod-install`) inside the `apps/menu-bar` directory.
+5. Install the Pods (`npx pod-install`) inside the `apps/menu-bar` directory. This downloads prebuilt Hermes and hermes-node (~30 MB) into `apps/menu-bar/macos/vendor/`.
 6. Build `common-types`, `eas-shared` and `cli` by running `yarn build` at the root of the project.
-7. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`.
-8. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local CLI file.
+
+The macOS app builds the CLI itself (Xcode's "Build CLI" phase, `apps/menu-bar/macos/scripts/archive_cli.sh`): it bundles `apps/cli` to Hermes bytecode and builds the `orbit-cli` launcher against the app's Hermes framework.
+
+Hermes and hermes-node come prebuilt from [hermes-node's releases](https://github.com/gabrieldonadel/hermes-node/releases), keyed by everything they're built from (`apps/menu-bar/macos/scripts/hermes-prebuilt.sh`). When you change one of those inputs (the hermes-node pin in `scripts/hermes-node.sh`, react-native-macos or its patch), no prebuilt exists for the new key yet and the build compiles them from source (~10–15 min the first time). The "Hermes prebuilts" workflow publishes them for `main`; to build them locally run `apps/menu-bar/macos/scripts/build-hermes-prebuilt.sh <out-dir>`. Set `HERMES_NODE_DIR` to work against a local hermes-node checkout.
 
 ## 🏎️ Start the Development Environment
 

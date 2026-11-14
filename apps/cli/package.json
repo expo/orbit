@@ -11,23 +11,23 @@
     "cli": "node ./build/index.js",
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc",
-    "archive": "yarn build && pkg build/index.js --config pkg.config.json -o dist/orbit-cli",
+    "archive": "./hermes-launcher/build.sh",
     "clean": "rimraf build ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "watch": "tsc --watch --preserveWatchOutput",
-    "codesign": "codesign --options=runtime --sign \"Developer ID Application: 650 Industries, Inc. (C8D8QTF339)\" --entitlements ./macos/entitlements.plist --force ./dist/orbit-cli-arm64 ./dist/orbit-cli-x64",
+    "codesign": "./hermes-launcher/codesign.sh",
     "typecheck": "tsc",
     "gql": "graphql-codegen --config codegen.ts",
     "test": "jest"
   },
   "dependencies": {
     "@types/picomatch": "^4.0.0",
-    "ipa-resign": "^0.0.20",
     "commander": "^10.0.1",
     "common-types": "1.0.0",
     "eas-shared": "*",
     "graphql": "^16.8.0",
     "graphql-request": "^6.1.0",
+    "ipa-resign": "^0.0.20",
     "picomatch": "^4.0.2",
     "snack-content": "2.0.0-preview.2",
     "strip-ansi": "^6.0.0"
@@ -37,7 +37,7 @@
     "@graphql-codegen/typescript-graphql-request": "^6.1.0",
     "@graphql-codegen/typescript-operations": "^4.0.1",
     "@types/jest": "^29.5.14",
-    "pkg": "^5.8.1",
+    "esbuild": "0.25.12",
     "ts-jest": "^29.3.4",
     "typescript": "~6.0.3"
   }

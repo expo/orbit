@@ -9,16 +9,12 @@ build:
         working_directory: ../../
         command: |
           yarn build
+    # The CLI is built and signed by the Xcode "Build CLI" phase, against the
+    # Hermes framework the archive builds (see macos/scripts/archive_cli.sh).
     - run:
-        name: Archive CLI
-        working_directory: ../../apps/cli
+        name: Install build tools for hermes-node
         command: |
-          yarn archive
-    - run:
-        name: Codesign CLI
-        working_directory: ../../apps/cli
-        command: |
-          yarn codesign
+          for tool in cmake ninja; do command -v $tool >/dev/null || brew install $tool; done
     - run:
         name: Install menu-bar pods
         working_directory: ./macos
