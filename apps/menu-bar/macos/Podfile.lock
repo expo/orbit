@@ -103,12 +103,8 @@ PODS:
   - fmt (12.1.0)
   - glog (0.3.5)
   - hermes-engine (250829098.0.4):
-    - hermes-engine/cdp (= 250829098.0.4)
-    - hermes-engine/Hermes (= 250829098.0.4)
-    - hermes-engine/Public (= 250829098.0.4)
-  - hermes-engine/cdp (250829098.0.4)
-  - hermes-engine/Hermes (250829098.0.4)
-  - hermes-engine/Public (250829098.0.4)
+    - hermes-engine/Pre-built (= 250829098.0.4)
+  - hermes-engine/Pre-built (250829098.0.4)
   - MenuBar (1.0.0):
     - ExpoModulesCore
   - RCT-Folly (2024.11.18.00):
@@ -3032,7 +3028,7 @@ SPEC CHECKSUMS:
   FilePicker: 0661f1ffbadd52ea79b2f23f5e89beae9767d02e
   fmt: 4cf0c5ec5864511c96d8d4bd7b03c3c69040af06
   glog: 2cf3e30a412574b50b1a29c4a3768cc840ab9ecf
-  hermes-engine: aaacfe3420c60014a5782a0f518f1ed369825fa0
+  hermes-engine: a4ab2257251541bbe7b25601af4c897071b9d9ba
   MenuBar: 5986d3736166dc022b970e61baefc9de9adbdd60
   RCT-Folly: 239ade45e818f69f53984f215571cbbd78c3c133
   RCTDeprecation: 8df4aea13a635ebe88bafef941fb110e28923d9f
@@ -3114,6 +3110,6 @@ SPEC CHECKSUMS:
   Swifter: e71dd674404923d7f03ebb03f3f222d1c570bc8e
   Yoga: a3e0ee0baa46166b3a7451a6b01c45cd1918de9e
 
-PODFILE CHECKSUM: 120264fa33e83c104427c579c5818508b371967b
+PODFILE CHECKSUM: f2d001dba3d272b7e3697fb4b75516d063c62e3d
 
 COCOAPODS: 1.16.2

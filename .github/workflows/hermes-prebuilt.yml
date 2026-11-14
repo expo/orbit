@@ -1,0 +1,77 @@
+name: Hermes prebuilts
+
+# Builds the prebuilt Hermes (hermes-engine pod tarballs, Debug + Release) and
+# hermes-node embed library that apps/menu-bar/macos/scripts/hermes-prebuilt.sh
+# downloads, and publishes them as a GitHub release tagged
+# hermes-prebuilt-<key>. The key changes whenever the pinned hermes-node,
+# react-native-macos, our patch to it or the build script change, so this
+# only builds when something relevant changed.
+#
+# Publishing to another repository needs HERMES_PREBUILT_TOKEN (a token with
+# contents:write on HERMES_PREBUILT_REPO).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - apps/menu-bar/macos/scripts/hermes-node.sh
+      - apps/menu-bar/macos/scripts/build-hermes-prebuilt.sh
+      - patches/react-native-macos+*.patch
+      - yarn.lock
+
+env:
+  HERMES_PREBUILT_REPO: gabrieldonadel/hermes-node
+
+concurrency:
+  group: hermes-prebuilt-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install workspace dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Compute key
+        id: key
+        working-directory: apps/menu-bar/macos
+        run: echo "key=$(./scripts/hermes-prebuilt.sh key)" >> "$GITHUB_OUTPUT"
+
+      - name: Check for an existing release
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.HERMES_PREBUILT_TOKEN }}
+        run: |
+          if gh release view "hermes-prebuilt-${{ steps.key.outputs.key }}" -R "$HERMES_PREBUILT_REPO" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install build tools
+        if: steps.existing.outputs.exists != 'true'
+        run: for tool in cmake ninja; do command -v $tool >/dev/null || brew install $tool; done
+
+      - name: Build
+        if: steps.existing.outputs.exists != 'true'
+        working-directory: apps/menu-bar/macos
+        run: ./scripts/build-hermes-prebuilt.sh "$RUNNER_TEMP/hermes-prebuilt"
+
+      - name: Publish
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.HERMES_PREBUILT_TOKEN }}
+        run: |
+          out="$RUNNER_TEMP/hermes-prebuilt"
+          test "$(cat "$out/KEY")" = "${{ steps.key.outputs.key }}"
+          gh release create "hermes-prebuilt-${{ steps.key.outputs.key }}" \
+            -R "$HERMES_PREBUILT_REPO" --prerelease \
+            --title "Orbit Hermes prebuilt ${{ steps.key.outputs.key }}" \
+            --notes "Built by ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} from ${{ github.sha }}." \
+            "$out"/*.tar.gz "$out/SHA256SUMS" "$out/KEY"

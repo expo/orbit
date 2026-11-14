@@ -9,8 +9,9 @@
 #
 #   hermes-node.sh fetch   clone/update the pinned checkout; prints the Hermes
 #                          source dir
-#   hermes-node.sh build   also build the embed library, headers and hermesc;
-#                          prints the output dir
+#   hermes-node.sh build   also build the embed library, headers and hermesc
+#                          (or download them prebuilt, see
+#                          hermes-prebuilt.sh); prints the output dir
 #
 # HERMES_NODE_DIR: use an existing local checkout instead (for hermes-node
 # development); it is built as-is.
@@ -19,7 +20,7 @@
 set -euo pipefail
 
 HERMES_NODE_REPO=https://github.com/gabrieldonadel/hermes-node.git
-HERMES_NODE_REF=7a09d288ed8c9861b413807c840e709da52fe188
+HERMES_NODE_REF=f1a921072c3b9c5e0eac5447e697a3f04277a103
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 ROOT="$SCRIPT_DIR/../vendor/hermes-node"
@@ -81,6 +82,12 @@ case "${1:-}" in
     echo "$SRC/hermes"
     ;;
   build)
+    # Prefer the published prebuilt (scripts/hermes-prebuilt.sh) unless a
+    # local hermes-node checkout is being developed.
+    if [[ -z "${HERMES_NODE_DIR:-}" ]] && prebuilt=$("$SCRIPT_DIR/hermes-prebuilt.sh" fetch); then
+      echo "$prebuilt/hermes-node"
+      exit 0
+    fi
     fetch
     check_jsi
     build
