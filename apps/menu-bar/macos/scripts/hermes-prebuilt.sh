@@ -28,8 +28,8 @@ log() {
 
 key() {
   # Everything the artifacts are built from: the pinned hermes-node (which
-  # pins Hermes), the react-native-macos version and our patch to it (which
-  # carries the vendored JSI), and the build scripts.
+  # pins Hermes), the react-native-macos version and our patch to it, and the
+  # build script.
   {
     grep '^HERMES_NODE_REF=' "$SCRIPT_DIR/hermes-node.sh"
     node -p "require('react-native-macos/package.json').version" 2>/dev/null ||
@@ -65,6 +65,8 @@ fetch() {
   }
   mkdir -p "$dir/hermes-node"
   tar -xzf "$dir/hermes-node-embed-macos.tar.gz" -C "$dir/hermes-node"
+  # The JSI this Hermes was built with, for scripts/vendor-jsi.sh.
+  tar -xzf "$dir/hermes-engine-macos-debug.tar.gz" -C "$dir" jsi
   touch "$dir/.verified"
   echo "$dir"
 }

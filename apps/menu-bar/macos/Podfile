@@ -14,17 +14,22 @@ require File.join(File.dirname(`node --print "require.resolve('expo/package.json
 # the app's hermesvm.framework. It is downloaded prebuilt when published for
 # this checkout (scripts/hermes-prebuilt.sh; the "Select Hermes flavor" build
 # phase switches between the Debug and Release builds) and built from source
-# otherwise (scripts/hermes-node.sh).
+# otherwise (scripts/hermes-node.sh). Either way its JSI replaces React
+# Native's (scripts/vendor-jsi.sh).
 ENV['RCT_HERMES_V1_ENABLED'] = '1'
 unless ENV['HERMES_ENGINE_TARBALL_PATH'] || ENV['REACT_NATIVE_OVERRIDE_HERMES_DIR']
   prebuilt_dir = `"#{__dir__}/scripts/hermes-prebuilt.sh" fetch`.strip
   if $?.success? && !prebuilt_dir.empty?
     ENV['HERMES_ENGINE_TARBALL_PATH'] = File.join(prebuilt_dir, 'hermes-engine-macos-debug.tar.gz')
+    hermes_jsi_dir = File.join(prebuilt_dir, 'jsi')
   else
     hermes_dir = `"#{__dir__}/scripts/hermes-node.sh" fetch`.strip
     raise 'scripts/hermes-node.sh fetch failed' unless $?.success? && !hermes_dir.empty?
     ENV['REACT_NATIVE_OVERRIDE_HERMES_DIR'] = hermes_dir
+    hermes_jsi_dir = File.join(hermes_dir, 'API', 'jsi', 'jsi')
   end
+  # React Native has to compile against the JSI this Hermes was built with.
+  system(File.join(__dir__, 'scripts', 'vendor-jsi.sh'), hermes_jsi_dir) || raise('scripts/vendor-jsi.sh failed')
 end
 
 relative_rn_macos_path = ''
@@ -68,6 +73,15 @@ post_install do |installer|
   react_native_post_install(installer, relative_rn_macos_path)
 
   installer.pods_project.targets.each do |target|
+    # Fail before anything compiles against React Native's own JSI if a yarn
+    # install replaced the copy pod install vendored (scripts/vendor-jsi.sh).
+    if target.name == 'React-jsi'
+      phase = target.new_shell_script_build_phase('[Orbit] Check vendored JSI')
+      phase.shell_script = "\"$PODS_ROOT/../scripts/vendor-jsi.sh\" --check\n"
+      phase.always_out_of_date = '1'
+      target.build_phases.delete(phase)
+      target.build_phases.unshift(phase)
+    end
     # TODO: remove this when bumping react-native-macos
     if target.name == 'fmt'
       target.build_configurations.each do |config|

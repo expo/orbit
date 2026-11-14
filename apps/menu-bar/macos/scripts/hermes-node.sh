@@ -3,9 +3,9 @@
 # which the CLI runs on instead of a pkg-bundled Node.
 #
 # hermes-node pins the facebook/hermes commit (its `hermes` submodule) that
-# the app's Hermes is built from too: the Podfile points
-# REACT_NATIVE_OVERRIDE_HERMES_DIR at that checkout, and the JSI vendored into
-# react-native-macos (patches/react-native-macos+*.patch) must match it.
+# the app's Hermes is built from too: without prebuilts, the Podfile points
+# REACT_NATIVE_OVERRIDE_HERMES_DIR at that checkout and copies its JSI into
+# react-native-macos (scripts/vendor-jsi.sh).
 #
 #   hermes-node.sh fetch   clone/update the pinned checkout; prints the Hermes
 #                          source dir
@@ -24,7 +24,6 @@ HERMES_NODE_REF=f1a921072c3b9c5e0eac5447e697a3f04277a103
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 ROOT="$SCRIPT_DIR/../vendor/hermes-node"
-REPO_ROOT=$(cd "$SCRIPT_DIR/../../../.." && pwd)
 
 log() {
   echo "[hermes-node] $*" >&2
@@ -51,17 +50,6 @@ fetch() {
   fi
 }
 
-check_jsi() {
-  # The JSI react-native-macos compiles against has to be the one this Hermes
-  # was written for; otherwise the app builds and crashes on vtable mismatch.
-  local vendored="$REPO_ROOT/node_modules/react-native-macos/ReactCommon/jsi/jsi/jsi.h"
-  if [[ -f "$vendored" ]] && ! cmp -s "$vendored" "$SRC/hermes/API/jsi/jsi/jsi.h"; then
-    log "error: react-native-macos's vendored JSI does not match hermes $(git -C "$SRC/hermes" rev-parse --short HEAD)."
-    log "Re-vendor it from $SRC/hermes/API/jsi/jsi and regenerate patches/react-native-macos+*.patch."
-    exit 1
-  fi
-}
-
 build() {
   local out="$ROOT/out"
   local stamp
@@ -78,7 +66,6 @@ build() {
 case "${1:-}" in
   fetch)
     fetch
-    check_jsi
     echo "$SRC/hermes"
     ;;
   build)
@@ -89,7 +76,6 @@ case "${1:-}" in
       exit 0
     fi
     fetch
-    check_jsi
     build
     echo "$ROOT/out"
     ;;
