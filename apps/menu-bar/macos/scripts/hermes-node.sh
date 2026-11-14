@@ -19,7 +19,7 @@
 set -euo pipefail
 
 HERMES_NODE_REPO=https://github.com/gabrieldonadel/hermes-node.git
-HERMES_NODE_REF=5c1c723222e776537c0b7ed663f28c5b8ae723d5
+HERMES_NODE_REF=7a09d288ed8c9861b413807c840e709da52fe188
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 ROOT="$SCRIPT_DIR/../vendor/hermes-node"
