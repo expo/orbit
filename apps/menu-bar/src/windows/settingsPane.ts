@@ -4,7 +4,7 @@ import { WindowsNavigator } from './index';
 import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import { storage } from '../modules/Storage';
 
-export const PANE_KEYS = ['general', 'platforms', 'apple', 'advanced'] as const;
+export const PANE_KEYS = ['general', 'platforms', 'apple', 'camera', 'advanced'] as const;
 export type Pane = (typeof PANE_KEYS)[number];
 
 // Read (and cleared) by the Settings window on mount: the window navigator

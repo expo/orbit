@@ -5,6 +5,7 @@ import { Analytics, Event } from './analytics';
 import { refreshShellCommandAsync } from './commands/shellCommandAsync';
 import AutoResizerRootView from './components/AutoResizerRootView';
 import { SAFE_AREA_FACTOR } from './hooks/useSafeDisplayDimensions';
+import { useSimulatorCameraBootstrap } from './hooks/useSimulatorCamera';
 import Popover from './popover';
 import { DevicesProvider } from './providers/DevicesProvider';
 import { FluentProvider } from './providers/FluentProvider';
@@ -15,6 +16,9 @@ type Props = {
 };
 
 function App(props: Props = { isDevWindow: false }) {
+  // Turns the simulator camera back on when it was on; it is off with every launch.
+  useSimulatorCameraBootstrap();
+
   useEffect(() => {
     Analytics.track(Event.APP_OPENED);
     refreshShellCommandAsync().catch(() => {});
