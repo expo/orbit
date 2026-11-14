@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add a virtual camera for iOS simulators on macOS. Settings → Simulator Camera turns it on and picks what the camera shows: the Mac's camera, an image, a video or a QR code, with a separate source for the front camera. Apps launched in a booted simulator see a back and a front camera through AVFoundation, including photo capture, QR scanning, movie recording and `UIImagePickerController`, with no change to their code. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
