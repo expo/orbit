@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Fix the tray icon on Windows having the wrong colour when the taskbar and apps use different light or dark modes. ([#398](https://github.com/expo/orbit/pull/398) by [@brentvatne](https://github.com/brentvatne))
+
 ### 💡 Others
 
 - Start Expo Simulators sessions without a maximum duration of 30 minutes. A session now gets the maximum duration of the account's plan. ([#395](https://github.com/expo/orbit/pull/395) by [@brentvatne](https://github.com/brentvatne))
