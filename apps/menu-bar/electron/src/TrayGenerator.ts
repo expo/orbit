@@ -12,11 +12,13 @@ import {
 } from 'electron';
 import path from 'path';
 
+import { getTaskbarUsesDarkColorsAsync } from './windowsTaskbarTheme';
 import WindowManager from '../modules/WindowManager/main';
 
 export default class TrayGenerator {
   mainWindow: BrowserWindow;
   tray: Tray | null;
+  trayIconUpdates = 0;
 
   constructor(mainWindow: BrowserWindow) {
     this.tray = null;
@@ -80,6 +82,8 @@ export default class TrayGenerator {
     this.mainWindow.hide();
   };
   toggleWindow = (_: KeyboardEvent, bounds: Rectangle) => {
+    // A change of the taskbar mode alone may not send the `updated` event of `nativeTheme`.
+    this.updateTrayIcon();
     if (this.mainWindow.isVisible()) {
       this.hideWindow();
     } else {
@@ -157,11 +161,23 @@ export default class TrayGenerator {
     ];
     return Menu.buildFromTemplate(menu);
   };
+  // The tray icon is on the taskbar. On Windows, the taskbar has a light or dark mode of its
+  // own, which `nativeTheme` does not report.
+  updateTrayIcon = async () => {
+    const update = ++this.trayIconUpdates;
+    const dark =
+      process.platform === 'win32'
+        ? await getTaskbarUsesDarkColorsAsync()
+        : nativeTheme.shouldUseDarkColors;
+    // A later update has the newer answer.
+    if (update === this.trayIconUpdates) {
+      this.tray?.setImage(getIconPath(dark));
+    }
+  };
   createTray = () => {
-    this.tray = new Tray(getIconPath());
-    nativeTheme.addListener('updated', () => {
-      this.tray?.setImage(getIconPath());
-    });
+    this.tray = new Tray(getIconPath(nativeTheme.shouldUseDarkColors));
+    this.updateTrayIcon();
+    nativeTheme.addListener('updated', this.updateTrayIcon);
 
     this.tray.setIgnoreDoubleClickEvents(true);
     this.tray.on('click', this.toggleWindow);
@@ -205,8 +221,8 @@ export default class TrayGenerator {
 }
 module.exports = TrayGenerator;
 
-const getIconPath = () => {
-  const iconName = getIconName();
+const getIconPath = (dark: boolean) => {
+  const iconName = getIconName(dark);
 
   return path.join(
     path.dirname(__dirname),
@@ -214,12 +230,10 @@ const getIconPath = () => {
   );
 };
 
-const getIconName = () => {
+const getIconName = (dark: boolean) => {
   if (process.platform === 'darwin' || process.platform === 'linux') {
     return 'icon.png';
   }
 
-  return `icon-${nativeTheme.shouldUseDarkColors ? 'dark' : 'light'}.${
-    process.platform === 'win32' ? 'ico' : 'png'
-  }`;
+  return `icon-${dark ? 'dark' : 'light'}.${process.platform === 'win32' ? 'ico' : 'png'}`;
 };
