@@ -6,9 +6,8 @@
 #   orbit-cli.hbc      the CLI (apps/cli/build) bundled with esbuild and
 #                      precompiled to Hermes bytecode
 #   bin/               ipa-resign's anisette and zsign helpers
-#   node_modules/macos-export-certificate-and-key/
-#                      the N-API addon, built for ARCHS and loaded without
-#                      `bindings` (which can't find it next to a bundle)
+#   node_modules/      macos-export-certificate-and-key, with its N-API addon
+#                      built for ARCHS, and `bindings`, which loads it
 #
 # The menu bar ships this directory as Contents/Resources/cli/.
 #
@@ -62,18 +61,22 @@ echo "[orbit-cli] building macos-export-certificate-and-key ($ARCHS)"
 ADDON_SRC=$(cd "$REPO_ROOT" && node -p "path.dirname(require.resolve('macos-export-certificate-and-key/package.json'))")
 NAPI_INCLUDE=$(cd "$ADDON_SRC" && node -p "require('node-addon-api').include_dir")
 ADDON_OUT="$DIST/node_modules/macos-export-certificate-and-key"
-mkdir -p "$ADDON_OUT"
+mkdir -p "$ADDON_OUT/build/Release"
 clang++ -std=c++17 -O2 "${arch_flags[@]}" -mmacosx-version-min="$DEPLOYMENT_TARGET" \
   -shared -undefined dynamic_lookup -fexceptions -DNAPI_CPP_EXCEPTIONS -DNAPI_VERSION=8 \
   -I"$HERMES_NODE_OUT/include" -I"$ADDON_SRC/$NAPI_INCLUDE" \
   "$ADDON_SRC/src/binding.cc" "$ADDON_SRC/src/certs.cc" \
   -framework CoreFoundation -framework Security \
-  -o "$ADDON_OUT/macos_export_certificate_and_key.node"
-strip -x "$ADDON_OUT/macos_export_certificate_and_key.node"
-cp "$ADDON_SRC/package.json" "$ADDON_OUT/"
-sed "s#require('bindings')('macos_export_certificate_and_key')#require('./macos_export_certificate_and_key.node')#" \
-  "$ADDON_SRC/index.js" > "$ADDON_OUT/index.js"
-grep -q "require('./macos_export_certificate_and_key.node')" "$ADDON_OUT/index.js"
+  -o "$ADDON_OUT/build/Release/macos_export_certificate_and_key.node"
+strip -x "$ADDON_OUT/build/Release/macos_export_certificate_and_key.node"
+cp "$ADDON_SRC/package.json" "$ADDON_SRC/index.js" "$ADDON_OUT/"
+# The package loads the addon through `bindings`, which finds it relative to
+# the package's own directory; ship it (and its one dependency) unchanged.
+for dep in bindings file-uri-to-path; do
+  DEP_SRC=$(cd "$ADDON_SRC" && node -p "path.dirname(require.resolve('$dep/package.json'))")
+  mkdir -p "$DIST/node_modules/$dep"
+  (cd "$DEP_SRC" && cp package.json $(node -p "require('./package.json').main || 'index.js'") "$DIST/node_modules/$dep/")
+done
 
 echo "[orbit-cli] copying ipa-resign helpers"
 # ipa-resign's "exports" hide package.json; its main is dist/index.js.

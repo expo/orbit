@@ -28,7 +28,6 @@
     "graphql": "^16.8.0",
     "graphql-request": "^6.1.0",
     "ipa-resign": "^0.0.20",
-    "node-fetch": "^2.6.7",
     "picomatch": "^4.0.2",
     "snack-content": "2.0.0-preview.2",
     "strip-ansi": "^6.0.0"
