@@ -13,6 +13,7 @@
 
 - Open only the selected simulator when Orbit launches DeviceHub (Xcode 27), instead of also restoring windows from DeviceHub's last session, which never finish loading for deleted simulators. ([#401](https://github.com/expo/orbit/pull/401) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show the correct OS version for simulators on device-specific runtimes, such as iPhone Duo, which showed `27.2.iPhone19.4` instead of `27.2`. ([#404](https://github.com/expo/orbit/pull/404) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix the tray icon on Windows having the wrong colour when the taskbar and apps use different light or dark modes. ([#398](https://github.com/expo/orbit/pull/398) by [@brentvatne](https://github.com/brentvatne))
 
 ### 💡 Others
 
