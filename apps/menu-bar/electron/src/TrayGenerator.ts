@@ -82,8 +82,6 @@ export default class TrayGenerator {
     this.mainWindow.hide();
   };
   toggleWindow = (_: KeyboardEvent, bounds: Rectangle) => {
-    // A change of the taskbar mode alone may not send the `updated` event of `nativeTheme`.
-    this.updateTrayIcon();
     if (this.mainWindow.isVisible()) {
       this.hideWindow();
     } else {
