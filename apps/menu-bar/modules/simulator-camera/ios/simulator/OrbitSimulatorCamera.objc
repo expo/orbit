@@ -1,0 +1,2255 @@
+// Orbit Simulator Camera: a virtual camera for apps running in the iOS Simulator.
+//
+// Orbit sets DYLD_INSERT_LIBRARIES in a booted simulator's launchd environment so that
+// this library loads into every app the simulator launches afterwards. The library
+// swizzles the AVFoundation capture classes, which have no camera on a simulator, so an
+// app sees one front and one back camera, and feeds them frames that Orbit writes into a
+// shared-memory file (see OrbitCameraShared.h). Apps need no changes.
+//
+// What is covered:
+// - AVCaptureDevice discovery and authorization
+// - AVCaptureSession inputs, outputs and connections for the virtual devices
+// - AVCaptureVideoDataOutput sample buffers (BGRA, rotated for the connection)
+// - AVCaptureVideoPreviewLayer rendering
+// - AVCapturePhotoOutput still captures
+// - AVCaptureMetadataOutput QR codes (CIDetector on the frames)
+// - AVCaptureMovieFileOutput recordings (video only)
+// - UIImagePickerController with the camera source
+//
+// Environment (set by Orbit in the simulator's launchd):
+//   ORBIT_SIMULATOR_CAMERA_DIR    directory of the front.shm and back.shm frame files
+//   ORBIT_SIMULATOR_CAMERA_LOG=1  log to the system log
+//   ORBIT_SIMULATOR_CAMERA_FORCE=1  also load into Apple's apps and non-UIKit processes
+//
+// Build: see DylibBuilder.swift. The library is compiled against the iOS Simulator SDK that
+// is installed on the machine, so it follows the user's Xcode.
+// The file is Objective-C; the .objc extension keeps it out of the source-file globs of the
+// pod and of Xcode, so nothing compiles it as part of Orbit itself.
+
+#import <AVFoundation/AVFoundation.h>
+#import <CoreImage/CoreImage.h>
+#import <CoreMedia/CoreMedia.h>
+#import <CoreVideo/CoreVideo.h>
+#import <ImageIO/ImageIO.h>
+#import <UIKit/UIKit.h>
+#import <objc/message.h>
+#import <objc/runtime.h>
+
+#include <fcntl.h>
+#include <mach/mach_time.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include "OrbitCameraShared.h"
+
+#pragma mark - Logging
+
+static BOOL sVerbose = NO;
+
+#define ORBIT_LOG(fmt, ...)                                     \
+  do {                                                          \
+    if (sVerbose) NSLog(@"[OrbitSimulatorCamera] " fmt, ##__VA_ARGS__); \
+  } while (0)
+
+#pragma mark - Constants
+
+static NSString *const kOrbitFrontDeviceID = @"dev.expo.orbit.simulator-camera.front";
+static NSString *const kOrbitBackDeviceID = @"dev.expo.orbit.simulator-camera.back";
+static const int32_t kOrbitFrameRate = 30;
+static const CGFloat kOrbitDefaultRotationAngle = 90;  // Portrait, like a phone held upright.
+
+#pragma mark - Swizzling
+
+// The original implementations, keyed by "Class.selector" ("+Class.selector" for class
+// methods). Swizzled methods call these to pass through.
+static NSMutableDictionary<NSString *, NSValue *> *sOriginalIMPs;
+
+static NSString *OrbitIMPKey(Class cls, SEL sel, BOOL classMethod) {
+  return [NSString stringWithFormat:@"%@%@.%@", classMethod ? @"+" : @"",
+                                    NSStringFromClass(cls), NSStringFromSelector(sel)];
+}
+
+static IMP OrbitOriginalIMP(Class cls, SEL sel, BOOL classMethod) {
+  return (IMP)[sOriginalIMPs[OrbitIMPKey(cls, sel, classMethod)] pointerValue];
+}
+
+// Replaces `sel` of `cls` with `replacement`. When the class does not implement the selector
+// itself but inherits it, the replacement is added to the class so the superclass keeps its
+// own behavior. A selector the class does not respond to at all is added too, so apps that
+// query newer API get an answer.
+static void OrbitSwizzle(Class cls, SEL sel, IMP replacement, const char *types, BOOL classMethod) {
+  if (cls == Nil) return;
+  Class target = classMethod ? object_getClass(cls) : cls;
+  Method method = class_getInstanceMethod(target, sel);
+  const char *encoding = method ? method_getTypeEncoding(method) : types;
+  if (method) {
+    sOriginalIMPs[OrbitIMPKey(cls, sel, classMethod)] =
+        [NSValue valueWithPointer:(void *)method_getImplementation(method)];
+  }
+  if (!class_addMethod(target, sel, replacement, encoding)) {
+    // The class implements the selector itself: replace it in place.
+    method_setImplementation(method, replacement);
+  }
+}
+
+#define SWIZZLE_INSTANCE(cls, sel, fn, types) \
+  OrbitSwizzle(cls, @selector(sel), (IMP)fn, types, NO)
+#define SWIZZLE_CLASS(cls, sel, fn, types) \
+  OrbitSwizzle(cls, @selector(sel), (IMP)fn, types, YES)
+
+#pragma mark - Associated storage
+
+static const void *kOrbitSessionStateKey = &kOrbitSessionStateKey;
+static const void *kOrbitOutputStateKey = &kOrbitOutputStateKey;
+static const void *kOrbitPreviewStateKey = &kOrbitPreviewStateKey;
+static const void *kOrbitPickerStateKey = &kOrbitPickerStateKey;
+
+#pragma mark - Time
+
+static uint64_t OrbitHostNanos(void) {
+  static mach_timebase_info_data_t timebase;
+  if (timebase.denom == 0) mach_timebase_info(&timebase);
+  return mach_absolute_time() * timebase.numer / timebase.denom;
+}
+
+#pragma mark - Shared memory reader
+
+@interface OrbitFrameReader : NSObject
+@property (nonatomic, readonly) AVCaptureDevicePosition position;
+/// The frame of the newest sequence, or nil before the writer published one.
+- (CVPixelBufferRef)copyCurrentFrame:(BOOL *)sourceMirrored;
+@end
+
+@implementation OrbitFrameReader {
+  NSString *_path;
+  int _fd;
+  void *_map;
+  size_t _mapSize;
+  uint64_t _lastSequence;
+  uint64_t _lastOpenAttemptNanos;
+  CVPixelBufferRef _frame;
+  BOOL _frameMirrored;
+  NSLock *_lock;
+}
+
+- (instancetype)initWithPosition:(AVCaptureDevicePosition)position directory:(NSString *)dir {
+  if ((self = [super init])) {
+    _position = position;
+    _path = [dir stringByAppendingPathComponent:position == AVCaptureDevicePositionFront
+                                                     ? @"front.shm"
+                                                     : @"back.shm"];
+    _fd = -1;
+    _lock = [NSLock new];
+  }
+  return self;
+}
+
+- (BOOL)mapIfNeeded {
+  if (_map) return YES;
+  // The writer creates the file when Orbit enables the camera. Retry at most twice a second.
+  uint64_t now = OrbitHostNanos();
+  if (now - _lastOpenAttemptNanos < 500000000ull) return NO;
+  _lastOpenAttemptNanos = now;
+
+  int fd = open(_path.fileSystemRepresentation, O_RDONLY);
+  if (fd < 0) return NO;
+  struct stat st;
+  if (fstat(fd, &st) != 0 || (size_t)st.st_size < ORBIT_CAMERA_SHM_FILE_SIZE) {
+    close(fd);
+    return NO;
+  }
+  void *map = mmap(NULL, (size_t)st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+  if (map == MAP_FAILED) {
+    close(fd);
+    return NO;
+  }
+  const OrbitCameraShmHeader *header = map;
+  if (header->magic != ORBIT_CAMERA_SHM_MAGIC || header->version != ORBIT_CAMERA_SHM_VERSION ||
+      header->headerSize != ORBIT_CAMERA_SHM_HEADER_SIZE ||
+      header->slotCount != ORBIT_CAMERA_SHM_SLOT_COUNT ||
+      header->slotSize != ORBIT_CAMERA_SHM_SLOT_SIZE) {
+    ORBIT_LOG(@"Unsupported frame file %@", _path);
+    munmap(map, (size_t)st.st_size);
+    close(fd);
+    return NO;
+  }
+  _fd = fd;
+  _map = map;
+  _mapSize = (size_t)st.st_size;
+  _lastSequence = 0;
+  ORBIT_LOG(@"Mapped %@", _path);
+  return YES;
+}
+
+- (void)unmap {
+  if (_map) munmap(_map, _mapSize);
+  if (_fd >= 0) close(_fd);
+  _map = NULL;
+  _fd = -1;
+  _lastSequence = 0;
+}
+
+static CVPixelBufferRef OrbitCreateBGRAPixelBuffer(size_t width, size_t height) {
+  NSDictionary *attrs = @{
+    (id)kCVPixelBufferIOSurfacePropertiesKey : @{},
+    (id)kCVPixelBufferCGImageCompatibilityKey : @YES,
+    (id)kCVPixelBufferCGBitmapContextCompatibilityKey : @YES,
+  };
+  CVPixelBufferRef buffer = NULL;
+  CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA,
+                      (__bridge CFDictionaryRef)attrs, &buffer);
+  return buffer;
+}
+
+- (CVPixelBufferRef)copyCurrentFrame:(BOOL *)sourceMirrored {
+  [_lock lock];
+  if ([self mapIfNeeded]) {
+    const OrbitCameraShmHeader *header = _map;
+    uint64_t now = OrbitHostNanos();
+    BOOL alive = header->heartbeatNanos != 0 &&
+                 now >= header->heartbeatNanos &&
+                 now - header->heartbeatNanos < ORBIT_CAMERA_HEARTBEAT_TIMEOUT_NANOS;
+    if (!alive) {
+      // Orbit stopped writing: forget the stale frame so the placeholder shows. Unmap so a
+      // file that Orbit recreates later is picked up.
+      if (_frame) CVBufferRelease(_frame);
+      _frame = NULL;
+      [self unmap];
+    } else if (header->sequence != _lastSequence && header->sequence != 0) {
+      uint32_t width = header->width, height = header->height, bytesPerRow = header->bytesPerRow;
+      uint32_t slot = header->frameSlot;
+      if (width > 0 && height > 0 && width <= ORBIT_CAMERA_MAX_WIDTH &&
+          height <= ORBIT_CAMERA_MAX_HEIGHT && bytesPerRow >= width * 4 &&
+          (uint64_t)bytesPerRow * height <= ORBIT_CAMERA_SHM_SLOT_SIZE &&
+          slot < ORBIT_CAMERA_SHM_SLOT_COUNT &&
+          header->pixelFormat == kCVPixelFormatType_32BGRA) {
+        CVPixelBufferRef buffer = NULL;
+        if (_frame && CVPixelBufferGetWidth(_frame) == width &&
+            CVPixelBufferGetHeight(_frame) == height && CFGetRetainCount(_frame) == 1) {
+          // Nobody else holds the previous frame: reuse its memory.
+          buffer = (CVPixelBufferRef)CFRetain(_frame);
+        } else {
+          buffer = OrbitCreateBGRAPixelBuffer(width, height);
+        }
+        if (buffer) {
+          const uint8_t *src = (const uint8_t *)_map + ORBIT_CAMERA_SHM_HEADER_SIZE +
+                               (size_t)slot * ORBIT_CAMERA_SHM_SLOT_SIZE;
+          CVPixelBufferLockBaseAddress(buffer, 0);
+          uint8_t *dst = CVPixelBufferGetBaseAddress(buffer);
+          size_t dstBytesPerRow = CVPixelBufferGetBytesPerRow(buffer);
+          if (dstBytesPerRow == bytesPerRow) {
+            memcpy(dst, src, (size_t)bytesPerRow * height);
+          } else {
+            size_t rowBytes = MIN(dstBytesPerRow, (size_t)bytesPerRow);
+            for (uint32_t y = 0; y < height; y++) {
+              memcpy(dst + y * dstBytesPerRow, src + (size_t)y * bytesPerRow, rowBytes);
+            }
+          }
+          CVPixelBufferUnlockBaseAddress(buffer, 0);
+          if (_frame) CVBufferRelease(_frame);
+          _frame = buffer;
+          _frameMirrored = (header->flags & ORBIT_CAMERA_FLAG_SOURCE_MIRRORED) != 0;
+          _lastSequence = header->sequence;
+        }
+      }
+    }
+  }
+  CVPixelBufferRef result = _frame ? (CVPixelBufferRef)CFRetain(_frame) : NULL;
+  if (sourceMirrored) *sourceMirrored = _frameMirrored;
+  [_lock unlock];
+  return result;
+}
+
+@end
+
+#pragma mark - Placeholder frame
+
+// Shown while Orbit has no source for a camera, so an app still gets frames and shows that
+// the virtual camera is in place.
+static CVPixelBufferRef OrbitCreatePlaceholderFrame(AVCaptureDevicePosition position) {
+  size_t width = 1280, height = 720;
+  CVPixelBufferRef buffer = OrbitCreateBGRAPixelBuffer(width, height);
+  if (!buffer) return NULL;
+  CVPixelBufferLockBaseAddress(buffer, 0);
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGContextRef ctx = CGBitmapContextCreate(
+      CVPixelBufferGetBaseAddress(buffer), width, height, 8, CVPixelBufferGetBytesPerRow(buffer),
+      colorSpace, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+  if (ctx) {
+    CGContextSetRGBFillColor(ctx, 0.11, 0.12, 0.16, 1);
+    CGContextFillRect(ctx, CGRectMake(0, 0, width, height));
+    // A ring of blocks that reads as a test pattern, so motion and orientation are visible.
+    CGFloat colors[6][3] = {{0.96, 0.33, 0.33}, {0.98, 0.70, 0.22}, {0.35, 0.80, 0.45},
+                            {0.30, 0.65, 0.98}, {0.60, 0.45, 0.95}, {0.95, 0.45, 0.75}};
+    for (int i = 0; i < 6; i++) {
+      CGContextSetRGBFillColor(ctx, colors[i][0], colors[i][1], colors[i][2], 1);
+      CGContextFillRect(ctx, CGRectMake(80 + i * 190, 80, 160, 90));
+    }
+    UIGraphicsPushContext(ctx);
+    // CoreGraphics draws with the origin at the bottom; flip for UIKit text drawing.
+    CGContextTranslateCTM(ctx, 0, height);
+    CGContextScaleCTM(ctx, 1, -1);
+    NSDictionary *title = @{
+      NSFontAttributeName : [UIFont boldSystemFontOfSize:44],
+      NSForegroundColorAttributeName : [UIColor whiteColor],
+    };
+    NSDictionary *body = @{
+      NSFontAttributeName : [UIFont systemFontOfSize:28],
+      NSForegroundColorAttributeName : [UIColor colorWithWhite:0.85 alpha:1],
+    };
+    [@"Expo Orbit · Simulator Camera" drawAtPoint:CGPointMake(80, 260) withAttributes:title];
+    NSString *which = position == AVCaptureDevicePositionFront ? @"front" : @"back";
+    [[NSString stringWithFormat:@"No source for the %@ camera. Pick one in Orbit → Settings → Simulator Camera.", which]
+        drawAtPoint:CGPointMake(80, 330)
+        withAttributes:body];
+    UIGraphicsPopContext();
+    CGContextRelease(ctx);
+  }
+  CGColorSpaceRelease(colorSpace);
+  CVPixelBufferUnlockBaseAddress(buffer, 0);
+  return buffer;
+}
+
+#pragma mark - Frame orientation
+
+// Rotates and mirrors a frame for a connection. Sources are landscape ("sensor" orientation,
+// like the frames of a real camera); `angle` is the AVCaptureConnection videoRotationAngle.
+static CVPixelBufferRef OrbitCreateOrientedFrame(CVPixelBufferRef source, CGFloat angle, BOOL mirror) {
+  if (!source) return NULL;
+  int quarterTurns = ((int)lround(angle / 90)) % 4;
+  if (quarterTurns < 0) quarterTurns += 4;
+  if (quarterTurns == 0 && !mirror) return (CVPixelBufferRef)CFRetain(source);
+
+  size_t srcWidth = CVPixelBufferGetWidth(source), srcHeight = CVPixelBufferGetHeight(source);
+  BOOL swap = quarterTurns % 2 == 1;
+  size_t dstWidth = swap ? srcHeight : srcWidth, dstHeight = swap ? srcWidth : srcHeight;
+  CVPixelBufferRef dst = OrbitCreateBGRAPixelBuffer(dstWidth, dstHeight);
+  if (!dst) return NULL;
+
+  CVPixelBufferLockBaseAddress(source, kCVPixelBufferLock_ReadOnly);
+  CVPixelBufferLockBaseAddress(dst, 0);
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGBitmapInfo info = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
+  CGContextRef srcCtx = CGBitmapContextCreate(CVPixelBufferGetBaseAddress(source), srcWidth, srcHeight,
+                                              8, CVPixelBufferGetBytesPerRow(source), colorSpace, info);
+  CGImageRef image = srcCtx ? CGBitmapContextCreateImage(srcCtx) : NULL;
+  CGContextRef dstCtx = CGBitmapContextCreate(CVPixelBufferGetBaseAddress(dst), dstWidth, dstHeight, 8,
+                                              CVPixelBufferGetBytesPerRow(dst), colorSpace, info);
+  if (image && dstCtx) {
+    CGContextSetInterpolationQuality(dstCtx, kCGInterpolationLow);
+    CGContextTranslateCTM(dstCtx, dstWidth / 2.0, dstHeight / 2.0);
+    if (mirror) CGContextScaleCTM(dstCtx, -1, 1);
+    // CoreGraphics' y axis points up, so a clockwise image rotation is a negative angle.
+    CGContextRotateCTM(dstCtx, -quarterTurns * M_PI_2);
+    CGContextDrawImage(dstCtx, CGRectMake(-(CGFloat)srcWidth / 2, -(CGFloat)srcHeight / 2, srcWidth, srcHeight), image);
+  }
+  if (dstCtx) CGContextRelease(dstCtx);
+  if (image) CGImageRelease(image);
+  if (srcCtx) CGContextRelease(srcCtx);
+  CGColorSpaceRelease(colorSpace);
+  CVPixelBufferUnlockBaseAddress(dst, 0);
+  CVPixelBufferUnlockBaseAddress(source, kCVPixelBufferLock_ReadOnly);
+  return dst;
+}
+
+static CMSampleBufferRef OrbitCreateSampleBuffer(CVPixelBufferRef pixelBuffer, CMTime pts) {
+  if (!pixelBuffer) return NULL;
+  CMVideoFormatDescriptionRef format = NULL;
+  if (CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault, pixelBuffer, &format) != noErr) {
+    return NULL;
+  }
+  CMSampleTimingInfo timing = {
+    .duration = CMTimeMake(1, kOrbitFrameRate), .presentationTimeStamp = pts, .decodeTimeStamp = kCMTimeInvalid,
+  };
+  CMSampleBufferRef sample = NULL;
+  CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault, pixelBuffer, format, &timing, &sample);
+  CFRelease(format);
+  return sample;
+}
+
+static CGImageRef OrbitCreateCGImage(CVPixelBufferRef pixelBuffer) {
+  if (!pixelBuffer) return NULL;
+  CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  CGContextRef ctx = CGBitmapContextCreate(
+      CVPixelBufferGetBaseAddress(pixelBuffer), CVPixelBufferGetWidth(pixelBuffer),
+      CVPixelBufferGetHeight(pixelBuffer), 8, CVPixelBufferGetBytesPerRow(pixelBuffer), colorSpace,
+      kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+  CGImageRef image = ctx ? CGBitmapContextCreateImage(ctx) : NULL;
+  if (ctx) CGContextRelease(ctx);
+  CGColorSpaceRelease(colorSpace);
+  CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+  return image;
+}
+
+#pragma mark - Frame rate range and format
+
+@interface OrbitFrameRateRange : AVFrameRateRange
+@end
+@implementation OrbitFrameRateRange
+- (instancetype)init { return self; }  // AVFrameRateRange has no public initializer.
+- (Float64)minFrameRate { return 1; }
+- (Float64)maxFrameRate { return kOrbitFrameRate; }
+- (CMTime)minFrameDuration { return CMTimeMake(1, kOrbitFrameRate); }
+- (CMTime)maxFrameDuration { return CMTimeMake(1, 1); }
+- (NSString *)description { return @"<OrbitFrameRateRange 1-30 fps>"; }
+@end
+
+@interface OrbitDeviceFormat : AVCaptureDeviceFormat
+@property (nonatomic) int32_t width;
+@property (nonatomic) int32_t height;
+@end
+@implementation OrbitDeviceFormat {
+  CMVideoFormatDescriptionRef _description;
+}
++ (instancetype)formatWithWidth:(int32_t)width height:(int32_t)height {
+  OrbitDeviceFormat *format = [self alloc];
+  format.width = width;
+  format.height = height;
+  CMVideoFormatDescriptionCreate(kCFAllocatorDefault, kCVPixelFormatType_32BGRA, width, height, NULL,
+                                 &format->_description);
+  return format;
+}
+- (instancetype)init { return self; }
+- (void)dealloc {
+  if (_description) CFRelease(_description);
+}
+- (NSString *)mediaType { return AVMediaTypeVideo; }
+- (CMFormatDescriptionRef)formatDescription { return _description; }
+- (NSArray<AVFrameRateRange *> *)videoSupportedFrameRateRanges { return @[ [OrbitFrameRateRange alloc] ]; }
+- (float)videoFieldOfView { return 60; }
+- (BOOL)isVideoBinned { return NO; }
+- (BOOL)isVideoStabilizationModeSupported:(AVCaptureVideoStabilizationMode)mode { return mode == AVCaptureVideoStabilizationModeOff; }
+- (CGFloat)videoMaxZoomFactor { return 1; }
+- (CGFloat)videoZoomFactorUpscaleThreshold { return 1; }
+- (CMTime)minExposureDuration { return CMTimeMake(1, 1000); }
+- (CMTime)maxExposureDuration { return CMTimeMake(1, 30); }
+- (float)minISO { return 50; }
+- (float)maxISO { return 1600; }
+- (BOOL)isVideoHDRSupported { return NO; }
+- (CMVideoDimensions)highResolutionStillImageDimensions { return (CMVideoDimensions){ _width, _height }; }
+- (NSArray<NSValue *> *)supportedMaxPhotoDimensions { return @[ [NSValue valueWithBytes:&(CMVideoDimensions){ _width, _height } objCType:@encode(CMVideoDimensions)] ]; }
+- (NSArray<AVCaptureDeviceFormat *> *)supportedDepthDataFormats { return @[]; }
+- (NSArray *)unsupportedCaptureOutputClasses { return @[]; }
+- (BOOL)isMultiCamSupported { return NO; }
+- (BOOL)isHighestPhotoQualitySupported { return YES; }
+- (BOOL)isHighPhotoQualitySupported { return YES; }
+- (BOOL)isPortraitEffectSupported { return NO; }
+- (BOOL)isCenterStageSupported { return NO; }
+- (BOOL)isGlobalToneMappingSupported { return NO; }
+- (BOOL)isAutoVideoFrameRateSupported { return NO; }
+- (BOOL)isVideoFrameRateRangeForCenterStageSupported { return NO; }
+- (NSArray<NSNumber *> *)supportedColorSpaces { return @[ @(AVCaptureColorSpace_sRGB) ]; }
+- (BOOL)isReactionEffectsSupported { return NO; }
+- (BOOL)isStudioLightSupported { return NO; }
+- (BOOL)isBackgroundReplacementSupported { return NO; }
+- (NSArray<NSNumber *> *)secondaryNativeResolutionZoomFactors { return @[]; }
+- (NSArray<NSNumber *> *)supportedVideoZoomFactorsForDepthDataDelivery { return @[]; }
+// AVFoundation's own code (for example AVCapturePhotoSettings) reaches the engine object
+// of a format through these private accessors; the virtual format has none.
+- (id)figCaptureSourceVideoFormat { return nil; }
+- (id)figCaptureSourceDepthDataFormat { return nil; }
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<OrbitDeviceFormat %dx%d BGRA>", _width, _height];
+}
+@end
+
+#pragma mark - Device
+
+@interface OrbitCaptureDevice : AVCaptureDevice
+@property (nonatomic, readonly) AVCaptureDevicePosition orbitPosition;
+@property (nonatomic, readonly) NSString *orbitUniqueID;
++ (instancetype)frontDevice;
++ (instancetype)backDevice;
++ (NSArray<OrbitCaptureDevice *> *)allDevices;
++ (OrbitCaptureDevice *)deviceForPosition:(AVCaptureDevicePosition)position;
+@end
+
+@implementation OrbitCaptureDevice {
+  NSArray *_formats;
+  OrbitDeviceFormat *_activeFormat;
+  AVCaptureFocusMode _focusMode;
+  AVCaptureExposureMode _exposureMode;
+  AVCaptureWhiteBalanceMode _whiteBalanceMode;
+  CGPoint _focusPoint, _exposurePoint;
+  CGFloat _zoom;
+  float _exposureBias;
+  BOOL _subjectAreaMonitoring;
+  CMTime _minFrameDuration, _maxFrameDuration;
+}
+
+static OrbitCaptureDevice *sFrontDevice, *sBackDevice;
+
++ (instancetype)deviceWithPosition:(AVCaptureDevicePosition)position uniqueID:(NSString *)uniqueID {
+  // AVCaptureDevice cannot be initialized on a simulator; the instance is allocated and the
+  // state it needs lives in this subclass.
+  OrbitCaptureDevice *device = [self alloc];
+  device->_orbitPosition = position;
+  device->_orbitUniqueID = uniqueID;
+  device->_formats = @[
+    [OrbitDeviceFormat formatWithWidth:1920 height:1080],
+    [OrbitDeviceFormat formatWithWidth:1280 height:720],
+    [OrbitDeviceFormat formatWithWidth:640 height:480],
+  ];
+  device->_activeFormat = device->_formats[0];
+  device->_focusMode = AVCaptureFocusModeContinuousAutoFocus;
+  device->_exposureMode = AVCaptureExposureModeContinuousAutoExposure;
+  device->_whiteBalanceMode = AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance;
+  device->_focusPoint = CGPointMake(0.5, 0.5);
+  device->_exposurePoint = CGPointMake(0.5, 0.5);
+  device->_zoom = 1;
+  device->_minFrameDuration = CMTimeMake(1, kOrbitFrameRate);
+  device->_maxFrameDuration = CMTimeMake(1, kOrbitFrameRate);
+  return device;
+}
++ (instancetype)frontDevice {
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    sFrontDevice = [self deviceWithPosition:AVCaptureDevicePositionFront uniqueID:kOrbitFrontDeviceID];
+  });
+  return sFrontDevice;
+}
++ (instancetype)backDevice {
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    sBackDevice = [self deviceWithPosition:AVCaptureDevicePositionBack uniqueID:kOrbitBackDeviceID];
+  });
+  return sBackDevice;
+}
++ (NSArray<OrbitCaptureDevice *> *)allDevices { return @[ [self backDevice], [self frontDevice] ]; }
++ (OrbitCaptureDevice *)deviceForPosition:(AVCaptureDevicePosition)position {
+  return position == AVCaptureDevicePositionFront ? [self frontDevice] : [self backDevice];
+}
+
+- (instancetype)init { return self; }
+- (NSString *)uniqueID { return _orbitUniqueID; }
+- (NSString *)modelID { return @"Orbit Virtual Camera"; }
+- (NSString *)localizedName {
+  return _orbitPosition == AVCaptureDevicePositionFront ? @"Front Camera" : @"Back Camera";
+}
+- (NSString *)manufacturer { return @"Expo"; }
+- (AVCaptureDeviceType)deviceType { return AVCaptureDeviceTypeBuiltInWideAngleCamera; }
+- (AVCaptureDevicePosition)position { return _orbitPosition; }
+- (BOOL)hasMediaType:(AVMediaType)mediaType { return [mediaType isEqualToString:AVMediaTypeVideo]; }
+- (BOOL)supportsAVCaptureSessionPreset:(AVCaptureSessionPreset)preset { return YES; }
+- (BOOL)isConnected { return YES; }
+- (BOOL)isSuspended { return NO; }
+- (BOOL)isInUseByAnotherApplication { return NO; }
+- (BOOL)isVirtualDevice { return NO; }
+- (NSArray<AVCaptureDevice *> *)constituentDevices { return @[]; }
+- (BOOL)isContinuityCamera { return NO; }
+- (BOOL)lockForConfiguration:(NSError **)error { return YES; }
+- (void)unlockForConfiguration {}
+- (NSArray<AVCaptureDeviceFormat *> *)formats { return _formats; }
+- (AVCaptureDeviceFormat *)activeFormat { return _activeFormat; }
+- (void)setActiveFormat:(AVCaptureDeviceFormat *)format {
+  if ([format isKindOfClass:[OrbitDeviceFormat class]]) _activeFormat = (OrbitDeviceFormat *)format;
+}
+- (CMTime)activeVideoMinFrameDuration { return _minFrameDuration; }
+- (void)setActiveVideoMinFrameDuration:(CMTime)d { _minFrameDuration = d; }
+- (CMTime)activeVideoMaxFrameDuration { return _maxFrameDuration; }
+- (void)setActiveVideoMaxFrameDuration:(CMTime)d { _maxFrameDuration = d; }
+- (AVCaptureDeviceFormat *)activeDepthDataFormat { return nil; }
+- (void)setActiveDepthDataFormat:(AVCaptureDeviceFormat *)f {}
+- (AVCaptureColorSpace)activeColorSpace { return AVCaptureColorSpace_sRGB; }
+- (void)setActiveColorSpace:(AVCaptureColorSpace)s {}
+
+// Flash and torch
+- (BOOL)hasFlash { return NO; }
+- (BOOL)isFlashAvailable { return NO; }
+- (BOOL)isFlashActive { return NO; }
+- (BOOL)isFlashModeSupported:(AVCaptureFlashMode)mode { return mode == AVCaptureFlashModeOff; }
+- (AVCaptureFlashMode)flashMode { return AVCaptureFlashModeOff; }
+- (void)setFlashMode:(AVCaptureFlashMode)m {}
+- (BOOL)hasTorch { return NO; }
+- (BOOL)isTorchAvailable { return NO; }
+- (BOOL)isTorchActive { return NO; }
+- (float)torchLevel { return 0; }
+- (BOOL)isTorchModeSupported:(AVCaptureTorchMode)mode { return mode == AVCaptureTorchModeOff; }
+- (AVCaptureTorchMode)torchMode { return AVCaptureTorchModeOff; }
+- (void)setTorchMode:(AVCaptureTorchMode)m {}
+- (BOOL)setTorchModeOnWithLevel:(float)level error:(NSError **)error { return NO; }
+
+// Focus
+- (BOOL)isFocusModeSupported:(AVCaptureFocusMode)mode { return YES; }
+- (AVCaptureFocusMode)focusMode { return _focusMode; }
+- (void)setFocusMode:(AVCaptureFocusMode)m { _focusMode = m; }
+- (BOOL)isFocusPointOfInterestSupported { return YES; }
+- (CGPoint)focusPointOfInterest { return _focusPoint; }
+- (void)setFocusPointOfInterest:(CGPoint)p { _focusPoint = p; }
+- (BOOL)isAdjustingFocus { return NO; }
+- (BOOL)isAutoFocusRangeRestrictionSupported { return NO; }
+- (AVCaptureAutoFocusRangeRestriction)autoFocusRangeRestriction { return AVCaptureAutoFocusRangeRestrictionNone; }
+- (void)setAutoFocusRangeRestriction:(AVCaptureAutoFocusRangeRestriction)r {}
+- (BOOL)isSmoothAutoFocusSupported { return NO; }
+- (BOOL)isSmoothAutoFocusEnabled { return NO; }
+- (void)setSmoothAutoFocusEnabled:(BOOL)e {}
+- (float)lensPosition { return 1; }
+- (void)setFocusModeLockedWithLensPosition:(float)p completionHandler:(void (^)(CMTime))handler {
+  _focusMode = AVCaptureFocusModeLocked;
+  if (handler) handler(CMClockGetTime(CMClockGetHostTimeClock()));
+}
+- (BOOL)isLockingFocusWithCustomLensPositionSupported { return NO; }
+- (NSInteger)minimumFocusDistance { return 100; }
+
+// Exposure
+- (BOOL)isExposureModeSupported:(AVCaptureExposureMode)mode { return YES; }
+- (AVCaptureExposureMode)exposureMode { return _exposureMode; }
+- (void)setExposureMode:(AVCaptureExposureMode)m { _exposureMode = m; }
+- (BOOL)isExposurePointOfInterestSupported { return YES; }
+- (CGPoint)exposurePointOfInterest { return _exposurePoint; }
+- (void)setExposurePointOfInterest:(CGPoint)p { _exposurePoint = p; }
+- (BOOL)isAdjustingExposure { return NO; }
+- (CMTime)exposureDuration { return CMTimeMake(1, 60); }
+- (float)ISO { return 100; }
+- (float)exposureTargetOffset { return 0; }
+- (float)exposureTargetBias { return _exposureBias; }
+- (float)minExposureTargetBias { return -8; }
+- (float)maxExposureTargetBias { return 8; }
+- (void)setExposureTargetBias:(float)bias completionHandler:(void (^)(CMTime))handler {
+  _exposureBias = bias;
+  if (handler) handler(CMClockGetTime(CMClockGetHostTimeClock()));
+}
+- (void)setExposureModeCustomWithDuration:(CMTime)d ISO:(float)iso completionHandler:(void (^)(CMTime))handler {
+  _exposureMode = AVCaptureExposureModeCustom;
+  if (handler) handler(CMClockGetTime(CMClockGetHostTimeClock()));
+}
+- (CMTime)activeMaxExposureDuration { return CMTimeMake(1, 30); }
+- (void)setActiveMaxExposureDuration:(CMTime)d {}
+- (BOOL)isLowLightBoostSupported { return NO; }
+- (BOOL)isLowLightBoostEnabled { return NO; }
+- (BOOL)automaticallyEnablesLowLightBoostWhenAvailable { return NO; }
+- (void)setAutomaticallyEnablesLowLightBoostWhenAvailable:(BOOL)e {}
+- (BOOL)isSubjectAreaChangeMonitoringEnabled { return _subjectAreaMonitoring; }
+- (void)setSubjectAreaChangeMonitoringEnabled:(BOOL)e { _subjectAreaMonitoring = e; }
+
+// White balance
+- (BOOL)isWhiteBalanceModeSupported:(AVCaptureWhiteBalanceMode)mode { return YES; }
+- (AVCaptureWhiteBalanceMode)whiteBalanceMode { return _whiteBalanceMode; }
+- (void)setWhiteBalanceMode:(AVCaptureWhiteBalanceMode)m { _whiteBalanceMode = m; }
+- (BOOL)isAdjustingWhiteBalance { return NO; }
+- (BOOL)isLockingWhiteBalanceWithCustomDeviceGainsSupported { return NO; }
+- (AVCaptureWhiteBalanceGains)deviceWhiteBalanceGains { return (AVCaptureWhiteBalanceGains){ 1, 1, 1 }; }
+- (AVCaptureWhiteBalanceGains)grayWorldDeviceWhiteBalanceGains { return (AVCaptureWhiteBalanceGains){ 1, 1, 1 }; }
+- (float)maxWhiteBalanceGain { return 4; }
+
+// Zoom
+- (CGFloat)videoZoomFactor { return _zoom; }
+- (void)setVideoZoomFactor:(CGFloat)z { _zoom = MAX(1, MIN(z, 4)); }
+- (void)rampToVideoZoomFactor:(CGFloat)z withRate:(float)rate { _zoom = MAX(1, MIN(z, 4)); }
+- (BOOL)isRampingVideoZoom { return NO; }
+- (void)cancelVideoZoomRamp {}
+- (CGFloat)minAvailableVideoZoomFactor { return 1; }
+- (CGFloat)maxAvailableVideoZoomFactor { return 4; }
+- (CGFloat)displayVideoZoomFactorMultiplier { return 1; }
+- (NSArray<NSNumber *> *)virtualDeviceSwitchOverVideoZoomFactors { return @[]; }
+
+// Misc
+- (float)lensAperture { return 1.8f; }
+- (BOOL)isGeometricDistortionCorrectionSupported { return NO; }
+- (BOOL)isGeometricDistortionCorrectionEnabled { return NO; }
+- (void)setGeometricDistortionCorrectionEnabled:(BOOL)e {}
+- (BOOL)isVideoHDREnabled { return NO; }
+- (void)setVideoHDREnabled:(BOOL)e {}
+- (BOOL)automaticallyAdjustsVideoHDREnabled { return NO; }
+- (void)setAutomaticallyAdjustsVideoHDREnabled:(BOOL)e {}
+- (BOOL)isCenterStageActive { return NO; }
+- (BOOL)isPortraitEffectActive { return NO; }
+- (BOOL)isStudioLightActive { return NO; }
+- (AVCaptureSystemPressureState *)systemPressureState { return nil; }
+- (NSArray<AVCaptureDeviceFormat *> *)activePrimaryConstituentDeviceSupportedFormats { return @[]; }
+- (BOOL)isAutoVideoFrameRateEnabled { return NO; }
+- (void)setAutoVideoFrameRateEnabled:(BOOL)e {}
+// Private accessors AVFoundation uses internally; there is no engine behind the virtual device.
+- (id)figCaptureSource { return nil; }
+- (NSDictionary *)figCaptureSourceAttributes { return @{}; }
+- (NSInteger)figCaptureSourceDeviceType { return 0; }
+- (NSInteger)figCaptureSourcePosition { return _orbitPosition; }
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<OrbitCaptureDevice %@ %@>", self.localizedName, _orbitUniqueID];
+}
+- (NSUInteger)hash { return _orbitUniqueID.hash; }
+- (BOOL)isEqual:(id)other { return other == self; }
+@end
+
+#pragma mark - Discovery session
+
+@interface OrbitDiscoverySession : AVCaptureDeviceDiscoverySession
+@property (nonatomic, copy) NSArray<AVCaptureDevice *> *orbitDevices;
+@end
+@implementation OrbitDiscoverySession
+- (instancetype)init { return self; }
+- (NSArray<AVCaptureDevice *> *)devices { return _orbitDevices; }
+- (NSArray<NSSet<AVCaptureDevice *> *> *)supportedMultiCamDeviceSets { return @[]; }
+@end
+
+static NSArray<OrbitCaptureDevice *> *OrbitDevicesForPosition(AVCaptureDevicePosition position) {
+  if (position == AVCaptureDevicePositionFront) return @[ [OrbitCaptureDevice frontDevice] ];
+  if (position == AVCaptureDevicePositionBack) return @[ [OrbitCaptureDevice backDevice] ];
+  return [OrbitCaptureDevice allDevices];
+}
+
+static BOOL OrbitIsVideoMediaType(NSString *mediaType) {
+  return mediaType == nil || [mediaType isEqualToString:AVMediaTypeVideo];
+}
+
+// AVCaptureDevice class methods
+static NSArray *OrbitDevice_devices(id self, SEL _cmd) {
+  NSArray *original = @[];
+  IMP imp = OrbitOriginalIMP([AVCaptureDevice class], _cmd, YES);
+  if (imp) original = ((NSArray * (*)(id, SEL))imp)(self, _cmd) ?: @[];
+  return [[OrbitCaptureDevice allDevices] arrayByAddingObjectsFromArray:original];
+}
+static NSArray *OrbitDevice_devicesWithMediaType(id self, SEL _cmd, NSString *mediaType) {
+  if (OrbitIsVideoMediaType(mediaType)) return [OrbitCaptureDevice allDevices];
+  IMP imp = OrbitOriginalIMP([AVCaptureDevice class], _cmd, YES);
+  return imp ? ((NSArray * (*)(id, SEL, id))imp)(self, _cmd, mediaType) : @[];
+}
+static id OrbitDevice_defaultDeviceWithMediaType(id self, SEL _cmd, NSString *mediaType) {
+  if (OrbitIsVideoMediaType(mediaType)) return [OrbitCaptureDevice backDevice];
+  IMP imp = OrbitOriginalIMP([AVCaptureDevice class], _cmd, YES);
+  return imp ? ((id (*)(id, SEL, id))imp)(self, _cmd, mediaType) : nil;
+}
+static id OrbitDevice_defaultDeviceWithDeviceType(id self, SEL _cmd, NSString *type, NSString *mediaType,
+                                                  AVCaptureDevicePosition position) {
+  if (OrbitIsVideoMediaType(mediaType)) {
+    if ([type isEqualToString:@"AVCaptureDeviceTypeExternal"] ||
+        [type isEqualToString:@"AVCaptureDeviceTypeContinuityCamera"]) {
+      return nil;
+    }
+    return OrbitDevicesForPosition(position).firstObject;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureDevice class], _cmd, YES);
+  return imp ? ((id (*)(id, SEL, id, id, AVCaptureDevicePosition))imp)(self, _cmd, type, mediaType, position) : nil;
+}
+static NSArray *OrbitDevice_devicesWithDeviceType(id self, SEL _cmd, NSString *type, NSString *mediaType,
+                                                  AVCaptureDevicePosition position) {
+  if (OrbitIsVideoMediaType(mediaType)) return OrbitDevicesForPosition(position);
+  return @[];
+}
+static id OrbitDevice_deviceWithUniqueID(id self, SEL _cmd, NSString *uniqueID) {
+  for (OrbitCaptureDevice *device in [OrbitCaptureDevice allDevices]) {
+    if ([device.uniqueID isEqualToString:uniqueID]) return device;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureDevice class], _cmd, YES);
+  return imp ? ((id (*)(id, SEL, id))imp)(self, _cmd, uniqueID) : nil;
+}
+static AVAuthorizationStatus OrbitDevice_authorizationStatus(id self, SEL _cmd, NSString *mediaType) {
+  if (OrbitIsVideoMediaType(mediaType)) return AVAuthorizationStatusAuthorized;
+  IMP imp = OrbitOriginalIMP([AVCaptureDevice class], _cmd, YES);
+  return imp ? ((AVAuthorizationStatus (*)(id, SEL, id))imp)(self, _cmd, mediaType) : AVAuthorizationStatusAuthorized;
+}
+static void OrbitDevice_requestAccess(id self, SEL _cmd, NSString *mediaType, void (^handler)(BOOL)) {
+  if (OrbitIsVideoMediaType(mediaType)) {
+    if (handler) dispatch_async(dispatch_get_main_queue(), ^{ handler(YES); });
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureDevice class], _cmd, YES);
+  if (imp) ((void (*)(id, SEL, id, id))imp)(self, _cmd, mediaType, handler);
+  else if (handler) handler(YES);
+}
+static id OrbitDevice_userPreferredCamera(id self, SEL _cmd) { return [OrbitCaptureDevice backDevice]; }
+static void OrbitDevice_setUserPreferredCamera(id self, SEL _cmd, id device) {}
+static id OrbitDevice_systemPreferredCamera(id self, SEL _cmd) { return [OrbitCaptureDevice backDevice]; }
+static id OrbitDiscovery_sessionWithDeviceTypes(id self, SEL _cmd, NSArray *types, NSString *mediaType,
+                                                AVCaptureDevicePosition position) {
+  OrbitDiscoverySession *session = [OrbitDiscoverySession alloc];
+  BOOL wantsCamera = NO;
+  for (NSString *type in types) {
+    if (![type isEqualToString:@"AVCaptureDeviceTypeExternal"] &&
+        ![type isEqualToString:@"AVCaptureDeviceTypeContinuityCamera"] &&
+        ![type isEqualToString:AVCaptureDeviceTypeBuiltInMicrophone]) {
+      wantsCamera = YES;
+    }
+  }
+  session.orbitDevices = wantsCamera && OrbitIsVideoMediaType(mediaType) ? OrbitDevicesForPosition(position) : @[];
+  return session;
+}
+static BOOL OrbitMultiCam_isSupported(id self, SEL _cmd) { return NO; }
+
+#pragma mark - Input and ports
+
+@class OrbitCaptureInput;
+
+@interface OrbitInputPort : AVCaptureInputPort
+@property (nonatomic, weak) OrbitCaptureInput *orbitInput;
+@property (nonatomic) BOOL orbitEnabled;
+@end
+
+@interface OrbitCaptureInput : AVCaptureDeviceInput
+@property (nonatomic, strong) OrbitCaptureDevice *orbitDevice;
+@property (nonatomic, strong) OrbitInputPort *orbitPort;
+@end
+
+@implementation OrbitInputPort {
+  CMVideoFormatDescriptionRef _formatDescription;
+}
+- (instancetype)init { return self; }
+- (AVCaptureInput *)input { return _orbitInput; }
+- (AVMediaType)mediaType { return AVMediaTypeVideo; }
+- (CMFormatDescriptionRef)formatDescription {
+  if (!_formatDescription) {
+    CMVideoFormatDescriptionCreate(kCFAllocatorDefault, kCVPixelFormatType_32BGRA, 1920, 1080, NULL, &_formatDescription);
+  }
+  return _formatDescription;
+}
+- (BOOL)isEnabled { return _orbitEnabled; }
+- (void)setEnabled:(BOOL)enabled { _orbitEnabled = enabled; }
+- (CMClockRef)clock { return CMClockGetHostTimeClock(); }
+- (AVCaptureDeviceType)sourceDeviceType { return AVCaptureDeviceTypeBuiltInWideAngleCamera; }
+- (AVCaptureDevicePosition)sourceDevicePosition { return _orbitInput.orbitDevice.orbitPosition; }
+- (NSString *)description { return @"<OrbitInputPort video>"; }
+@end
+
+@implementation OrbitCaptureInput
++ (instancetype)inputWithDevice:(OrbitCaptureDevice *)device {
+  OrbitCaptureInput *input = [self alloc];
+  input.orbitDevice = device;
+  OrbitInputPort *port = [OrbitInputPort alloc];
+  port.orbitInput = input;
+  port.orbitEnabled = YES;
+  input.orbitPort = port;
+  return input;
+}
+- (instancetype)init { return self; }
+- (AVCaptureDevice *)device { return _orbitDevice; }
+- (NSArray<AVCaptureInputPort *> *)ports { return @[ _orbitPort ]; }
+- (NSArray<AVCaptureInputPort *> *)portsWithMediaType:(AVMediaType)mediaType sourceDeviceType:(AVCaptureDeviceType)type sourceDevicePosition:(AVCaptureDevicePosition)position {
+  return OrbitIsVideoMediaType(mediaType) ? @[ _orbitPort ] : @[];
+}
+- (BOOL)unifiedAutoExposureDefaultsEnabled { return NO; }
+- (void)setUnifiedAutoExposureDefaultsEnabled:(BOOL)e {}
+- (CMTime)videoMinFrameDurationOverride { return kCMTimeInvalid; }
+- (void)setVideoMinFrameDurationOverride:(CMTime)t {}
+- (BOOL)isMultichannelAudioModeSupported:(AVCaptureMultichannelAudioMode)mode { return mode == AVCaptureMultichannelAudioModeNone; }
+- (NSString *)description { return [NSString stringWithFormat:@"<OrbitCaptureInput %@>", _orbitDevice]; }
+@end
+
+static OrbitCaptureInput *OrbitInputIfOurs(id input) {
+  return [input isKindOfClass:[OrbitCaptureInput class]] ? input : nil;
+}
+
+static id OrbitDeviceInput_deviceInputWithDevice(id self, SEL _cmd, AVCaptureDevice *device, NSError **error) {
+  if ([device isKindOfClass:[OrbitCaptureDevice class]]) return [OrbitCaptureInput inputWithDevice:(OrbitCaptureDevice *)device];
+  IMP imp = OrbitOriginalIMP([AVCaptureDeviceInput class], _cmd, YES);
+  return imp ? ((id (*)(id, SEL, id, NSError **))imp)(self, _cmd, device, error) : nil;
+}
+static id OrbitDeviceInput_initWithDevice(id self, SEL _cmd, AVCaptureDevice *device, NSError **error) {
+  if ([device isKindOfClass:[OrbitCaptureDevice class]]) return [OrbitCaptureInput inputWithDevice:(OrbitCaptureDevice *)device];
+  IMP imp = OrbitOriginalIMP([AVCaptureDeviceInput class], _cmd, NO);
+  return imp ? ((id (*)(id, SEL, id, NSError **))imp)(self, _cmd, device, error) : nil;
+}
+
+#pragma mark - Connection
+
+@interface OrbitConnection : AVCaptureConnection
+@property (nonatomic, strong) NSArray<AVCaptureInputPort *> *orbitPorts;
+@property (nonatomic, weak) AVCaptureOutput *orbitOutput;
+@property (nonatomic, weak) AVCaptureVideoPreviewLayer *orbitPreviewLayer;
+@property (nonatomic) BOOL orbitEnabled;
+@property (nonatomic) CGFloat orbitRotationAngle;
+@property (nonatomic) BOOL orbitMirrored;
+@property (nonatomic) BOOL orbitAutoMirror;
+@property (nonatomic) AVCaptureVideoStabilizationMode orbitStabilization;
+@property (nonatomic) CGFloat orbitScaleAndCrop;
++ (instancetype)connectionWithPorts:(NSArray<AVCaptureInputPort *> *)ports output:(AVCaptureOutput *)output;
++ (instancetype)connectionWithPorts:(NSArray<AVCaptureInputPort *> *)ports previewLayer:(AVCaptureVideoPreviewLayer *)layer;
+- (AVCaptureDevicePosition)orbitPosition;
+@end
+
+@implementation OrbitConnection
++ (instancetype)connectionWithPorts:(NSArray<AVCaptureInputPort *> *)ports output:(AVCaptureOutput *)output {
+  OrbitConnection *c = [self alloc];
+  c.orbitPorts = ports;
+  c.orbitOutput = output;
+  c.orbitEnabled = YES;
+  c.orbitRotationAngle = kOrbitDefaultRotationAngle;
+  c.orbitScaleAndCrop = 1;
+  return c;
+}
++ (instancetype)connectionWithPorts:(NSArray<AVCaptureInputPort *> *)ports previewLayer:(AVCaptureVideoPreviewLayer *)layer {
+  OrbitConnection *c = [self connectionWithPorts:ports output:nil];
+  c.orbitPreviewLayer = layer;
+  // Like AVFoundation: a preview of the front camera mirrors by default.
+  c.orbitAutoMirror = YES;
+  c.orbitMirrored = [c orbitPosition] == AVCaptureDevicePositionFront;
+  return c;
+}
+- (instancetype)init { return self; }
+- (AVCaptureDevicePosition)orbitPosition {
+  OrbitInputPort *port = (OrbitInputPort *)_orbitPorts.firstObject;
+  return [port isKindOfClass:[OrbitInputPort class]] ? port.orbitInput.orbitDevice.orbitPosition : AVCaptureDevicePositionBack;
+}
+- (NSArray<AVCaptureInputPort *> *)inputPorts { return _orbitPorts; }
+- (AVCaptureOutput *)output { return _orbitOutput; }
+- (AVCaptureVideoPreviewLayer *)videoPreviewLayer { return _orbitPreviewLayer; }
+- (BOOL)isEnabled { return _orbitEnabled; }
+- (void)setEnabled:(BOOL)e { _orbitEnabled = e; }
+- (BOOL)isActive { return YES; }
+- (NSArray<AVCaptureAudioChannel *> *)audioChannels { return @[]; }
+- (BOOL)isVideoMirroringSupported { return YES; }
+- (BOOL)isVideoMirrored { return _orbitMirrored; }
+- (void)setVideoMirrored:(BOOL)m { _orbitMirrored = m; }
+- (BOOL)automaticallyAdjustsVideoMirroring { return _orbitAutoMirror; }
+- (void)setAutomaticallyAdjustsVideoMirroring:(BOOL)a { _orbitAutoMirror = a; }
+- (BOOL)isVideoOrientationSupported { return YES; }
+- (AVCaptureVideoOrientation)videoOrientation {
+  switch ((int)lround(_orbitRotationAngle) % 360) {
+    case 0: return AVCaptureVideoOrientationLandscapeRight;
+    case 180: return AVCaptureVideoOrientationLandscapeLeft;
+    case 270: return AVCaptureVideoOrientationPortraitUpsideDown;
+    default: return AVCaptureVideoOrientationPortrait;
+  }
+}
+- (void)setVideoOrientation:(AVCaptureVideoOrientation)o {
+  switch (o) {
+    case AVCaptureVideoOrientationLandscapeRight: _orbitRotationAngle = 0; break;
+    case AVCaptureVideoOrientationLandscapeLeft: _orbitRotationAngle = 180; break;
+    case AVCaptureVideoOrientationPortraitUpsideDown: _orbitRotationAngle = 270; break;
+    default: _orbitRotationAngle = 90; break;
+  }
+}
+- (BOOL)isVideoRotationAngleSupported:(CGFloat)angle { return fmod(angle, 90) == 0; }
+- (CGFloat)videoRotationAngle { return _orbitRotationAngle; }
+- (void)setVideoRotationAngle:(CGFloat)a { _orbitRotationAngle = fmod(fmod(a, 360) + 360, 360); }
+- (BOOL)isVideoFieldModeSupported { return NO; }
+- (BOOL)isVideoMinFrameDurationSupported { return YES; }
+- (CMTime)videoMinFrameDuration { return CMTimeMake(1, kOrbitFrameRate); }
+- (void)setVideoMinFrameDuration:(CMTime)t {}
+- (BOOL)isVideoMaxFrameDurationSupported { return YES; }
+- (CMTime)videoMaxFrameDuration { return CMTimeMake(1, kOrbitFrameRate); }
+- (void)setVideoMaxFrameDuration:(CMTime)t {}
+- (CGFloat)videoMaxScaleAndCropFactor { return 4; }
+- (CGFloat)videoScaleAndCropFactor { return _orbitScaleAndCrop; }
+- (void)setVideoScaleAndCropFactor:(CGFloat)f { _orbitScaleAndCrop = f; }
+- (BOOL)isVideoStabilizationSupported { return NO; }
+- (BOOL)isVideoStabilizationEnabled { return NO; }
+- (AVCaptureVideoStabilizationMode)preferredVideoStabilizationMode { return _orbitStabilization; }
+- (void)setPreferredVideoStabilizationMode:(AVCaptureVideoStabilizationMode)m { _orbitStabilization = m; }
+- (AVCaptureVideoStabilizationMode)activeVideoStabilizationMode { return AVCaptureVideoStabilizationModeOff; }
+- (BOOL)isCameraIntrinsicMatrixDeliverySupported { return NO; }
+- (BOOL)isCameraIntrinsicMatrixDeliveryEnabled { return NO; }
+- (void)setCameraIntrinsicMatrixDeliveryEnabled:(BOOL)e {}
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<OrbitConnection angle=%.0f mirrored=%d>", _orbitRotationAngle, _orbitMirrored];
+}
+@end
+
+#pragma mark - Session state
+
+@interface OrbitSessionState : NSObject
+@property (nonatomic, strong) NSMutableArray<OrbitCaptureInput *> *inputs;
+@property (nonatomic, strong) NSMutableArray<AVCaptureOutput *> *outputs;
+@property (nonatomic, strong) NSMutableArray<OrbitConnection *> *connections;
+@property (nonatomic, strong) NSHashTable<AVCaptureVideoPreviewLayer *> *previewLayers;
+@property (nonatomic, copy) NSString *preset;
+@property (nonatomic) BOOL running;
+@property (nonatomic) BOOL interrupted;
+@end
+@implementation OrbitSessionState
+- (instancetype)init {
+  if ((self = [super init])) {
+    _inputs = [NSMutableArray new];
+    _outputs = [NSMutableArray new];
+    _connections = [NSMutableArray new];
+    _previewLayers = [NSHashTable weakObjectsHashTable];
+    _preset = AVCaptureSessionPresetHigh;
+  }
+  return self;
+}
+- (OrbitCaptureInput *)videoInput { return _inputs.firstObject; }
+- (OrbitConnection *)connectionForOutput:(AVCaptureOutput *)output {
+  for (OrbitConnection *c in _connections) if (c.orbitOutput == output) return c;
+  return nil;
+}
+- (OrbitConnection *)connectionForPreviewLayer:(AVCaptureVideoPreviewLayer *)layer {
+  for (OrbitConnection *c in _connections) if (c.orbitPreviewLayer == layer) return c;
+  return nil;
+}
+@end
+
+// All sessions that have state, so the frame timer can walk them.
+static NSHashTable<AVCaptureSession *> *sSessions;
+static NSLock *sSessionsLock;
+
+static OrbitSessionState *OrbitStateForSession(AVCaptureSession *session, BOOL create) {
+  OrbitSessionState *state = objc_getAssociatedObject(session, kOrbitSessionStateKey);
+  if (!state && create) {
+    state = [OrbitSessionState new];
+    objc_setAssociatedObject(session, kOrbitSessionStateKey, state, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [sSessionsLock lock];
+    [sSessions addObject:session];
+    [sSessionsLock unlock];
+  }
+  return state;
+}
+
+static BOOL OrbitOutputWantsVideo(AVCaptureOutput *output) {
+  return [output isKindOfClass:[AVCaptureVideoDataOutput class]] ||
+         [output isKindOfClass:[AVCapturePhotoOutput class]] ||
+         [output isKindOfClass:[AVCaptureMetadataOutput class]] ||
+         [output isKindOfClass:[AVCaptureMovieFileOutput class]] ||
+         [output isKindOfClass:NSClassFromString(@"AVCaptureStillImageOutput")];
+}
+
+// Creates the connections of the session's video input to its outputs and preview layers,
+// as AVFoundation does when an input or output is added with connections.
+static void OrbitConnectIfNeeded(AVCaptureSession *session, OrbitSessionState *state) {
+  OrbitCaptureInput *input = state.videoInput;
+  if (!input) return;
+  for (AVCaptureOutput *output in state.outputs) {
+    if (OrbitOutputWantsVideo(output) && ![state connectionForOutput:output]) {
+      [state.connections addObject:[OrbitConnection connectionWithPorts:input.ports output:output]];
+    }
+  }
+  for (AVCaptureVideoPreviewLayer *layer in state.previewLayers) {
+    if (![state connectionForPreviewLayer:layer]) {
+      [state.connections addObject:[OrbitConnection connectionWithPorts:input.ports previewLayer:layer]];
+    }
+  }
+}
+
+static void OrbitDisconnectInput(OrbitSessionState *state, OrbitCaptureInput *input) {
+  NSMutableArray *remaining = [NSMutableArray new];
+  for (OrbitConnection *c in state.connections) {
+    if (c.orbitPorts.firstObject != input.orbitPort) [remaining addObject:c];
+  }
+  state.connections = remaining;
+}
+
+#define ORIGINAL(cls, ret, ...) ((ret (*)(id, SEL, ##__VA_ARGS__))OrbitOriginalIMP([cls class], _cmd, NO))
+#define CALL_ORIGINAL_IF_PRESENT(cls, ret, dflt, ...)                          \
+  do {                                                                          \
+    IMP _imp = OrbitOriginalIMP([cls class], _cmd, NO);                        \
+    if (_imp) return ((ret (*)(id, SEL, ##__VA_ARGS__))_imp)(self, _cmd, ##__VA_ARGS__); \
+    return dflt;                                                                \
+  } while (0)
+
+// AVCaptureSession
+static BOOL OrbitSession_canAddInput(AVCaptureSession *self, SEL _cmd, AVCaptureInput *input) {
+  if (OrbitInputIfOurs(input)) return OrbitStateForSession(self, YES).videoInput == nil;
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  return imp ? ((BOOL (*)(id, SEL, id))imp)(self, _cmd, input) : NO;
+}
+static void OrbitSession_addInput(AVCaptureSession *self, SEL _cmd, AVCaptureInput *input) {
+  OrbitCaptureInput *ours = OrbitInputIfOurs(input);
+  if (ours) {
+    OrbitSessionState *state = OrbitStateForSession(self, YES);
+    if (![state.inputs containsObject:ours]) [state.inputs addObject:ours];
+    OrbitConnectIfNeeded(self, state);
+    ORBIT_LOG(@"Session %p: added input %@", self, ours);
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, input);
+}
+static void OrbitSession_addInputWithNoConnections(AVCaptureSession *self, SEL _cmd, AVCaptureInput *input) {
+  OrbitCaptureInput *ours = OrbitInputIfOurs(input);
+  if (ours) {
+    OrbitSessionState *state = OrbitStateForSession(self, YES);
+    if (![state.inputs containsObject:ours]) [state.inputs addObject:ours];
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, input);
+}
+static void OrbitSession_removeInput(AVCaptureSession *self, SEL _cmd, AVCaptureInput *input) {
+  OrbitCaptureInput *ours = OrbitInputIfOurs(input);
+  if (ours) {
+    OrbitSessionState *state = OrbitStateForSession(self, NO);
+    [state.inputs removeObject:ours];
+    OrbitDisconnectInput(state, ours);
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, input);
+}
+static NSArray *OrbitSession_inputs(AVCaptureSession *self, SEL _cmd) {
+  NSArray *original = @[];
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) original = ((NSArray * (*)(id, SEL))imp)(self, _cmd) ?: @[];
+  OrbitSessionState *state = OrbitStateForSession(self, NO);
+  return state ? [state.inputs arrayByAddingObjectsFromArray:original] : original;
+}
+static BOOL OrbitSession_canAddOutput(AVCaptureSession *self, SEL _cmd, AVCaptureOutput *output) {
+  if (OrbitOutputWantsVideo(output)) return ![OrbitStateForSession(self, YES).outputs containsObject:output];
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  return imp ? ((BOOL (*)(id, SEL, id))imp)(self, _cmd, output) : NO;
+}
+static void OrbitSession_addOutput(AVCaptureSession *self, SEL _cmd, AVCaptureOutput *output) {
+  if (OrbitOutputWantsVideo(output)) {
+    OrbitSessionState *state = OrbitStateForSession(self, YES);
+    if (![state.outputs containsObject:output]) [state.outputs addObject:output];
+    OrbitConnectIfNeeded(self, state);
+    ORBIT_LOG(@"Session %p: added output %@", self, output);
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, output);
+}
+static void OrbitSession_addOutputWithNoConnections(AVCaptureSession *self, SEL _cmd, AVCaptureOutput *output) {
+  if (OrbitOutputWantsVideo(output)) {
+    OrbitSessionState *state = OrbitStateForSession(self, YES);
+    if (![state.outputs containsObject:output]) [state.outputs addObject:output];
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, output);
+}
+static void OrbitSession_removeOutput(AVCaptureSession *self, SEL _cmd, AVCaptureOutput *output) {
+  OrbitSessionState *state = OrbitStateForSession(self, NO);
+  if (state && [state.outputs containsObject:output]) {
+    [state.outputs removeObject:output];
+    OrbitConnection *c = [state connectionForOutput:output];
+    if (c) [state.connections removeObject:c];
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, output);
+}
+static NSArray *OrbitSession_outputs(AVCaptureSession *self, SEL _cmd) {
+  NSArray *original = @[];
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) original = ((NSArray * (*)(id, SEL))imp)(self, _cmd) ?: @[];
+  OrbitSessionState *state = OrbitStateForSession(self, NO);
+  return state ? [state.outputs arrayByAddingObjectsFromArray:original] : original;
+}
+static NSArray *OrbitSession_connections(AVCaptureSession *self, SEL _cmd) {
+  NSArray *original = @[];
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) original = ((NSArray * (*)(id, SEL))imp)(self, _cmd) ?: @[];
+  OrbitSessionState *state = OrbitStateForSession(self, NO);
+  return state ? [state.connections arrayByAddingObjectsFromArray:original] : original;
+}
+static BOOL OrbitSession_canAddConnection(AVCaptureSession *self, SEL _cmd, AVCaptureConnection *connection) {
+  if ([connection isKindOfClass:[OrbitConnection class]]) return YES;
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  return imp ? ((BOOL (*)(id, SEL, id))imp)(self, _cmd, connection) : NO;
+}
+static void OrbitSession_addConnection(AVCaptureSession *self, SEL _cmd, AVCaptureConnection *connection) {
+  if ([connection isKindOfClass:[OrbitConnection class]]) {
+    OrbitSessionState *state = OrbitStateForSession(self, YES);
+    if (![state.connections containsObject:(OrbitConnection *)connection]) [state.connections addObject:(OrbitConnection *)connection];
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, connection);
+}
+static void OrbitSession_removeConnection(AVCaptureSession *self, SEL _cmd, AVCaptureConnection *connection) {
+  if ([connection isKindOfClass:[OrbitConnection class]]) {
+    [OrbitStateForSession(self, NO).connections removeObject:(OrbitConnection *)connection];
+    return;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureSession class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, connection);
+}
+static BOOL OrbitSession_canSetSessionPreset(AVCaptureSession *self, SEL _cmd, NSString *preset) { return YES; }
+static NSString *OrbitSession_sessionPreset(AVCaptureSession *self, SEL _cmd) {
+  return OrbitStateForSession(self, YES).preset;
+}
+static void OrbitSession_setSessionPreset(AVCaptureSession *self, SEL _cmd, NSString *preset) {
+  OrbitStateForSession(self, YES).preset = preset ?: AVCaptureSessionPresetHigh;
+}
+static void OrbitSession_beginConfiguration(AVCaptureSession *self, SEL _cmd) {}
+static void OrbitSession_commitConfiguration(AVCaptureSession *self, SEL _cmd) {}
+static BOOL OrbitSession_isRunning(AVCaptureSession *self, SEL _cmd) {
+  return OrbitStateForSession(self, NO).running;
+}
+static BOOL OrbitSession_isInterrupted(AVCaptureSession *self, SEL _cmd) { return NO; }
+static void OrbitSession_startRunning(AVCaptureSession *self, SEL _cmd) {
+  OrbitSessionState *state = OrbitStateForSession(self, YES);
+  if (state.running) return;
+  state.running = YES;
+  ORBIT_LOG(@"Session %p: start running (%lu outputs, %lu connections)", self,
+            (unsigned long)state.outputs.count, (unsigned long)state.connections.count);
+  [[NSNotificationCenter defaultCenter] postNotificationName:AVCaptureSessionDidStartRunningNotification object:self];
+}
+static void OrbitSession_stopRunning(AVCaptureSession *self, SEL _cmd) {
+  OrbitSessionState *state = OrbitStateForSession(self, NO);
+  if (!state || !state.running) return;
+  state.running = NO;
+  [[NSNotificationCenter defaultCenter] postNotificationName:AVCaptureSessionDidStopRunningNotification object:self];
+}
+static BOOL OrbitSession_automaticallyConfiguresCaptureDeviceForWideColor(AVCaptureSession *self, SEL _cmd) { return NO; }
+static void OrbitSession_setAutomaticallyConfiguresCaptureDeviceForWideColor(AVCaptureSession *self, SEL _cmd, BOOL v) {}
+static BOOL OrbitSession_isMultitaskingCameraAccessSupported(AVCaptureSession *self, SEL _cmd) { return NO; }
+static CMClockRef OrbitSession_synchronizationClock(AVCaptureSession *self, SEL _cmd) { return CMClockGetHostTimeClock(); }
+static BOOL OrbitSession_supportsHardwareCost(AVCaptureSession *self, SEL _cmd) { return NO; }
+static float OrbitSession_hardwareCost(AVCaptureSession *self, SEL _cmd) { return 0; }
+
+#pragma mark - Output state
+
+@interface OrbitOutputState : NSObject
+@property (nonatomic, weak) id delegate;
+@property (nonatomic, strong) dispatch_queue_t queue;
+@property (nonatomic, copy) NSArray *metadataObjectTypes;
+@property (nonatomic) CGRect rectOfInterest;
+@property (nonatomic) BOOL inFlight;
+@property (nonatomic) NSUInteger tickCount;
+// Movie recording
+@property (nonatomic, strong) AVAssetWriter *writer;
+@property (nonatomic, strong) AVAssetWriterInput *writerInput;
+@property (nonatomic, strong) AVAssetWriterInputPixelBufferAdaptor *adaptor;
+@property (nonatomic, strong) NSURL *recordingURL;
+@property (nonatomic, weak) id recordingDelegate;
+@property (nonatomic) CMTime recordingStart;
+@property (nonatomic) CMTime recordedDuration;
+@property (nonatomic) BOOL recordingPaused;
+@property (nonatomic) int64_t recordedFrames;
+@end
+@implementation OrbitOutputState
+- (instancetype)init {
+  if ((self = [super init])) _rectOfInterest = CGRectMake(0, 0, 1, 1);
+  return self;
+}
+@end
+
+static OrbitOutputState *OrbitStateForOutput(AVCaptureOutput *output) {
+  OrbitOutputState *state = objc_getAssociatedObject(output, kOrbitOutputStateKey);
+  if (!state) {
+    state = [OrbitOutputState new];
+    objc_setAssociatedObject(output, kOrbitOutputStateKey, state, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  }
+  return state;
+}
+
+static OrbitSessionState *OrbitSessionStateForOutput(AVCaptureOutput *output, AVCaptureSession **sessionOut) {
+  [sSessionsLock lock];
+  NSArray *sessions = sSessions.allObjects;
+  [sSessionsLock unlock];
+  for (AVCaptureSession *session in sessions) {
+    OrbitSessionState *state = OrbitStateForSession(session, NO);
+    if ([state.outputs containsObject:output]) {
+      if (sessionOut) *sessionOut = session;
+      return state;
+    }
+  }
+  return nil;
+}
+
+// AVCaptureOutput
+static NSArray *OrbitOutput_connections(AVCaptureOutput *self, SEL _cmd) {
+  OrbitSessionState *state = OrbitSessionStateForOutput(self, NULL);
+  OrbitConnection *c = [state connectionForOutput:self];
+  if (c) return @[ c ];
+  IMP imp = OrbitOriginalIMP([AVCaptureOutput class], _cmd, NO);
+  return imp ? ((NSArray * (*)(id, SEL))imp)(self, _cmd) : @[];
+}
+static AVCaptureConnection *OrbitOutput_connectionWithMediaType(AVCaptureOutput *self, SEL _cmd, NSString *mediaType) {
+  if (OrbitIsVideoMediaType(mediaType)) {
+    OrbitConnection *c = [OrbitSessionStateForOutput(self, NULL) connectionForOutput:self];
+    if (c) return c;
+  }
+  IMP imp = OrbitOriginalIMP([AVCaptureOutput class], _cmd, NO);
+  return imp ? ((id (*)(id, SEL, id))imp)(self, _cmd, mediaType) : nil;
+}
+static CGRect OrbitOutput_metadataOutputRectOfInterestForRect(AVCaptureOutput *self, SEL _cmd, CGRect rect) {
+  // Output coordinates are normalized with the origin at the top left of the unrotated
+  // frame; this maps a normalized rect of interest as-is, which is right for a connection
+  // without rotation and close enough for previews.
+  return rect;
+}
+static CGRect OrbitOutput_rectForMetadataOutputRectOfInterest(AVCaptureOutput *self, SEL _cmd, CGRect rect) {
+  return rect;
+}
+static AVMetadataObject *OrbitOutput_transformedMetadataObject(AVCaptureOutput *self, SEL _cmd, AVMetadataObject *object, AVCaptureConnection *connection) {
+  return object;
+}
+
+#pragma mark - Video data output
+
+static void OrbitVideoData_setSampleBufferDelegate(AVCaptureVideoDataOutput *self, SEL _cmd, id delegate, dispatch_queue_t queue) {
+  OrbitOutputState *state = OrbitStateForOutput(self);
+  state.delegate = delegate;
+  state.queue = queue;
+  IMP imp = OrbitOriginalIMP([AVCaptureVideoDataOutput class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id, id))imp)(self, _cmd, delegate, queue);
+}
+static NSArray *OrbitVideoData_availableVideoCVPixelFormatTypes(id self, SEL _cmd) {
+  return @[ @(kCVPixelFormatType_32BGRA), @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
+            @(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange) ];
+}
+static NSArray *OrbitVideoData_availableVideoCodecTypes(id self, SEL _cmd) { return @[ AVVideoCodecTypeH264 ]; }
+static NSDictionary *OrbitVideoData_recommendedVideoSettings(id self, SEL _cmd, NSString *fileType) {
+  return @{
+    AVVideoCodecKey : AVVideoCodecTypeH264, AVVideoWidthKey : @1080, AVVideoHeightKey : @1920,
+  };
+}
+static NSDictionary *OrbitVideoData_recommendedVideoSettingsForCodec(id self, SEL _cmd, NSString *codec, NSString *fileType) {
+  return @{ AVVideoCodecKey : codec ?: AVVideoCodecTypeH264, AVVideoWidthKey : @1080, AVVideoHeightKey : @1920 };
+}
+
+#pragma mark - Photo output
+
+@interface OrbitResolvedPhotoSettings : AVCaptureResolvedPhotoSettings
+@property (nonatomic) int64_t orbitUniqueID;
+@property (nonatomic) CMVideoDimensions orbitDimensions;
+@end
+@implementation OrbitResolvedPhotoSettings
+- (instancetype)init { return self; }
+- (int64_t)uniqueID { return _orbitUniqueID; }
+- (CMVideoDimensions)photoDimensions { return _orbitDimensions; }
+- (CMVideoDimensions)rawPhotoDimensions { return (CMVideoDimensions){ 0, 0 }; }
+- (CMVideoDimensions)previewDimensions { return _orbitDimensions; }
+- (CMVideoDimensions)embeddedThumbnailDimensions { return (CMVideoDimensions){ 0, 0 }; }
+- (CMVideoDimensions)portraitEffectsMatteDimensions { return (CMVideoDimensions){ 0, 0 }; }
+- (CMVideoDimensions)livePhotoMovieDimensions { return (CMVideoDimensions){ 0, 0 }; }
+- (BOOL)isFlashEnabled { return NO; }
+- (BOOL)isRedEyeReductionEnabled { return NO; }
+- (BOOL)isStillImageStabilizationEnabled { return NO; }
+- (BOOL)isDualCameraFusionEnabled { return NO; }
+- (BOOL)isContentAwareDistortionCorrectionEnabled { return NO; }
+- (BOOL)isFastCapturePrioritizationEnabled { return NO; }
+- (NSUInteger)expectedPhotoCount { return 1; }
+- (CMTimeRange)photoProcessingTimeRange { return kCMTimeRangeZero; }
+- (AVCaptureDeviceType)deviceType { return AVCaptureDeviceTypeBuiltInWideAngleCamera; }
+@end
+
+@interface OrbitCapturePhoto : AVCapturePhoto
+@property (nonatomic) CVPixelBufferRef orbitPixelBuffer;
+@property (nonatomic, strong) OrbitResolvedPhotoSettings *orbitSettings;
+@property (nonatomic, strong) NSData *orbitJPEG;
+@property (nonatomic) CMTime orbitTimestamp;
+@property (nonatomic) CGFloat orbitRotationAngle;
+@end
+@implementation OrbitCapturePhoto
+- (instancetype)init { return self; }
+- (void)dealloc {
+  if (_orbitPixelBuffer) CVBufferRelease(_orbitPixelBuffer);
+}
+- (CMTime)timestamp { return _orbitTimestamp; }
+- (BOOL)isRawPhoto { return NO; }
+- (CVPixelBufferRef)pixelBuffer { return _orbitPixelBuffer; }
+- (CVPixelBufferRef)previewPixelBuffer { return _orbitPixelBuffer; }
+- (NSDictionary *)embeddedThumbnailPhotoFormat { return nil; }
+- (AVDepthData *)depthData { return nil; }
+- (AVPortraitEffectsMatte *)portraitEffectsMatte { return nil; }
+- (NSDictionary<NSString *, id> *)metadata {
+  return @{
+    (id)kCGImagePropertyPixelWidth : @(CVPixelBufferGetWidth(_orbitPixelBuffer)),
+    (id)kCGImagePropertyPixelHeight : @(CVPixelBufferGetHeight(_orbitPixelBuffer)),
+    (id)kCGImagePropertyOrientation : @(kCGImagePropertyOrientationUp),
+    (id)kCGImagePropertyExifDictionary : @{ (id)kCGImagePropertyExifLensModel : @"Orbit Virtual Camera" },
+  };
+}
+- (AVCameraCalibrationData *)cameraCalibrationData { return nil; }
+- (AVCaptureResolvedPhotoSettings *)resolvedSettings { return _orbitSettings; }
+- (NSInteger)photoCount { return 1; }
+- (AVCaptureDeviceType)sourceDeviceType { return AVCaptureDeviceTypeBuiltInWideAngleCamera; }
+- (NSData *)fileDataRepresentation {
+  if (!_orbitJPEG) {
+    CGImageRef image = OrbitCreateCGImage(_orbitPixelBuffer);
+    if (image) {
+      _orbitJPEG = UIImageJPEGRepresentation([UIImage imageWithCGImage:image], 0.9);
+      CGImageRelease(image);
+    }
+  }
+  return _orbitJPEG;
+}
+- (NSData *)fileDataRepresentationWithCustomizer:(id)customizer { return [self fileDataRepresentation]; }
+- (NSData *)fileDataRepresentationWithReplacementMetadata:(NSDictionary *)m replacementEmbeddedThumbnailPhotoFormat:(NSDictionary *)f replacementEmbeddedThumbnailPixelBuffer:(CVPixelBufferRef)p replacementDepthData:(AVDepthData *)d {
+  return [self fileDataRepresentation];
+}
+- (CGImageRef)CGImageRepresentation { return (CGImageRef)CFAutorelease(OrbitCreateCGImage(_orbitPixelBuffer)); }
+- (CGImageRef)previewCGImageRepresentation { return [self CGImageRepresentation]; }
+- (NSArray *)semanticSegmentationMatteTypes { return @[]; }
+- (id)semanticSegmentationMatteForType:(NSString *)type { return nil; }
+- (float)constantColorCenterWeightedMeanConfidenceLevel { return 0; }
+- (BOOL)isConstantColorFallbackPhoto { return NO; }
+@end
+
+static int64_t sPhotoUniqueID = 1;
+
+static void OrbitPhoto_capturePhotoWithSettings(AVCapturePhotoOutput *self, SEL _cmd, AVCapturePhotoSettings *settings,
+                                                id<AVCapturePhotoCaptureDelegate> delegate) {
+  AVCaptureSession *session = nil;
+  OrbitSessionState *sessionState = OrbitSessionStateForOutput(self, &session);
+  OrbitConnection *connection = [sessionState connectionForOutput:self];
+  AVCaptureDevicePosition position = connection ? connection.orbitPosition : AVCaptureDevicePositionBack;
+  CGFloat angle = connection ? connection.orbitRotationAngle : kOrbitDefaultRotationAngle;
+  BOOL mirrored = connection ? connection.orbitMirrored : NO;
+
+  OrbitResolvedPhotoSettings *resolved = [OrbitResolvedPhotoSettings alloc];
+  resolved.orbitUniqueID = settings ? settings.uniqueID : sPhotoUniqueID++;
+
+  extern CVPixelBufferRef OrbitCurrentFrameForPosition(AVCaptureDevicePosition position, BOOL *sourceMirrored);
+  BOOL sourceMirrored = NO;
+  CVPixelBufferRef source = OrbitCurrentFrameForPosition(position, &sourceMirrored);
+  CVPixelBufferRef oriented = OrbitCreateOrientedFrame(source, angle, mirrored && !sourceMirrored);
+  if (source) CVBufferRelease(source);
+  resolved.orbitDimensions = (CMVideoDimensions){ (int32_t)CVPixelBufferGetWidth(oriented), (int32_t)CVPixelBufferGetHeight(oriented) };
+
+  OrbitCapturePhoto *photo = [OrbitCapturePhoto alloc];
+  photo.orbitPixelBuffer = oriented;  // Retained; released in dealloc.
+  photo.orbitSettings = resolved;
+  photo.orbitTimestamp = CMClockGetTime(CMClockGetHostTimeClock());
+  photo.orbitRotationAngle = angle;
+
+  // AVFoundation calls the delegate on an internal queue, in this order.
+  dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+    if ([delegate respondsToSelector:@selector(captureOutput:willBeginCaptureForResolvedSettings:)]) {
+      [delegate captureOutput:self willBeginCaptureForResolvedSettings:resolved];
+    }
+    if ([delegate respondsToSelector:@selector(captureOutput:willCapturePhotoForResolvedSettings:)]) {
+      [delegate captureOutput:self willCapturePhotoForResolvedSettings:resolved];
+    }
+    if ([delegate respondsToSelector:@selector(captureOutput:didCapturePhotoForResolvedSettings:)]) {
+      [delegate captureOutput:self didCapturePhotoForResolvedSettings:resolved];
+    }
+    if ([delegate respondsToSelector:@selector(captureOutput:didFinishProcessingPhoto:error:)]) {
+      [delegate captureOutput:self didFinishProcessingPhoto:photo error:nil];
+    }
+    if ([delegate respondsToSelector:@selector(captureOutput:didFinishCaptureForResolvedSettings:error:)]) {
+      [delegate captureOutput:self didFinishCaptureForResolvedSettings:resolved error:nil];
+    }
+  });
+}
+static NSArray *OrbitPhoto_availablePhotoCodecTypes(id self, SEL _cmd) { return @[ AVVideoCodecTypeJPEG ]; }
+static NSArray *OrbitPhoto_availablePhotoPixelFormatTypes(id self, SEL _cmd) { return @[ @(kCVPixelFormatType_32BGRA) ]; }
+static NSArray *OrbitPhoto_availableRawPhotoPixelFormatTypes(id self, SEL _cmd) { return @[]; }
+static NSArray *OrbitPhoto_availablePhotoFileTypes(id self, SEL _cmd) { return @[ AVFileTypeJPEG ]; }
+static NSArray *OrbitPhoto_supportedPhotoCodecTypesForFileType(id self, SEL _cmd, NSString *fileType) { return @[ AVVideoCodecTypeJPEG ]; }
+static NSArray *OrbitPhoto_supportedPhotoPixelFormatTypesForFileType(id self, SEL _cmd, NSString *fileType) { return @[ @(kCVPixelFormatType_32BGRA) ]; }
+static NSArray *OrbitPhoto_supportedFlashModes(id self, SEL _cmd) { return @[ @(AVCaptureFlashModeOff) ]; }
+static BOOL OrbitPhoto_no(id self, SEL _cmd) { return NO; }
+static BOOL OrbitPhoto_yes(id self, SEL _cmd) { return YES; }
+static void OrbitPhoto_setBool(id self, SEL _cmd, BOOL v) {}
+static CMVideoDimensions OrbitPhoto_maxPhotoDimensions(id self, SEL _cmd) { return (CMVideoDimensions){ 1920, 1080 }; }
+static void OrbitPhoto_setMaxPhotoDimensions(id self, SEL _cmd, CMVideoDimensions d) {}
+static NSInteger OrbitPhoto_maxPhotoQualityPrioritization(id self, SEL _cmd) { return 3; }
+static void OrbitPhoto_setMaxPhotoQualityPrioritization(id self, SEL _cmd, NSInteger p) {}
+static NSArray *OrbitPhoto_preparedPhotoSettingsArray(id self, SEL _cmd) { return @[]; }
+static void OrbitPhoto_setPreparedPhotoSettingsArray(id self, SEL _cmd, NSArray *a, void (^handler)(BOOL, NSError *)) {
+  if (handler) handler(YES, nil);
+}
+static NSInteger OrbitPhoto_captureReadiness(id self, SEL _cmd) { return 1; }  // AVCapturePhotoOutputCaptureReadinessReady
+
+#pragma mark - Metadata output
+
+static NSArray<AVMetadataObjectType> *OrbitSupportedMetadataTypes(void) {
+  return @[ AVMetadataObjectTypeQRCode ];
+}
+static NSArray *OrbitMetadata_availableMetadataObjectTypes(id self, SEL _cmd) { return OrbitSupportedMetadataTypes(); }
+static NSArray *OrbitMetadata_metadataObjectTypes(AVCaptureMetadataOutput *self, SEL _cmd) {
+  return OrbitStateForOutput(self).metadataObjectTypes ?: @[];
+}
+static void OrbitMetadata_setMetadataObjectTypes(AVCaptureMetadataOutput *self, SEL _cmd, NSArray *types) {
+  // Other symbologies are accepted so apps that request a list do not throw; only QR codes
+  // are detected (CIDetector supports QR only).
+  OrbitStateForOutput(self).metadataObjectTypes = types;
+}
+static void OrbitMetadata_setMetadataObjectsDelegate(AVCaptureMetadataOutput *self, SEL _cmd, id delegate, dispatch_queue_t queue) {
+  OrbitOutputState *state = OrbitStateForOutput(self);
+  state.delegate = delegate;
+  state.queue = queue;
+}
+static id OrbitMetadata_metadataObjectsDelegate(AVCaptureMetadataOutput *self, SEL _cmd) { return OrbitStateForOutput(self).delegate; }
+static dispatch_queue_t OrbitMetadata_metadataObjectsCallbackQueue(AVCaptureMetadataOutput *self, SEL _cmd) { return OrbitStateForOutput(self).queue; }
+static CGRect OrbitMetadata_rectOfInterest(AVCaptureMetadataOutput *self, SEL _cmd) { return OrbitStateForOutput(self).rectOfInterest; }
+static void OrbitMetadata_setRectOfInterest(AVCaptureMetadataOutput *self, SEL _cmd, CGRect rect) { OrbitStateForOutput(self).rectOfInterest = rect; }
+
+@interface OrbitMetadataObject : AVMetadataMachineReadableCodeObject
+@property (nonatomic, copy) NSString *orbitType;
+@property (nonatomic, copy) NSString *orbitValue;
+@property (nonatomic) CGRect orbitBounds;
+@property (nonatomic, copy) NSArray *orbitCorners;
+@property (nonatomic) CMTime orbitTime;
+@end
+@implementation OrbitMetadataObject
+- (instancetype)init { return self; }
+- (AVMetadataObjectType)type { return _orbitType; }
+- (NSString *)stringValue { return _orbitValue; }
+- (CGRect)bounds { return _orbitBounds; }
+- (NSArray *)corners { return _orbitCorners; }
+- (CMTime)time { return _orbitTime; }
+- (CMTime)duration { return kCMTimeInvalid; }
+- (id)descriptor { return nil; }
+- (NSString *)description {
+  return [NSString stringWithFormat:@"<OrbitMetadataObject %@ %@ %@>", _orbitType, _orbitValue, NSStringFromCGRect(_orbitBounds)];
+}
+@end
+
+// Normalized point in a rotated frame → normalized point in the unrotated (sensor) frame.
+static NSArray<OrbitMetadataObject *> *OrbitDetectCodes(CVPixelBufferRef frame, CGFloat angle, BOOL mirrored) {
+  static CIDetector *detector;
+  static CIContext *context;
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    context = [CIContext contextWithOptions:@{ kCIContextUseSoftwareRenderer : @YES }];
+    detector = [CIDetector detectorOfType:CIDetectorTypeQRCode context:context options:@{ CIDetectorAccuracy : CIDetectorAccuracyHigh }];
+  });
+  if (!frame || !detector) return @[];
+  CIImage *image = [CIImage imageWithCVPixelBuffer:frame];
+  CGFloat width = CVPixelBufferGetWidth(frame), height = CVPixelBufferGetHeight(frame);
+  NSMutableArray *objects = [NSMutableArray new];
+  CMTime now = CMClockGetTime(CMClockGetHostTimeClock());
+  for (CIFeature *feature in [detector featuresInImage:image]) {
+    if (![feature isKindOfClass:[CIQRCodeFeature class]]) continue;
+    CIQRCodeFeature *qr = (CIQRCodeFeature *)feature;
+    if (!qr.messageString) continue;
+    // CoreImage's origin is bottom-left; AVFoundation's bounds are normalized, top-left.
+    CGRect b = qr.bounds;
+    CGRect bounds = CGRectMake(b.origin.x / width, 1 - (b.origin.y + b.size.height) / height,
+                               b.size.width / width, b.size.height / height);
+    OrbitMetadataObject *object = [OrbitMetadataObject alloc];
+    object.orbitType = AVMetadataObjectTypeQRCode;
+    object.orbitValue = qr.messageString;
+    object.orbitBounds = bounds;
+    object.orbitTime = now;
+    CGPoint corners[4] = { qr.topLeft, qr.topRight, qr.bottomRight, qr.bottomLeft };
+    NSMutableArray *points = [NSMutableArray new];
+    for (int i = 0; i < 4; i++) {
+      [points addObject:@{ @"X" : @(corners[i].x / width), @"Y" : @(1 - corners[i].y / height) }];
+    }
+    object.orbitCorners = points;
+    [objects addObject:object];
+  }
+  return objects;
+}
+
+#pragma mark - Movie file output
+
+static BOOL OrbitMovie_isRecording(AVCaptureMovieFileOutput *self, SEL _cmd) { return OrbitStateForOutput(self).writer != nil; }
+static BOOL OrbitMovie_isRecordingPaused(AVCaptureMovieFileOutput *self, SEL _cmd) { return OrbitStateForOutput(self).recordingPaused; }
+static CMTime OrbitMovie_recordedDuration(AVCaptureMovieFileOutput *self, SEL _cmd) { return OrbitStateForOutput(self).recordedDuration; }
+static int64_t OrbitMovie_recordedFileSize(AVCaptureMovieFileOutput *self, SEL _cmd) {
+  OrbitOutputState *state = OrbitStateForOutput(self);
+  if (!state.recordingURL) return 0;
+  return [[[NSFileManager defaultManager] attributesOfItemAtPath:state.recordingURL.path error:nil] fileSize];
+}
+static NSArray *OrbitMovie_availableVideoCodecTypes(id self, SEL _cmd) { return @[ AVVideoCodecTypeH264 ]; }
+static NSArray *OrbitMovie_supportedOutputSettingsKeysForConnection(id self, SEL _cmd, id c) { return @[ AVVideoCodecKey ]; }
+static NSDictionary *OrbitMovie_outputSettingsForConnection(id self, SEL _cmd, id c) { return @{ AVVideoCodecKey : AVVideoCodecTypeH264 }; }
+static void OrbitMovie_setOutputSettings(id self, SEL _cmd, NSDictionary *s, id c) {}
+
+static void OrbitMovie_startRecording(AVCaptureMovieFileOutput *self, SEL _cmd, NSURL *url, id<AVCaptureFileOutputRecordingDelegate> delegate) {
+  OrbitOutputState *state = OrbitStateForOutput(self);
+  if (state.writer) return;
+  [[NSFileManager defaultManager] removeItemAtURL:url error:nil];
+  NSError *error = nil;
+  AVAssetWriter *writer = [AVAssetWriter assetWriterWithURL:url fileType:AVFileTypeQuickTimeMovie error:&error];
+  if (!writer) {
+    ORBIT_LOG(@"Cannot start recording: %@", error);
+    return;
+  }
+  OrbitConnection *connection = [OrbitSessionStateForOutput(self, NULL) connectionForOutput:self];
+  BOOL portrait = connection ? ((int)lround(connection.orbitRotationAngle) % 180) == 90 : YES;
+  NSDictionary *settings = @{
+    AVVideoCodecKey : AVVideoCodecTypeH264,
+    AVVideoWidthKey : @(portrait ? 1080 : 1920), AVVideoHeightKey : @(portrait ? 1920 : 1080),
+  };
+  AVAssetWriterInput *input = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:settings];
+  input.expectsMediaDataInRealTime = YES;
+  AVAssetWriterInputPixelBufferAdaptor *adaptor =
+      [AVAssetWriterInputPixelBufferAdaptor assetWriterInputPixelBufferAdaptorWithAssetWriterInput:input
+          sourcePixelBufferAttributes:@{ (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) }];
+  [writer addInput:input];
+  [writer startWriting];
+  state.writer = writer;
+  state.writerInput = input;
+  state.adaptor = adaptor;
+  state.recordingURL = url;
+  state.recordingDelegate = delegate;
+  state.recordingStart = kCMTimeInvalid;
+  state.recordedDuration = kCMTimeZero;
+  state.recordedFrames = 0;
+  state.recordingPaused = NO;
+  NSArray *connections = connection ? @[ connection ] : @[];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if ([delegate respondsToSelector:@selector(captureOutput:didStartRecordingToOutputFileAtURL:fromConnections:)]) {
+      [delegate captureOutput:self didStartRecordingToOutputFileAtURL:url fromConnections:connections];
+    }
+  });
+}
+static void OrbitMovie_stopRecording(AVCaptureMovieFileOutput *self, SEL _cmd) {
+  OrbitOutputState *state = OrbitStateForOutput(self);
+  AVAssetWriter *writer = state.writer;
+  if (!writer) return;
+  AVAssetWriterInput *input = state.writerInput;
+  NSURL *url = state.recordingURL;
+  id<AVCaptureFileOutputRecordingDelegate> delegate = state.recordingDelegate;
+  OrbitConnection *connection = [OrbitSessionStateForOutput(self, NULL) connectionForOutput:self];
+  NSArray *connections = connection ? @[ connection ] : @[];
+  state.writer = nil;
+  state.writerInput = nil;
+  state.adaptor = nil;
+  [input markAsFinished];
+  [writer finishWritingWithCompletionHandler:^{
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if ([delegate respondsToSelector:@selector(captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:)]) {
+        [delegate captureOutput:self didFinishRecordingToOutputFileAtURL:url fromConnections:connections error:writer.error];
+      }
+    });
+  }];
+}
+static void OrbitMovie_pauseRecording(AVCaptureMovieFileOutput *self, SEL _cmd) { OrbitStateForOutput(self).recordingPaused = YES; }
+static void OrbitMovie_resumeRecording(AVCaptureMovieFileOutput *self, SEL _cmd) { OrbitStateForOutput(self).recordingPaused = NO; }
+
+static void OrbitMovieAppendFrame(AVCaptureMovieFileOutput *output, OrbitOutputState *state, CVPixelBufferRef frame) {
+  if (!state.writer || state.recordingPaused || !state.writerInput.readyForMoreMediaData) return;
+  CMTime now = CMClockGetTime(CMClockGetHostTimeClock());
+  if (!CMTIME_IS_VALID(state.recordingStart)) {
+    state.recordingStart = now;
+    [state.writer startSessionAtSourceTime:now];
+  }
+  if ([state.adaptor appendPixelBuffer:frame withPresentationTime:now]) {
+    state.recordedFrames++;
+    state.recordedDuration = CMTimeSubtract(now, state.recordingStart);
+  }
+}
+
+#pragma mark - Preview layer
+
+@interface OrbitPreviewState : NSObject
+@property (nonatomic, weak) AVCaptureSession *session;
+@property (nonatomic, strong) AVSampleBufferDisplayLayer *displayLayer;
+@property (nonatomic) BOOL withoutConnection;
+@end
+@implementation OrbitPreviewState
+@end
+
+static OrbitPreviewState *OrbitStateForPreview(AVCaptureVideoPreviewLayer *layer, BOOL create) {
+  OrbitPreviewState *state = objc_getAssociatedObject(layer, kOrbitPreviewStateKey);
+  if (!state && create) {
+    state = [OrbitPreviewState new];
+    objc_setAssociatedObject(layer, kOrbitPreviewStateKey, state, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  }
+  return state;
+}
+
+static void OrbitPreviewAttach(AVCaptureVideoPreviewLayer *layer, AVCaptureSession *session, BOOL withoutConnection) {
+  OrbitPreviewState *state = OrbitStateForPreview(layer, YES);
+  if (state.session && state.session != session) {
+    OrbitSessionState *old = OrbitStateForSession(state.session, NO);
+    [old.previewLayers removeObject:layer];
+    OrbitConnection *c = [old connectionForPreviewLayer:layer];
+    if (c) [old.connections removeObject:c];
+  }
+  state.session = session;
+  state.withoutConnection = withoutConnection;
+  if (!state.displayLayer) {
+    AVSampleBufferDisplayLayer *display = [AVSampleBufferDisplayLayer layer];
+    display.videoGravity = layer.videoGravity ?: AVLayerVideoGravityResizeAspectFill;
+    display.frame = layer.bounds;
+    [layer addSublayer:display];
+    state.displayLayer = display;
+  }
+  if (session) {
+    OrbitSessionState *sessionState = OrbitStateForSession(session, YES);
+    [sessionState.previewLayers addObject:layer];
+    if (!withoutConnection) OrbitConnectIfNeeded(session, sessionState);
+  }
+}
+
+// The original initializers and setters connect the layer to the session's inputs through
+// AVFoundation's internals, which cannot handle the virtual input. The layer is created
+// without a session and the connection is kept here instead.
+static AVCaptureVideoPreviewLayer *OrbitPreviewInitBare(AVCaptureVideoPreviewLayer *self) {
+  // The initializers chain into each other (init → initWithSession: → the no-connection
+  // one); the no-connection initializer with a nil session sets the layer up and connects
+  // nothing. The guard covers a chain that comes back through a swizzled initializer.
+  static __thread BOOL inBareInit = NO;
+  if (inBareInit) {
+    IMP layerInit = class_getMethodImplementation([CALayer class], @selector(init));
+    return ((id (*)(id, SEL))layerInit)(self, @selector(init));
+  }
+  inBareInit = YES;
+  SEL bare = @selector(initWithSessionWithNoConnection:);
+  IMP imp = OrbitOriginalIMP([AVCaptureVideoPreviewLayer class], bare, NO);
+  AVCaptureVideoPreviewLayer *layer = imp ? ((id (*)(id, SEL, id))imp)(self, bare, nil) : self;
+  inBareInit = NO;
+  return layer;
+}
+static id OrbitPreview_initWithSession(AVCaptureVideoPreviewLayer *self, SEL _cmd, AVCaptureSession *session) {
+  AVCaptureVideoPreviewLayer *layer = OrbitPreviewInitBare(self);
+  if (layer) OrbitPreviewAttach(layer, session, NO);
+  return layer;
+}
+static id OrbitPreview_initWithSessionWithNoConnection(AVCaptureVideoPreviewLayer *self, SEL _cmd, AVCaptureSession *session) {
+  AVCaptureVideoPreviewLayer *layer = OrbitPreviewInitBare(self);
+  if (layer) OrbitPreviewAttach(layer, session, YES);
+  return layer;
+}
+static id OrbitPreview_init(AVCaptureVideoPreviewLayer *self, SEL _cmd) {
+  AVCaptureVideoPreviewLayer *layer = OrbitPreviewInitBare(self);
+  if (layer) OrbitStateForPreview(layer, YES);
+  return layer;
+}
+static void OrbitPreview_setSession(AVCaptureVideoPreviewLayer *self, SEL _cmd, AVCaptureSession *session) {
+  OrbitPreviewAttach(self, session, NO);
+}
+static void OrbitPreview_setSessionWithNoConnection(AVCaptureVideoPreviewLayer *self, SEL _cmd, AVCaptureSession *session) {
+  OrbitPreviewAttach(self, session, YES);
+}
+static AVCaptureSession *OrbitPreview_session(AVCaptureVideoPreviewLayer *self, SEL _cmd) {
+  return OrbitStateForPreview(self, NO).session;
+}
+static AVCaptureConnection *OrbitPreview_connection(AVCaptureVideoPreviewLayer *self, SEL _cmd) {
+  OrbitPreviewState *state = OrbitStateForPreview(self, NO);
+  OrbitSessionState *sessionState = state.session ? OrbitStateForSession(state.session, NO) : nil;
+  return [sessionState connectionForPreviewLayer:self];
+}
+static void OrbitPreview_setVideoGravity(AVCaptureVideoPreviewLayer *self, SEL _cmd, NSString *gravity) {
+  IMP imp = OrbitOriginalIMP([AVCaptureVideoPreviewLayer class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, id))imp)(self, _cmd, gravity);
+  OrbitStateForPreview(self, NO).displayLayer.videoGravity = gravity ?: AVLayerVideoGravityResizeAspect;
+}
+static void OrbitPreview_layoutSublayers(AVCaptureVideoPreviewLayer *self, SEL _cmd) {
+  IMP imp = OrbitOriginalIMP([AVCaptureVideoPreviewLayer class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL))imp)(self, _cmd);
+  OrbitPreviewState *state = OrbitStateForPreview(self, NO);
+  if (state.displayLayer) {
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
+    state.displayLayer.frame = self.bounds;
+    [CATransaction commit];
+  }
+}
+static BOOL OrbitPreview_isPreviewing(AVCaptureVideoPreviewLayer *self, SEL _cmd) {
+  OrbitPreviewState *state = OrbitStateForPreview(self, NO);
+  return state.session ? OrbitStateForSession(state.session, NO).running : NO;
+}
+// Layer point ↔ normalized device point. The display layer shows the frame with the gravity
+// of the preview layer; these map through the rect the video occupies.
+static CGRect OrbitPreviewVideoRect(AVCaptureVideoPreviewLayer *layer) {
+  CGRect bounds = layer.bounds;
+  OrbitPreviewState *state = OrbitStateForPreview(layer, NO);
+  OrbitConnection *c = (OrbitConnection *)OrbitPreview_connection(layer, @selector(connection));
+  BOOL portrait = c ? ((int)lround(c.orbitRotationAngle) % 180) == 90 : YES;
+  CGFloat videoAspect = portrait ? 9.0 / 16.0 : 16.0 / 9.0;
+  if (!state.displayLayer || CGRectIsEmpty(bounds)) return bounds;
+  NSString *gravity = layer.videoGravity;
+  if ([gravity isEqualToString:AVLayerVideoGravityResize]) return bounds;
+  CGFloat boundsAspect = bounds.size.width / bounds.size.height;
+  BOOL fill = [gravity isEqualToString:AVLayerVideoGravityResizeAspectFill];
+  CGFloat w, h;
+  if ((videoAspect > boundsAspect) != fill) {
+    w = bounds.size.width;
+    h = w / videoAspect;
+  } else {
+    h = bounds.size.height;
+    w = h * videoAspect;
+  }
+  return CGRectMake(CGRectGetMidX(bounds) - w / 2, CGRectGetMidY(bounds) - h / 2, w, h);
+}
+static CGPoint OrbitPreview_captureDevicePointOfInterestForPoint(AVCaptureVideoPreviewLayer *self, SEL _cmd, CGPoint point) {
+  CGRect rect = OrbitPreviewVideoRect(self);
+  if (rect.size.width <= 0 || rect.size.height <= 0) return CGPointMake(0.5, 0.5);
+  return CGPointMake((point.x - rect.origin.x) / rect.size.width, (point.y - rect.origin.y) / rect.size.height);
+}
+static CGPoint OrbitPreview_pointForCaptureDevicePointOfInterest(AVCaptureVideoPreviewLayer *self, SEL _cmd, CGPoint point) {
+  CGRect rect = OrbitPreviewVideoRect(self);
+  return CGPointMake(rect.origin.x + point.x * rect.size.width, rect.origin.y + point.y * rect.size.height);
+}
+static CGRect OrbitPreview_metadataOutputRectOfInterestForRect(AVCaptureVideoPreviewLayer *self, SEL _cmd, CGRect rect) {
+  CGPoint origin = OrbitPreview_captureDevicePointOfInterestForPoint(self, _cmd, rect.origin);
+  CGPoint end = OrbitPreview_captureDevicePointOfInterestForPoint(self, _cmd, CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect)));
+  return CGRectMake(origin.x, origin.y, end.x - origin.x, end.y - origin.y);
+}
+static CGRect OrbitPreview_rectForMetadataOutputRectOfInterest(AVCaptureVideoPreviewLayer *self, SEL _cmd, CGRect rect) {
+  CGPoint origin = OrbitPreview_pointForCaptureDevicePointOfInterest(self, _cmd, rect.origin);
+  CGPoint end = OrbitPreview_pointForCaptureDevicePointOfInterest(self, _cmd, CGPointMake(CGRectGetMaxX(rect), CGRectGetMaxY(rect)));
+  return CGRectMake(origin.x, origin.y, end.x - origin.x, end.y - origin.y);
+}
+static AVMetadataObject *OrbitPreview_transformedMetadataObject(AVCaptureVideoPreviewLayer *self, SEL _cmd, AVMetadataObject *object) {
+  if (![object isKindOfClass:[OrbitMetadataObject class]]) return object;
+  OrbitMetadataObject *source = (OrbitMetadataObject *)object;
+  OrbitMetadataObject *result = [OrbitMetadataObject alloc];
+  result.orbitType = source.orbitType;
+  result.orbitValue = source.orbitValue;
+  result.orbitTime = source.orbitTime;
+  result.orbitBounds = OrbitPreview_rectForMetadataOutputRectOfInterest(self, _cmd, source.orbitBounds);
+  NSMutableArray *corners = [NSMutableArray new];
+  for (NSDictionary *corner in source.orbitCorners) {
+    CGPoint p = OrbitPreview_pointForCaptureDevicePointOfInterest(
+        self, _cmd, CGPointMake([corner[@"X"] doubleValue], [corner[@"Y"] doubleValue]));
+    [corners addObject:@{ @"X" : @(p.x), @"Y" : @(p.y) }];
+  }
+  result.orbitCorners = corners;
+  return result;
+}
+
+#pragma mark - Frame delivery
+
+static NSString *sFramesDirectory;
+static OrbitFrameReader *sFrontReader, *sBackReader;
+static CVPixelBufferRef sFrontPlaceholder, sBackPlaceholder;
+static dispatch_queue_t sTickQueue;
+static dispatch_source_t sTimer;
+
+CVPixelBufferRef OrbitCurrentFrameForPosition(AVCaptureDevicePosition position, BOOL *sourceMirrored) {
+  OrbitFrameReader *reader = position == AVCaptureDevicePositionFront ? sFrontReader : sBackReader;
+  CVPixelBufferRef frame = [reader copyCurrentFrame:sourceMirrored];
+  if (frame) return frame;
+  CVPixelBufferRef *placeholder = position == AVCaptureDevicePositionFront ? &sFrontPlaceholder : &sBackPlaceholder;
+  if (!*placeholder) *placeholder = OrbitCreatePlaceholderFrame(position);
+  if (sourceMirrored) *sourceMirrored = NO;
+  return *placeholder ? (CVPixelBufferRef)CFRetain(*placeholder) : NULL;
+}
+
+// A frame rotated for a connection, computed at most once per tick per orientation.
+@interface OrbitTickCache : NSObject
+@property (nonatomic, strong) NSMutableDictionary<NSString *, id> *buffers;
+@end
+@implementation OrbitTickCache
+@end
+
+static CVPixelBufferRef OrbitOrientedFrameForConnection(NSMutableDictionary *cache, OrbitConnection *connection) {
+  AVCaptureDevicePosition position = connection.orbitPosition;
+  NSString *sourceKey = position == AVCaptureDevicePositionFront ? @"front" : @"back";
+  NSNumber *mirroredFlag = cache[[sourceKey stringByAppendingString:@".mirrored"]];
+  CVPixelBufferRef source = (__bridge CVPixelBufferRef)cache[sourceKey];
+  if (!source) {
+    BOOL sourceMirrored = NO;
+    source = OrbitCurrentFrameForPosition(position, &sourceMirrored);
+    if (!source) return NULL;
+    cache[sourceKey] = (__bridge_transfer id)source;
+    mirroredFlag = @(sourceMirrored);
+    cache[[sourceKey stringByAppendingString:@".mirrored"]] = mirroredFlag;
+  }
+  BOOL mirror = connection.orbitMirrored && !mirroredFlag.boolValue;
+  NSString *key = [NSString stringWithFormat:@"%@.%.0f.%d", sourceKey, connection.orbitRotationAngle, mirror];
+  CVPixelBufferRef oriented = (__bridge CVPixelBufferRef)cache[key];
+  if (!oriented) {
+    oriented = OrbitCreateOrientedFrame(source, connection.orbitRotationAngle, mirror);
+    if (!oriented) return NULL;
+    cache[key] = (__bridge_transfer id)oriented;
+  }
+  return oriented;
+}
+
+static void OrbitDeliverFrames(void) {
+  [sSessionsLock lock];
+  NSArray *sessions = sSessions.allObjects;
+  [sSessionsLock unlock];
+  NSMutableDictionary *cache = [NSMutableDictionary new];
+  CMTime pts = CMClockGetTime(CMClockGetHostTimeClock());
+
+  for (AVCaptureSession *session in sessions) {
+    OrbitSessionState *state = OrbitStateForSession(session, NO);
+    if (!state.running || !state.videoInput) continue;
+    for (OrbitConnection *connection in [state.connections copy]) {
+      if (!connection.orbitEnabled) continue;
+      AVCaptureOutput *output = connection.orbitOutput;
+      AVCaptureVideoPreviewLayer *previewLayer = connection.orbitPreviewLayer;
+
+      if (previewLayer) {
+        OrbitPreviewState *preview = OrbitStateForPreview(previewLayer, NO);
+        AVSampleBufferDisplayLayer *display = preview.displayLayer;
+        if (!display || previewLayer.hidden) continue;
+        CVPixelBufferRef frame = OrbitOrientedFrameForConnection(cache, connection);
+        CMSampleBufferRef sample = OrbitCreateSampleBuffer(frame, pts);
+        if (sample) {
+          CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sample, true);
+          if (attachments && CFArrayGetCount(attachments) > 0) {
+            CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
+            CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
+          }
+          if (display.status == AVQueuedSampleBufferRenderingStatusFailed) [display flush];
+          if (display.isReadyForMoreMediaData) [display enqueueSampleBuffer:sample];
+          CFRelease(sample);
+        }
+        continue;
+      }
+      if (!output) continue;
+      OrbitOutputState *outputState = OrbitStateForOutput(output);
+      outputState.tickCount++;
+
+      if ([output isKindOfClass:[AVCaptureVideoDataOutput class]]) {
+        id<AVCaptureVideoDataOutputSampleBufferDelegate> delegate = outputState.delegate;
+        if (!delegate || !outputState.queue || outputState.inFlight) continue;
+        CVPixelBufferRef frame = OrbitOrientedFrameForConnection(cache, connection);
+        CMSampleBufferRef sample = OrbitCreateSampleBuffer(frame, pts);
+        if (!sample) continue;
+        outputState.inFlight = YES;
+        dispatch_async(outputState.queue, ^{
+          if ([delegate respondsToSelector:@selector(captureOutput:didOutputSampleBuffer:fromConnection:)]) {
+            [delegate captureOutput:output didOutputSampleBuffer:sample fromConnection:connection];
+          }
+          CFRelease(sample);
+          outputState.inFlight = NO;
+        });
+      } else if ([output isKindOfClass:[AVCaptureMetadataOutput class]]) {
+        // Detect about three times a second: enough for a scanner, cheap enough for the CPU.
+        if (outputState.tickCount % 10 != 0) continue;
+        id<AVCaptureMetadataOutputObjectsDelegate> delegate = outputState.delegate;
+        if (!delegate || !outputState.queue || outputState.inFlight) continue;
+        if (![outputState.metadataObjectTypes containsObject:AVMetadataObjectTypeQRCode]) continue;
+        CVPixelBufferRef frame = OrbitOrientedFrameForConnection(cache, connection);
+        if (!frame) continue;
+        CVBufferRetain(frame);
+        outputState.inFlight = YES;
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+          NSArray *objects = OrbitDetectCodes(frame, connection.orbitRotationAngle, connection.orbitMirrored);
+          CVBufferRelease(frame);
+          if (objects.count == 0) {
+            outputState.inFlight = NO;
+            return;
+          }
+          dispatch_async(outputState.queue, ^{
+            if ([delegate respondsToSelector:@selector(captureOutput:didOutputMetadataObjects:fromConnection:)]) {
+              [delegate captureOutput:output didOutputMetadataObjects:objects fromConnection:connection];
+            }
+            outputState.inFlight = NO;
+          });
+        });
+      } else if ([output isKindOfClass:[AVCaptureMovieFileOutput class]]) {
+        if (!outputState.writer) continue;
+        CVPixelBufferRef frame = OrbitOrientedFrameForConnection(cache, connection);
+        if (frame) OrbitMovieAppendFrame((AVCaptureMovieFileOutput *)output, outputState, frame);
+      }
+    }
+  }
+}
+
+static void OrbitStartFrameTimer(void) {
+  sTickQueue = dispatch_queue_create("dev.expo.orbit.simulator-camera.frames", DISPATCH_QUEUE_SERIAL);
+  sTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, sTickQueue);
+  dispatch_source_set_timer(sTimer, dispatch_time(DISPATCH_TIME_NOW, 0), NSEC_PER_SEC / kOrbitFrameRate, NSEC_PER_MSEC * 2);
+  dispatch_source_set_event_handler(sTimer, ^{
+    @autoreleasepool {
+      OrbitDeliverFrames();
+    }
+  });
+  dispatch_resume(sTimer);
+}
+
+#pragma mark - UIImagePickerController
+
+// A minimal camera UI for apps that use the system picker: the preview with Cancel and a
+// shutter button. Returns the frame as UIImagePickerControllerOriginalImage.
+@interface OrbitPickerCameraController : UIViewController
+@property (nonatomic, weak) UIImagePickerController *picker;
+@property (nonatomic, strong) AVSampleBufferDisplayLayer *displayLayer;
+@property (nonatomic, strong) dispatch_source_t timer;
+@property (nonatomic) AVCaptureDevicePosition position;
+@end
+@implementation OrbitPickerCameraController
+- (void)viewDidLoad {
+  [super viewDidLoad];
+  self.view.backgroundColor = [UIColor blackColor];
+  _displayLayer = [AVSampleBufferDisplayLayer layer];
+  _displayLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+  [self.view.layer addSublayer:_displayLayer];
+
+  UIButton *cancel = [UIButton buttonWithType:UIButtonTypeSystem];
+  [cancel setTitle:@"Cancel" forState:UIControlStateNormal];
+  cancel.tintColor = [UIColor whiteColor];
+  cancel.titleLabel.font = [UIFont systemFontOfSize:18];
+  [cancel addTarget:self action:@selector(cancel) forControlEvents:UIControlEventTouchUpInside];
+  cancel.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.view addSubview:cancel];
+
+  UIButton *shutter = [UIButton buttonWithType:UIButtonTypeCustom];
+  shutter.backgroundColor = [UIColor whiteColor];
+  shutter.layer.cornerRadius = 36;
+  shutter.layer.borderColor = [UIColor colorWithWhite:0.8 alpha:1].CGColor;
+  shutter.layer.borderWidth = 4;
+  [shutter addTarget:self action:@selector(capture) forControlEvents:UIControlEventTouchUpInside];
+  shutter.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.view addSubview:shutter];
+
+  UIButton *flip = [UIButton buttonWithType:UIButtonTypeSystem];
+  [flip setTitle:@"Flip" forState:UIControlStateNormal];
+  flip.tintColor = [UIColor whiteColor];
+  flip.titleLabel.font = [UIFont systemFontOfSize:18];
+  [flip addTarget:self action:@selector(flip) forControlEvents:UIControlEventTouchUpInside];
+  flip.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.view addSubview:flip];
+
+  UILayoutGuide *safe = self.view.safeAreaLayoutGuide;
+  [NSLayoutConstraint activateConstraints:@[
+    [cancel.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor constant:20],
+    [cancel.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor constant:-32],
+    [flip.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor constant:-20],
+    [flip.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor constant:-32],
+    [shutter.centerXAnchor constraintEqualToAnchor:safe.centerXAnchor],
+    [shutter.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor constant:-16],
+    [shutter.widthAnchor constraintEqualToConstant:72],
+    [shutter.heightAnchor constraintEqualToConstant:72],
+  ]];
+
+  _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+  dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, NSEC_PER_SEC / kOrbitFrameRate, NSEC_PER_MSEC * 2);
+  __weak typeof(self) weakSelf = self;
+  dispatch_source_set_event_handler(_timer, ^{ [weakSelf renderFrame]; });
+  dispatch_resume(_timer);
+}
+- (void)viewDidLayoutSubviews {
+  [super viewDidLayoutSubviews];
+  _displayLayer.frame = self.view.bounds;
+}
+- (CVPixelBufferRef)copyOrientedFrame {
+  BOOL sourceMirrored = NO;
+  CVPixelBufferRef source = OrbitCurrentFrameForPosition(_position, &sourceMirrored);
+  CVPixelBufferRef oriented = OrbitCreateOrientedFrame(source, 90, _position == AVCaptureDevicePositionFront && !sourceMirrored);
+  if (source) CVBufferRelease(source);
+  return oriented;
+}
+- (void)renderFrame {
+  CVPixelBufferRef frame = [self copyOrientedFrame];
+  CMSampleBufferRef sample = OrbitCreateSampleBuffer(frame, CMClockGetTime(CMClockGetHostTimeClock()));
+  if (frame) CVBufferRelease(frame);
+  if (!sample) return;
+  CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sample, true);
+  if (attachments && CFArrayGetCount(attachments) > 0) {
+    CFDictionarySetValue((CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0), kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
+  }
+  if (_displayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) [_displayLayer flush];
+  if (_displayLayer.isReadyForMoreMediaData) [_displayLayer enqueueSampleBuffer:sample];
+  CFRelease(sample);
+}
+- (void)dealloc {
+  if (_timer) dispatch_source_cancel(_timer);
+}
+- (void)cancel {
+  UIImagePickerController *picker = _picker;
+  id<UIImagePickerControllerDelegate> delegate = (id)picker.delegate;
+  if ([delegate respondsToSelector:@selector(imagePickerControllerDidCancel:)]) {
+    [delegate imagePickerControllerDidCancel:picker];
+  } else {
+    [picker.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  }
+}
+- (void)flip {
+  _position = _position == AVCaptureDevicePositionFront ? AVCaptureDevicePositionBack : AVCaptureDevicePositionFront;
+}
+- (void)capture {
+  CVPixelBufferRef frame = [self copyOrientedFrame];
+  CGImageRef cgImage = OrbitCreateCGImage(frame);
+  if (frame) CVBufferRelease(frame);
+  if (!cgImage) return;
+  UIImage *image = [UIImage imageWithCGImage:cgImage];
+  CGImageRelease(cgImage);
+  UIImagePickerController *picker = _picker;
+  id<UIImagePickerControllerDelegate> delegate = (id)picker.delegate;
+  NSDictionary *info = @{
+    UIImagePickerControllerOriginalImage : image,
+    UIImagePickerControllerMediaType : @"public.image",
+  };
+  if ([delegate respondsToSelector:@selector(imagePickerController:didFinishPickingMediaWithInfo:)]) {
+    [delegate imagePickerController:picker didFinishPickingMediaWithInfo:info];
+  } else {
+    [picker.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+  }
+}
+@end
+
+static BOOL OrbitPicker_isSourceTypeAvailable(id self, SEL _cmd, UIImagePickerControllerSourceType type) {
+  if (type == UIImagePickerControllerSourceTypeCamera) return YES;
+  IMP imp = OrbitOriginalIMP([UIImagePickerController class], _cmd, YES);
+  return imp ? ((BOOL (*)(id, SEL, UIImagePickerControllerSourceType))imp)(self, _cmd, type) : NO;
+}
+static BOOL OrbitPicker_isCameraDeviceAvailable(id self, SEL _cmd, UIImagePickerControllerCameraDevice device) { return YES; }
+static BOOL OrbitPicker_isFlashAvailableForCameraDevice(id self, SEL _cmd, UIImagePickerControllerCameraDevice device) { return NO; }
+static NSArray *OrbitPicker_availableMediaTypesForSourceType(id self, SEL _cmd, UIImagePickerControllerSourceType type) {
+  if (type == UIImagePickerControllerSourceTypeCamera) return @[ @"public.image" ];
+  IMP imp = OrbitOriginalIMP([UIImagePickerController class], _cmd, YES);
+  return imp ? ((NSArray * (*)(id, SEL, UIImagePickerControllerSourceType))imp)(self, _cmd, type) : nil;
+}
+static NSArray *OrbitPicker_availableCaptureModesForCameraDevice(id self, SEL _cmd, UIImagePickerControllerCameraDevice device) {
+  return @[ @(UIImagePickerControllerCameraCaptureModePhoto) ];
+}
+static void OrbitPicker_setSourceType(UIImagePickerController *self, SEL _cmd, UIImagePickerControllerSourceType type) {
+  if (type == UIImagePickerControllerSourceTypeCamera) {
+    objc_setAssociatedObject(self, kOrbitPickerStateKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    return;  // The original throws on a simulator: the camera source is unavailable there.
+  }
+  objc_setAssociatedObject(self, kOrbitPickerStateKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  IMP imp = OrbitOriginalIMP([UIImagePickerController class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL, UIImagePickerControllerSourceType))imp)(self, _cmd, type);
+}
+static UIImagePickerControllerSourceType OrbitPicker_sourceType(UIImagePickerController *self, SEL _cmd) {
+  if (objc_getAssociatedObject(self, kOrbitPickerStateKey)) return UIImagePickerControllerSourceTypeCamera;
+  IMP imp = OrbitOriginalIMP([UIImagePickerController class], _cmd, NO);
+  return imp ? ((UIImagePickerControllerSourceType (*)(id, SEL))imp)(self, _cmd) : UIImagePickerControllerSourceTypePhotoLibrary;
+}
+static void OrbitPicker_viewDidLoad(UIImagePickerController *self, SEL _cmd) {
+  IMP imp = OrbitOriginalIMP([UIImagePickerController class], _cmd, NO);
+  if (imp) ((void (*)(id, SEL))imp)(self, _cmd);
+  if (!objc_getAssociatedObject(self, kOrbitPickerStateKey)) return;
+  OrbitPickerCameraController *camera = [OrbitPickerCameraController new];
+  camera.picker = self;
+  camera.position = self.cameraDevice == UIImagePickerControllerCameraDeviceFront ? AVCaptureDevicePositionFront : AVCaptureDevicePositionBack;
+  [self setNavigationBarHidden:YES animated:NO];
+  [self setViewControllers:@[ camera ] animated:NO];
+}
+
+#pragma mark - Bootstrap
+
+static void OrbitInstallSwizzles(void) {
+  Class device = [AVCaptureDevice class];
+  SWIZZLE_CLASS(device, devices, OrbitDevice_devices, "@@:");
+  SWIZZLE_CLASS(device, devicesWithMediaType:, OrbitDevice_devicesWithMediaType, "@@:@");
+  SWIZZLE_CLASS(device, defaultDeviceWithMediaType:, OrbitDevice_defaultDeviceWithMediaType, "@@:@");
+  SWIZZLE_CLASS(device, defaultDeviceWithDeviceType:mediaType:position:, OrbitDevice_defaultDeviceWithDeviceType, "@@:@@q");
+  SWIZZLE_CLASS(device, devicesWithDeviceType:mediaType:position:, OrbitDevice_devicesWithDeviceType, "@@:@@q");
+  SWIZZLE_CLASS(device, deviceWithUniqueID:, OrbitDevice_deviceWithUniqueID, "@@:@");
+  SWIZZLE_CLASS(device, authorizationStatusForMediaType:, OrbitDevice_authorizationStatus, "q@:@");
+  SWIZZLE_CLASS(device, requestAccessForMediaType:completionHandler:, OrbitDevice_requestAccess, "v@:@@?");
+  SWIZZLE_CLASS(device, userPreferredCamera, OrbitDevice_userPreferredCamera, "@@:");
+  SWIZZLE_CLASS(device, setUserPreferredCamera:, OrbitDevice_setUserPreferredCamera, "v@:@");
+  SWIZZLE_CLASS(device, systemPreferredCamera, OrbitDevice_systemPreferredCamera, "@@:");
+  SWIZZLE_CLASS([AVCaptureDeviceDiscoverySession class], discoverySessionWithDeviceTypes:mediaType:position:, OrbitDiscovery_sessionWithDeviceTypes, "@@:@@q");
+  SWIZZLE_CLASS(NSClassFromString(@"AVCaptureMultiCamSession"), isMultiCamSupported, OrbitMultiCam_isSupported, "B@:");
+
+  Class deviceInput = [AVCaptureDeviceInput class];
+  SWIZZLE_CLASS(deviceInput, deviceInputWithDevice:error:, OrbitDeviceInput_deviceInputWithDevice, "@@:@^@");
+  SWIZZLE_INSTANCE(deviceInput, initWithDevice:error:, OrbitDeviceInput_initWithDevice, "@@:@^@");
+
+  Class session = [AVCaptureSession class];
+  SWIZZLE_INSTANCE(session, canAddInput:, OrbitSession_canAddInput, "B@:@");
+  SWIZZLE_INSTANCE(session, addInput:, OrbitSession_addInput, "v@:@");
+  SWIZZLE_INSTANCE(session, addInputWithNoConnections:, OrbitSession_addInputWithNoConnections, "v@:@");
+  SWIZZLE_INSTANCE(session, removeInput:, OrbitSession_removeInput, "v@:@");
+  SWIZZLE_INSTANCE(session, inputs, OrbitSession_inputs, "@@:");
+  SWIZZLE_INSTANCE(session, canAddOutput:, OrbitSession_canAddOutput, "B@:@");
+  SWIZZLE_INSTANCE(session, addOutput:, OrbitSession_addOutput, "v@:@");
+  SWIZZLE_INSTANCE(session, addOutputWithNoConnections:, OrbitSession_addOutputWithNoConnections, "v@:@");
+  SWIZZLE_INSTANCE(session, removeOutput:, OrbitSession_removeOutput, "v@:@");
+  SWIZZLE_INSTANCE(session, outputs, OrbitSession_outputs, "@@:");
+  SWIZZLE_INSTANCE(session, connections, OrbitSession_connections, "@@:");
+  SWIZZLE_INSTANCE(session, canAddConnection:, OrbitSession_canAddConnection, "B@:@");
+  SWIZZLE_INSTANCE(session, addConnection:, OrbitSession_addConnection, "v@:@");
+  SWIZZLE_INSTANCE(session, removeConnection:, OrbitSession_removeConnection, "v@:@");
+  SWIZZLE_INSTANCE(session, canSetSessionPreset:, OrbitSession_canSetSessionPreset, "B@:@");
+  SWIZZLE_INSTANCE(session, sessionPreset, OrbitSession_sessionPreset, "@@:");
+  SWIZZLE_INSTANCE(session, setSessionPreset:, OrbitSession_setSessionPreset, "v@:@");
+  SWIZZLE_INSTANCE(session, beginConfiguration, OrbitSession_beginConfiguration, "v@:");
+  SWIZZLE_INSTANCE(session, commitConfiguration, OrbitSession_commitConfiguration, "v@:");
+  SWIZZLE_INSTANCE(session, isRunning, OrbitSession_isRunning, "B@:");
+  SWIZZLE_INSTANCE(session, isInterrupted, OrbitSession_isInterrupted, "B@:");
+  SWIZZLE_INSTANCE(session, startRunning, OrbitSession_startRunning, "v@:");
+  SWIZZLE_INSTANCE(session, stopRunning, OrbitSession_stopRunning, "v@:");
+  SWIZZLE_INSTANCE(session, automaticallyConfiguresCaptureDeviceForWideColor, OrbitSession_automaticallyConfiguresCaptureDeviceForWideColor, "B@:");
+  SWIZZLE_INSTANCE(session, setAutomaticallyConfiguresCaptureDeviceForWideColor:, OrbitSession_setAutomaticallyConfiguresCaptureDeviceForWideColor, "v@:B");
+  SWIZZLE_INSTANCE(session, isMultitaskingCameraAccessSupported, OrbitSession_isMultitaskingCameraAccessSupported, "B@:");
+  SWIZZLE_INSTANCE(session, synchronizationClock, OrbitSession_synchronizationClock, "^{OpaqueCMClock=}@:");
+  SWIZZLE_INSTANCE(session, hardwareCost, OrbitSession_hardwareCost, "f@:");
+
+  Class output = [AVCaptureOutput class];
+  SWIZZLE_INSTANCE(output, connections, OrbitOutput_connections, "@@:");
+  SWIZZLE_INSTANCE(output, connectionWithMediaType:, OrbitOutput_connectionWithMediaType, "@@:@");
+  SWIZZLE_INSTANCE(output, metadataOutputRectOfInterestForRect:, OrbitOutput_metadataOutputRectOfInterestForRect, "{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}");
+  SWIZZLE_INSTANCE(output, rectForMetadataOutputRectOfInterest:, OrbitOutput_rectForMetadataOutputRectOfInterest, "{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}");
+  SWIZZLE_INSTANCE(output, transformedMetadataObjectForMetadataObject:connection:, OrbitOutput_transformedMetadataObject, "@@:@@");
+
+  Class videoData = [AVCaptureVideoDataOutput class];
+  SWIZZLE_INSTANCE(videoData, setSampleBufferDelegate:queue:, OrbitVideoData_setSampleBufferDelegate, "v@:@@");
+  SWIZZLE_INSTANCE(videoData, availableVideoCVPixelFormatTypes, OrbitVideoData_availableVideoCVPixelFormatTypes, "@@:");
+  SWIZZLE_INSTANCE(videoData, availableVideoCodecTypes, OrbitVideoData_availableVideoCodecTypes, "@@:");
+  SWIZZLE_INSTANCE(videoData, recommendedVideoSettingsForAssetWriterWithOutputFileType:, OrbitVideoData_recommendedVideoSettings, "@@:@");
+  SWIZZLE_INSTANCE(videoData, recommendedVideoSettingsForVideoCodecType:assetWriterOutputFileType:, OrbitVideoData_recommendedVideoSettingsForCodec, "@@:@@");
+
+  Class photo = [AVCapturePhotoOutput class];
+  SWIZZLE_INSTANCE(photo, capturePhotoWithSettings:delegate:, OrbitPhoto_capturePhotoWithSettings, "v@:@@");
+  SWIZZLE_INSTANCE(photo, availablePhotoCodecTypes, OrbitPhoto_availablePhotoCodecTypes, "@@:");
+  SWIZZLE_INSTANCE(photo, availablePhotoPixelFormatTypes, OrbitPhoto_availablePhotoPixelFormatTypes, "@@:");
+  SWIZZLE_INSTANCE(photo, availableRawPhotoPixelFormatTypes, OrbitPhoto_availableRawPhotoPixelFormatTypes, "@@:");
+  SWIZZLE_INSTANCE(photo, availablePhotoFileTypes, OrbitPhoto_availablePhotoFileTypes, "@@:");
+  SWIZZLE_INSTANCE(photo, supportedPhotoCodecTypesForFileType:, OrbitPhoto_supportedPhotoCodecTypesForFileType, "@@:@");
+  SWIZZLE_INSTANCE(photo, supportedPhotoPixelFormatTypesForFileType:, OrbitPhoto_supportedPhotoPixelFormatTypesForFileType, "@@:@");
+  SWIZZLE_INSTANCE(photo, supportedFlashModes, OrbitPhoto_supportedFlashModes, "@@:");
+  SWIZZLE_INSTANCE(photo, isStillImageStabilizationSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isLivePhotoCaptureSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isLivePhotoCaptureEnabled, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, setLivePhotoCaptureEnabled:, OrbitPhoto_setBool, "v@:B");
+  SWIZZLE_INSTANCE(photo, isHighResolutionCaptureEnabled, OrbitPhoto_yes, "B@:");
+  SWIZZLE_INSTANCE(photo, setHighResolutionCaptureEnabled:, OrbitPhoto_setBool, "v@:B");
+  SWIZZLE_INSTANCE(photo, isDepthDataDeliverySupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isDepthDataDeliveryEnabled, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, setDepthDataDeliveryEnabled:, OrbitPhoto_setBool, "v@:B");
+  SWIZZLE_INSTANCE(photo, isPortraitEffectsMatteDeliverySupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isDualCameraFusionSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isAutoRedEyeReductionSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isContentAwareDistortionCorrectionSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isResponsiveCaptureSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isZeroShutterLagSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, isFastCapturePrioritizationSupported, OrbitPhoto_no, "B@:");
+  SWIZZLE_INSTANCE(photo, maxPhotoDimensions, OrbitPhoto_maxPhotoDimensions, "{CMVideoDimensions=ii}@:");
+  SWIZZLE_INSTANCE(photo, setMaxPhotoDimensions:, OrbitPhoto_setMaxPhotoDimensions, "v@:{CMVideoDimensions=ii}");
+  SWIZZLE_INSTANCE(photo, maxPhotoQualityPrioritization, OrbitPhoto_maxPhotoQualityPrioritization, "q@:");
+  SWIZZLE_INSTANCE(photo, setMaxPhotoQualityPrioritization:, OrbitPhoto_setMaxPhotoQualityPrioritization, "v@:q");
+  SWIZZLE_INSTANCE(photo, preparedPhotoSettingsArray, OrbitPhoto_preparedPhotoSettingsArray, "@@:");
+  SWIZZLE_INSTANCE(photo, setPreparedPhotoSettingsArray:completionHandler:, OrbitPhoto_setPreparedPhotoSettingsArray, "v@:@@?");
+  SWIZZLE_INSTANCE(photo, captureReadiness, OrbitPhoto_captureReadiness, "q@:");
+
+  Class metadata = [AVCaptureMetadataOutput class];
+  SWIZZLE_INSTANCE(metadata, availableMetadataObjectTypes, OrbitMetadata_availableMetadataObjectTypes, "@@:");
+  SWIZZLE_INSTANCE(metadata, metadataObjectTypes, OrbitMetadata_metadataObjectTypes, "@@:");
+  SWIZZLE_INSTANCE(metadata, setMetadataObjectTypes:, OrbitMetadata_setMetadataObjectTypes, "v@:@");
+  SWIZZLE_INSTANCE(metadata, setMetadataObjectsDelegate:queue:, OrbitMetadata_setMetadataObjectsDelegate, "v@:@@");
+  SWIZZLE_INSTANCE(metadata, metadataObjectsDelegate, OrbitMetadata_metadataObjectsDelegate, "@@:");
+  SWIZZLE_INSTANCE(metadata, metadataObjectsCallbackQueue, OrbitMetadata_metadataObjectsCallbackQueue, "@@:");
+  SWIZZLE_INSTANCE(metadata, rectOfInterest, OrbitMetadata_rectOfInterest, "{CGRect={CGPoint=dd}{CGSize=dd}}@:");
+  SWIZZLE_INSTANCE(metadata, setRectOfInterest:, OrbitMetadata_setRectOfInterest, "v@:{CGRect={CGPoint=dd}{CGSize=dd}}");
+
+  Class movie = [AVCaptureMovieFileOutput class];
+  SWIZZLE_INSTANCE(movie, startRecordingToOutputFileURL:recordingDelegate:, OrbitMovie_startRecording, "v@:@@");
+  SWIZZLE_INSTANCE(movie, stopRecording, OrbitMovie_stopRecording, "v@:");
+  SWIZZLE_INSTANCE(movie, pauseRecording, OrbitMovie_pauseRecording, "v@:");
+  SWIZZLE_INSTANCE(movie, resumeRecording, OrbitMovie_resumeRecording, "v@:");
+  SWIZZLE_INSTANCE(movie, isRecording, OrbitMovie_isRecording, "B@:");
+  SWIZZLE_INSTANCE(movie, isRecordingPaused, OrbitMovie_isRecordingPaused, "B@:");
+  SWIZZLE_INSTANCE(movie, recordedDuration, OrbitMovie_recordedDuration, "{CMTime=qiIq}@:");
+  SWIZZLE_INSTANCE(movie, recordedFileSize, OrbitMovie_recordedFileSize, "q@:");
+  SWIZZLE_INSTANCE(movie, availableVideoCodecTypes, OrbitMovie_availableVideoCodecTypes, "@@:");
+  SWIZZLE_INSTANCE(movie, supportedOutputSettingsKeysForConnection:, OrbitMovie_supportedOutputSettingsKeysForConnection, "@@:@");
+  SWIZZLE_INSTANCE(movie, outputSettingsForConnection:, OrbitMovie_outputSettingsForConnection, "@@:@");
+  SWIZZLE_INSTANCE(movie, setOutputSettings:forConnection:, OrbitMovie_setOutputSettings, "v@:@@");
+
+  Class preview = [AVCaptureVideoPreviewLayer class];
+  SWIZZLE_INSTANCE(preview, initWithSession:, OrbitPreview_initWithSession, "@@:@");
+  SWIZZLE_INSTANCE(preview, initWithSessionWithNoConnection:, OrbitPreview_initWithSessionWithNoConnection, "@@:@");
+  SWIZZLE_INSTANCE(preview, init, OrbitPreview_init, "@@:");
+  SWIZZLE_INSTANCE(preview, setSession:, OrbitPreview_setSession, "v@:@");
+  SWIZZLE_INSTANCE(preview, setSessionWithNoConnection:, OrbitPreview_setSessionWithNoConnection, "v@:@");
+  SWIZZLE_INSTANCE(preview, session, OrbitPreview_session, "@@:");
+  SWIZZLE_INSTANCE(preview, connection, OrbitPreview_connection, "@@:");
+  SWIZZLE_INSTANCE(preview, setVideoGravity:, OrbitPreview_setVideoGravity, "v@:@");
+  SWIZZLE_INSTANCE(preview, layoutSublayers, OrbitPreview_layoutSublayers, "v@:");
+  SWIZZLE_INSTANCE(preview, isPreviewing, OrbitPreview_isPreviewing, "B@:");
+  SWIZZLE_INSTANCE(preview, captureDevicePointOfInterestForPoint:, OrbitPreview_captureDevicePointOfInterestForPoint, "{CGPoint=dd}@:{CGPoint=dd}");
+  SWIZZLE_INSTANCE(preview, pointForCaptureDevicePointOfInterest:, OrbitPreview_pointForCaptureDevicePointOfInterest, "{CGPoint=dd}@:{CGPoint=dd}");
+  SWIZZLE_INSTANCE(preview, metadataOutputRectOfInterestForRect:, OrbitPreview_metadataOutputRectOfInterestForRect, "{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}");
+  SWIZZLE_INSTANCE(preview, rectForMetadataOutputRectOfInterest:, OrbitPreview_rectForMetadataOutputRectOfInterest, "{CGRect={CGPoint=dd}{CGSize=dd}}@:{CGRect={CGPoint=dd}{CGSize=dd}}");
+  SWIZZLE_INSTANCE(preview, transformedMetadataObjectForMetadataObject:, OrbitPreview_transformedMetadataObject, "@@:@");
+
+  Class picker = [UIImagePickerController class];
+  SWIZZLE_CLASS(picker, isSourceTypeAvailable:, OrbitPicker_isSourceTypeAvailable, "B@:q");
+  SWIZZLE_CLASS(picker, isCameraDeviceAvailable:, OrbitPicker_isCameraDeviceAvailable, "B@:q");
+  SWIZZLE_CLASS(picker, isFlashAvailableForCameraDevice:, OrbitPicker_isFlashAvailableForCameraDevice, "B@:q");
+  SWIZZLE_CLASS(picker, availableMediaTypesForSourceType:, OrbitPicker_availableMediaTypesForSourceType, "@@:q");
+  SWIZZLE_CLASS(picker, availableCaptureModesForCameraDevice:, OrbitPicker_availableCaptureModesForCameraDevice, "@@:q");
+  SWIZZLE_INSTANCE(picker, setSourceType:, OrbitPicker_setSourceType, "v@:q");
+  SWIZZLE_INSTANCE(picker, sourceType, OrbitPicker_sourceType, "q@:");
+  SWIZZLE_INSTANCE(picker, viewDidLoad, OrbitPicker_viewDidLoad, "v@:");
+}
+
+static BOOL OrbitShouldLoad(void) {
+  if (getenv("ORBIT_SIMULATOR_CAMERA_FORCE")) return YES;
+  // Only UIKit apps, and not Apple's own, which have no use for a camera shim and may be
+  // sensitive to swizzling.
+  const char *service = getenv("XPC_SERVICE_NAME");
+  if (!service || strncmp(service, "UIKitApplication:", 17) != 0) return NO;
+  if (strncmp(service + 17, "com.apple.", 10) == 0) return NO;
+  return YES;
+}
+
+__attribute__((constructor)) static void OrbitSimulatorCameraLoad(void) {
+  if (!OrbitShouldLoad()) return;
+  @autoreleasepool {
+    sVerbose = getenv("ORBIT_SIMULATOR_CAMERA_LOG") != NULL;
+    const char *dir = getenv("ORBIT_SIMULATOR_CAMERA_DIR");
+    sFramesDirectory = dir ? @(dir) : [NSString stringWithFormat:@ORBIT_CAMERA_DEFAULT_DIR_FORMAT, getuid()];
+    sOriginalIMPs = [NSMutableDictionary new];
+    sSessions = [NSHashTable weakObjectsHashTable];
+    sSessionsLock = [NSLock new];
+    sFrontReader = [[OrbitFrameReader alloc] initWithPosition:AVCaptureDevicePositionFront directory:sFramesDirectory];
+    sBackReader = [[OrbitFrameReader alloc] initWithPosition:AVCaptureDevicePositionBack directory:sFramesDirectory];
+    OrbitInstallSwizzles();
+    OrbitStartFrameTimer();
+    NSLog(@"[OrbitSimulatorCamera] Virtual camera installed (frames in %@)", sFramesDirectory);
+  }
+}
