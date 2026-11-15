@@ -1,25 +1,24 @@
 #!/bin/bash
-# Downloads prebuilt Hermes (hermes-engine pod tarballs) and hermes-node (the
-# CLI's embed library + hermesc) so a checkout doesn't have to compile them.
-# The artifacts are produced by scripts/build-hermes-prebuilt.sh and published
-# under a key that changes whenever anything they're built from changes.
+# Downloads the prebuilt Hermes (hermes-engine pod tarballs + the JSI they were
+# built with) and hermes-node embed library for the hermes-node commit pinned
+# in scripts/hermes-node.sh, so a checkout doesn't have to compile them.
+# hermes-node publishes them for each commit as the release prebuilt-<commit>
+# (its utils/build-apple-prebuilt.sh and Apple prebuilt workflow).
 #
-#   hermes-prebuilt.sh key     print the key for this checkout
-#   hermes-prebuilt.sh fetch   download + verify into vendor/prebuilt/<key>/;
+#   hermes-prebuilt.sh key     print the pinned hermes-node commit
+#   hermes-prebuilt.sh fetch   download + verify into vendor/prebuilt/<commit>/;
 #                              prints that directory, or nothing (exit 1) if
-#                              the artifacts aren't published, in which case
+#                              that commit has no release, in which case
 #                              callers build from source
 #
 # ORBIT_HERMES_PREBUILT_URL: base URL; files are fetched from
-#   <base>/<key>/<file>. Defaults to the GitHub release tagged
-#   hermes-prebuilt-<key> (base .../releases/download/hermes-prebuilt-).
+#   <base><commit>/<file>. Defaults to hermes-node's GitHub releases.
 # HERMES_NODE_PREBUILT=0: never download; always build from source.
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-REPO_ROOT=$(cd "$SCRIPT_DIR/../../../.." && pwd)
 VENDOR="$SCRIPT_DIR/../vendor"
-DEFAULT_URL=https://github.com/gabrieldonadel/hermes-node/releases/download/hermes-prebuilt-
+DEFAULT_URL=https://github.com/gabrieldonadel/hermes-node/releases/download/prebuilt-
 FILES=(hermes-engine-macos-debug.tar.gz hermes-engine-macos-release.tar.gz hermes-node-embed-macos.tar.gz)
 
 log() {
@@ -27,16 +26,7 @@ log() {
 }
 
 key() {
-  # Everything the artifacts are built from: the pinned hermes-node (which
-  # pins Hermes), the react-native-macos version and our patch to it, and the
-  # build script.
-  {
-    grep '^HERMES_NODE_REF=' "$SCRIPT_DIR/hermes-node.sh"
-    node -p "require('react-native-macos/package.json').version" 2>/dev/null ||
-      (cd "$REPO_ROOT" && node -p "require('react-native-macos/package.json').version")
-    cat "$REPO_ROOT"/patches/react-native-macos+*.patch
-    cat "$SCRIPT_DIR/build-hermes-prebuilt.sh"
-  } | shasum -a 256 | cut -c1-16
+  sed -n 's/^HERMES_NODE_REF=//p' "$SCRIPT_DIR/hermes-node.sh"
 }
 
 fetch() {

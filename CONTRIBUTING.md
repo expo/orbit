@@ -18,7 +18,7 @@
 
 By default the macOS app bundles the CLI as `pkg`-built Node binaries. Running `pod install` with `ORBIT_HERMES_CLI=1` (or setting `"hermesCli": "true"` in `apps/menu-bar/macos/Podfile.properties.json`) opts into running it on the app's own Hermes through [hermes-node](https://github.com/gabrieldonadel/hermes-node) instead. The Xcode "Build CLI" phase then builds `apps/cli` to Hermes bytecode plus a small `orbit-cli` launcher (`apps/cli/hermes-launcher/`) in every configuration.
 
-Hermes and hermes-node are downloaded prebuilt from [hermes-node's releases](https://github.com/gabrieldonadel/hermes-node/releases), keyed by everything they're built from (`apps/menu-bar/macos/scripts/hermes-prebuilt.sh`). If none is published for your checkout, for example after changing the hermes-node pin in `scripts/hermes-node.sh`, they're built from source, which needs `cmake` and `ninja` and takes ~10–15 min the first time. Build them with `apps/menu-bar/macos/scripts/build-hermes-prebuilt.sh <out-dir>`, and set `HERMES_NODE_DIR` to work against a local hermes-node checkout. Running `pod install` without the flag goes back to the default.
+Hermes and hermes-node are downloaded prebuilt for the hermes-node commit pinned in `apps/menu-bar/macos/scripts/hermes-node.sh`, from that commit's release in [hermes-node](https://github.com/gabrieldonadel/hermes-node/releases), where hermes-node's CI publishes them. If that commit has no release yet, they're built from source instead, which needs `cmake` and `ninja` and takes ~10–15 min the first time. Set `HERMES_NODE_DIR` to work against a local hermes-node checkout. Running `pod install` without the flag goes back to the default.
 
 ## 🏎️ Start the Development Environment
 
