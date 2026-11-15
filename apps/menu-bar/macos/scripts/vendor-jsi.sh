@@ -10,6 +10,8 @@
 #   vendor-jsi.sh --check                    fail if what's there isn't the
 #                                            copy (e.g. yarn install restored
 #                                            React Native's own)
+#   vendor-jsi.sh --restore                  put React Native's own JSI back
+#                                            (ORBIT_HERMES_CLI turned off)
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -17,6 +19,19 @@ REPO_ROOT=$(cd "$SCRIPT_DIR/../../../.." && pwd)
 RN_PATH=$(cd "$REPO_ROOT" && node -p "path.dirname(require.resolve('react-native-macos/package.json'))")
 DEST="$RN_PATH/ReactCommon/jsi/jsi"
 MARKER="$DEST/.orbit-vendored-jsi"
+ORIGINAL="$RN_PATH/ReactCommon/jsi/.orbit-original-jsi"
+
+if [[ "${1:-}" == "--restore" ]]; then
+  if [[ -f "$MARKER" ]]; then
+    if [[ ! -d "$ORIGINAL" ]]; then
+      echo "error: can't restore React Native's JSI; reinstall it: rm -rf $RN_PATH && yarn install" >&2
+      exit 1
+    fi
+    rm -rf "$DEST"
+    mv "$ORIGINAL" "$DEST"
+  fi
+  exit 0
+fi
 
 if [[ "${1:-}" == "--check" ]]; then
   if [[ ! -f "$MARKER" ]] || ! (cd "$DEST" && shasum -a 256 -c "$MARKER" >/dev/null 2>&1); then
@@ -32,6 +47,11 @@ SRC=${1:?usage: $0 <hermes API/jsi/jsi dir> | --check}
   exit 1
 }
 
+# Keep React Native's own copy so --restore can put it back.
+if [[ ! -f "$MARKER" ]]; then
+  rm -rf "$ORIGINAL"
+  cp -R "$DEST" "$ORIGINAL"
+fi
 rm -rf "$DEST"
 mkdir -p "$DEST"
 cp -R "$SRC/." "$DEST/"

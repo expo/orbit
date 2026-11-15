@@ -3,7 +3,7 @@
   "version": "2.9.0",
   "private": true,
   "scripts": {
-    "archive": "xcodebuild archive -workspace macos/ExpoMenuBar.xcworkspace -scheme ExpoMenuBar-macOS -destination 'generic/platform=macOS,name=Any Mac' -archivePath build/ExpoOrbit.xcarchive",
+    "archive": "yarn update-cli && xcodebuild archive -workspace macos/ExpoMenuBar.xcworkspace -scheme ExpoMenuBar-macOS -destination 'generic/platform=macOS,name=Any Mac' -archivePath build/ExpoOrbit.xcarchive",
     "export-archive": "xcodebuild -exportArchive -archivePath build/ExpoOrbit.xcarchive -exportPath build/Release",
     "export-upload-archive": "yarn export-archive -exportOptionsPlist macos/ExportUploadOptions.plist",
     "export-local-archive": "yarn export-archive -exportOptionsPlist macos/ExportLocalOptions.plist",

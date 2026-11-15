@@ -35,7 +35,7 @@ export type ShellCommandContext = {
   linkDir?: string;
 };
 
-function isStandaloneExecutable(): boolean {
+function isHermesLauncher(): boolean {
   return Boolean(process.argv[1]) && process.argv[1] === `${process.execPath}.hbc`;
 }
 
@@ -48,9 +48,10 @@ export function getCurrentLauncher(): Launcher {
     }
   }
 
-  // macOS ships the CLI as a standalone executable inside the app bundle: the `orbit-cli`
-  // launcher, which runs `orbit-cli.hbc` from next to itself (see hermes-launcher/main.cpp).
-  if (isStandaloneExecutable()) {
+  // macOS ships the CLI as a standalone executable inside the app bundle: a `pkg` binary or,
+  // in ORBIT_HERMES_CLI builds, the `orbit-cli` launcher, which runs `orbit-cli.hbc` from next
+  // to itself (see hermes-launcher/main.cpp).
+  if ((process as any).pkg || isHermesLauncher()) {
     return { command: [process.execPath], env };
   }
 
