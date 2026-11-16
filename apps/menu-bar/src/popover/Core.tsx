@@ -352,21 +352,23 @@ function Core(props: Props) {
       key !== 'remote' && section.data.length && !devices.length
         ? 'All devices are hidden. Settings shows them again.'
         : '';
-    // The Android section and the Expo Simulators section end with a row that adds a device.
+    // The iOS, Android and Expo Simulators sections end with a row that adds a device.
     const addItem =
       key === 'android'
         ? { title: 'Pair a device', subtitle: 'Over Wi-Fi' }
-        : key === 'remote' && !isLoading
-          ? {
-              title: 'New session',
-              subtitle:
-                remoteStatus === 'signed-out'
-                  ? 'Log in to use Expo Simulators'
-                  : remoteStatus === 'no-access'
-                    ? 'Available on paid plans'
-                    : 'iOS Simulator or Android Emulator',
-            }
-          : undefined;
+        : key === 'ios'
+          ? { title: 'Pair an iPhone', subtitle: 'Over Wi-Fi (iOS 27+)' }
+          : key === 'remote' && !isLoading
+            ? {
+                title: 'New session',
+                subtitle:
+                  remoteStatus === 'signed-out'
+                    ? 'Log in to use Expo Simulators'
+                    : remoteStatus === 'no-access'
+                      ? 'Available on paid plans'
+                      : 'iOS Simulator or Android Emulator',
+              }
+            : undefined;
     return {
       ...section,
       key,
@@ -1771,7 +1773,9 @@ function Core(props: Props) {
                     onPress={
                       key === 'android'
                         ? () => WindowsNavigator.open('PairAndroidDevice')
-                        : startRemoteSimulator
+                        : key === 'ios'
+                          ? () => WindowsNavigator.open('PairIosDevice')
+                          : startRemoteSimulator
                     }
                     testID={`add-device-${key}`}
                   />

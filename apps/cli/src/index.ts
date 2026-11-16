@@ -46,7 +46,10 @@ program
   .option('--sdk-version <string>', 'Expo Simulators: SDK version of Expo Go')
   .option('--launch-args <json>', 'Expo Simulators: launch arguments, as a JSON array of strings')
   .option('--tags <json>', 'Expo Simulators: tags, as a JSON array of strings')
-  .option('--session-type <string>', 'Expo Simulators: agent-device, argent, appium or web-preview-only')
+  .option(
+    '--session-type <string>',
+    'Expo Simulators: agent-device, argent, appium or web-preview-only'
+  )
   .action(async (...args) => {
     const { bootDeviceAsync } = await import('./commands/BootDevice');
     return returnLoggerMiddleware(bootDeviceAsync)(...args);
@@ -72,7 +75,9 @@ program
 
 program
   .command('list-remote-simulator-options')
-  .description('List the device models, builds and Expo Go versions for a new Expo Simulators session')
+  .description(
+    'List the device models, builds and Expo Go versions for a new Expo Simulators session'
+  )
   .requiredOption('--app-id <string>', 'ID of the project the session runs under')
   .action(async (...args) => {
     const { listRemoteSimulatorOptionsAsync } = await import('./commands/RemoteSimulator');
@@ -113,6 +118,24 @@ program
   .action(async (...args) => {
     const { listAndroidPairingServicesAsync } = await import('./commands/PairAndroidDevice');
     return returnLoggerMiddleware(listAndroidPairingServicesAsync)(...args);
+  });
+
+program
+  .command('pair-ios-device')
+  .description('Pair an iPhone over Wi-Fi (iOS 27 Remote Device Pairing)')
+  .option('--timeout  <number>', 'Time to wait for the iPhone to pair, in milliseconds')
+  .action(async (...args) => {
+    const { pairIosDeviceAsync } = await import('./commands/PairIosDevice');
+    return returnLoggerMiddleware(pairIosDeviceAsync)(...args);
+  });
+
+program
+  .command('unpair-ios-device')
+  .description('Forget an iPhone paired over Wi-Fi')
+  .requiredOption('--device-id  <string>', 'UDID of the iPhone')
+  .action(async (...args) => {
+    const { unpairIosDeviceAsync } = await import('./commands/PairIosDevice');
+    return returnLoggerMiddleware(unpairIosDeviceAsync)(...args);
   });
 
 program
