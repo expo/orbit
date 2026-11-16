@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Pair iPhones over Wi-Fi with iOS 27 Remote Device Pairing, then install and launch builds on them without a cable, on macOS and Windows. ([#400](https://github.com/expo/orbit/pull/400) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 ### 💡 Others
