@@ -20,7 +20,12 @@
 set -euo pipefail
 
 HERMES_NODE_REPO=https://github.com/gabrieldonadel/hermes-node.git
-HERMES_NODE_REF=f156186e7eb701f491e3ef851496087c44c5a85f
+HERMES_NODE_REF=1ede79dd89f6cf1c27d6f80d8d54d77e8b208feb
+# sha256 of the SHA256SUMS file in hermes-node's prebuilt-<ref> release
+# (scripts/hermes-prebuilt.sh). Pins the prebuilt binaries to this ref: release
+# assets can be re-uploaded, so they're only used if this matches. Update it
+# with the ref: curl -fsSL <release>/SHA256SUMS | shasum -a 256
+HERMES_NODE_PREBUILT_SHA256=856d5af785c35589b5301c3cc2fbfb2b2589ca592cc5798e3e56a40fb5fc1865
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 ROOT="$SCRIPT_DIR/../vendor/hermes-node"

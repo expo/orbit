@@ -1,15 +1,17 @@
 #!/bin/bash
 # Xcode "Select Hermes flavor" phase (ORBIT_HERMES_CLI builds only). With
-# prebuilt Hermes, pod install vendors
-# the Debug hermesvm.framework (with the debugger); Release builds swap in the
-# Release one before anything links or embeds it. A no-op when Hermes is built
+# prebuilt Hermes, pod install vendors the Debug hermesvm.framework (with the
+# debugger); Release builds swap in the Release one before anything links or
+# embeds it. A no-op when Hermes is built
 # from source (the hermes-engine pod then builds the right flavor itself).
 set -euo pipefail
 [[ -f "$PODS_ROOT/.orbit-hermes-cli" ]] || exit 0
+# Written by the Podfile: set when pod install used the prebuilt Hermes.
+HERMES_NODE_PREBUILT_DIR=
+source "$PODS_ROOT/.orbit-hermes-cli"
+[[ -n "$HERMES_NODE_PREBUILT_DIR" ]] || exit 0
 destroot="$PODS_ROOT/hermes-engine/destroot"
-# A from-source pod has the Hermes sources (API/) next to its destroot.
-[[ -d "$PODS_ROOT/hermes-engine/API" ]] && exit 0
-prebuilt=$("$PODS_ROOT/../scripts/hermes-prebuilt.sh" fetch)
+prebuilt="$HERMES_NODE_PREBUILT_DIR"
 
 flavor=$([[ "$CONFIGURATION" == *Release* ]] && echo release || echo debug)
 marker="$destroot/.flavor"

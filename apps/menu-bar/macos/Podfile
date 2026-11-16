@@ -1,6 +1,7 @@
 require 'pathname'
 
 require 'json'
+require 'shellwords'
 podfile_properties = JSON.parse(File.read('./Podfile.properties.json')) rescue {}
 showDevWindow = podfile_properties['showDevWindow'] == 'true'
 showDockIcon = podfile_properties['showDockIcon'] == 'true'
@@ -20,22 +21,30 @@ require File.join(File.dirname(`node --print "require.resolve('expo/package.json
 # (scripts/hermes-node.sh). Either way its JSI replaces React Native's
 # (scripts/vendor-jsi.sh).
 hermes_cli = ENV['ORBIT_HERMES_CLI'] == '1' || podfile_properties['hermesCli'] == 'true'
+# What pod install resolved, for the build phases (see post_install): they run
+# from Xcode without this shell's environment and must use the same Hermes and
+# hermes-node builds.
+hermes_cli_settings = {}
 if hermes_cli
   ENV['RCT_HERMES_V1_ENABLED'] = '1'
-  unless ENV['HERMES_ENGINE_TARBALL_PATH'] || ENV['REACT_NATIVE_OVERRIDE_HERMES_DIR']
-    prebuilt_dir = `"#{__dir__}/scripts/hermes-prebuilt.sh" fetch`.strip
-    if $?.success? && !prebuilt_dir.empty?
-      ENV['HERMES_ENGINE_TARBALL_PATH'] = File.join(prebuilt_dir, 'hermes-engine-macos-debug.tar.gz')
-      hermes_jsi_dir = File.join(prebuilt_dir, 'jsi')
-    else
-      hermes_dir = `"#{__dir__}/scripts/hermes-node.sh" fetch`.strip
-      raise 'scripts/hermes-node.sh fetch failed' unless $?.success? && !hermes_dir.empty?
-      ENV['REACT_NATIVE_OVERRIDE_HERMES_DIR'] = hermes_dir
-      hermes_jsi_dir = File.join(hermes_dir, 'API', 'jsi', 'jsi')
-    end
-    # React Native has to compile against the JSI this Hermes was built with.
-    system(File.join(__dir__, 'scripts', 'vendor-jsi.sh'), hermes_jsi_dir) || raise('scripts/vendor-jsi.sh failed')
+  # A local hermes-node checkout (HERMES_NODE_DIR) is built from source; so is
+  # everything when HERMES_NODE_PREBUILT=0 or nothing is published for the pin.
+  prebuilt_dir = ENV['HERMES_NODE_DIR'] ? '' : `"#{__dir__}/scripts/hermes-prebuilt.sh" fetch`.strip
+  raise 'The prebuilt Hermes download does not match its pinned checksums' if $?.exitstatus == 3
+  if $?.success? && !prebuilt_dir.empty?
+    ENV['HERMES_ENGINE_TARBALL_PATH'] = File.join(prebuilt_dir, 'hermes-engine-macos-debug.tar.gz')
+    hermes_jsi_dir = File.join(prebuilt_dir, 'jsi')
+    hermes_cli_settings['HERMES_NODE_PREBUILT_DIR'] = prebuilt_dir
+  else
+    hermes_dir = `"#{__dir__}/scripts/hermes-node.sh" fetch`.strip
+    raise 'scripts/hermes-node.sh fetch failed' unless $?.success? && !hermes_dir.empty?
+    ENV['REACT_NATIVE_OVERRIDE_HERMES_DIR'] = hermes_dir
+    hermes_jsi_dir = File.join(hermes_dir, 'API', 'jsi', 'jsi')
+    hermes_cli_settings['HERMES_NODE_PREBUILT'] = '0'
+    hermes_cli_settings['HERMES_NODE_DIR'] = ENV['HERMES_NODE_DIR'] if ENV['HERMES_NODE_DIR']
   end
+  # React Native has to compile against the JSI this Hermes was built with.
+  system(File.join(__dir__, 'scripts', 'vendor-jsi.sh'), hermes_jsi_dir) || raise('scripts/vendor-jsi.sh failed')
 else
   system(File.join(__dir__, 'scripts', 'vendor-jsi.sh'), '--restore') || raise('scripts/vendor-jsi.sh failed')
 end
@@ -80,9 +89,14 @@ use_frameworks! :linkage => :static
 post_install do |installer|
   react_native_post_install(installer, relative_rn_macos_path)
 
-  # Tells the Build CLI and Select Hermes flavor phases which CLI to build.
+  # Tells the Build CLI and Select Hermes flavor phases which CLI to build and
+  # from what (sourced by scripts/archive_cli.sh and select-hermes-flavor.sh).
   hermes_cli_marker = File.join(installer.sandbox.root.to_s, '.orbit-hermes-cli')
-  hermes_cli ? FileUtils.touch(hermes_cli_marker) : FileUtils.rm_f(hermes_cli_marker)
+  if hermes_cli
+    File.write(hermes_cli_marker, hermes_cli_settings.map { |k, v| "#{k}=#{Shellwords.escape(v)}\n" }.join)
+  else
+    FileUtils.rm_f(hermes_cli_marker)
+  end
 
   installer.pods_project.targets.each do |target|
     # Fail before anything compiles against React Native's own JSI if a yarn

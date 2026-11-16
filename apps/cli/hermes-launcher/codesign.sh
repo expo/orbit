@@ -10,6 +10,6 @@ IDENTITY=${CODESIGN_IDENTITY:-"Developer ID Application: 650 Industries, Inc. (C
 find "$CLI_DIR/dist" -type f | while read -r f; do
   if file -b "$f" | grep -q "Mach-O"; then
     codesign --options=runtime --timestamp --force --sign "$IDENTITY" \
-      --entitlements "$CLI_DIR/macos/entitlements.plist" "$f"
+      --entitlements "$CLI_DIR/hermes-launcher/entitlements.plist" "$f"
   fi
 done

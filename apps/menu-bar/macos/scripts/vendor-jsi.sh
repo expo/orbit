@@ -16,7 +16,9 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../../../.." && pwd)
-RN_PATH=$(cd "$REPO_ROOT" && node -p "path.dirname(require.resolve('react-native-macos/package.json'))")
+# REACT_NATIVE_PATH is set in Xcode builds (the --check phase), where node may
+# not be on PATH; pod install resolves it with node.
+RN_PATH=${REACT_NATIVE_PATH:-$(cd "$REPO_ROOT" && node -p "path.dirname(require.resolve('react-native-macos/package.json'))")}
 DEST="$RN_PATH/ReactCommon/jsi/jsi"
 MARKER="$DEST/.orbit-vendored-jsi"
 ORIGINAL="$RN_PATH/ReactCommon/jsi/.orbit-original-jsi"

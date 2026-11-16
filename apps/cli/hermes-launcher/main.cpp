@@ -4,9 +4,8 @@
 //
 // The CLI itself is `<this executable>.hbc`: apps/cli bundled into one file and
 // precompiled with a hermesc built from the same Hermes commit as the
-// framework (see build.sh). If there is no such file, the first argument is
-// the entry point instead, like `node <entry.js|.hbc> args...`, which is handy
-// for development.
+// framework (see build.sh). For development, ORBIT_CLI_ENTRY=<entry.js|.hbc>
+// runs another entry point instead, like `node <entry> args...`.
 
 #include <hermes/hermes.h>
 #include <hermes/node-compat/runtime/hermes_node_instance.h>
@@ -43,15 +42,18 @@ int main(int argc, char **argv) {
   std::string exe = executablePath();
   std::string dir = exe.substr(0, exe.rfind('/'));
 
-  std::string entry = exe.empty() ? std::string() : exe + ".hbc";
-  int firstArg = 1;
-  if (entry.empty() || !exists(entry)) {
-    if (argc < 2) {
-      std::fprintf(stderr, "usage: %s <entry.js|.hbc> [args...]\n", argv[0]);
-      return 2;
+  std::string entry;
+  if (const char *override = getenv("ORBIT_CLI_ENTRY")) {
+    entry = override;
+  } else {
+    entry = exe.empty() ? std::string() : exe + ".hbc";
+    if (entry.empty() || !exists(entry)) {
+      std::fprintf(
+          stderr,
+          "orbit-cli: %s not found next to the executable\n",
+          entry.empty() ? "orbit-cli.hbc" : entry.c_str());
+      return 1;
     }
-    entry = argv[1];
-    firstArg = 2;
   }
 
   // ipa-resign runs the anisette and zsign helpers from ORBIT_HELPER_BIN_DIR
@@ -74,7 +76,7 @@ int main(int argc, char **argv) {
   // process.argv = [execPath, entry, ...args], as under node.
   config.argv.push_back(argv[0]);
   config.argv.push_back(entry);
-  for (int i = firstArg; i < argc; ++i)
+  for (int i = 1; i < argc; ++i)
     config.argv.push_back(argv[i]);
   int exitCode = node->bootstrap(config) ? 0 : 1;
 
