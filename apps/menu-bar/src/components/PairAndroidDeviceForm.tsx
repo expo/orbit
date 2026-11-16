@@ -196,7 +196,13 @@ const QRCodePairing = ({ onSuccess, onError }: PairingCallbacks) => {
   );
 };
 
-const NumberedStep = ({ number, children }: { number: number; children: React.ReactNode }) => (
+export const NumberedStep = ({
+  number,
+  children,
+}: {
+  number: number;
+  children: React.ReactNode;
+}) => (
   <Row gap="2" align="start">
     <View rounded="large" align="centered" style={styles.stepBadge}>
       <Text size="tiny" weight="semibold" color="secondary">
@@ -386,7 +392,13 @@ const ConnectingState = ({ deviceName }: { deviceName: string }) => (
   </View>
 );
 
-const SuccessState = ({ deviceName, onDone }: { deviceName: string; onDone: () => void }) => (
+export const SuccessState = ({
+  deviceName,
+  onDone,
+}: {
+  deviceName: string;
+  onDone: () => void;
+}) => (
   <View align="centered" pt="2" gap="1">
     <StatusBadge glyph="✓" color={lightTheme.text.success} />
     <Spacer.Vertical size="tiny" />
@@ -433,7 +445,7 @@ const ErrorState = ({
   </View>
 );
 
-const StatusBadge = ({ glyph, color }: { glyph: string; color: string }) => (
+export const StatusBadge = ({ glyph, color }: { glyph: string; color: string }) => (
   <View align="centered" style={[styles.statusBadge, { backgroundColor: addOpacity(color, 0.14) }]}>
     <Text style={{ color, fontSize: 28, lineHeight: 32 }}>{glyph}</Text>
   </View>
