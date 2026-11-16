@@ -122,9 +122,14 @@ export async function openSimulatorAppAsync(simulatorUdid: string): Promise<void
   // DeviceHub.app (Xcode 27+) registers the `devices://` URL scheme,
   // which can be used to focus the right device by its UDID.
   if (appName === DEVICE_HUB_APP_NAME) {
-    const args = simulatorUdid
-      ? [`devices://device/open?id=${simulatorUdid}`]
-      : ['-a', DEVICE_HUB_APP_NAME];
+    const args = ['-a', DEVICE_HUB_APP_NAME];
+    if (simulatorUdid) {
+      args.push(`devices://device/open?id=${simulatorUdid}`);
+    }
+    // Skip the windows DeviceHub restores from its last session: they can be for
+    // simulators that were deleted since, which never finish loading. This has no
+    // effect if the app is already running.
+    args.push('--args', '-ApplePersistenceIgnoreState', 'YES');
     await spawnAsync('open', args);
     return;
   }
