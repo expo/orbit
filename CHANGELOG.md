@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Open only the selected simulator when Orbit launches DeviceHub (Xcode 27), instead of also restoring windows from DeviceHub's last session, which never finish loading for deleted simulators. ([#401](https://github.com/expo/orbit/pull/401) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 💡 Others
 
 - Start Expo Simulators sessions without a maximum duration of 30 minutes. A session now gets the maximum duration of the account's plan. ([#395](https://github.com/expo/orbit/pull/395) by [@brentvatne](https://github.com/brentvatne))
