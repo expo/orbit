@@ -2,7 +2,6 @@ import crypto from 'crypto';
 
 import { Ed25519, X25519, chachaOpen, chachaSeal, hkdf512, siphash24 } from '../crypto';
 import { decodeOpack, encodeOpack } from '../opack';
-import { PlistUid, parsePlist, toBinaryPlist, toXmlPlist } from '../plist';
 import { N, SrpClient, SrpServer, bigIntToBytes, bytesToBigInt, g, modPow, pad } from '../srp';
 import { TLV, decodeTlv, encodeTlv } from '../tlv8';
 import {
@@ -75,59 +74,6 @@ describe('tlv8', () => {
 
   it('throws on truncated input', () => {
     expect(() => decodeTlv(Buffer.from([TLV.SALT, 4, 1, 2]))).toThrow('truncated TLV8');
-  });
-});
-
-describe('plist', () => {
-  const sample = {
-    HostID: 'ABC-123',
-    Escaped: 'a < b & c > d',
-    Count: 42,
-    Negative: -7,
-    Huge: 2n ** 62n,
-    Ratio: 2.5,
-    Enabled: true,
-    Disabled: false,
-    Certificate: Buffer.from('-----BEGIN CERTIFICATE-----'),
-    Created: new Date('2024-01-02T03:04:05Z'),
-    List: ['a', 1, { nested: 'yes' }],
-    EmptyList: [],
-    EmptyDict: {},
-  };
-
-  it('round-trips XML', () => {
-    const xml = toXmlPlist(sample);
-    expect(xml).toContain('<!DOCTYPE plist');
-    expect(xml).toContain('<string>a &lt; b &amp; c &gt; d</string>');
-    expect(parsePlist(xml)).toEqual(sample);
-    expect(parsePlist(Buffer.from(xml))).toEqual(sample);
-  });
-
-  it('round-trips binary', () => {
-    const value = { ...sample, Unicode: 'héllo ✓', Uid: new PlistUid(3), Nothing: null };
-    const binary = toBinaryPlist(value);
-    expect(binary.subarray(0, 8).toString('latin1')).toBe('bplist00');
-    expect(parsePlist(binary)).toEqual(value);
-  });
-
-  it('parses a binary plist produced by plutil', () => {
-    // `plutil -convert binary1` of
-    // { a: 1, b: [true, 'x', 'é', 1.5], d: <data 010203> }
-    const binary = Buffer.from(
-      '62706c6973743030d301020304050a5161516251641001a4060708090951786100e9233ff800000000000043' +
-        '010203080f111315171c1d1f222b000000000000010100000000000000' +
-        '0b0000000000000000000000000000002f',
-      'hex'
-    );
-    expect(parsePlist(binary)).toEqual({
-      a: 1,
-      b: [true, 'x', 'é', 1.5],
-      d: Buffer.from([1, 2, 3]),
-    });
-  });
-
-  it('drops null/undefined entries when writing XML', () => {
-    expect(parsePlist(toXmlPlist({ a: 1, b: null, c: undefined }))).toEqual({ a: 1 });
   });
 });
 

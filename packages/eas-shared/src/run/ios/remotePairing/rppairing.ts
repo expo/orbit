@@ -14,7 +14,6 @@ import { TLV, TLV_ERROR, decodeTlv, encodeTlv } from './tlv8';
 
 export const RPPAIRING_MAGIC = Buffer.from('RPPairing', 'latin1');
 export const WIRE_PROTOCOL_VERSION = 26;
-export const REMOTE_PAIRING_PORT_RANGE: readonly [number, number] = [49152, 65535];
 
 export class PairingError extends Error {}
 export class PairingRejectedError extends PairingError {}

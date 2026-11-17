@@ -6,7 +6,7 @@ import net from 'net';
 import { Duplex } from 'stream';
 
 import { AppService } from './coredevice';
-import { discoverOnLan, probe, ProbeResult, scanPorts, sweepLocalSubnets } from './discovery';
+import { discoverOnLan, probe, ProbeResult, sweepLocalSubnets } from './discovery';
 import { PairVerifyFailedError, RemotePairingClient } from './rppairing';
 import { RemoteServiceDiscovery } from './rsd';
 import { DeviceRecord, updateDevice } from './store';
@@ -43,10 +43,6 @@ export class RemoteDeviceSession {
       if (result && (!result.peer?.udid || result.peer.udid === this.record.udid)) {
         return [result];
       }
-    }
-    if (lastHost && !lastPort) {
-      const result = await scanPorts(lastHost, { timeoutMs: 800 });
-      if (result) return [result];
     }
     const found = (await discoverOnLan({ timeoutMs: 5000, record: this.record })).filter(
       (entry): entry is ProbeResult => entry.reachable !== false

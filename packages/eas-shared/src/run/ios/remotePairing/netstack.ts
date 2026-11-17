@@ -1,15 +1,12 @@
 // Ported from remote-device (MIT, https://github.com/expo/appdrop).
-// A small userspace IPv6 network stack: TCP (active + passive open) and UDP over a raw packet
-// link. The CoreDevice tunnel carries raw IPv6 packets, and running our own stack means no root,
+// A small userspace IPv6 network stack: TCP (active + passive open) over a raw packet link.
+// The CoreDevice tunnel carries raw IPv6 packets, and running our own stack means no root,
 // no kernel utun, and no native dependency. Connections are exposed as stream.Duplex objects.
 import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import { Duplex } from 'stream';
 
-import { bytesToIp, ipToBytes } from './mdns';
-
 const PROTO_TCP = 6;
-const PROTO_UDP = 17;
 const PROTO_ICMPV6 = 58;
 const IPV6_HEADER = 40;
 const TCP_HEADER = 20;
@@ -30,6 +27,32 @@ const RTO_INITIAL = 1000;
 const RTO_MAX = 8000;
 const MAX_RETRANSMITS = 8;
 
+export function ipToBytes(address: string): Buffer {
+  if (address.includes(':')) {
+    const clean = address.split('%')[0];
+    const halves = clean.split('::');
+    const head = halves[0] ? halves[0].split(':') : [];
+    const tail = halves.length > 1 && halves[1] ? halves[1].split(':') : [];
+    const groups = [...head, ...Array<string>(8 - head.length - tail.length).fill('0'), ...tail];
+    const bytes = Buffer.alloc(16);
+    groups.forEach((group, index) => bytes.writeUInt16BE(parseInt(group || '0', 16), index * 2));
+    return bytes;
+  }
+  return Buffer.from(address.split('.').map(Number));
+}
+
+export function bytesToIp(bytes: Buffer): string {
+  if (bytes.length === 4) return [...bytes].join('.');
+  const groups: string[] = [];
+  for (let i = 0; i < 16; i += 2) groups.push(bytes.readUInt16BE(i).toString(16));
+  const text = groups.join(':');
+  // Compress the longest run of zero groups.
+  const runs = text.match(/(^|:)(0(:0)+)(:|$)/g);
+  if (!runs) return text;
+  const longest = runs.sort((a, b) => b.length - a.length)[0];
+  return text.replace(longest, '::').replace(/:::/, '::');
+}
+
 export interface ParsedIpv6 {
   proto: number;
   src: Buffer;
@@ -48,11 +71,6 @@ export interface ConnectOptions {
 }
 
 export type ConnectionHandler = (connection: TcpConnection) => void;
-
-export interface UdpRemoteInfo {
-  address: string;
-  port: number;
-}
 
 interface InFlightSegment {
   seq: number;
@@ -544,37 +562,6 @@ export class TcpConnection extends Duplex {
   }
 }
 
-/** A bound UDP port on the stack. Emits "message" (data, { address, port }). */
-export class UdpSocket extends EventEmitter {
-  readonly stack: NetStack;
-  readonly port: number;
-
-  constructor(stack: NetStack, port: number) {
-    super();
-    this.stack = stack;
-    this.port = port;
-  }
-
-  send(address: string | Buffer, port: number, data: Buffer): void {
-    const remote = Buffer.isBuffer(address) ? address : ipToBytes(address);
-    const header = Buffer.alloc(8);
-    header.writeUInt16BE(this.port, 0);
-    header.writeUInt16BE(port, 2);
-    header.writeUInt16BE(8 + data.length, 4);
-    const datagram = Buffer.concat([header, data]);
-    datagram.writeUInt16BE(
-      checksum(pseudoHeader(this.stack.localBytes, remote, datagram.length, PROTO_UDP), datagram) ||
-        0xffff,
-      6
-    );
-    this.stack.transmit(buildIpv6(this.stack.localBytes, remote, PROTO_UDP, datagram));
-  }
-
-  close(): void {
-    this.stack.udpSockets.delete(this.port);
-  }
-}
-
 /**
  * NetStack: feed inbound raw IPv6 packets with `receive(packet)`; it emits "packet" with raw
  * outbound IPv6 packets. `localAddress` is our tunnel address.
@@ -585,7 +572,6 @@ export class NetStack extends EventEmitter {
   readonly mtu: number;
   readonly connections: Map<string, TcpConnection>;
   readonly tcpListeners: Map<number, ConnectionHandler>;
-  readonly udpSockets: Map<number, UdpSocket>;
   nextPort: number;
 
   constructor({ localAddress, mtu = 1500 }: NetStackOptions) {
@@ -595,7 +581,6 @@ export class NetStack extends EventEmitter {
     this.mtu = mtu;
     this.connections = new Map();
     this.tcpListeners = new Map();
-    this.udpSockets = new Map();
     this.nextPort = 49152 + crypto.randomInt(0, 8000);
   }
 
@@ -608,8 +593,7 @@ export class NetStack extends EventEmitter {
       const port = 49152 + ((this.nextPort - 49152 + i) % 16384);
       const inUse =
         [...this.connections.values()].some((c) => c.localPort === port) ||
-        this.tcpListeners.has(port) ||
-        this.udpSockets.has(port);
+        this.tcpListeners.has(port);
       if (!inUse) {
         this.nextPort = port + 1;
         return port;
@@ -661,19 +645,11 @@ export class NetStack extends EventEmitter {
     return { close: () => this.tcpListeners.delete(port) };
   }
 
-  udp(port = 0): UdpSocket {
-    const bound = port || this.allocatePort();
-    const socket = new UdpSocket(this, bound);
-    this.udpSockets.set(bound, socket);
-    return socket;
-  }
-
   receive(packet: Buffer): void {
     const parsed = parseIpv6(packet);
     if (!parsed) return;
     if (!parsed.dst.equals(this.localBytes)) return;
     if (parsed.proto === PROTO_TCP) this.receiveTcp(parsed);
-    else if (parsed.proto === PROTO_UDP) this.receiveUdp(parsed);
     else if (parsed.proto === PROTO_ICMPV6) this.receiveIcmp(parsed);
   }
 
@@ -728,14 +704,6 @@ export class NetStack extends EventEmitter {
     this.transmit(buildIpv6(this.localBytes, remote, PROTO_TCP, header));
   }
 
-  receiveUdp({ src, payload }: ParsedIpv6): void {
-    if (payload.length < 8) return;
-    const socket = this.udpSockets.get(payload.readUInt16BE(2));
-    if (!socket) return;
-    const remote: UdpRemoteInfo = { address: bytesToIp(src), port: payload.readUInt16BE(0) };
-    socket.emit('message', Buffer.from(payload.subarray(8)), remote);
-  }
-
   receiveIcmp({ src, payload }: ParsedIpv6): void {
     if (payload[0] !== 128) return; // echo request
     const reply = Buffer.from(payload);
@@ -752,6 +720,5 @@ export class NetStack extends EventEmitter {
     for (const connection of [...this.connections.values()]) connection.destroy();
     this.connections.clear();
     this.tcpListeners.clear();
-    this.udpSockets.clear();
   }
 }

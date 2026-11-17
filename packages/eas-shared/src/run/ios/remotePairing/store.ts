@@ -5,7 +5,6 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-import { parsePlist, toXmlPlist } from './plist';
 import { getDataDirectory } from '../../../paths';
 
 export const STATE_DIR: string =
@@ -13,7 +12,6 @@ export const STATE_DIR: string =
 
 const HOST_FILE = 'host.json';
 const DEVICES_DIR = 'devices';
-const PAIR_RECORDS_DIR = 'pair-records';
 
 /** This machine's stable identity as a pairable DeviceHub host. */
 export interface HostIdentity {
@@ -38,7 +36,6 @@ export interface DeviceRecord {
   privateKey: Buffer;
   publicKey: Buffer;
   pairedAt: string;
-  importedFrom?: string;
   lastHost?: string;
   lastPort?: number;
   lastSeenAt?: string;
@@ -126,24 +123,6 @@ export function saveDevice(record: DeviceRecord, root: string = STATE_DIR): Devi
     peerAltIrk: record.peerAltIrk.toString('base64'),
   };
   writeJsonAtomic(devicePath(record.udid, root), serialised);
-  // Also emit a pymobiledevice3-compatible remote pair record for interoperability.
-  const plistFile = path.join(root, PAIR_RECORDS_DIR, `remote_${record.udid}.plist`);
-  ensureDir(path.dirname(plistFile));
-  fs.writeFileSync(
-    plistFile,
-    toXmlPlist({
-      public_key: record.publicKey,
-      private_key: record.privateKey,
-      remote_unlock_host_key: '',
-      host_identifier: record.hostIdentifier,
-      host_alt_irk: record.hostAltIrk,
-      peer_alt_irk: record.peerAltIrk,
-      peer_udid: record.udid,
-      peer_model: record.model,
-      peer_name: record.name,
-    }),
-    { mode: 0o600 }
-  );
   return record;
 }
 
@@ -189,60 +168,9 @@ export function updateDevice(
 }
 
 export function deleteDevice(udid: string, root: string = STATE_DIR): void {
-  const files = [devicePath(udid, root), path.join(root, PAIR_RECORDS_DIR, `remote_${udid}.plist`)];
-  for (const file of files) {
-    try {
-      fs.unlinkSync(file);
-    } catch (error) {
-      if (!isErrnoCode(error, 'ENOENT')) throw error;
-    }
+  try {
+    fs.unlinkSync(devicePath(udid, root));
+  } catch (error) {
+    if (!isErrnoCode(error, 'ENOENT')) throw error;
   }
-}
-
-/** Fields of a pymobiledevice3 remote pair record plist. */
-interface PairRecordPlist {
-  host_identifier?: string;
-  host_alt_irk?: Buffer;
-  peer_alt_irk?: Buffer;
-  private_key?: Buffer;
-  public_key?: Buffer;
-  peer_udid?: string;
-  peer_name?: string;
-  peer_model?: string;
-}
-
-/**
- * Import a pymobiledevice3 `remote_<udid>.plist` written by its pairable-host flow.
- * Host-initiated records (no host_identifier) are rejected: they belong to a different identity.
- */
-export function importPairRecordPlist(file: string, root: string = STATE_DIR): DeviceRecord {
-  const plist = parsePlist(fs.readFileSync(file)) as PairRecordPlist;
-  if (!plist.host_identifier || !plist.private_key || !plist.peer_alt_irk) {
-    throw new Error(
-      `${file} is not a device-initiated pair record (missing host_identifier/peer_alt_irk)`
-    );
-  }
-  const udid =
-    plist.peer_udid ||
-    path
-      .basename(file)
-      .replace(/^remote_/, '')
-      .replace(/\.plist$/, '');
-  return saveDevice(
-    {
-      udid,
-      name: plist.peer_name || udid,
-      model: plist.peer_model || null,
-      accountId: null,
-      hostIdentifier: plist.host_identifier,
-      hostAltIrk: Buffer.from(plist.host_alt_irk || Buffer.alloc(16)),
-      peerAltIrk: Buffer.from(plist.peer_alt_irk),
-      privateKey: Buffer.from(plist.private_key),
-      // Matches the source: a missing public_key throws here.
-      publicKey: Buffer.from(plist.public_key as Buffer),
-      pairedAt: fs.statSync(file).mtime.toISOString(),
-      importedFrom: file,
-    },
-    root
-  );
 }

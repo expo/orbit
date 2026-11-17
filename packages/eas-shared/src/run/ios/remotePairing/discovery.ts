@@ -12,7 +12,7 @@ import {
   browse,
   localAddresses,
 } from './mdns';
-import { PacketReader, REMOTE_PAIRING_PORT_RANGE, probeFrame } from './rppairing';
+import { PacketReader, probeFrame } from './rppairing';
 import type { DeviceRecord } from './store';
 
 /** The device info returned by a successful probe, optionally enriched by LAN discovery. */
@@ -104,28 +104,6 @@ export interface ScanPortsOptions {
   concurrency?: number;
   timeoutMs?: number;
   onProgress?: (done: number) => void;
-}
-
-/** Scan the ephemeral range for a RemotePairing listener. Resolves the first probe result or null. */
-export async function scanPorts(
-  host: string,
-  { ports = null, concurrency = 256, timeoutMs = 1000, onProgress }: ScanPortsOptions = {}
-): Promise<ProbeResult | null> {
-  const [first, last] = REMOTE_PAIRING_PORT_RANGE;
-  const queue = ports ? [...ports] : Array.from({ length: last - first + 1 }, (_, i) => first + i);
-  let found: ProbeResult | null = null;
-  let done = 0;
-  const worker = async () => {
-    while (queue.length && !found) {
-      const port = queue.shift()!;
-      const result = await probe(host, port, { timeoutMs });
-      done += 1;
-      if (onProgress && done % 512 === 0) onProgress(done);
-      if (result && !found) found = result;
-    }
-  };
-  await Promise.all(Array.from({ length: Math.max(1, concurrency) }, worker));
-  return found;
 }
 
 /**

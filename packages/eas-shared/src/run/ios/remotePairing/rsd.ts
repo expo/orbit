@@ -1,9 +1,10 @@
 // Ported from remote-device (MIT, https://github.com/expo/appdrop).
 // RemoteServiceDiscovery: the RSD endpoint on the tunnel lists every service and its port.
+import { Socket } from 'net';
 import { Duplex } from 'stream';
 
-import { parsePlist, toXmlPlist } from './plist';
 import { RemoteXpcConnection, RemoteXpcError } from './remotexpc';
+import { LockdownProtocolClient } from '../appleDevice/protocol/LockdownProtocol';
 
 export const RSD_PORT = 58783;
 
@@ -123,166 +124,35 @@ export class RemoteServiceDiscovery {
     return connection;
   }
 
-  /** Lockdown-style plist service with the RSDCheckin handshake. */
-  async startLockdownService(name: string): Promise<PlistService> {
-    const socket = await this.connectRaw(this.servicePort(name));
-    const service = new PlistService(socket);
-    try {
-      const checkin = await service.sendReceive({
-        Label: 'remote-device',
-        ProtocolVersion: '2',
-        Request: 'RSDCheckin',
-      });
-      if (checkin.Request !== 'RSDCheckin') {
-        throw new RsdError(`unexpected RSDCheckin response: ${JSON.stringify(checkin)}`);
-      }
-      const started = await service.receive();
-      if (started.Request !== 'StartService') {
-        throw new RsdError(`unexpected StartService response: ${JSON.stringify(started)}`);
-      }
-      if (started.Error) throw new RsdError(`${name}: ${started.Error}`);
-    } catch (error) {
-      service.close();
-      throw error;
-    }
-    return service;
-  }
-
   /**
-   * Same RSDCheckin/StartService handshake as `startLockdownService`, but hands back the raw
-   * stream afterwards so a client that speaks the service's own framing (AFC, installation_proxy,
-   * ...) can take over. Bytes the device sent right behind the StartService reply are pushed back
-   * onto the stream, and the stream starts flowing again as soon as a 'data' listener is added.
+   * Open a lockdown-protocol service (`*.shim.remote`) with the RSDCheckin handshake and return
+   * the stream, ready for a client that speaks the service's own framing (AFCClient,
+   * InstallationProxyClient). These services wait for the client to speak first, so nothing is
+   * left unread behind the StartService reply.
    */
   async startLockdownServiceSocket(name: string): Promise<Duplex> {
-    const service = await this.startLockdownService(name);
-    return service.detach();
-  }
-
-  close(): void {
-    this.control?.close();
-  }
-}
-
-interface PlistWaiter {
-  resolve: (value: any) => void;
-  reject: (error: Error) => void;
-}
-
-/** Length-prefixed plist messaging used by lockdown-style services. */
-export class PlistService {
-  socket: Duplex;
-  buffer: Buffer = Buffer.alloc(0);
-  waiters: PlistWaiter[] = [];
-  closed: Error | null = null;
-  private readonly onData: (chunk: Buffer) => void;
-  private readonly onClose: () => void;
-  private readonly onError: (error: Error) => void;
-
-  constructor(socket: Duplex) {
-    this.socket = socket;
-    this.onData = (chunk) => {
-      this.buffer = Buffer.concat([this.buffer, chunk]);
-      this.drain();
-    };
-    const finish = (error?: Error) => {
-      this.closed = error || new RsdError('service connection closed');
-      for (const waiter of this.waiters.splice(0)) waiter.reject(this.closed);
-    };
-    this.onClose = () => finish();
-    this.onError = (error) => finish(error);
-    socket.on('data', this.onData);
-    socket.on('close', this.onClose);
-    socket.on('error', this.onError);
-  }
-
-  drain(): void {
-    while (this.waiters.length && this.buffer.length >= 4) {
-      const size = this.buffer.readUInt32BE(0);
-      if (this.buffer.length < 4 + size) return;
-      const body = this.buffer.subarray(4, 4 + size);
-      this.buffer = this.buffer.subarray(4 + size);
-      const waiter = this.waiters.shift()!;
-      try {
-        waiter.resolve(parsePlist(body));
-      } catch (error) {
-        waiter.reject(error as Error);
-      }
+    const socket = await this.connectRaw(this.servicePort(name));
+    const client = new LockdownProtocolClient(socket as Socket);
+    try {
+      await client.sendMessage(
+        { Label: 'Expo Orbit', ProtocolVersion: '2', Request: 'RSDCheckin' } as any,
+        (response: any, resolve, reject) => {
+          if (response.Request === 'StartService') {
+            resolve();
+          } else if (response.Request !== 'RSDCheckin') {
+            reject(new RsdError(`${name}: unexpected response ${JSON.stringify(response)}`));
+          }
+        }
+      );
+    } catch (error) {
+      socket.destroy();
+      throw error;
     }
-  }
-
-  send(value: unknown): Promise<void> {
-    const payload = Buffer.from(toXmlPlist(value), 'utf8');
-    const header = Buffer.alloc(4);
-    header.writeUInt32BE(payload.length);
-    return new Promise((resolve, reject) =>
-      this.socket.write(Buffer.concat([header, payload]), (error) =>
-        error ? reject(error) : resolve()
-      )
-    );
-  }
-
-  receive(timeoutMs = 15_000): Promise<any> {
-    if (this.closed) return Promise.reject(this.closed);
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        const index = this.waiters.indexOf(waiter);
-        if (index >= 0) this.waiters.splice(index, 1);
-        reject(new RsdError('timed out waiting for plist'));
-      }, timeoutMs);
-      const waiter: PlistWaiter = {
-        resolve: (value) => {
-          clearTimeout(timer);
-          resolve(value);
-        },
-        reject: (error) => {
-          clearTimeout(timer);
-          reject(error);
-        },
-      };
-      this.waiters.push(waiter);
-      this.drain();
-    });
-  }
-
-  async sendReceive(value: unknown): Promise<any> {
-    await this.send(value);
-    return this.receive();
-  }
-
-  /**
-   * Stop plist framing and give the underlying stream back (not part of the original source).
-   *
-   * Any bytes already read past the last plist are unshifted back onto the stream. The stream is
-   * paused first (removing a 'data' listener does not stop a flowing stream, so bytes would be
-   * dropped), and resumed when the next consumer subscribes to 'data' (an explicitly paused
-   * stream does not resume on its own when a listener is added).
-   */
-  detach(): Duplex {
-    const socket = this.socket;
-    socket.pause();
-    socket.removeListener('data', this.onData);
-    socket.removeListener('close', this.onClose);
-    socket.removeListener('error', this.onError);
-    for (const waiter of this.waiters.splice(0)) {
-      waiter.reject(new RsdError('service connection detached'));
-    }
-    const leftover = this.buffer;
-    this.buffer = Buffer.alloc(0);
-    if (leftover.length) socket.unshift(leftover);
-    const resumeOnData = (event: string | symbol) => {
-      if (event !== 'data') return;
-      socket.removeListener('newListener', resumeOnData);
-      // 'newListener' fires before the listener is attached; resume() only starts delivering on
-      // the next tick, by which time it is.
-      socket.resume();
-    };
-    socket.on('newListener', resumeOnData);
     return socket;
   }
 
   close(): void {
-    this.socket.destroy();
+    this.control?.close();
   }
 }
 
