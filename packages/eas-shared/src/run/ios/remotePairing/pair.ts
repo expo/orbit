@@ -24,12 +24,6 @@ export interface PairDeviceOptions {
   port?: number;
   timeoutMs?: number;
   stateDir?: string;
-  /** Addresses to advertise instead of every local address. */
-  addresses?: HostAddress[] | null;
-  /** Extra hosts to send unicast mDNS announcements to (e.g. across a tunnel). */
-  announceTo?: string[];
-  /** Interface to bind the listener to; by default binds dual-stack on all interfaces. */
-  host?: string | null;
 }
 
 export interface PairingAdvertisingEvent {
@@ -76,9 +70,6 @@ export function pairDevice({
   port = DEFAULT_PAIRING_PORT,
   timeoutMs = 10 * 60 * 1000,
   stateDir,
-  addresses = null,
-  announceTo = [],
-  host = null,
 }: PairDeviceOptions = {}): PairDeviceSession {
   const events = new EventEmitter() as PairingEventEmitter;
   const promise = (async () => {
@@ -114,7 +105,7 @@ export function pairDevice({
           socket.destroy();
         });
     });
-    const boundPort = await listen(server, port, host);
+    const boundPort = await listen(server, port);
     server.on('error', rejectResult);
     const txt: TxtProperties = {
       name: hostInfo.name,
@@ -132,8 +123,6 @@ export function pairDevice({
         instanceName: hostInfo.identifier,
         port: boundPort,
         txt,
-        addresses: addresses || undefined,
-        unicastTargets: announceTo,
       });
     } catch (error) {
       server.close();
@@ -143,7 +132,7 @@ export function pairDevice({
       port: boundPort,
       name: hostInfo.name,
       identifier: hostInfo.identifier,
-      addresses: addresses || localAddresses(),
+      addresses: localAddresses(),
       txt,
       backend: responder.backend,
     });
@@ -179,11 +168,7 @@ export function pairDevice({
   return promise;
 }
 
-function listen(
-  server: net.Server,
-  preferred: number,
-  host: string | null = null
-): Promise<number> {
+function listen(server: net.Server, preferred: number): Promise<number> {
   return new Promise((resolve, reject) => {
     const tryPort = (port: number, attempt: number = 0) => {
       server.once('error', (error: NodeJS.ErrnoException) => {
@@ -198,10 +183,9 @@ function listen(
         server.removeAllListeners('error');
         resolve((server.address() as net.AddressInfo).port);
       });
-      // No host binds dual-stack (:: with IPv4 mapped), so a phone that dials this Mac's IPv6
+      // Binds dual-stack (:: with IPv4 mapped), so a phone that dials this computer's IPv6
       // address reaches us too.
-      if (host) server.listen(port, host);
-      else server.listen(port);
+      server.listen(port);
     };
     tryPort(preferred);
   });

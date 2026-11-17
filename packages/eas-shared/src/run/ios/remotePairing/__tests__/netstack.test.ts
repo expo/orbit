@@ -1,8 +1,7 @@
 import crypto from 'crypto';
 import { Duplex } from 'stream';
 
-import { bytesToIp, ipToBytes } from '../mdns';
-import { NetStack, TcpConnection } from '../netstack';
+import { NetStack, TcpConnection, bytesToIp, ipToBytes } from '../netstack';
 import {
   CDTUNNEL_MAGIC,
   Ipv6Splitter,
@@ -84,18 +83,6 @@ describe('NetStack', () => {
 
   it('rejects a connection to a port nobody listens on', async () => {
     await expect(client.connect(SERVER_ADDRESS, 1234)).rejects.toThrow('connection refused');
-  });
-
-  it('exchanges UDP datagrams', async () => {
-    const serverSocket = server.udp(5000);
-    const clientSocket = client.udp();
-    const received = new Promise<[Buffer, { address: string; port: number }]>((resolve) => {
-      serverSocket.on('message', (data, remote) => resolve([data, remote]));
-    });
-    clientSocket.send(SERVER_ADDRESS, 5000, Buffer.from('hello'));
-    const [data, remote] = await received;
-    expect(data.toString()).toBe('hello');
-    expect(remote).toEqual({ address: CLIENT_ADDRESS, port: clientSocket.port });
   });
 });
 

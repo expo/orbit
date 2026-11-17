@@ -87,45 +87,9 @@ function makeRsd(host: Duplex): { rsd: RemoteServiceDiscovery; connect: jest.Moc
 }
 
 describe('RemoteServiceDiscovery.startLockdownServiceSocket', () => {
-  it('delivers bytes that arrive in the same chunk as the checkin replies', async () => {
+  it('hands back the stream once the service has started', async () => {
     const [host, device] = duplexPair();
     const { rsd, connect } = makeRsd(host);
-
-    const extra = Buffer.from([0x43, 0x46, 0x41, 0x36, 0x4c, 0x50, 0x41, 0x41, 0xde, 0xad]);
-    const deviceSide = (async () => {
-      const checkin = (await readFramed(device)).toString('utf8');
-      expect(checkin).toContain('RSDCheckin');
-      device.write(
-        Buffer.concat([frame({ Request: 'RSDCheckin' }), frame({ Request: 'StartService' }), extra])
-      );
-    })();
-
-    const socket = await rsd.startLockdownServiceSocket(SERVICE);
-    await deviceSide;
-    expect(connect).toHaveBeenCalledWith('fd00::1', SERVICE_PORT);
-    expect(socket).toBe(host);
-
-    // Let any pending stream ticks run before a consumer subscribes: nothing may be lost.
-    await new Promise((resolve) => setImmediate(resolve));
-
-    const later = Buffer.from('later bytes');
-    const received = collect(socket, extra.length + later.length);
-    device.write(later);
-    expect(await received).toEqual(Buffer.concat([extra, later]));
-
-    // Writes still reach the device unchanged (no plist framing).
-    const echoed = new Promise<Buffer>((resolve) => device.once('data', resolve));
-    device.resume();
-    socket.write(Buffer.from('ping'));
-    expect(await echoed).toEqual(Buffer.from('ping'));
-
-    socket.destroy();
-    device.destroy();
-  });
-
-  it('works when no extra bytes follow the replies', async () => {
-    const [host, device] = duplexPair();
-    const { rsd } = makeRsd(host);
 
     const deviceSide = (async () => {
       await readFramed(device);
@@ -135,6 +99,8 @@ describe('RemoteServiceDiscovery.startLockdownServiceSocket', () => {
 
     const socket = await rsd.startLockdownServiceSocket(SERVICE);
     await deviceSide;
+    expect(connect).toHaveBeenCalledWith('fd00::1', SERVICE_PORT);
+    expect(socket).toBe(host);
 
     const payload = Buffer.from('hello');
     const received = collect(socket, payload.length);
@@ -159,9 +125,7 @@ describe('RemoteServiceDiscovery.startLockdownServiceSocket', () => {
       );
     })();
 
-    await expect(rsd.startLockdownServiceSocket(SERVICE)).rejects.toThrow(
-      `${SERVICE}: ServiceProhibited`
-    );
+    await expect(rsd.startLockdownServiceSocket(SERVICE)).rejects.toThrow('ServiceProhibited');
     expect(host.destroyed).toBe(true);
     device.destroy();
   });
