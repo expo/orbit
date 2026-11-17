@@ -10,6 +10,7 @@
 
 ### 💡 Others
 
+- Update `ipa-resign` to 0.0.28: the emulated-Mac anisette identity by default on Windows and Linux, the Windows CoreADI64 identity, and one protocol core shared with sign.expo.dev. ([#402](https://github.com/expo/orbit/pull/402) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Update `ipa-resign` to 0.0.28: the emulated-Mac anisette identity by default on Windows and Linux, the Windows CoreADI64 identity, and one protocol core shared with sign.expo.dev. ([#aborted: you must first push the current branch to a remote, or use the --head flag](https://github.com/expo/orbit/pull/aborted: you must first push the current branch to a remote, or use the --head flag) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Start Expo Simulators sessions without a maximum duration of 30 minutes. A session now gets the maximum duration of the account's plan. ([#395](https://github.com/expo/orbit/pull/395) by [@brentvatne](https://github.com/brentvatne))
 
