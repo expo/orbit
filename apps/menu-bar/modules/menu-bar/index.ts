@@ -21,7 +21,7 @@ async function runCli(
     if (event.listenerId !== id) {
       return;
     }
-    logs.push({ command, info: event.output });
+    logs.push({ command, info: event.output, level: 'info' });
     callback?.(event.output);
   };
   const listener = emitter.addListener('onCLIOutput', filteredCallback);
@@ -41,7 +41,7 @@ async function runCli(
     } else if (error instanceof Error) {
       // The CLI's error is a stringified JSON object, wrapped by the native module.
       const cliError = convertCliErrorMessageToError(error.message);
-      logs.push({ command, info: cliError.message });
+      logs.push({ command, info: cliError.message, level: 'error' });
 
       throw cliError;
     }

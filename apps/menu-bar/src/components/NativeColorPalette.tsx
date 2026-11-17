@@ -1,81 +1,39 @@
-import { setStringAsync } from 'expo-clipboard';
-import { useState } from 'react';
-import { FlatList, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PlatformColor } from '../modules/PlatformColor';
 
-const SMALL_SQUARE_SIZE = 25;
-const NUMBER_OF_COLUMNS = 9;
+// react-native-macos shows `tooltip` on hover; its types do not declare the prop.
+const tooltip = (text: string) => ({ tooltip: text }) as object;
 
-const NativeColorPalette = () => {
-  const [selectedColor, setSelectedColor] = useState<string>();
-  return (
-    <View style={styles.container}>
-      <View style={{ alignItems: 'flex-start' }}>
-        <FlatList
-          data={colorsArray}
-          renderItem={({ item }) => {
-            return (
-              <TouchableOpacity
-                style={[
-                  styles.smallSquare,
-                  {
-                    backgroundColor: PlatformColor(item),
-                  },
-                ]}
-                onPress={() => setSelectedColor((prev) => (prev !== item ? item : undefined))}
-              />
-            );
-          }}
-          keyExtractor={(item) => item}
-          numColumns={NUMBER_OF_COLUMNS}
-        />
-      </View>
-      {selectedColor ? (
-        <View style={styles.selectedContainer}>
-          <View
-            style={[
-              styles.bigSquare,
-              {
-                backgroundColor: PlatformColor(selectedColor),
-              },
-            ]}
-          />
-          <TouchableOpacity
-            style={styles.selectedColorText}
-            onPress={() => setStringAsync(selectedColor)}>
-            <Text>{selectedColor}</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-    </View>
-  );
-};
+const NativeColorPalette = ({ onPress }: { onPress: (name: string) => void }) => (
+  <View style={styles.grid}>
+    {colorsArray.map((name) => (
+      <Pressable
+        key={name}
+        {...tooltip(name)}
+        accessibilityLabel={name}
+        onPress={() => onPress(name)}
+        style={[styles.swatch, { backgroundColor: PlatformColor(name) }]}
+      />
+    ))}
+  </View>
+);
 
 export default NativeColorPalette;
 
 const styles = StyleSheet.create({
-  container: {
+  grid: {
     flexDirection: 'row',
-    borderWidth: 2,
-    borderColor: PlatformColor('tertiaryLabelColor'),
+    flexWrap: 'wrap',
+    gap: 6,
   },
-  smallSquare: {
-    height: SMALL_SQUARE_SIZE,
-    width: SMALL_SQUARE_SIZE,
-  },
-  bigSquare: {
-    height: 40,
-    width: 40,
-  },
-  selectedContainer: {
-    flexDirection: 'row',
-    gap: 5,
-    alignItems: 'center',
-    padding: 5,
-  },
-  selectedColorText: {
-    margin: 10,
+  // Seven columns fit the 280pt Debug Menu sidebar.
+  swatch: {
+    width: 27,
+    height: 27,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(127,127,127,0.35)',
   },
 });
 

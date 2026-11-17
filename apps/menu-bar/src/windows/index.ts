@@ -70,8 +70,17 @@ export const WindowsNavigator = createWindowsNavigator({
     options: {
       title: 'Debug Menu',
       windowStyle: {
+        mask: [
+          WindowStyleMask.Titled,
+          WindowStyleMask.Closable,
+          WindowStyleMask.Resizable,
+          ...(Platform.OS === 'macos' ? [WindowStyleMask.FullSizeContentView] : []),
+        ],
+        titlebarAppearsTransparent: true,
+        titleVisibility: 'hidden',
+        toolbar: true,
         height: 600,
-        width: 800,
+        width: 900,
       },
     },
   },
