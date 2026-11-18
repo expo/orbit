@@ -43,7 +43,10 @@ echo "[orbit-cli] compiling TypeScript"
 echo "[orbit-cli] bundling and compiling to Hermes bytecode"
 (cd "$CLI_DIR" && node hermes-launcher/bundle.mjs "$WORK/orbit-cli.js")
 python3 "$HERMES_NODE_OUT/bin/wrap-cjs.py" "$WORK/orbit-cli.js" orbit-cli "$WORK/orbit-cli.wrapped.js"
-"$HERMES_NODE_OUT/bin/hermesc" -emit-binary -O -Xes6-block-scoping -Xasync-generators \
+# -fno-inline: ipa-resign's obfuscated string decoder is called from ~15k
+# sites, and inlining it there makes the optimizer take over 10 minutes and the
+# bytecode nearly 3x larger, for no measurable speedup.
+"$HERMES_NODE_OUT/bin/hermesc" -emit-binary -O -fno-inline -Xes6-block-scoping -Xasync-generators \
   -Wno-undefined-variable -out="$DIST/orbit-cli.hbc" "$WORK/orbit-cli.wrapped.js"
 
 echo "[orbit-cli] building the launcher ($ARCHS)"
@@ -79,8 +82,7 @@ for dep in bindings file-uri-to-path; do
 done
 
 echo "[orbit-cli] copying ipa-resign helpers"
-# ipa-resign's "exports" hide package.json; its main is dist/index.js.
-IPA_RESIGN=$(cd "$REPO_ROOT" && node -p "path.resolve(path.dirname(require.resolve('ipa-resign')), '..')")
+IPA_RESIGN=$(cd "$REPO_ROOT" && node -p "path.dirname(require.resolve('ipa-resign/package.json'))")
 cp "$IPA_RESIGN/bin/anisette" "$IPA_RESIGN/bin/zsign" "$DIST/bin/"
 
 rm -rf "$WORK"
