@@ -36,19 +36,9 @@ export async function getAvailableAppleSimulatorsListAsync(
   const iosSimulators = [];
 
   for (const runtime of Object.keys(info.devices)) {
-    // Given a string like 'com.apple.CoreSimulator.SimRuntime.tvOS-13-4'
-    const runtimeSuffix = runtime.split('com.apple.CoreSimulator.SimRuntime.').pop();
-
-    if (!runtimeSuffix) {
-      continue;
-    }
-
-    // Create an array [tvOS, 13, 4]
-    const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
+    const { osType, osVersion } = CoreSimulator.parseSimRuntime(runtime);
 
     if (osType === 'iOS' || osType === 'tvOS' || osType === 'watchOS') {
-      // Join the end components [13, 4] -> '13.4'
-      const osVersion = osVersionComponents.join('.');
       const sims = info.devices[runtime];
       for (const device of sims) {
         if (device.isAvailable) {
