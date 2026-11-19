@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Redesign the Debug Menu: filter logs by text or by errors, expand an entry to see its output with JSON in color, and copy or clear the logs. The list updates while commands run. Debug actions write their result to the log, and a click on a system color copies its name. ([#403](https://github.com/expo/orbit/pull/403) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Open only the selected simulator when Orbit launches DeviceHub (Xcode 27), instead of also restoring windows from DeviceHub's last session, which never finish loading for deleted simulators. ([#401](https://github.com/expo/orbit/pull/401) by [@gabrieldonadel](https://github.com/gabrieldonadel))
