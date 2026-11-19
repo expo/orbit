@@ -110,7 +110,9 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 #endif
   }
 
-  override func customize(_ rootView: RCTRootView) {
-    rootView.backgroundColor = NSColor.clear
+  // Matches Expo's override (UIView is NSView on macOS). The root view is an
+  // RCTSurfaceHostingProxyRootView, an RCTUIView but not an RCTRootView.
+  override func customize(_ rootView: NSView) {
+    (rootView as? RCTUIView)?.backgroundColor = NSColor.clear
   }
 }

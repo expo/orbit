@@ -106,12 +106,18 @@ export async function getDeviceInfoAsync({
   return devicePlistToSimulatorDevice(deviceDirectory, data);
 }
 
+/**
+ * 'com.apple.CoreSimulator.SimRuntime.tvOS-13-4' -> { osType: 'tvOS', osVersion: '13.4' }.
+ * Device-specific runtimes add a suffix, which is dropped: 'iOS-27-2-iPhone19-4' -> '27.2'.
+ */
+export function parseSimRuntime(runtime: string) {
+  const [osType, ...rest] = runtime.split('com.apple.CoreSimulator.SimRuntime.').pop()!.split('-');
+  const osVersion = rest.join('.').match(/^\d+(\.\d+)*/)?.[0] ?? '';
+  return { osType, osVersion };
+}
+
 export function devicePlistToSimulatorDevice(deviceDirectory: string, data: any): SimulatorDevice {
-  const runtimeSuffix = data.runtime.split('com.apple.CoreSimulator.SimRuntime.').pop()!;
-  // Create an array [tvOS, 13, 4]
-  const [osType, ...osVersionComponents] = runtimeSuffix.split('-');
-  // Join the end components [13, 4] -> '13.4'
-  const osVersion = osVersionComponents.join('.');
+  const { osType, osVersion } = parseSimRuntime(data.runtime);
   return {
     ...data,
     /**
