@@ -23,6 +23,10 @@ export function refreshSimulatorCameraSimulatorsAsync() {
   return SimulatorCameraModule.refreshSimulators();
 }
 
+export function requestMacCameraAccessAsync() {
+  return SimulatorCameraModule.requestMacCameraAccess();
+}
+
 export function listMacCamerasAsync() {
   return SimulatorCameraModule.listMacCameras();
 }

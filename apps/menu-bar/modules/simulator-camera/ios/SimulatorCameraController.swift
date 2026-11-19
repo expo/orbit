@@ -119,6 +119,8 @@ final class SimulatorCameraController {
     stopTimers()
     for (_, running) in runningSources { running.source.stop() }
     runningSources = [:]
+    // Every source stopped; enabling again starts them and reports their errors afresh.
+    sourceErrors = [:]
     targetsLock.lock()
     targets = [:]
     targetsLock.unlock()
@@ -191,9 +193,12 @@ final class SimulatorCameraController {
     targetsLock.lock()
     let targets = self.targets[config] ?? []
     targetsLock.unlock()
+    // A QR code always fits: filling a 16:9 frame with a square code cuts off its finder
+    // patterns, and no scanner reads it. The content mode setting is for images and videos.
+    let contentMode = config.kind == .qr ? .fit : config.contentMode
     for writer in targets {
       writer.publish(width: FrameCanvas.width, height: FrameCanvas.height, bytesPerRow: FrameCanvas.bytesPerRow) { slot in
-        FrameCanvas.render(frame, contentMode: config.contentMode, into: slot)
+        FrameCanvas.render(frame, contentMode: contentMode, into: slot)
       }
     }
   }

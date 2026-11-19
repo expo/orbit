@@ -7,6 +7,7 @@ import {
   listMacCamerasAsync,
   MacCamera,
   refreshSimulatorCameraSimulatorsAsync,
+  requestMacCameraAccessAsync,
   setSimulatorCameraEnabledAsync,
   setSimulatorCameraSourceAsync,
   SimulatorCameraSource,
@@ -98,7 +99,18 @@ export function useSimulatorCamera() {
   }, []);
 
   const setEnabled = useCallback(
-    (enabled: boolean) => update({ ...preferencesRef.current, enabled }),
+    async (enabled: boolean) => {
+      // The switch is the only place that asks for the Mac's camera access, whatever the
+      // sources are, so picking the Mac camera later needs no prompt. A refusal still turns
+      // the camera on: images, videos and QR codes work without it.
+      if (enabled) {
+        await requestMacCameraAccessAsync().catch(() => false);
+        listMacCamerasAsync()
+          .then(setMacCameras)
+          .catch(() => {});
+      }
+      await update({ ...preferencesRef.current, enabled });
+    },
     [update]
   );
   const setBackSource = useCallback(

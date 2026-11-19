@@ -300,7 +300,7 @@ static CVPixelBufferRef OrbitCreatePlaceholderFrame(AVCaptureDevicePosition posi
     };
     [@"Expo Orbit · Simulator Camera" drawAtPoint:CGPointMake(80, 260) withAttributes:title];
     NSString *which = position == AVCaptureDevicePositionFront ? @"front" : @"back";
-    [[NSString stringWithFormat:@"No source for the %@ camera. Pick one in Orbit → Settings → Simulator Camera.", which]
+    [[NSString stringWithFormat:@"No source for the %@ camera. Pick one in Orbit → Settings → Experiments.", which]
         drawAtPoint:CGPointMake(80, 330)
         withAttributes:body];
     UIGraphicsPopContext();
@@ -835,10 +835,15 @@ static id OrbitDeviceInput_deviceInputWithDevice(id self, SEL _cmd, AVCaptureDev
   IMP imp = OrbitOriginalIMP([AVCaptureDeviceInput class], _cmd, YES);
   return imp ? ((id (*)(id, SEL, id, NSError **))imp)(self, _cmd, device, error) : nil;
 }
-static id OrbitDeviceInput_initWithDevice(id self, SEL _cmd, AVCaptureDevice *device, NSError **error) {
+// An -init… method takes ownership of self and returns a +1 object. A plain C replacement
+// returns +0 under ARC, so the caller over-releases the input and the session keeps a
+// dangling pointer (the frame timer then crashes retaining it). Declare the init semantics.
+typedef id (*OrbitInitWithDeviceIMP)(__attribute__((ns_consumed)) id, SEL, id, NSError **) NS_RETURNS_RETAINED;
+static id OrbitDeviceInput_initWithDevice(__attribute__((ns_consumed)) id self, SEL _cmd, AVCaptureDevice *device, NSError **error) NS_RETURNS_RETAINED;
+static id OrbitDeviceInput_initWithDevice(__attribute__((ns_consumed)) id self, SEL _cmd, AVCaptureDevice *device, NSError **error) {
   if ([device isKindOfClass:[OrbitCaptureDevice class]]) return [OrbitCaptureInput inputWithDevice:(OrbitCaptureDevice *)device];
-  IMP imp = OrbitOriginalIMP([AVCaptureDeviceInput class], _cmd, NO);
-  return imp ? ((id (*)(id, SEL, id, NSError **))imp)(self, _cmd, device, error) : nil;
+  OrbitInitWithDeviceIMP imp = (OrbitInitWithDeviceIMP)OrbitOriginalIMP([AVCaptureDeviceInput class], _cmd, NO);
+  return imp ? imp(self, _cmd, device, error) : nil;
 }
 
 #pragma mark - Connection

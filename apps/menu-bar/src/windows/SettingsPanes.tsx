@@ -1,6 +1,6 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
 import {
-  Camera16Regular,
+  Beaker16Regular,
   Key16Regular,
   MoreHorizontal16Regular,
   Options16Regular,
@@ -118,19 +118,19 @@ const allPanes: PaneItem[] = [
     fallback: <PhoneLaptop16Regular />,
   },
   { key: 'apple', label: 'Apple ID', symbol: 'key', fallback: <Key16Regular /> },
-  { key: 'camera', label: 'Simulator Camera', symbol: 'camera', fallback: <Camera16Regular /> },
   {
     key: 'advanced',
     label: 'Advanced',
     symbol: 'slider.horizontal.3',
     fallback: <Options16Regular />,
   },
+  { key: 'experiments', label: 'Experiments', symbol: 'flask', fallback: <Beaker16Regular /> },
 ];
 export const panes = allPanes.filter(
   (item) =>
     (item.key !== 'apple' || RESIGN_ENABLED) &&
-    // The virtual camera needs the iOS Simulator, which only runs on macOS.
-    (item.key !== 'camera' || isSimulatorCameraSupported)
+    // The only experiment, the simulator camera, needs the iOS Simulator: macOS only.
+    (item.key !== 'experiments' || isSimulatorCameraSupported)
 );
 
 type PlatformItem = {
@@ -859,7 +859,7 @@ export function SettingsPane({ pane }: { pane: Pane }) {
           </>
         ) : null}
 
-        {pane === 'camera' && isSimulatorCameraSupported ? <SimulatorCameraPane /> : null}
+        {pane === 'experiments' && isSimulatorCameraSupported ? <SimulatorCameraPane /> : null}
 
         {pane === 'advanced' ? (
           <>

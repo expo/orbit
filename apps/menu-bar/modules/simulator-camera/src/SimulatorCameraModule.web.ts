@@ -25,6 +25,7 @@ const SimulatorCameraModule: NativeSimulatorCameraModule = {
   setEnabled: unsupported,
   setSource: unsupported,
   refreshSimulators: () => Promise.resolve(status),
+  requestMacCameraAccess: () => Promise.resolve(false),
   listMacCameras: () => Promise.resolve([]),
 };
 

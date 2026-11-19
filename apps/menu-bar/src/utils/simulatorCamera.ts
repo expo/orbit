@@ -19,7 +19,8 @@ export const noSource: SimulatorCameraSource = { kind: 'none' };
 
 export const defaultSimulatorCameraPreferences: SimulatorCameraPreferences = {
   enabled: false,
-  back: noSource,
+  // The Mac's default camera; the switch asks for camera access when it turns on.
+  back: { kind: 'macCamera' },
   front: null,
 };
 

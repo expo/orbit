@@ -56,6 +56,7 @@ enum FrameSourceError: LocalizedError {
   case unreadableImage(String)
   case cameraNotFound(String?)
   case cameraDenied
+  case cameraNotAsked
   case cannotEncodeQR
 
   var errorDescription: String? {
@@ -64,6 +65,7 @@ enum FrameSourceError: LocalizedError {
     case .unreadableImage(let path): return "Cannot read the image \(path)"
     case .cameraNotFound(let id): return "Camera not found\(id.map { ": \($0)" } ?? "")"
     case .cameraDenied: return "Orbit has no access to the camera. Allow it in System Settings → Privacy & Security → Camera."
+    case .cameraNotAsked: return "Orbit has no access to the camera yet. Turn the simulator camera off and on to allow it."
     case .cannotEncodeQR: return "Cannot encode the text as a QR code"
     }
   }
@@ -247,11 +249,9 @@ final class MacCameraFrameSource: NSObject, FrameSource, AVCaptureVideoDataOutpu
     case .denied, .restricted:
       throw FrameSourceError.cameraDenied
     case .notDetermined:
-      // Ask once; the frames start when the user allows. The placeholder shows until then.
-      AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-        if granted { self?.queue.async { try? self?.configureAndRun() } }
-      }
-      return
+      // Only the Settings switch asks for access (requestMacCameraAccess), never a source:
+      // Orbit's launch and a source change must not put up a permission prompt.
+      throw FrameSourceError.cameraNotAsked
     default:
       break
     }

@@ -41,5 +41,7 @@ export interface NativeSimulatorCameraModule {
     source: SimulatorCameraSource
   ): Promise<SimulatorCameraStatus>;
   refreshSimulators(): Promise<SimulatorCameraStatus>;
+  /** Asks for the Mac's camera access if it was never asked; resolves with whether it is granted. */
+  requestMacCameraAccess(): Promise<boolean>;
   listMacCameras(): Promise<MacCamera[]>;
 }

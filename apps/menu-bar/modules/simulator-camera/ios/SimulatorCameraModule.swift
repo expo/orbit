@@ -1,3 +1,4 @@
+import AVFoundation
 import ExpoModulesCore
 
 private let onStatusChange = "onStatusChange"
@@ -44,6 +45,12 @@ public class SimulatorCameraModule: Module {
 
     AsyncFunction("refreshSimulators") { () -> [String: Any] in
       SimulatorCameraController.shared.refreshSimulators().dictionary
+    }
+
+    // Asks macOS for camera access when it has not been asked yet; otherwise resolves with the
+    // stored answer. Called only when the user turns the simulator camera on.
+    AsyncFunction("requestMacCameraAccess") { (promise: Promise) in
+      AVCaptureDevice.requestAccess(for: .video) { granted in promise.resolve(granted) }
     }
 
     AsyncFunction("listMacCameras") { () -> [[String: String]] in
