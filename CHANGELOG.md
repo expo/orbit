@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Show the number of remote sessions that start or run in a badge on the menu bar icon, on macOS. ([#396](https://github.com/expo/orbit/pull/396) by [@brentvatne](https://github.com/brentvatne))
+
 ### 🐛 Bug fixes
 
 - Open only the selected simulator when Orbit launches DeviceHub (Xcode 27), instead of also restoring windows from DeviceHub's last session, which never finish loading for deleted simulators. ([#401](https://github.com/expo/orbit/pull/401) by [@gabrieldonadel](https://github.com/gabrieldonadel))
