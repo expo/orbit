@@ -83,7 +83,7 @@ public class MenuBarModule: Module {
       let task = Process()
       let pipe = Pipe()
       
-      task.executableURL = Bundle.main.url(forResource: getCliResourceNameForArch(), withExtension: nil)
+      task.executableURL = getCliExecutableURL()
       task.arguments = [command] + arguments
 
       var environment = ProcessInfo.processInfo.environment

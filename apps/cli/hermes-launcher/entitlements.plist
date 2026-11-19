@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened-runtime entitlements for the Hermes CLI (launcher, N-API addon,
+  ipa-resign helpers). Hermes runs without a JIT, so the pkg/V8 allow-jit and
+  allow-unsigned-executable-memory exceptions are gone; the launcher works with
+  only this entitlement.
+
+  disable-library-validation stays until a Developer ID build confirms it isn't
+  needed: hermesvm.framework and the addon are signed by the same team, which
+  should satisfy library validation, but that hasn't been verified (ad hoc
+  signatures have no team ID, so they can't show it).
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+</dict>
+</plist>

@@ -44,7 +44,13 @@ public func parseCliOutput(_ output: String) -> CLIOutputResult {
   )
 }
 
-public func getCliResourceNameForArch() -> String {
+/// The bundled CLI in Contents/Resources/cli/: the `orbit-cli` launcher in
+/// ORBIT_HERMES_CLI builds (universal; runs orbit-cli.hbc on the app's Hermes),
+/// otherwise the pkg binary for this architecture.
+public func getCliExecutableURL() -> URL? {
+  if let launcher = Bundle.main.url(forResource: "orbit-cli", withExtension: nil, subdirectory: "cli") {
+    return launcher
+  }
   var sysinfo = utsname()
   uname(&sysinfo)
   let machine = withUnsafePointer(to: &sysinfo.machine) {
@@ -52,5 +58,6 @@ public func getCliResourceNameForArch() -> String {
       ptr in String(cString: ptr)
     }
   }
-  return machine == "arm64" ? "orbit-cli-arm64" : "orbit-cli-x64"
+  let name = machine == "arm64" ? "orbit-cli-arm64" : "orbit-cli-x64"
+  return Bundle.main.url(forResource: name, withExtension: nil, subdirectory: "cli")
 }

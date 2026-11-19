@@ -13,7 +13,7 @@
     "lint": "eslint .",
     "start": "expo start",
     "test": "jest",
-    "update-cli": "mkdir -p cli && cp -R ../cli/dist/ cli/",
+    "update-cli": "rm -rf cli && cp -R ../cli/dist cli",
     "gql": "graphql-codegen --config codegen.ts",
     "typecheck": "tsc"
   },

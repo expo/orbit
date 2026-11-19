@@ -33,7 +33,7 @@ private let WHITELISTED_DOMAINS = ["expo.dev", "expo.test", "exp.host", "localho
       let task = Process()
       let pipe = Pipe()
 
-      task.executableURL = Bundle.main.url(forResource: getCliResourceNameForArch(), withExtension: nil)
+      task.executableURL = getCliExecutableURL()
       task.arguments = ["list-devices"]
       task.standardOutput = pipe
       task.standardError = FileHandle.nullDevice

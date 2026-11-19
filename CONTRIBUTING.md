@@ -14,6 +14,12 @@
 7. Inside the `apps/cli` directory run `yarn archive` to generate the standalone executable used by the `menu-bar`.
 8. Finally, run `yarn update-cli` inside the `apps/menu-bar` directory to update the local CLI file.
 
+### Experimental: the CLI on Hermes (`ORBIT_HERMES_CLI`)
+
+By default the macOS app bundles the CLI as `pkg`-built Node binaries. Running `pod install` with `ORBIT_HERMES_CLI=1` (or setting `"hermesCli": "true"` in `apps/menu-bar/macos/Podfile.properties.json`) opts into running it on the app's own Hermes through [hermes-node](https://github.com/gabrieldonadel/hermes-node) instead. The Xcode "Build CLI" phase then builds `apps/cli` to Hermes bytecode plus a small `orbit-cli` launcher (`apps/cli/hermes-launcher/`) in every configuration.
+
+Hermes and hermes-node are downloaded prebuilt for the hermes-node commit pinned in `apps/menu-bar/macos/scripts/hermes-node.sh` (`HERMES_NODE_REF`), from that commit's release in [hermes-node](https://github.com/gabrieldonadel/hermes-node/releases), where hermes-node's CI publishes them. They're only used if the release's `SHA256SUMS` matches `HERMES_NODE_PREBUILT_SHA256`, pinned next to the ref; update both together. If that commit has no release yet, they're built from source instead, which needs `cmake` and `ninja` and takes ~10–15 min the first time. Set `HERMES_NODE_DIR` to work against a local hermes-node checkout. Running `pod install` without the flag goes back to the default.
+
 ## 🏎️ Start the Development Environment
 
 1. From the `apps/menu-bar` directory, run `yarn start` to start Metro Bundler.

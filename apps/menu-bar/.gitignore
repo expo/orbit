@@ -62,3 +62,5 @@ yarn-error.log
 !.eas/build/
 .expo/
 ios/build/
+# hermes-node checkout and build (scripts/hermes-node.sh)
+macos/vendor/

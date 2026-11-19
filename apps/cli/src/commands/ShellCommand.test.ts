@@ -7,6 +7,7 @@ import {
   ShellCommandContext,
   createPosixShim,
   createWindowsShim,
+  getCurrentLauncher,
   getShellCommandStatusAsync,
   installShellCommandAsync,
   refreshShellCommandAsync,
@@ -36,6 +37,26 @@ function createContext(overrides: Partial<ShellCommandContext> = {}): ShellComma
 
 const shimPath = () => path.join(homedir, '.expo', 'orbit', 'bin', 'orbit');
 const linkPath = () => path.join(homedir, '.local', 'bin', 'orbit');
+
+describe('getCurrentLauncher', () => {
+  const { argv, execPath } = process;
+  afterEach(() => {
+    process.argv = argv;
+    Object.defineProperty(process, 'execPath', { value: execPath });
+  });
+
+  it('runs the macOS launcher directly when it is running its bundled CLI', () => {
+    const exe = '/Applications/Expo Orbit.app/Contents/Resources/cli/orbit-cli';
+    Object.defineProperty(process, 'execPath', { value: exe });
+    process.argv = [exe, `${exe}.hbc`, 'install-shell-command'];
+    expect(getCurrentLauncher().command).toEqual([exe]);
+  });
+
+  it('passes the entry point to a plain Node runtime', () => {
+    process.argv = [execPath, '/repo/apps/cli/build/index.js', 'install-shell-command'];
+    expect(getCurrentLauncher().command).toEqual([execPath, '/repo/apps/cli/build/index.js']);
+  });
+});
 
 describe('createPosixShim', () => {
   it('forwards arguments, environment and exit code to the bundled CLI', () => {

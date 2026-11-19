@@ -9,8 +9,7 @@ yarn-error.log
 packages/*/build
 apps/*/build
 
-apps/menu-bar/cli/expo-orbit-cli
-apps/menu-bar/cli/orbit-cli*
+apps/menu-bar/cli/
 
 .idea
 
