@@ -6,6 +6,7 @@ import * as AppleDevice from './AppleDevice';
 import { FREE_APP_LIMIT_MESSAGE, freeAppLimitBundleIds } from './freeAppLimit';
 import { ensureDirectory } from '../../../utils/dir';
 import * as devicectl from '../devicectl';
+import * as WirelessAppleDevice from '../remotePairing/WirelessAppleDevice';
 
 /** Get the app_delta folder for faster subsequent rebuilds on devices. */
 export function getAppDeltaDirectory(bundleId: string): string {
@@ -41,6 +42,23 @@ export async function installOnDeviceAsync(props: {
       },
     });
   } catch (error: any) {
+    // Not reachable over usbmux (or no usbmux service at all, e.g. Windows without the Apple
+    // helper): an iPhone paired over Wi-Fi is installed to through its RemotePairing tunnel.
+    if (
+      (error.code === 'APPLE_DEVICE_USBMUXD' ||
+        error.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING') &&
+      WirelessAppleDevice.hasWirelessPairing(udid)
+    ) {
+      return await WirelessAppleDevice.installAndLaunchAppAsync({
+        udid,
+        appPath: bundle,
+        bundleId: bundleIdentifier,
+        deltaPath: appDeltaDirectory,
+        onProgress({ status, progress }) {
+          console.log(`status: ${status} ${progress}%`);
+        },
+      });
+    }
     if (error.code === 'APPLE_DEVICE_USBMUXD') {
       // Usbmux can only find wireless devices if they are unlocked. Fallback on much slower devicectl.
       if (devicectl.hasDevicectlEverBeenInstalled()) {

@@ -6,9 +6,11 @@ import path from 'path';
 
 import { ClientManager } from './ClientManager';
 import { XcodeDeveloperDiskImagePrerequisite } from './XcodeDeveloperDiskImagePrerequisite';
+import { AFCClient } from './client/AFCClient';
 import { FreeProfileApp, freeProfileApps } from './freeAppLimit';
 import { delayAsync } from '../../../utils/delayAsync';
 import { CommandError } from '../../../utils/errors';
+import { installExitHooks } from '../../../utils/exit';
 import {
   APP_STORE_BUNDLE_IDENTIFIER,
   EXPO_GO_APP_STORE_URL,
@@ -29,7 +31,6 @@ import {
   createUsbmuxdNotRunningError,
   isUsbmuxdNotRunningError,
 } from './usbmuxd';
-import { installExitHooks } from '../../../utils/exit';
 import { uniqBy } from '../../../utils/fn';
 import { parseBinaryPlistAsync } from '../../../utils/parseBinaryPlistAsync';
 
@@ -145,6 +146,59 @@ export async function getConnectedDevicesUsingCustomToolingAsync(): Promise<
   }
 }
 
+/**
+ * Upload an app bundle to the device's staging area over AFC and install it with
+ * installation_proxy. Shared by the usbmux path and the Wi-Fi (RemotePairing) path,
+ * whose `*.shim.remote` services speak the same protocols.
+ */
+export async function uploadAndInstallAppAsync({
+  afcClient,
+  getInstaller,
+  appPath,
+  bundleId,
+  deltaPath,
+  onProgress,
+}: {
+  afcClient: AFCClient;
+  /** Opened after the upload: installation_proxy drops idle connections. */
+  getInstaller: () => Promise<InstallationProxyClient>;
+  appPath: string;
+  bundleId: string;
+  deltaPath: string;
+  onProgress: OnInstallProgressCallback;
+}) {
+  const packageName = path.basename(appPath);
+  const destPackagePath = path.posix.join('PublicStaging', packageName);
+
+  await uploadApp(afcClient, {
+    appBinaryPath: appPath,
+    destinationPath: destPackagePath,
+  });
+
+  const installer = await getInstaller();
+  await installer.installApp(
+    destPackagePath,
+    bundleId,
+    {
+      // https://github.com/ios-control/ios-deploy/blob/0f2ffb1e564aa67a2dfca7cdf13de47ce489d835/src/ios-deploy/ios-deploy.m#L2491-L2508
+      ApplicationsType: 'Any',
+
+      CFBundleIdentifier: bundleId,
+      CloseOnInvalidate: '1',
+      InvalidateOnDetach: '1',
+      IsUserInitiated: '1',
+      // Disable checking for wifi devices, this is nominally faster.
+      PreferWifi: '0',
+      // Only info I could find on these:
+      // https://github.com/wwxxyx/Quectel_BG96/blob/310876f90fc1093a59e45e381160eddcc31697d0/Apple_Homekit/homekit_certification_tools/ATS%206/ATS%206/ATS.app/Contents/Frameworks/CaptureKit.framework/Versions/A/Resources/MobileDevice/MobileInstallation.h#L112-L121
+      PackageType: 'Developer',
+      ShadowParentKey: deltaPath,
+      // SkipUninstall: '1'
+    },
+    onProgress
+  );
+}
+
 /** Install and run an Apple app binary on a connected Apple device. */
 export async function runOnDevice({
   udid,
@@ -182,36 +236,16 @@ export async function runOnDevice({
       log('Could not mount the developer disk image, continuing install only: %O', error);
     }
 
-    const packageName = path.basename(appPath);
-    const destPackagePath = path.posix.join('PublicStaging', packageName);
-
-    await uploadApp(clientManager, {
-      appBinaryPath: appPath,
-      destinationPath: destPackagePath,
+    await uploadAndInstallAppAsync({
+      afcClient: await clientManager.getAFCClient(),
+      getInstaller: () => clientManager.getInstallationProxyClient(),
+      appPath,
+      bundleId,
+      deltaPath,
+      onProgress,
     });
 
     const installer = await clientManager.getInstallationProxyClient();
-    await installer.installApp(
-      destPackagePath,
-      bundleId,
-      {
-        // https://github.com/ios-control/ios-deploy/blob/0f2ffb1e564aa67a2dfca7cdf13de47ce489d835/src/ios-deploy/ios-deploy.m#L2491-L2508
-        ApplicationsType: 'Any',
-
-        CFBundleIdentifier: bundleId,
-        CloseOnInvalidate: '1',
-        InvalidateOnDetach: '1',
-        IsUserInitiated: '1',
-        // Disable checking for wifi devices, this is nominally faster.
-        PreferWifi: '0',
-        // Only info I could find on these:
-        // https://github.com/wwxxyx/Quectel_BG96/blob/310876f90fc1093a59e45e381160eddcc31697d0/Apple_Homekit/homekit_certification_tools/ATS%206/ATS%206/ATS.app/Contents/Frameworks/CaptureKit.framework/Versions/A/Resources/MobileDevice/MobileInstallation.h#L112-L121
-        PackageType: 'Developer',
-        ShadowParentKey: deltaPath,
-        // SkipUninstall: '1'
-      },
-      onProgress
-    );
 
     const {
       // TODO(EvanBacon): This can be undefined when querying App Clips.
@@ -279,11 +313,10 @@ async function mountDeveloperDiskImage(clientManager: ClientManager) {
 }
 
 async function uploadApp(
-  clientManager: ClientManager,
+  afcClient: AFCClient,
   { appBinaryPath, destinationPath }: { appBinaryPath: string; destinationPath: string }
 ) {
   console.log('Uploading App...\n');
-  const afcClient = await clientManager.getAFCClient();
   try {
     await afcClient.getFileInfo('PublicStaging');
   } catch (err: any) {

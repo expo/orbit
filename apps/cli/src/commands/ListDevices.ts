@@ -58,6 +58,23 @@ export async function listDevicesAsync<P extends Platform>({
       })()
     );
 
+    // iPhones paired over Wi-Fi (iOS 27 Remote Device Pairing) on every platform, listed on
+    // their own so a missing usbmux service doesn't hide them.
+    tasks.push(
+      (async () => {
+        try {
+          const wirelessDevices = await AppleDevice.getConnectedWirelessDevicesAsync();
+          for (const device of wirelessDevices) {
+            if (!result.ios.devices.some(({ udid }) => udid === device.udid)) {
+              result.ios.devices.push(device);
+            }
+          }
+        } catch (error) {
+          console.warn('Unable to get Apple devices paired over Wi-Fi', error);
+        }
+      })()
+    );
+
     // Simulators are only supported on macOS
     if (process.platform === 'darwin') {
       tasks.push(

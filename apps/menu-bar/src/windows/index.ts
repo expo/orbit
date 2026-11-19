@@ -5,6 +5,7 @@ import DebugMenu from './DebugMenu';
 import NewSimulator from './NewSimulator';
 import Onboarding from './Onboarding';
 import PairAndroidDevice from './PairAndroidDevice';
+import PairIosDevice from './PairIosDevice';
 import Settings from './Settings';
 import { WindowStyleMask, createWindowsNavigator } from '../modules/WindowManager';
 
@@ -50,6 +51,18 @@ export const WindowsNavigator = createWindowsNavigator({
         titlebarAppearsTransparent: true,
         height: 400,
         width: 500,
+      },
+    },
+  },
+  PairIosDevice: {
+    component: PairIosDevice,
+    options: {
+      title: 'Pair iPhone over Wi-Fi',
+      windowStyle: {
+        mask: [WindowStyleMask.Titled, WindowStyleMask.Closable],
+        titlebarAppearsTransparent: true,
+        height: 300,
+        width: 440,
       },
     },
   },
