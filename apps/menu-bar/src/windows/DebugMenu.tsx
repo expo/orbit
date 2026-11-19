@@ -1,4 +1,4 @@
-import { Bug16Regular, Checkmark12Regular, Copy16Regular } from '@fluentui/react-icons';
+import { Checkmark12Regular, Copy16Regular } from '@fluentui/react-icons';
 import { useState } from 'react';
 import { Platform, ScrollView, StyleSheet } from 'react-native';
 
