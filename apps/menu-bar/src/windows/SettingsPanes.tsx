@@ -1,5 +1,6 @@
 import { darkTheme, lightTheme } from '@expo/styleguide-native';
 import {
+  Beaker16Regular,
   Key16Regular,
   MoreHorizontal16Regular,
   Options16Regular,
@@ -20,9 +21,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
+import { SimulatorCameraPane } from './SimulatorCameraPane';
 import { WindowsNavigator } from './index';
 import { Pane } from './settingsPane';
 import AutoUpdater from '../../modules/auto-updater';
+import { isSimulatorCameraSupported } from '../../modules/simulator-camera';
 import {
   APPLE_ID_CHANGED_EVENT,
   clearAppleIdLoginAsync,
@@ -121,8 +124,14 @@ const allPanes: PaneItem[] = [
     symbol: 'slider.horizontal.3',
     fallback: <Options16Regular />,
   },
+  { key: 'experiments', label: 'Experiments', symbol: 'flask', fallback: <Beaker16Regular /> },
 ];
-export const panes = allPanes.filter((item) => item.key !== 'apple' || RESIGN_ENABLED);
+export const panes = allPanes.filter(
+  (item) =>
+    (item.key !== 'apple' || RESIGN_ENABLED) &&
+    // The only experiment, the simulator camera, needs the iOS Simulator: macOS only.
+    (item.key !== 'experiments' || isSimulatorCameraSupported)
+);
 
 type PlatformItem = {
   label: string;
@@ -850,6 +859,8 @@ export function SettingsPane({ pane }: { pane: Pane }) {
           </>
         ) : null}
 
+        {pane === 'experiments' && isSimulatorCameraSupported ? <SimulatorCameraPane /> : null}
+
         {pane === 'advanced' ? (
           <>
             <Section title="Remote devices">
@@ -1157,7 +1168,7 @@ function getShellCommandSubtitle(status?: CliCommands.ShellCommand.ShellCommandS
   return 'Run Orbit from any terminal';
 }
 
-function Section({
+export function Section({
   title,
   trailing,
   children,
@@ -1179,7 +1190,7 @@ function Section({
   );
 }
 
-function Card({ children }: { children: React.ReactNode }) {
+export function Card({ children }: { children: React.ReactNode }) {
   const theme = useCurrentTheme();
   const backgroundColor =
     theme === 'light'
@@ -1240,7 +1251,7 @@ const OPEN_REMOTE_SESSION_CHOICES: {
   { id: 'never', label: 'Never' },
 ];
 
-function SettingRow({
+export function SettingRow({
   leading,
   title,
   subtitle,
