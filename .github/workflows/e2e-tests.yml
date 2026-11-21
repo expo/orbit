@@ -17,16 +17,37 @@ on:
       - apps/menu-bar/e2e/**
       - apps/menu-bar/electron/**
       - apps/menu-bar/macos/**
+      - apps/menu-bar/modules/**
+      - apps/menu-bar/fingerprint.config.js
+      - yarn.lock
+      - patches/**
+      - .github/workflows/e2e-tests.yml
+  # PRs can only read caches saved by their own runs or by the base branch, so the
+  # macOS app/ccache caches are warmed on main for new PRs to reuse.
+  push:
+    branches: [main]
+    paths:
+      - apps/menu-bar/src/**
+      - apps/menu-bar/e2e/**
+      - apps/menu-bar/electron/**
+      - apps/menu-bar/macos/**
+      - apps/menu-bar/modules/**
+      - apps/menu-bar/fingerprint.config.js
+      - yarn.lock
+      - patches/**
       - .github/workflows/e2e-tests.yml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Don't cancel main runs, they warm the caches PRs build on.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   electron-e2e-windows:
     runs-on: windows-latest
     name: Electron E2E (Windows)
+    # main runs exist to warm the macOS caches.
+    if: github.event_name != 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,6 +107,8 @@ jobs:
   electron-e2e-linux:
     runs-on: ubuntu-latest
     name: Electron E2E (Linux)
+    # main runs exist to warm the macOS caches.
+    if: github.event_name != 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -161,6 +184,18 @@ jobs:
   macos-e2e:
     runs-on: macos-26
     name: macOS E2E (Appium mac2)
+    # Every step that builds the .app is skipped when a build with the same native
+    # fingerprint is cached: JS-only changes just re-bundle the JS into that app.
+    env:
+      XCODE_VERSION: "26.6"
+      # Outside the checkout so Metro doesn't crawl it.
+      CCACHE_DIR: /Users/runner/.ccache
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      APP_PATH: apps/menu-bar/macos/build/Build/Products/Release/Expo Orbit.app
+      # hermesc + hermes-node the app was built with, cached next to it (see
+      # macos/scripts/ci/build-e2e-app.sh).
+      E2E_TOOLS_DIR: apps/menu-bar/macos/build/e2e-tools
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -172,24 +207,128 @@ jobs:
         with:
           node-version: 22
 
-      # node-gyp 9 builds macos-export-certificate-and-key in `yarn install` and
-      # needs distutils, which Python 3.12 removed. Without the addon, the
-      # Hermes CLI build fails in the "Build CLI" phase.
-      - name: Setup Python
+      - name: Switch to Xcode ${{ env.XCODE_VERSION }}
+        run: sudo xcode-select --switch /Applications/Xcode_${XCODE_VERSION}.app
+
+      # node-gyp 9 needs distutils, gone from the runner's default Python (3.12+).
+      # Without it the optional macos-export-certificate-and-key install fails, yarn
+      # drops the package, and the Hermes CLI build can't find its sources.
+      - name: Setup Python for node-gyp
+        id: python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Switch to Xcode 26.6
-        run: sudo xcode-select --switch /Applications/Xcode_26.6.app
+      # node_modules is restored as-is (yarn install skipped) on an exact hit, and
+      # reconciled by `yarn install` from the closest previous one otherwise.
+      - name: Restore workspace node_modules
+        id: node-modules
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-${{ runner.arch }}-node22-modules-${{ hashFiles('yarn.lock', 'patches/**') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-node22-modules-
 
       - name: Install workspace dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
         run: yarn install --frozen-lockfile
+        env:
+          npm_config_python: ${{ steps.python.outputs.python-path }}
+
+      - name: Save workspace node_modules
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ steps.node-modules.outputs.cache-primary-key }}
+
+      - name: Restore E2E node_modules
+        id: e2e-node-modules
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/menu-bar/e2e/node_modules
+          key: ${{ runner.os }}-${{ runner.arch }}-node22-e2e-modules-${{ hashFiles('apps/menu-bar/e2e/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-node22-e2e-modules-
+
+      - name: Install E2E dependencies
+        if: steps.e2e-node-modules.outputs.cache-hit != 'true'
+        working-directory: apps/menu-bar/e2e
+        run: yarn install --frozen-lockfile
+
+      - name: Save E2E node_modules
+        if: steps.e2e-node-modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/menu-bar/e2e/node_modules
+          key: ${{ steps.e2e-node-modules.outputs.cache-primary-key }}
+
+      # Neither depends on the app, so they run in the background while it builds.
+      # "Wait for E2E environment" below joins them.
+      - name: Prepare E2E environment in background
+        run: |
+          (
+            set -euo pipefail
+            # Pin to the last 2.x line
+            (cd apps/menu-bar/e2e && npx appium driver install --source=npm appium-mac2-driver@2.2.2)
+            # Android AVD (not booted)
+            sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
+            yes | "$sdk/sdkmanager" --licenses >/dev/null || true
+            "$sdk/sdkmanager" --install "system-images;android-33;default;arm64-v8a"
+            echo no | "$sdk/avdmanager" create avd \
+              --name e2e --abi default/arm64-v8a \
+              --package "system-images;android-33;default;arm64-v8a" --force
+          ) > "$RUNNER_TEMP/e2e-env.log" 2>&1 && echo 0 > "$RUNNER_TEMP/e2e-env.status" \
+            || echo $? > "$RUNNER_TEMP/e2e-env.status" &
 
       - name: Build packages
         run: yarn build
 
+      - name: Compute native fingerprint
+        id: fingerprint
+        working-directory: apps/menu-bar
+        run: |
+          yarn --silent fingerprint fingerprint:generate --platform ios . > "$RUNNER_TEMP/fingerprint.json"
+          echo "hash=$(jq -r .hash "$RUNNER_TEMP/fingerprint.json")" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cached app build
+        id: app-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ env.APP_PATH }}
+            ${{ env.E2E_TOOLS_DIR }}
+          key: macos-e2e-app-v1-xcode${{ env.XCODE_VERSION }}-${{ steps.fingerprint.outputs.hash }}
+
+      # ── Fingerprint matched: only JS changed ─────────────────────────────────
+      - name: Update JS bundle and CLI in cached app
+        if: steps.app-cache.outputs.cache-hit == 'true'
+        run: apps/menu-bar/macos/scripts/ci/update-js.sh "$APP_PATH"
+
+      # ── Fingerprint changed: build the app ───────────────────────────────────
+      - name: Install ccache
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        run: brew install ccache
+
+      - name: Restore ccache
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        id: ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: macos-e2e-ccache-v1-xcode${{ env.XCODE_VERSION }}-${{ steps.fingerprint.outputs.hash }}
+          restore-keys: |
+            macos-e2e-ccache-v1-xcode${{ env.XCODE_VERSION }}-
+
       - name: Setup Ruby
+        if: steps.app-cache.outputs.cache-hit != 'true'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
@@ -201,6 +340,7 @@ jobs:
       # does not fetch again, and it then fails on the version change (#408 moved
       # hermes-engine from 0.14.1 to 250829098.0.4).
       - name: Cache CocoaPods
+        if: steps.app-cache.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -208,45 +348,60 @@ jobs:
             ~/Library/Caches/CocoaPods
           key: ${{ runner.os }}-pods-${{ hashFiles('apps/menu-bar/macos/Podfile.lock') }}
 
+      # ExpoModulesJSI builds its xcframework with a nested xcodebuild (~1.5 min)
+      # and skips it when its own source hash matches the restored slices.
+      - name: Cache ExpoModulesJSI xcframework
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/expo-modules-jsi/apple/Products
+            node_modules/expo-modules-jsi/apple/.xcframework-slices
+          key: ${{ runner.os }}-expo-modules-jsi-xcode${{ env.XCODE_VERSION }}-${{ hashFiles('node_modules/expo-modules-jsi/package.json', 'apps/menu-bar/macos/Podfile.lock') }}
+
+      # Prebuilt Hermes + hermes-node that pod install downloads (or builds),
+      # pinned by scripts/hermes-node.sh.
+      - name: Cache Hermes CLI prebuilts
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: apps/menu-bar/macos/vendor
+          key: ${{ runner.os }}-hermes-node-${{ hashFiles('apps/menu-bar/macos/scripts/hermes-node.sh', 'apps/menu-bar/macos/scripts/hermes-prebuilt.sh') }}
+
       - name: Install CocoaPods
+        if: steps.app-cache.outputs.cache-hit != 'true'
         working-directory: apps/menu-bar/macos
         run: bundle exec pod install
 
-      - name: Build macOS app (unsigned — E2E only)
-        working-directory: apps/menu-bar
-        # Skip codesigning: the E2E job has no Developer ID Application cert,
-        # and Appium mac2 launches the .app by path in the same user session,
-        # so Gatekeeper isn't in the picture. Production builds are still
-        # signed/notarized via apps/menu-bar/.eas/build/build-release.yml.
+      - name: Build macOS app (unsigned, arm64 — E2E only)
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        run: apps/menu-bar/macos/scripts/ci/build-e2e-app.sh
+
+      # Saved before the tests run so a failing/flaky test doesn't throw the build away.
+      - name: Save app build
+        if: steps.app-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.APP_PATH }}
+            ${{ env.E2E_TOOLS_DIR }}
+          key: ${{ steps.app-cache.outputs.cache-primary-key }}
+
+      # Also after a failed build: whatever compiled is still a head start next time.
+      - name: Save ccache
+        if: always() && steps.app-cache.outputs.cache-hit != 'true' && steps.ccache.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache.outputs.cache-primary-key }}
+
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Wait for E2E environment
+        timeout-minutes: 15
         run: |
-          xcodebuild build \
-            -workspace macos/ExpoMenuBar.xcworkspace \
-            -scheme ExpoMenuBar-macOS \
-            -configuration Release \
-            -destination 'platform=macOS' \
-            -derivedDataPath macos/build \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Install E2E dependencies
-        run: yarn install
-        working-directory: apps/menu-bar/e2e
-
-      - name: Install Appium mac2 driver
-        working-directory: apps/menu-bar/e2e
-        # Pin to the last 2.x line
-        run: npx appium driver install --source=npm appium-mac2-driver@2.2.2
-
-      - name: Create Android AVD (not booted)
-        run: |
-          set -euo pipefail
-          sdk="$ANDROID_HOME/cmdline-tools/latest/bin"
-          yes | "$sdk/sdkmanager" --licenses >/dev/null || true
-          "$sdk/sdkmanager" --install "system-images;android-33;default;arm64-v8a"
-          echo no | "$sdk/avdmanager" create avd \
-            --name e2e --abi default/arm64-v8a \
-            --package "system-images;android-33;default;arm64-v8a" --force
+          while [ ! -f "$RUNNER_TEMP/e2e-env.status" ]; do sleep 1; done
+          cat "$RUNNER_TEMP/e2e-env.log"
+          exit "$(cat "$RUNNER_TEMP/e2e-env.status")"
 
       - name: Run macOS E2E tests
         working-directory: apps/menu-bar/e2e
