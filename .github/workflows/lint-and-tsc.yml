@@ -20,7 +20,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The PR number is only known once the PR is open, so the changelog entry usually lands in its
+  # own push. That push still matches the `paths` filter (which checks the whole PR diff), so skip
+  # linting when it only touches CHANGELOG.md and the previous push already passed.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
+    outputs:
+      only-changelog: ${{ steps.diff.outputs.only-changelog }}
+    steps:
+      - name: 🔍 Check if this push only changes the changelog
+        id: diff
+        if: github.event.action == 'synchronize'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Three-dot compare: after a rebase this includes main's changes too, so linting runs.
+          files=$(gh api "repos/$REPO/compare/$BEFORE...$AFTER" --jq '.files[].filename') || exit 0
+          echo "Changed files since $BEFORE:"
+          echo "$files"
+          [ "$files" = "CHANGELOG.md" ] || exit 0
+
+          # The previous run may have failed or been cancelled by this one (cancel-in-progress).
+          passed=$(gh api "repos/$REPO/commits/$BEFORE/check-runs?check_name=lint" \
+            --jq '[.check_runs[].conclusion] | any(. == "success" or . == "skipped")') || exit 0
+          if [ "$passed" = "true" ]; then
+            echo "only-changelog=true" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.only-changelog != 'true'
     runs-on: ubuntu-22.04
     steps:
       - name: 👀 Checkout
