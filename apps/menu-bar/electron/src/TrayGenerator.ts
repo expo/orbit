@@ -161,6 +161,8 @@ export default class TrayGenerator {
   };
   // The tray icon is on the taskbar. On Windows, the taskbar has a light or dark mode of its
   // own, which `nativeTheme` does not report.
+  // TODO: When we bump Electron to 39, replace `windowsTaskbarTheme.ts` with a read of
+  // `nativeTheme.shouldUseDarkColorsForSystemIntegratedUI`.
   updateTrayIcon = async () => {
     const update = ++this.trayIconUpdates;
     const dark =
