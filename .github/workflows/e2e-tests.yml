@@ -172,6 +172,14 @@ jobs:
         with:
           node-version: 22
 
+      # node-gyp 9 builds macos-export-certificate-and-key in `yarn install` and
+      # needs distutils, which Python 3.12 removed. Without the addon, the
+      # Hermes CLI build fails in the "Build CLI" phase.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Switch to Xcode 26.6
         run: sudo xcode-select --switch /Applications/Xcode_26.6.app
 
