@@ -25,6 +25,7 @@ import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
+import { unpairIosDeviceAsync } from '../commands/pairIosDeviceAsync';
 import { stopRemoteSimulatorAsync } from '../commands/remoteSimulatorAsync';
 import {
   handleFreeAppLimitAsync,
@@ -1567,12 +1568,25 @@ function Core(props: Props) {
   const showDeviceMenu = async (key: string, device: Device) => {
     const id = getDeviceId(device);
     const hasOrder = !!deviceList.order[key]?.length;
-    const index = await MenuBarModule.showMenu([
+    // An iPhone listed over the network is one paired over Wi-Fi from Orbit.
+    const wifiPairedUdid =
+      'udid' in device &&
+      device.osType === 'iOS' &&
+      device.deviceType === 'device' &&
+      device.connectionType === 'Network'
+        ? device.udid
+        : undefined;
+    const items = [
       { title: device.name, header: true },
       { title: 'Hide from this list' },
       ...(hasOrder ? [{ separator: true }, { title: 'Reset the order of this section' }] : []),
-    ]);
-    if (index === 1) {
+      ...(wifiPairedUdid ? [{ separator: true }, { title: 'Forget Wi-Fi pairing' }] : []),
+    ];
+    const index = await MenuBarModule.showMenu(items);
+    if (wifiPairedUdid && index === items.length - 1) {
+      await unpairIosDeviceAsync(wifiPairedUdid);
+      await refetch();
+    } else if (index === 1) {
       updateDeviceList((prev) => ({ ...prev, hidden: [...prev.hidden, id] }));
       // A hidden device is not the default device.
       const platform = getDeviceOS(device);
@@ -1584,7 +1598,7 @@ function Core(props: Props) {
         saveSelectedDevicesIds(newValue);
         return newValue;
       });
-    } else if (index === 3) {
+    } else if (hasOrder && index === 3) {
       updateDeviceList((prev) => {
         const { [key]: _removed, ...order } = prev.order;
         return { ...prev, order };

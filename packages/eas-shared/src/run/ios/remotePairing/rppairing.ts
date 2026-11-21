@@ -71,6 +71,9 @@ export interface ClientPairRecord {
   hostIdentifier: string;
   /** 32-byte Ed25519 seed. */
   privateKey: Buffer;
+  /** The iPhone's long-term Ed25519 key from Pair-Setup. When set, Pair-Verify checks it. */
+  peerPublicKey?: Buffer;
+  peerIdentifier?: string;
 }
 
 /** Device info decoded from the OPACK `INFO` TLV in Pair-Setup M5. */
@@ -460,7 +463,8 @@ export interface CreateListenerResponse {
  * Encrypted control channel to a paired iPhone.
  * `pairRecord`: { hostIdentifier, privateKey (32-byte ed25519 seed) }.
  *
- * Events: "close" (), "error" (Error).
+ * Events: "close" (). Socket errors reject the pending read instead of being re-emitted: an
+ * "error" event nobody listens to would take the process down.
  */
 export class RemotePairingClient extends EventEmitter {
   socket: Socket;
@@ -493,7 +497,6 @@ export class RemotePairingClient extends EventEmitter {
     this.serverKey = null;
     this.queue = Promise.resolve();
     socket.on('close', () => this.emit('close'));
-    socket.on('error', (error) => this.emit('error', error));
   }
 
   get remoteIdentifier(): string | undefined {
@@ -587,6 +590,10 @@ export class RemotePairingClient extends EventEmitter {
       Buffer.from('Pair-Verify-Encrypt-Salt'),
       Buffer.from('Pair-Verify-Encrypt-Info')
     );
+    if (this.pairRecord.peerPublicKey && !this.peerProvedIdentity(m2, verifyKey, x25519)) {
+      // Not PairVerifyFailedError: the phone did not reject us, somebody else answered for it.
+      throw new PairingError('the device did not prove it is the paired iPhone (pair-verify M2)');
+    }
 
     const identifier = this.pairRecord.hostIdentifier;
     const signer = new Ed25519(this.pairRecord.privateKey);
@@ -610,6 +617,31 @@ export class RemotePairingClient extends EventEmitter {
     this.clientKey = hkdf512(encryptionKey, null, Buffer.from('ClientEncrypt-main'));
     this.serverKey = hkdf512(encryptionKey, null, Buffer.from('ServerEncrypt-main'));
     return true;
+  }
+
+  /**
+   * Pair-Verify M2 as in HAP: the device signs (its curve key | its pairing id | our curve key)
+   * with the long-term key it sent in Pair-Setup, sealed under the verify key. Without this
+   * check any listener that accepts our M3 would become the tunnel peer.
+   */
+  private peerProvedIdentity(m2: Map<number, Buffer>, verifyKey: Buffer, x25519: X25519): boolean {
+    const { peerPublicKey, peerIdentifier } = this.pairRecord;
+    try {
+      const tlv = decodeTlv(
+        chachaOpen(verifyKey, nonce('PV-Msg02'), m2.get(TLV.ENCRYPTED_DATA) as Buffer)
+      );
+      const identifier = tlv.get(TLV.IDENTIFIER);
+      const signature = tlv.get(TLV.SIGNATURE);
+      if (!identifier || !signature) return false;
+      if (peerIdentifier && identifier.toString('utf8') !== peerIdentifier) return false;
+      return Ed25519.verify(
+        peerPublicKey!,
+        Buffer.concat([m2.get(TLV.PUBLIC_KEY)!, identifier, x25519.publicKey]),
+        signature
+      );
+    } catch {
+      return false;
+    }
   }
 
   /** handshake + pair-verify. */

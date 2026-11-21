@@ -5,12 +5,16 @@ import { AppleDevice } from 'eas-shared';
 type PairIosDeviceOptions = {
   /** How long to wait for the iPhone to pair, in milliseconds. */
   timeout?: string;
+  /** Stop the pairing session in progress instead of starting one. */
+  cancel?: boolean;
 };
 
 /** Logged once this computer is listed on the iPhone under Remote Device Pairing. */
 const ADVERTISING_LOG_PREFIX = '[orbit] advertising ';
 /** Logged with the PIN the user types on the iPhone. The menu bar app renders it. */
 const PIN_LOG_PREFIX = '[orbit] pin ';
+/** Logged when the attempt that showed the PIN failed; the PIN is no longer valid. */
+const PIN_REJECTED_LOG = '[orbit] pin rejected';
 /** Logged the instant pairing succeeds, before the device details are read. */
 const DEVICE_PAIRED_LOG = '[orbit] device paired';
 
@@ -23,12 +27,19 @@ const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000;
  */
 export async function pairIosDeviceAsync({
   timeout,
+  cancel,
 }: PairIosDeviceOptions): Promise<PairIosDeviceResult> {
+  if (cancel) {
+    AppleDevice.cancelWirelessPairing();
+    return { success: true };
+  }
+  const timeoutMs = Number(timeout);
   try {
     const device = await AppleDevice.pairWirelessDeviceAsync({
-      timeoutMs: timeout ? parseInt(timeout, 10) : DEFAULT_TIMEOUT_MS,
+      timeoutMs: timeoutMs > 0 ? timeoutMs : DEFAULT_TIMEOUT_MS,
       onAdvertising: ({ name }) => console.log(`${ADVERTISING_LOG_PREFIX}${name}`),
       onPin: (pin) => console.log(`${PIN_LOG_PREFIX}${pin}`),
+      onPinRejected: () => console.log(PIN_REJECTED_LOG),
       onPaired: () => console.log(DEVICE_PAIRED_LOG),
     });
     return {

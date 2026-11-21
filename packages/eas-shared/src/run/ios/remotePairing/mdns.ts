@@ -192,14 +192,23 @@ function stopStaleRegistrations(instanceName: string): Promise<void> {
 
 /**
  * Browse for instances of `serviceType` for `timeout` ms. `onInstance` fires as soon as an
- * instance's address is known; the promise resolves every instance found.
+ * instance's address is known; the promise resolves every instance found. Aborting `signal`
+ * ends the browse at once with what was found so far. `systemFallback: false` skips the
+ * `dns-sd` fallback on macOS, which always costs its full timeout.
  */
 export async function browse(
   serviceType: string,
   {
     timeout = 3000,
     onInstance,
-  }: { timeout?: number; onInstance?: (i: ServiceInstance) => void } = {}
+    signal,
+    systemFallback = true,
+  }: {
+    timeout?: number;
+    onInstance?: (i: ServiceInstance) => void;
+    signal?: AbortSignal;
+    systemFallback?: boolean;
+  } = {}
 ): Promise<ServiceInstance[]> {
   const instances = new Map<string, Omit<ServiceInstance, 'addresses'>>();
   const hosts = new Map<string, HostAddress[]>();
@@ -258,11 +267,20 @@ export async function browse(
   const query = () => mdns.query([{ name: serviceType, type: 'PTR' }]);
   query();
   const requery = setInterval(query, 1000);
-  await new Promise((resolve) => setTimeout(resolve, timeout));
+  await new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, timeout);
+    const stop = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    if (signal?.aborted) stop();
+    else signal?.addEventListener('abort', stop, { once: true });
+  });
   clearInterval(requery);
   mdns.destroy();
+  if (signal?.aborted) return assemble();
 
-  if (instances.size === 0 && process.platform === 'darwin') {
+  if (instances.size === 0 && systemFallback && process.platform === 'darwin') {
     // Our own multicast may be blocked by Local Network privacy; ask mDNSResponder instead.
     for (const instance of await browseWithDnsSd(serviceType)) {
       instances.set(instance.instance, instance);

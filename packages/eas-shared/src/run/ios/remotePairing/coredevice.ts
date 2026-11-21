@@ -19,6 +19,7 @@ const CORE_DEVICE_VERSION = {
 export interface LaunchOptions {
   args?: string[];
   env?: Record<string, string>;
+  /** Off by default, like `devicectl device process launch` without `--terminate-existing`. */
   killExisting?: boolean;
   startSuspended?: boolean;
   /** Handed to the app on launch, like `devicectl device process launch --payload-url`. */
@@ -96,7 +97,7 @@ export class AppService extends CoreDeviceService {
 
   launch(
     bundleId: string,
-    { args = [], env = {}, killExisting = true, startSuspended = false, url }: LaunchOptions = {}
+    { args = [], env = {}, killExisting = false, startSuspended = false, url }: LaunchOptions = {}
   ): Promise<unknown> {
     return this.invoke('com.apple.coredevice.feature.launchapplication', {
       applicationSpecifier: { bundleIdentifier: { _0: bundleId } },

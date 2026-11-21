@@ -166,7 +166,7 @@ export async function uploadAndInstallAppAsync({
   bundleId: string;
   deltaPath: string;
   onProgress: OnInstallProgressCallback;
-}) {
+}): Promise<InstallationProxyClient> {
   const packageName = path.basename(appPath);
   const destPackagePath = path.posix.join('PublicStaging', packageName);
 
@@ -197,6 +197,7 @@ export async function uploadAndInstallAppAsync({
     },
     onProgress
   );
+  return installer;
 }
 
 /** Install and run an Apple app binary on a connected Apple device. */
@@ -236,7 +237,7 @@ export async function runOnDevice({
       log('Could not mount the developer disk image, continuing install only: %O', error);
     }
 
-    await uploadAndInstallAppAsync({
+    const installer = await uploadAndInstallAppAsync({
       afcClient: await clientManager.getAFCClient(),
       getInstaller: () => clientManager.getInstallationProxyClient(),
       appPath,
@@ -244,8 +245,6 @@ export async function runOnDevice({
       deltaPath,
       onProgress,
     });
-
-    const installer = await clientManager.getInstallationProxyClient();
 
     const {
       // TODO(EvanBacon): This can be undefined when querying App Clips.
@@ -403,7 +402,7 @@ async function launchApp(
 }
 
 /** Installed apps among `bundleIds`, with their display names (installation_proxy `Lookup`). */
-async function lookupInstalledAsync(
+export async function lookupInstalledAsync(
   installer: InstallationProxyClient,
   bundleIds: string[]
 ): Promise<Record<string, { name?: string }>> {

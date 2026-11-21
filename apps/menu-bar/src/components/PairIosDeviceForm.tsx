@@ -6,7 +6,7 @@ import Button from './Button';
 import { NumberedStep, StatusBadge, SuccessState } from './PairAndroidDeviceForm';
 import { Text } from './Text';
 import { Row, Spacer, View } from './View';
-import { pairIosDeviceAsync } from '../commands/pairIosDeviceAsync';
+import { cancelIosPairingAsync, pairIosDeviceAsync } from '../commands/pairIosDeviceAsync';
 import MenuBarModule from '../modules/MenuBarModule';
 import { addOpacity } from '../utils/theme';
 import { WindowsNavigator } from '../windows';
@@ -28,9 +28,15 @@ const PairIosDeviceForm = () => {
 
   useEffect(() => {
     let cancelled = false;
+    let hostName: string | undefined;
+    // A new session takes over from the previous one in the CLI, so "Try again" needs no cancel.
     pairIosDeviceAsync({
-      onAdvertising: (hostName) => !cancelled && setState({ status: 'waiting', hostName }),
+      onAdvertising: (name) => {
+        hostName = name;
+        if (!cancelled) setState({ status: 'waiting', hostName });
+      },
       onPin: (pin) => !cancelled && setState({ status: 'pin', pin }),
+      onPinRejected: () => !cancelled && setState({ status: 'waiting', hostName }),
       onPaired: () => !cancelled && setState({ status: 'paired' }),
     })
       .then((result) => {
@@ -50,6 +56,14 @@ const PairIosDeviceForm = () => {
       cancelled = true;
     };
   }, [attempt]);
+
+  // The window closed: stop advertising this computer.
+  useEffect(
+    () => () => {
+      cancelIosPairingAsync().catch(() => {});
+    },
+    []
+  );
 
   if (state.status === 'paired') {
     return (

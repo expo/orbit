@@ -27,12 +27,18 @@ export function hkdf512(
   return Buffer.from(crypto.hkdfSync('sha512', ikm, salt ?? Buffer.alloc(64), info, length));
 }
 
+// Electron's Node (BoringSSL) has no `chacha20-poly1305` in createCipheriv, and the CLI runs on it
+// on Windows and Linux. The portable version below only seals pairing messages and control
+// requests, which are small; the tunnel's bulk data is TLS-PSK.
+const HAS_NATIVE_CHACHA = crypto.getCiphers().includes('chacha20-poly1305');
+
 export function chachaSeal(
   key: Buffer | Uint8Array,
   nonce: Buffer | Uint8Array,
   plaintext: Buffer | Uint8Array,
   aad: Buffer | Uint8Array = Buffer.alloc(0)
 ): Buffer {
+  if (!HAS_NATIVE_CHACHA) return portableChachaSeal(key, nonce, plaintext, aad);
   const cipher = crypto.createCipheriv('chacha20-poly1305', key, nonce, { authTagLength: 16 });
   cipher.setAAD(aad, { plaintextLength: plaintext.length });
   const body = Buffer.concat([cipher.update(plaintext), cipher.final()]);
@@ -46,12 +52,113 @@ export function chachaOpen(
   aad: Buffer | Uint8Array = Buffer.alloc(0)
 ): Buffer {
   if (sealed.length < 16) throw new Error('ciphertext too short');
+  if (!HAS_NATIVE_CHACHA) return portableChachaOpen(key, nonce, sealed, aad);
   const decipher = crypto.createDecipheriv('chacha20-poly1305', key, nonce, {
     authTagLength: 16,
   });
   decipher.setAAD(aad, { plaintextLength: sealed.length - 16 });
   decipher.setAuthTag(sealed.subarray(sealed.length - 16));
   return Buffer.concat([decipher.update(sealed.subarray(0, sealed.length - 16)), decipher.final()]);
+}
+
+// ---- ChaCha20-Poly1305 (RFC 8439) without OpenSSL ----
+
+function chachaBlock(key: Buffer, counter: number, nonce: Buffer): Buffer {
+  const state = new Uint32Array(16);
+  state.set([0x61707865, 0x3320646e, 0x79622d32, 0x6b206574]);
+  for (let i = 0; i < 8; i += 1) state[4 + i] = key.readUInt32LE(4 * i);
+  state[12] = counter;
+  for (let i = 0; i < 3; i += 1) state[13 + i] = nonce.readUInt32LE(4 * i);
+  const x = Uint32Array.from(state);
+  const rotl = (value: number, bits: number): number => (value << bits) | (value >>> (32 - bits));
+  const quarter = (a: number, b: number, c: number, d: number): void => {
+    x[a] += x[b];
+    x[d] = rotl(x[d] ^ x[a], 16);
+    x[c] += x[d];
+    x[b] = rotl(x[b] ^ x[c], 12);
+    x[a] += x[b];
+    x[d] = rotl(x[d] ^ x[a], 8);
+    x[c] += x[d];
+    x[b] = rotl(x[b] ^ x[c], 7);
+  };
+  for (let round = 0; round < 10; round += 1) {
+    quarter(0, 4, 8, 12);
+    quarter(1, 5, 9, 13);
+    quarter(2, 6, 10, 14);
+    quarter(3, 7, 11, 15);
+    quarter(0, 5, 10, 15);
+    quarter(1, 6, 11, 12);
+    quarter(2, 7, 8, 13);
+    quarter(3, 4, 9, 14);
+  }
+  const out = Buffer.alloc(64);
+  for (let i = 0; i < 16; i += 1) out.writeUInt32LE((x[i] + state[i]) >>> 0, 4 * i);
+  return out;
+}
+
+function chachaXor(key: Buffer, nonce: Buffer, data: Buffer): Buffer {
+  const out = Buffer.alloc(data.length);
+  for (let offset = 0; offset < data.length; offset += 64) {
+    const block = chachaBlock(key, 1 + offset / 64, nonce);
+    for (let i = 0; i < 64 && offset + i < data.length; i += 1) {
+      out[offset + i] = data[offset + i] ^ block[i];
+    }
+  }
+  return out;
+}
+
+const littleEndian = (bytes: Buffer): bigint =>
+  bytes.length ? BigInt('0x' + Buffer.from(bytes).reverse().toString('hex')) : 0n;
+
+function poly1305(key: Buffer, message: Buffer): Buffer {
+  const r = littleEndian(key.subarray(0, 16)) & 0x0ffffffc0ffffffc0ffffffc0fffffffn;
+  const s = littleEndian(key.subarray(16, 32));
+  const p = (1n << 130n) - 5n;
+  let accumulator = 0n;
+  for (let offset = 0; offset < message.length; offset += 16) {
+    const block = message.subarray(offset, offset + 16);
+    accumulator = ((accumulator + littleEndian(block) + (1n << BigInt(8 * block.length))) * r) % p;
+  }
+  const tag = ((accumulator + s) & ((1n << 128n) - 1n)).toString(16).padStart(32, '0');
+  return Buffer.from(tag, 'hex').reverse();
+}
+
+function chachaTag(key: Buffer, nonce: Buffer, ciphertext: Buffer, aad: Buffer): Buffer {
+  const pad = (length: number): Buffer => Buffer.alloc((16 - (length % 16)) % 16);
+  const lengths = Buffer.alloc(16);
+  lengths.writeBigUInt64LE(BigInt(aad.length), 0);
+  lengths.writeBigUInt64LE(BigInt(ciphertext.length), 8);
+  return poly1305(
+    chachaBlock(key, 0, nonce).subarray(0, 32),
+    Buffer.concat([aad, pad(aad.length), ciphertext, pad(ciphertext.length), lengths])
+  );
+}
+
+export function portableChachaSeal(
+  key: Buffer | Uint8Array,
+  nonce: Buffer | Uint8Array,
+  plaintext: Buffer | Uint8Array,
+  aad: Buffer | Uint8Array = Buffer.alloc(0)
+): Buffer {
+  const [k, n] = [Buffer.from(key), Buffer.from(nonce)];
+  const ciphertext = chachaXor(k, n, Buffer.from(plaintext));
+  return Buffer.concat([ciphertext, chachaTag(k, n, ciphertext, Buffer.from(aad))]);
+}
+
+export function portableChachaOpen(
+  key: Buffer | Uint8Array,
+  nonce: Buffer | Uint8Array,
+  sealed: Buffer,
+  aad: Buffer | Uint8Array = Buffer.alloc(0)
+): Buffer {
+  if (sealed.length < 16) throw new Error('ciphertext too short');
+  const [k, n] = [Buffer.from(key), Buffer.from(nonce)];
+  const ciphertext = sealed.subarray(0, sealed.length - 16);
+  const tag = chachaTag(k, n, ciphertext, Buffer.from(aad));
+  if (!crypto.timingSafeEqual(tag, sealed.subarray(sealed.length - 16))) {
+    throw new Error('chacha20-poly1305 authentication failed');
+  }
+  return chachaXor(k, n, ciphertext);
 }
 
 function rawPublicKey(keyObject: crypto.KeyObject): Buffer {

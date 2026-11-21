@@ -35,6 +35,9 @@ export interface DeviceRecord {
   /** 32-byte Ed25519 seed of our long-term pairing key. */
   privateKey: Buffer;
   publicKey: Buffer;
+  /** The iPhone's long-term Ed25519 key and pairing id, verified in Pair-Setup. */
+  peerPublicKey?: Buffer;
+  peerIdentifier?: string;
   pairedAt: string;
   lastHost?: string;
   lastPort?: number;
@@ -47,10 +50,11 @@ type SerializedHostIdentity = Omit<HostIdentity, 'altIrk'> & { altIrk: string };
 
 type SerializedDeviceRecord = Omit<
   DeviceRecord,
-  'privateKey' | 'publicKey' | 'hostAltIrk' | 'peerAltIrk'
+  'privateKey' | 'publicKey' | 'peerPublicKey' | 'hostAltIrk' | 'peerAltIrk'
 > & {
   privateKey: string;
   publicKey: string;
+  peerPublicKey?: string;
   hostAltIrk: string;
   peerAltIrk: string;
 };
@@ -119,6 +123,7 @@ export function saveDevice(record: DeviceRecord, root: string = STATE_DIR): Devi
     ...record,
     privateKey: record.privateKey.toString('base64'),
     publicKey: record.publicKey.toString('base64'),
+    peerPublicKey: record.peerPublicKey?.toString('base64'),
     hostAltIrk: record.hostAltIrk.toString('base64'),
     peerAltIrk: record.peerAltIrk.toString('base64'),
   };
@@ -132,6 +137,7 @@ function hydrate(raw: SerializedDeviceRecord | null): DeviceRecord | null {
     ...raw,
     privateKey: Buffer.from(raw.privateKey, 'base64'),
     publicKey: Buffer.from(raw.publicKey, 'base64'),
+    peerPublicKey: raw.peerPublicKey ? Buffer.from(raw.peerPublicKey, 'base64') : undefined,
     hostAltIrk: Buffer.from(raw.hostAltIrk, 'base64'),
     peerAltIrk: Buffer.from(raw.peerAltIrk, 'base64'),
   };
@@ -155,16 +161,6 @@ export function listDevices(root: string = STATE_DIR): DeviceRecord[] {
     .sort((a, b) =>
       (b.lastSeenAt || b.pairedAt || '').localeCompare(a.lastSeenAt || a.pairedAt || '')
     );
-}
-
-export function updateDevice(
-  udid: string,
-  changes: Partial<DeviceRecord>,
-  root: string = STATE_DIR
-): DeviceRecord {
-  const current = loadDevice(udid, root);
-  if (!current) throw new Error(`no pairing for ${udid}`);
-  return saveDevice({ ...current, ...changes }, root);
 }
 
 export function deleteDevice(udid: string, root: string = STATE_DIR): void {

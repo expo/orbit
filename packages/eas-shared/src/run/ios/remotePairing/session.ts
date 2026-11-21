@@ -6,10 +6,10 @@ import net from 'net';
 import { Duplex } from 'stream';
 
 import { AppService } from './coredevice';
-import { discoverOnLan, probe, ProbeResult, sweepLocalSubnets } from './discovery';
+import { discoverOnLan, probe, ProbeResult } from './discovery';
 import { PairVerifyFailedError, RemotePairingClient } from './rppairing';
 import { RemoteServiceDiscovery } from './rsd';
-import { DeviceRecord, updateDevice } from './store';
+import { DeviceRecord, deleteDevice, saveDevice } from './store';
 import { connectTlsPsk, establishTunnel, Tunnel } from './tunnel';
 
 const log = debug('expo:remote-pairing');
@@ -44,16 +44,15 @@ export class RemoteDeviceSession {
         return [result];
       }
     }
-    const found = (await discoverOnLan({ timeoutMs: 5000, record: this.record })).filter(
+    const found = (await discoverOnLan({ timeoutMs: 5000, records: [this.record] })).filter(
       (entry): entry is ProbeResult => entry.reachable !== false
     );
     const matches = found.filter((entry) => entry.matches);
     if (matches.length) return matches;
-    // Only a matching authTag identifies this phone; others are worth a try anyway since the
-    // advertisement can lag behind a fresh pairing.
-    if (found.length) return found;
-    const swept = await sweepLocalSubnets({ ports: [lastPort || 49152] });
-    if (swept.length) return swept;
+    // Only a matching authTag identifies this phone. The advertisement can lag behind a fresh
+    // pairing, so until the first connection the other listeners are tried too: pair-verify
+    // rejects the ones that are not this phone.
+    if (found.length && !this.record.lastSeenAt) return found;
     throw new DeviceUnreachableError(
       `${this.record.name ?? 'The iPhone'} was not found on the network. Make sure it is on the same Wi-Fi as this computer, unlocked, and that Developer Mode is on.`
     );
@@ -77,6 +76,8 @@ export class RemoteDeviceSession {
       const attempt = new RemotePairingClient(socket, {
         hostIdentifier: this.record.hostIdentifier,
         privateKey: this.record.privateKey,
+        peerPublicKey: this.record.peerPublicKey,
+        peerIdentifier: this.record.peerIdentifier,
       });
       try {
         await attempt.connect();
@@ -115,9 +116,13 @@ export class RemoteDeviceSession {
     }
 
     try {
-      this.record = updateDevice(
-        this.record.udid,
+      // Pair-Setup may only identify the phone by account id. RSD gives its real UDID, so the
+      // record is moved under it and lines up with USB/devicectl listings.
+      const previous = this.record.udid;
+      this.record = saveDevice(
         {
+          ...this.record,
+          udid: this.rsd.udid || previous,
           lastHost: endpoint.host,
           lastPort: endpoint.port,
           lastSeenAt: new Date().toISOString(),
@@ -126,6 +131,7 @@ export class RemoteDeviceSession {
         },
         this.stateDir
       );
+      if (this.record.udid !== previous) deleteDevice(previous, this.stateDir);
     } catch (error) {
       log('Failed to update the pairing record: %O', error);
     }

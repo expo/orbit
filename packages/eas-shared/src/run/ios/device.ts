@@ -99,7 +99,20 @@ async function ensureExpoClientInstalledAsync(udid: string) {
   if (!WirelessAppleDevice.hasWirelessPairing(udid)) {
     return await ensureExpoClientInstalledOverUsbmuxAsync(udid);
   }
-  if (!(await WirelessAppleDevice.isAppInstalledAsync(udid, EXPO_GO_BUNDLE_IDENTIFIER))) {
+  let installed: boolean;
+  try {
+    installed = await WirelessAppleDevice.isAppInstalledAsync(udid, EXPO_GO_BUNDLE_IDENTIFIER);
+  } catch (wifiError) {
+    // Paired over Wi-Fi but not on this network: it may still be plugged in.
+    try {
+      return await ensureExpoClientInstalledOverUsbmuxAsync(udid);
+    } catch (error: any) {
+      // The phone is only reachable over Wi-Fi: its error is the one worth reporting.
+      if (/^APPLE_DEVICE_USBMUXD/.test(error?.code ?? '')) throw wifiError;
+      throw error;
+    }
+  }
+  if (!installed) {
     await openURLAsync({ udid, bundleId: APP_STORE_BUNDLE_IDENTIFIER, url: EXPO_GO_APP_STORE_URL });
     throw new InternalError(
       'EXPO_GO_NOT_INSTALLED_ON_DEVICE',
@@ -127,6 +140,7 @@ const AppleDevice = {
   isAppleUsbDeviceConnectedAsync,
   getConnectedWirelessDevicesAsync: WirelessAppleDevice.getConnectedWirelessDevicesAsync,
   pairWirelessDeviceAsync: WirelessAppleDevice.pairWirelessDeviceAsync,
+  cancelWirelessPairing: WirelessAppleDevice.cancelWirelessPairing,
   unpairWirelessDevice: WirelessAppleDevice.unpairWirelessDevice,
 };
 

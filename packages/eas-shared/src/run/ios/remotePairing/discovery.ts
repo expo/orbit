@@ -1,17 +1,9 @@
 // Ported from remote-device (MIT, https://github.com/expo/appdrop).
-// Finding the iPhone's RemotePairing listener: Bonjour on the LAN, a saved host:port, or a
-// bounded port scan on any routable address (for example a tailnet IP).
+// Finding the iPhone's RemotePairing listener: Bonjour on the LAN or a saved host:port.
 import net from 'net';
 
 import { computeAuthTag } from './crypto';
-import {
-  HostAddress,
-  REMOTEPAIRING_SERVICE,
-  ServiceInstance,
-  TxtProperties,
-  browse,
-  localAddresses,
-} from './mdns';
+import { HostAddress, REMOTEPAIRING_SERVICE, ServiceInstance, TxtProperties, browse } from './mdns';
 import { PacketReader, probeFrame } from './rppairing';
 import type { DeviceRecord } from './store';
 
@@ -99,35 +91,33 @@ export function probe(
   });
 }
 
-export interface ScanPortsOptions {
-  ports?: Iterable<number> | null;
-  concurrency?: number;
-  timeoutMs?: number;
-  onProgress?: (done: number) => void;
-}
-
 /**
  * Browse Bonjour for RemotePairing listeners. Resolves [{ host, port, peer, txt, instance, matches }]
- * where `matches` is true when `record` (optional) identifies that phone via its authTag.
- * Stops early as soon as the matching phone answers a probe.
+ * where `matches` is true when one of `records` identifies that phone via its authTag.
+ * Stops as soon as every record's phone answered a probe, or when `signal` aborts.
  */
 export async function discoverOnLan({
   timeoutMs = 5000,
-  record = null,
+  records = [],
+  signal,
+  systemFallback,
 }: {
   timeoutMs?: number;
-  record?: Pick<DeviceRecord, 'peerAltIrk'> | null;
+  records?: Pick<DeviceRecord, 'peerAltIrk'>[];
+  signal?: AbortSignal;
+  systemFallback?: boolean;
 } = {}): Promise<LanDiscoveryResult[]> {
   const results: ProbeResult[] = [];
   const seen = new Set<string>();
-  let stopEarly: (result: ProbeResult) => void = () => {};
-  const early = new Promise<ProbeResult>((resolve) => {
-    stopEarly = resolve;
-  });
+  const found = new Set<Pick<DeviceRecord, 'peerAltIrk'>>();
+  const stop = new AbortController();
+  if (signal?.aborted) stop.abort();
+  else signal?.addEventListener('abort', () => stop.abort(), { once: true });
   const probes: Promise<void>[] = [];
   const unreachable: UnreachableAdvertisement[] = [];
   const consider = (instance: ServiceInstance) => {
-    const matches = record ? advertisementMatchesRecord(instance.txt, record) : false;
+    const matching = records.filter((record) => advertisementMatchesRecord(instance.txt, record));
+    const matches = matching.length > 0;
     if (!instance.addresses.length && !seen.has(instance.instance)) {
       seen.add(instance.instance);
       unreachable.push({
@@ -148,18 +138,19 @@ export async function discoverOnLan({
           if (!result) return;
           Object.assign(result, { instance: instance.instance, txt: instance.txt, matches });
           results.push(result);
-          if (matches) stopEarly(result);
+          for (const record of matching) found.add(record);
+          if (records.length && found.size === records.length) stop.abort();
         })
       );
     }
   };
-  const browsing = browse(REMOTEPAIRING_SERVICE, {
+  const instances = await browse(REMOTEPAIRING_SERVICE, {
     timeout: timeoutMs,
     onInstance: consider,
+    signal: stop.signal,
+    systemFallback,
   });
-  const winner = await Promise.race([early, browsing.then(() => null)]);
-  if (!winner) {
-    const instances = await browsing;
+  if (!stop.signal.aborted) {
     instances.forEach(consider);
     await Promise.all(probes);
   }
@@ -178,43 +169,4 @@ function prioritise(addresses: HostAddress[]): HostAddress[] {
     return entry.address.includes('%') ? 2 : 3;
   };
   return [...addresses].sort((a, b) => rank(a) - rank(b));
-}
-
-export interface SweepLocalSubnetsOptions {
-  ports?: number[];
-  timeoutMs?: number;
-  concurrency?: number;
-  exclude?: Set<string>;
-}
-
-/**
- * Fallback when Bonjour finds nothing: probe port(s) on every host of each local IPv4 /24.
- * Cheap (a few hundred connects) and finds a phone whose mDNS is filtered by the network.
- */
-export async function sweepLocalSubnets({
-  ports = [49152],
-  timeoutMs = 700,
-  concurrency = 64,
-  exclude = new Set(),
-}: SweepLocalSubnetsOptions = {}): Promise<ProbeResult[]> {
-  const targets: { host: string; port: number }[] = [];
-  for (const { address } of localAddresses().filter((entry) => entry.family === 4)) {
-    const base = address.split('.').slice(0, 3).join('.');
-    for (let host = 1; host < 255; host += 1) {
-      const candidate = `${base}.${host}`;
-      if (candidate === address || exclude.has(candidate)) continue;
-      for (const port of ports) targets.push({ host: candidate, port });
-    }
-  }
-  const found: ProbeResult[] = [];
-  const queue = [...targets];
-  const worker = async () => {
-    while (queue.length) {
-      const { host, port } = queue.shift()!;
-      const result = await probe(host, port, { timeoutMs });
-      if (result) found.push(result);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.max(1, concurrency) }, worker));
-  return found;
 }

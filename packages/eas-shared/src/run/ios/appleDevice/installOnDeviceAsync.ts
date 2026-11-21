@@ -41,25 +41,37 @@ export async function installOnDeviceAsync(props: {
         console.log(`status: ${status} ${progress}%`);
       },
     });
-  } catch (error: any) {
+  } catch (usbmuxError: any) {
     // Not reachable over usbmux (or no usbmux service at all, e.g. Windows without the Apple
     // helper): an iPhone paired over Wi-Fi is installed to through its RemotePairing tunnel.
+    // Its errors go through the same mapping below as the usbmux ones.
+    let error = usbmuxError;
+    let overWifi = false;
     if (
-      (error.code === 'APPLE_DEVICE_USBMUXD' ||
-        error.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING') &&
+      (usbmuxError.code === 'APPLE_DEVICE_USBMUXD' ||
+        usbmuxError.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING') &&
       WirelessAppleDevice.hasWirelessPairing(udid)
     ) {
-      return await WirelessAppleDevice.installAndLaunchAppAsync({
-        udid,
-        appPath: bundle,
-        bundleId: bundleIdentifier,
-        deltaPath: appDeltaDirectory,
-        onProgress({ status, progress }) {
-          console.log(`status: ${status} ${progress}%`);
-        },
-      });
+      try {
+        return await WirelessAppleDevice.installAndLaunchAppAsync({
+          udid,
+          appPath: bundle,
+          bundleId: bundleIdentifier,
+          deltaPath: appDeltaDirectory,
+          onProgress({ status, progress }) {
+            console.log(`status: ${status} ${progress}%`);
+          },
+        });
+      } catch (wifiError: any) {
+        error = wifiError;
+        // The phone answered over Wi-Fi and refused the install: devicectl would not do better.
+        overWifi =
+          typeof wifiError?.code === 'string' &&
+          wifiError.code.startsWith('APPLE_') &&
+          wifiError.code !== 'APPLE_DEVICE_NOT_PAIRED';
+      }
     }
-    if (error.code === 'APPLE_DEVICE_USBMUXD') {
+    if (usbmuxError.code === 'APPLE_DEVICE_USBMUXD' && !overWifi) {
       // Usbmux can only find wireless devices if they are unlocked. Fallback on much slower devicectl.
       if (devicectl.hasDevicectlEverBeenInstalled()) {
         return await devicectl.installAndLaunchAppAsync({ bundle, bundleIdentifier, udid });
@@ -86,7 +98,10 @@ export async function installOnDeviceAsync(props: {
       // their display names, so the host can offer "Remove <name>" for apps it
       // did not install itself. Best effort: a failed lookup leaves names out.
       const bundleIds = freeAppLimitBundleIds(error.message);
-      const names = await AppleDevice.lookupAppNamesAsync(udid, bundleIds).catch(
+      const lookupAppNamesAsync = overWifi
+        ? WirelessAppleDevice.lookupAppNamesAsync
+        : AppleDevice.lookupAppNamesAsync;
+      const names = await lookupAppNamesAsync(udid, bundleIds).catch(
         (): Record<string, string> => ({})
       );
       throw new InternalError('APPLE_FREE_APP_LIMIT_REACHED', FREE_APP_LIMIT_MESSAGE, {

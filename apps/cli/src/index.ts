@@ -124,6 +124,7 @@ program
   .command('pair-ios-device')
   .description('Pair an iPhone over Wi-Fi (iOS 27 Remote Device Pairing)')
   .option('--timeout  <number>', 'Time to wait for the iPhone to pair, in milliseconds')
+  .option('--cancel', 'Stop the pairing session in progress')
   .action(async (...args) => {
     const { pairIosDeviceAsync } = await import('./commands/PairIosDevice');
     return returnLoggerMiddleware(pairIosDeviceAsync)(...args);

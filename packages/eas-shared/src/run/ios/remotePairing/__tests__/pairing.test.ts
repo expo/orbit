@@ -1,9 +1,15 @@
 import crypto from 'crypto';
 import net from 'net';
 
-import { chachaOpen, chachaSeal, Ed25519, hkdf512 } from '../crypto';
+import { chachaOpen, chachaSeal, Ed25519, hkdf512, X25519 } from '../crypto';
 import { decodeOpack, encodeOpack } from '../opack';
-import { acceptPairing, framePacket, PacketReader, PairingError } from '../rppairing';
+import {
+  acceptPairing,
+  framePacket,
+  PacketReader,
+  PairingError,
+  RemotePairingClient,
+} from '../rppairing';
 import { SrpClient } from '../srp';
 import { decodeTlv, encodeTlv, TLV } from '../tlv8';
 
@@ -151,6 +157,105 @@ describe('acceptPairing', () => {
     );
     await expect(outcome).rejects.toThrow(/wrong PIN/);
     host.destroy();
+    device.destroy();
+    close();
+  });
+});
+
+/** Plays the iPhone's side of Pair-Verify, signing M2 with the long-term key `identity`. */
+async function verifyAsDeviceAsync(socket: net.Socket, identity: Ed25519, identifier: string) {
+  const reader = new PacketReader(socket);
+  let sequence = 0;
+  const send = (value: unknown) =>
+    socket.write(
+      framePacket({
+        message: { plain: { _0: value } },
+        originatedBy: 'device',
+        sequenceNumber: sequence++,
+      })
+    );
+  const sendPairingData = (data: Buffer) =>
+    send({ event: { _0: { pairingData: { _0: { data: data.toString('base64') } } } } });
+  const receivePairingData = async () => {
+    const envelope = await reader.next(5000);
+    return decodeTlv(Buffer.from(envelope.message.plain._0.event._0.pairingData._0.data, 'base64'));
+  };
+
+  await reader.next(5000);
+  send({
+    response: { _1: { handshake: { _0: { wireProtocolVersion: 26, peerDeviceInfo: {} } } } },
+  });
+  const hostCurveKey = (await receivePairingData()).get(TLV.PUBLIC_KEY)!;
+  const curve = new X25519();
+  const verifyKey = hkdf512(
+    curve.exchange(hostCurveKey),
+    Buffer.from('Pair-Verify-Encrypt-Salt'),
+    Buffer.from('Pair-Verify-Encrypt-Info')
+  );
+  const id = Buffer.from(identifier, 'utf8');
+  const m2Plain = encodeTlv([
+    [TLV.IDENTIFIER, id],
+    [TLV.SIGNATURE, identity.sign(Buffer.concat([curve.publicKey, id, hostCurveKey]))],
+  ]);
+  sendPairingData(
+    encodeTlv([
+      [TLV.STATE, Buffer.from([2])],
+      [TLV.PUBLIC_KEY, curve.publicKey],
+      [TLV.ENCRYPTED_DATA, chachaSeal(verifyKey, nonce('PV-Msg02'), m2Plain)],
+    ])
+  );
+  await receivePairingData();
+  sendPairingData(encodeTlv([[TLV.STATE, Buffer.from([4])]]));
+}
+
+describe('RemotePairingClient', () => {
+  const deviceIdentity = new Ed25519();
+  const deviceIdentifier = crypto.randomUUID().toUpperCase();
+
+  async function pairVerifyAsync(peerPublicKey: Buffer) {
+    const { host, device, close } = await connectedPairAsync();
+    // The device side fails on its own when the host walks away after M2.
+    const deviceSide = verifyAsDeviceAsync(device, deviceIdentity, deviceIdentifier).catch(
+      () => {}
+    );
+    const client = new RemotePairingClient(
+      host,
+      {
+        hostIdentifier: HOST.identifier,
+        privateKey: new Ed25519().seed,
+        peerPublicKey,
+        peerIdentifier: deviceIdentifier,
+      },
+      { timeoutMs: 5000 }
+    );
+    try {
+      return await client.connect();
+    } finally {
+      host.destroy();
+      device.destroy();
+      close();
+      await deviceSide;
+    }
+  }
+
+  it('pair-verifies with the device whose key was saved in Pair-Setup', async () => {
+    await expect(pairVerifyAsync(deviceIdentity.publicKey)).resolves.toBeDefined();
+  });
+
+  it('rejects a device that signs with another key', async () => {
+    await expect(pairVerifyAsync(new Ed25519().publicKey)).rejects.toThrow(
+      /did not prove it is the paired iPhone/
+    );
+  });
+
+  it('does not throw on a socket error nobody listens to', async () => {
+    const { host, device, close } = await connectedPairAsync();
+    const client = new RemotePairingClient(host, {
+      hostIdentifier: HOST.identifier,
+      privateKey: new Ed25519().seed,
+    });
+    expect(() => host.emit('error', new Error('read ECONNRESET'))).not.toThrow();
+    client.close();
     device.destroy();
     close();
   });

@@ -4,10 +4,10 @@ import debug from 'debug';
 import { EventEmitter } from 'events';
 
 import { advertisementMatchesRecord, discoverOnLan, probe } from './discovery';
-import { pairDevice } from './pair';
+import { cancelPairing, pairDevice } from './pair';
 import { RemoteDeviceSession, NotPairedError } from './session';
-import { DeviceRecord, deleteDevice, listDevices, loadDevice, saveDevice } from './store';
-import { uploadAndInstallAppAsync } from '../appleDevice/AppleDevice';
+import { DeviceRecord, deleteDevice, listDevices, loadDevice } from './store';
+import { lookupInstalledAsync, uploadAndInstallAppAsync } from '../appleDevice/AppleDevice';
 import { AFCClient } from '../appleDevice/client/AFCClient';
 import {
   InstallationProxyClient,
@@ -50,8 +50,17 @@ export async function getConnectedWirelessDevicesAsync(): Promise<AppleConnected
   if (!records.length) return [];
 
   const reachable = new Set<string>();
+  // Ends the browse as soon as every paired phone answered at its last known address.
+  const everyoneAnswered = new AbortController();
   await Promise.all([
-    discoverOnLan({ timeoutMs: DISCOVERY_TIMEOUT_MS })
+    // ponytail: no `dns-sd` fallback here, it adds 2.5 s or more to every device list. A phone
+    // whose address changed on a Mac that blocks our multicast is listed after its next connection.
+    discoverOnLan({
+      timeoutMs: DISCOVERY_TIMEOUT_MS,
+      records,
+      signal: everyoneAnswered.signal,
+      systemFallback: false,
+    })
       .then((found) => {
         for (const entry of found) {
           if (entry.reachable === false) continue;
@@ -61,14 +70,18 @@ export async function getConnectedWirelessDevicesAsync(): Promise<AppleConnected
         }
       })
       .catch((error) => log('Bonjour discovery failed: %O', error)),
-    ...records
-      .filter((record) => record.lastHost && record.lastPort)
-      .map(async (record) => {
-        const result = await probe(record.lastHost!, record.lastPort!, { timeoutMs: 1000 });
-        if (result && (!result.peer?.udid || result.peer.udid === record.udid)) {
-          reachable.add(record.udid);
-        }
-      }),
+    Promise.all(
+      records
+        .filter((record) => record.lastHost && record.lastPort)
+        .map(async (record) => {
+          const result = await probe(record.lastHost!, record.lastPort!, { timeoutMs: 1000 });
+          if (result && (!result.peer?.udid || result.peer.udid === record.udid)) {
+            reachable.add(record.udid);
+          }
+        })
+    ).then(() => {
+      if (reachable.size === records.length) everyoneAnswered.abort();
+    }),
   ]);
 
   return records
@@ -89,6 +102,8 @@ export type WirelessPairingEvents = {
   onAdvertising?: (info: { name: string }) => void;
   /** The iPhone picked this computer; the user must type `pin` on it. */
   onPin?: (pin: string) => void;
+  /** The attempt that showed the PIN failed (wrong PIN, phone gave up); still waiting. */
+  onPinRejected?: () => void;
   /** Pairing succeeded; connecting to read the device details. */
   onPaired?: () => void;
 };
@@ -102,13 +117,17 @@ export async function pairWirelessDeviceAsync({
   timeoutMs,
   onAdvertising,
   onPin,
+  onPinRejected,
   onPaired,
 }: WirelessPairingEvents & { timeoutMs?: number } = {}): Promise<AppleConnectedDevice> {
   const pairing = pairDevice({ timeoutMs });
   const events: EventEmitter = pairing.events;
   events.on('advertising', (info: { name: string }) => onAdvertising?.(info));
   events.on('pin', (pin: string) => onPin?.(pin));
-  events.on('attempt-failed', (error: Error) => log('Pairing attempt failed: %O', error));
+  events.on('attempt-failed', (error: Error, pinShown: boolean) => {
+    log('Pairing attempt failed: %O', error);
+    if (pinShown) onPinRejected?.();
+  });
 
   let record: DeviceRecord;
   try {
@@ -130,14 +149,8 @@ export async function pairWirelessDeviceAsync({
   try {
     await session.connectAsync();
     record = session.record;
-    const udid = session.udid;
-    if (udid && udid !== record.udid) {
-      const previous = record.udid;
-      record = saveDevice({ ...record, udid });
-      deleteDevice(previous);
-    }
   } catch (error) {
-    // Paired regardless; the device list connects again once it's reachable.
+    // Paired regardless; the next successful connection fills in the details.
     log('Paired, but the first connection failed: %O', error);
   } finally {
     session.close();
@@ -152,6 +165,11 @@ export async function pairWirelessDeviceAsync({
     osVersion: record.osVersion ?? '',
     osType: 'iOS',
   };
+}
+
+/** Stop the pairing session another process is running on this computer, if any. */
+export function cancelWirelessPairing() {
+  cancelPairing();
 }
 
 /** Forget a Wi-Fi pairing on this computer. The phone keeps listing it until removed there. */
@@ -190,20 +208,18 @@ async function getInstallerAsync(session: RemoteDeviceSession) {
   );
 }
 
-/** Install an app bundle over Wi-Fi and launch it (optionally with a URL). */
+/** Install an app bundle over Wi-Fi and launch it. */
 export async function installAndLaunchAppAsync({
   udid,
   appPath,
   bundleId,
   deltaPath,
-  url,
   onProgress,
 }: {
   udid: string;
   appPath: string;
   bundleId: string;
   deltaPath: string;
-  url?: string;
   onProgress: OnInstallProgressCallback;
 }) {
   await withSessionAsync(udid, async (session) => {
@@ -216,7 +232,7 @@ export async function installAndLaunchAppAsync({
       deltaPath,
       onProgress,
     });
-    await launchWithSessionAsync(session, { bundleId, url });
+    await launchWithSessionAsync(session, { bundleId });
   });
 }
 
@@ -244,5 +260,21 @@ export async function isAppInstalledAsync(udid: string, bundleId: string): Promi
     const installer = await getInstallerAsync(session);
     const result = await installer.lookupApp([bundleId]);
     return Boolean(result[bundleId]);
+  });
+}
+
+/** Display names of installed apps, like AppleDevice.lookupAppNamesAsync but over Wi-Fi. */
+export async function lookupAppNamesAsync(
+  udid: string,
+  bundleIds: string[]
+): Promise<Record<string, string>> {
+  if (bundleIds.length === 0) return {};
+  return withSessionAsync(udid, async (session) => {
+    const installed = await lookupInstalledAsync(await getInstallerAsync(session), bundleIds);
+    const names: Record<string, string> = {};
+    for (const [bundleId, { name }] of Object.entries(installed)) {
+      if (name) names[bundleId] = name;
+    }
+    return names;
   });
 }

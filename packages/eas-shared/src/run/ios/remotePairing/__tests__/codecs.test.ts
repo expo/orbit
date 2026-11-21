@@ -1,6 +1,15 @@
 import crypto from 'crypto';
 
-import { Ed25519, X25519, chachaOpen, chachaSeal, hkdf512, siphash24 } from '../crypto';
+import {
+  Ed25519,
+  X25519,
+  chachaOpen,
+  chachaSeal,
+  hkdf512,
+  portableChachaOpen,
+  portableChachaSeal,
+  siphash24,
+} from '../crypto';
 import { decodeOpack, encodeOpack } from '../opack';
 import { N, SrpClient, SrpServer, bigIntToBytes, bytesToBigInt, g, modPow, pad } from '../srp';
 import { TLV, decodeTlv, encodeTlv } from '../tlv8';
@@ -182,6 +191,20 @@ describe('crypto', () => {
     expect(chachaOpen(key, nonce, sealed).toString()).toBe('secret');
     sealed[0] ^= 1;
     expect(() => chachaOpen(key, nonce, sealed)).toThrow();
+  });
+
+  it('has a portable chacha20-poly1305 that agrees with OpenSSL (for Electron)', () => {
+    const key = crypto.randomBytes(32);
+    const nonce = crypto.randomBytes(12);
+    const aad = Buffer.from('header');
+    for (const length of [0, 1, 16, 63, 64, 65, 1000]) {
+      const plaintext = crypto.randomBytes(length);
+      const sealed = portableChachaSeal(key, nonce, plaintext, aad);
+      expect(sealed).toEqual(chachaSeal(key, nonce, plaintext, aad));
+      expect(portableChachaOpen(key, nonce, chachaSeal(key, nonce, plaintext))).toEqual(plaintext);
+      sealed[sealed.length - 1] ^= 1;
+      expect(() => portableChachaOpen(key, nonce, sealed, aad)).toThrow('authentication failed');
+    }
   });
 
   it('signs/verifies ed25519 and agrees on x25519', () => {
