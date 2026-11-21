@@ -75,7 +75,7 @@ Use `agent-device` only on physical devices (iPhone, iPad, Android) to verify ap
 ## Architecture Notes
 
 - Menu bar app uses React Context providers for state (DevicesProvider, ThemeProvider)
-- CLI commands are invoked by menu bar app for device/build operations (bundled in Contents/Resources/cli: pkg binaries by default; with `ORBIT_HERMES_CLI=1` at pod install, the `orbit-cli` launcher running the CLI on the app's Hermes via hermes-node, see CONTRIBUTING.md)
+- CLI commands are invoked by menu bar app for device/build operations (bundled in Contents/Resources/cli: the `orbit-cli` launcher running the CLI on the app's Hermes via hermes-node, from `"hermesCli": "true"` in Podfile.properties.json; pkg binaries when it is `"false"`, see CONTRIBUTING.md)
 - GraphQL queries fetch EAS build data; local state manages device lists
 - Native modules in `src/modules/` bridge to Electron APIs (MenuBar, Storage, Alert, FileHandler, Linking)
 - Secondary windows (Settings, Onboarding) use react-native-multi-window
