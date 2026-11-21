@@ -172,6 +172,14 @@ jobs:
         with:
           node-version: 22
 
+      # node-gyp 9 builds macos-export-certificate-and-key in `yarn install` and
+      # needs distutils, which Python 3.12 removed. Without the addon, the
+      # Hermes CLI build fails in the "Build CLI" phase.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Switch to Xcode 26.6
         run: sudo xcode-select --switch /Applications/Xcode_26.6.app
 
@@ -188,10 +196,10 @@ jobs:
           bundler-cache: true
           working-directory: apps/menu-bar
 
-      # Pods are derived from the (already installed) node_modules and pinned by
-      # Podfile.lock, so restoring them across runs is safe — `pod install` below
-      # still reconciles and re-applies the post_install hooks. Keyed on the
-      # lockfile so a dependency bump invalidates the cache.
+      # Keyed on the exact Podfile.lock, with no fallback key: Pods from an older
+      # lockfile keep the old podspecs in Pods/Local Podspecs, which `pod install`
+      # does not fetch again, and it then fails on the version change (#408 moved
+      # hermes-engine from 0.14.1 to 250829098.0.4).
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
@@ -199,8 +207,6 @@ jobs:
             apps/menu-bar/macos/Pods
             ~/Library/Caches/CocoaPods
           key: ${{ runner.os }}-pods-${{ hashFiles('apps/menu-bar/macos/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
 
       - name: Install CocoaPods
         working-directory: apps/menu-bar/macos
