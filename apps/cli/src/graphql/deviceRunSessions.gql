@@ -114,7 +114,6 @@ fragment RemoteSimulatorBuild on Build {
     id
     version
   }
-  runtimeVersion
 }
 
 # The choices of the "Create new simulator" window. Android has no APK-only build filter, so the
