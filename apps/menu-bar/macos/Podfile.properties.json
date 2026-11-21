@@ -1,4 +1,5 @@
 {
   "showDevWindow": "false",
-  "showDockIcon": "false"
+  "showDockIcon": "false",
+  "hermesCli": "true"
 }

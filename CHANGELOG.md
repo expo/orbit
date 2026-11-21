@@ -16,6 +16,7 @@
 
 ### 💡 Others
 
+- Run the macOS CLI on the app's own Hermes through hermes-node by default (`"hermesCli": "true"` in `Podfile.properties.json`), instead of the `pkg`-built Node binaries. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add an experimental, opt-in macOS build (`ORBIT_HERMES_CLI=1 pod install`) that runs the CLI on the app's own Hermes through [hermes-node](https://github.com/gabrieldonadel/hermes-node) instead of the `pkg`-built Node binaries, shrinking the CLI in the app from 199 MB to 34 MB. Default builds are unchanged. ([#397](https://github.com/expo/orbit/pull/397) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Start Expo Simulators sessions without a maximum duration of 30 minutes. A session now gets the maximum duration of the account's plan. ([#395](https://github.com/expo/orbit/pull/395) by [@brentvatne](https://github.com/brentvatne))
 
