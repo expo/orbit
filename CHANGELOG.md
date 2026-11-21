@@ -6,6 +6,8 @@
 
 ### 🎉 New features
 
+- Add support for re-signing iOS builds for an iPhone or iPad with your Apple ID (free or paid developer account) when they are not provisioned for the device. ([#372](https://github.com/expo/orbit/pull/372) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Renew apps signed with free Apple IDs automatically before their 7-day profile expires. ([#378](https://github.com/expo/orbit/pull/378) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Redesign the Debug Menu: filter logs by text or by errors, expand an entry to see its output with JSON in color, and copy or clear the logs. The list updates while commands run. Debug actions write their result to the log, and a click on a system color copies its name. ([#403](https://github.com/expo/orbit/pull/403) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add an experimental virtual camera for iOS simulators on macOS. Settings → Experiments turns it on and picks what the camera shows: the Mac's camera, an image, a video or a QR code, with a separate source for the front camera. Apps launched in a booted simulator see a back and a front camera through AVFoundation, including photo capture, QR scanning, movie recording and `UIImagePickerController`, with no change to their code. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
