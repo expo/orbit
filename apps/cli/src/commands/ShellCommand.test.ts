@@ -54,7 +54,10 @@ describe('getCurrentLauncher', () => {
 
   it('passes the entry point to a plain Node runtime', () => {
     process.argv = [execPath, '/repo/apps/cli/build/index.js', 'install-shell-command'];
-    expect(getCurrentLauncher().command).toEqual([execPath, '/repo/apps/cli/build/index.js']);
+    expect(getCurrentLauncher().command).toEqual([
+      execPath,
+      path.resolve('/repo/apps/cli/build/index.js'),
+    ]);
   });
 });
 
