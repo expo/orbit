@@ -150,7 +150,7 @@ function isApkUrl(url?: string | null): boolean {
 // The labels follow the "Create new simulator" dialog on expo.dev.
 function buildOption(build: RemoteSimulatorBuildFragment): RemoteSimulatorOption {
   const buildNumber = build.appBuildVersion ?? 'unknown';
-  const runtimeVersion = build.runtime?.version ?? build.runtimeVersion;
+  const runtimeVersion = build.runtime?.version;
   const version =
     build.buildMode === 'LOCAL'
       ? 'Local'
