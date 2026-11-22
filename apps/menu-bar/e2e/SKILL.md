@@ -130,7 +130,7 @@ const isNativeMac = browser.capabilities.platformName === 'mac';
 
 ### `browserVersion` is required
 
-When the `e2e/` package doesn't have `electron` as a direct dependency, you must set `browserVersion` in the capability (e.g. `'33.2.0'`) so `wdio-electron-service` can fetch the matching Chromedriver.
+When the `e2e/` package doesn't have `electron` as a direct dependency, you must set `browserVersion` in the capability (e.g. `'34.5.8'`) so `wdio-electron-service` can fetch the matching Chromedriver.
 
 ### `expect` import
 

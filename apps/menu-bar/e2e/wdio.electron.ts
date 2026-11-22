@@ -53,7 +53,7 @@ export const config: WebdriverIO.Config = {
       // Must match the electron version in ../electron/package.json so
       // wdio-electron-service fetches a compatible Chromedriver without
       // requiring electron to be installed in this e2e package.
-      browserVersion: '33.2.0',
+      browserVersion: '34.5.8',
       'wdio:electronServiceOptions': {
         appBinaryPath: getAppBinaryPath(),
         appArgs,
