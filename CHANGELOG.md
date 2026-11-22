@@ -17,6 +17,7 @@
 
 ### 💡 Others
 
+- Upgrade `electron` to 34.5.8, and `ipa-resign` in the Electron app to 0.0.29 to match the CLI. Electron 33 crashes when it loads the `ipa-resign` WASM signer. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Run the macOS CLI on the app's own Hermes through hermes-node by default (`"hermesCli": "true"` in `Podfile.properties.json`), instead of the `pkg`-built Node binaries. ([#408](https://github.com/expo/orbit/pull/408) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Stop selecting the deprecated `Build.runtimeVersion` GraphQL field. ([#406](https://github.com/expo/orbit/pull/406) by [@tchayen](https://github.com/tchayen))
 - Fix the `getCurrentLauncher` CLI test on Windows, where `path.resolve` adds a drive letter. ([#405](https://github.com/expo/orbit/pull/405) by [@gabrieldonadel](https://github.com/gabrieldonadel))
