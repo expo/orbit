@@ -25,6 +25,45 @@ function hasBinary(bin: string): boolean {
   }
 }
 
+// Top-level `node_modules/<name>` entries reachable only through `rootDep`, i.e.
+// safe to drop when `rootDep` itself is dropped. electron-packager only prunes
+// devDependencies, so without this a test-only dependency's whole tree ships too.
+function exclusiveDependencies(rootDep: string): string[] {
+  const nodeModules = path.join(__dirname, 'node_modules');
+  const resolveDir = (name: string, fromDir: string): string | null => {
+    for (let dir = fromDir; dir.startsWith(__dirname); dir = path.dirname(dir)) {
+      const candidate = path.join(dir, 'node_modules', name);
+      if (fs.existsSync(path.join(candidate, 'package.json'))) {
+        return candidate;
+      }
+    }
+    return null;
+  };
+  const walk = (names: string[], fromDir: string, seen: Set<string>): Set<string> => {
+    for (const name of names) {
+      const dir = resolveDir(name, fromDir);
+      if (!dir || seen.has(dir)) {
+        continue;
+      }
+      seen.add(dir);
+      const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+      walk(Object.keys({ ...pkg.dependencies, ...pkg.optionalDependencies }), dir, seen);
+    }
+    return seen;
+  };
+  const { dependencies = {} } = JSON.parse(
+    fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')
+  );
+  const kept = walk(
+    Object.keys(dependencies).filter((name) => name !== rootDep),
+    __dirname,
+    new Set()
+  );
+  return [...walk([rootDep], __dirname, new Set())]
+    .filter((dir) => !kept.has(dir) && dir.startsWith(nodeModules + path.sep))
+    .map((dir) => '/' + path.relative(__dirname, dir).split(path.sep).join('/'));
+}
+
 type CommonParams<T, U> = {
   [K in keyof T & keyof U]?: T[K] extends U[K] ? T[K] : never;
 };
@@ -61,13 +100,19 @@ const config: ForgeConfig = {
     extraResource: ['./assets', './bin', './anisette'],
     // `wdio-electron-service` has to live in `dependencies` (not devDeps) so
     // electron-packager keeps it in the asar's node_modules — the runtime
-    // require in src/main.ts needs it. But it's a test-only dep; strip it
-    // from production builds where WDIO_E2E isn't set. Always keep `/bin` out of
-    // the asar — it's shipped via extraResource above, so the asar copy would be
-    // dead weight (and unexecutable).
+    // require in src/main.ts needs it. But it's a test-only dep; strip it and
+    // the dependencies only it uses from production builds where WDIO_E2E isn't
+    // set (its tree includes non-host prebuilds, e.g. bare-fs's android-arm
+    // `.bare` files, that make rpmbuild's strip step fail). Always keep `/bin`
+    // out of the asar — it's shipped via extraResource above, so the asar copy
+    // would be dead weight (and unexecutable).
     ignore: [
       /^\/bin(\/|$)/,
-      ...(process.env.WDIO_E2E === '1' ? [] : [/^\/node_modules\/wdio-electron-service(\/|$)/]),
+      ...(process.env.WDIO_E2E === '1'
+        ? []
+        : exclusiveDependencies('wdio-electron-service').map(
+            (dir) => new RegExp(`^${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|$)`)
+          )),
     ],
   },
   rebuildConfig: {},
