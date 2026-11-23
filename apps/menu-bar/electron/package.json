@@ -32,7 +32,8 @@
     "ts-node": "^10.0.0",
     "typescript": "^5.3.0",
     "vite": "^5.0.12",
-    "vite-plugin-static-copy": "^2.1.0"
+    "vite-plugin-static-copy": "^2.1.0",
+    "wdio-electron-service": "^8.1.0"
   },
   "dependencies": {
     "@expo/json-file": "^8.2.37",
@@ -42,8 +43,7 @@
     "express": "^4.18.2",
     "ipa-resign": "^0.0.29",
     "react-native-electron-modules": "../../../packages/react-native-electron-modules",
-    "system-ca": "^2.0.1",
-    "wdio-electron-service": "^8.1.0"
+    "system-ca": "^2.0.1"
   },
   "config": {
     "forge": "./forge.config.ts"

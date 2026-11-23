@@ -22,11 +22,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-      # rpm's post-install brp-strip chokes on Electron's prebuilt binaries,
-      # failing maker-rpm's %install step. Electron binaries shouldn't be
-      # stripped anyway, so disable the post-install scriptlet globally.
-      - name: 🩹 Disable rpm binary stripping
-        run: echo '%__os_install_post %{nil}' >> ~/.rpmmacros
       - name: ⬢ Setup Node
         uses: actions/setup-node@v4
         with:
