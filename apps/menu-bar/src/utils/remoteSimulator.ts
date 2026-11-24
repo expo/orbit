@@ -286,6 +286,18 @@ export function parseTags(input: string): Parsed {
 }
 
 /**
+ * The text of the badge on the menu bar icon: the number of sessions that start or run, or
+ * null with no session. The badge is a circle for one digit and widens for two. Three
+ * characters fill the width of the icon, so 99 is the highest number.
+ */
+export function getRemoteSessionsBadge(count: number): string | null {
+  if (count <= 0) {
+    return null;
+  }
+  return count > 99 ? '99+' : String(count);
+}
+
+/**
  * The time since `isoDate`, for a running session: "<1 min", "12 min" or "1 h 5 min". No
  * seconds.
  */

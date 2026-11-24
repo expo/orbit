@@ -6,14 +6,18 @@
 
 ### 🎉 New features
 
+- Add support for re-signing iOS builds for an iPhone or iPad with your Apple ID (free or paid developer account) when they are not provisioned for the device. ([#372](https://github.com/expo/orbit/pull/372) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Renew apps signed with free Apple IDs automatically before their 7-day profile expires. ([#378](https://github.com/expo/orbit/pull/378) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Redesign the Debug Menu: filter logs by text or by errors, expand an entry to see its output with JSON in color, and copy or clear the logs. The list updates while commands run. Debug actions write their result to the log, and a click on a system color copies its name. ([#403](https://github.com/expo/orbit/pull/403) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Add an experimental virtual camera for iOS simulators on macOS. Settings → Experiments turns it on and picks what the camera shows: the Mac's camera, an image, a video or a QR code, with a separate source for the front camera. Apps launched in a booted simulator see a back and a front camera through AVFoundation, including photo capture, QR scanning, movie recording and `UIImagePickerController`, with no change to their code. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Show the number of remote sessions that start or run in a badge on the menu bar icon, on macOS. ([#396](https://github.com/expo/orbit/pull/396) by [@brentvatne](https://github.com/brentvatne))
 
 ### 🐛 Bug fixes
 
 - Ask for local network access on first launch only after the user leaves onboarding, instead of showing the macOS permission prompt over the Onboarding window as soon as Orbit opens. ([#411](https://github.com/expo/orbit/pull/411) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Open only the selected simulator when Orbit launches DeviceHub (Xcode 27), instead of also restoring windows from DeviceHub's last session, which never finish loading for deleted simulators. ([#401](https://github.com/expo/orbit/pull/401) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show the correct OS version for simulators on device-specific runtimes, such as iPhone Duo, which showed `27.2.iPhone19.4` instead of `27.2`. ([#404](https://github.com/expo/orbit/pull/404) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Fix `yarn make` failing to build the Linux `.rpm`: `wdio-electron-service` is now a devDependency, so packaged apps no longer ship its dependencies, which include prebuilt binaries for other platforms that rpmbuild can't strip. This also shrinks the app's `node_modules` from 193 MB to 45 MB. ([#412](https://github.com/expo/orbit/pull/412) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Fix the tray icon on Windows having the wrong colour when the taskbar and apps use different light or dark modes. ([#398](https://github.com/expo/orbit/pull/398) by [@brentvatne](https://github.com/brentvatne))
 
 ### 💡 Others
