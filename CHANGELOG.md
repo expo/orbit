@@ -13,6 +13,7 @@
 - Show the number of remote sessions that start or run in a badge on the menu bar icon, on macOS. ([#396](https://github.com/expo/orbit/pull/396) by [@brentvatne](https://github.com/brentvatne))
 
 - Pair iPhones over Wi-Fi with iOS 27 Remote Device Pairing, then install and launch builds on them without a cable, on macOS and Windows. ([#400](https://github.com/expo/orbit/pull/400) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+- Sign in to development builds on iOS simulators and Android emulators with the Orbit account. Orbit adds an approved device code to the launch URL when the app has `expo-dev-launcher` 58.1.0 or later. ([#414](https://github.com/expo/orbit/pull/414) by [@gabrieldonadel](https://github.com/gabrieldonadel))
 
 ### 🐛 Bug fixes
 

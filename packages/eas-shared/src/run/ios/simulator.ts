@@ -292,7 +292,8 @@ export async function getAppBundleIdentifierAsync(appPath: string): Promise<stri
 
 export async function openURLAsync(options: { udid: string; url: string }): Promise<void> {
   await activateSimulatorWindowAsync(options.udid);
-  console.log(`Opening url ${options.url}...`);
+  // Never log the approved device code of a development build sign in.
+  console.log(`Opening url ${options.url.replace(/&__expo_device_[a-z]+=[^&]*/g, '')}...`);
   await xcrunAsync(['simctl', 'openurl', options.udid, options.url]);
 }
 
