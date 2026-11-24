@@ -6,6 +6,7 @@ import {
   RemoteSimulatorList,
 } from 'common-types/build/devices';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { listRemoteSimulatorsAsync } from '../commands/remoteSimulatorAsync';
@@ -197,14 +198,32 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
   }, [remoteSessionsBadge]);
 
   // Orbit reads the list when the popover opens. With a session, it also reads the list on a
-  // timer, so that the badge goes away when a session ends by itself.
+  // timer, so that the badge goes away when a session ends by itself. Only macOS has a badge,
+  // so the other platforms do not pay for the timer.
+  // With no known session, there is no timer: a session started elsewhere (EAS CLI, expo.dev,
+  // another machine) shows in the badge only once the popover opens. Reading the list with no
+  // session would start a CLI process every interval for every user, so that case is out of
+  // scope for now.
   const hasRemoteSessions = remoteSessions.length > 0;
   useEffect(() => {
-    if (!hasRemoteSessions) {
+    if (!hasRemoteSessions || Platform.OS !== 'macos') {
       return;
     }
-    const interval = setInterval(updateRemoteSimulators, REMOTE_SESSIONS_POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    // A read starts a CLI process and makes a network request, which can take longer than the
+    // interval. The next read is scheduled when the previous one ends, so only one runs at a time.
+    let timeout: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+    const tick = async () => {
+      await updateRemoteSimulators();
+      if (!cancelled) {
+        timeout = setTimeout(tick, REMOTE_SESSIONS_POLL_INTERVAL_MS);
+      }
+    };
+    timeout = setTimeout(tick, REMOTE_SESSIONS_POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [hasRemoteSessions, updateRemoteSimulators]);
 
   const { showAndroidEmulators } = getUserPreferences();

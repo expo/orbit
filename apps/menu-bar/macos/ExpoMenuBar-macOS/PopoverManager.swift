@@ -60,7 +60,7 @@ class PopoverManager: NSObject {
   private func setupStatusItem() {
     statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
-    let dragDropView = DragDropStatusItemView(frame: NSRect(x: 0, y: 0, width: 22, height: 22))!
+    let dragDropView = DragDropStatusItemView(frame: NSRect(x: 0, y: 0, width: 22, height: 22))
     dragDropView.openPopoverAction = { [weak self] in
       self?.openPopover()
     }
