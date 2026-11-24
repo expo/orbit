@@ -59,16 +59,9 @@ const config: ForgeConfig = {
     // populated by `yarn build:helpers`; the CLI reads them via
     // ORBIT_ANISETTE_ASSETS_DIR (see src/main.ts).
     extraResource: ['./assets', './bin', './anisette'],
-    // `wdio-electron-service` has to live in `dependencies` (not devDeps) so
-    // electron-packager keeps it in the asar's node_modules — the runtime
-    // require in src/main.ts needs it. But it's a test-only dep; strip it
-    // from production builds where WDIO_E2E isn't set. Always keep `/bin` out of
-    // the asar — it's shipped via extraResource above, so the asar copy would be
-    // dead weight (and unexecutable).
-    ignore: [
-      /^\/bin(\/|$)/,
-      ...(process.env.WDIO_E2E === '1' ? [] : [/^\/node_modules\/wdio-electron-service(\/|$)/]),
-    ],
+    // Keep `/bin` out of the asar — it's shipped via extraResource above, so the
+    // asar copy would be dead weight (and unexecutable).
+    ignore: [/^\/bin(\/|$)/],
   },
   rebuildConfig: {},
   hooks: {
