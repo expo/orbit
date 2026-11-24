@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Orbit",
+    "slug": "orbit",
+    "owner": "expo",
+    "extra": {
+      "eas": {
+        "projectId": "6f773599-3109-410f-97c0-fd197cf47995"
+      }
+    }
+  }
+}
