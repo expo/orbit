@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["C8D8QTF339.dev.expo.orbit"],
+        "components": [
+          { "/": "/download", "?": { "url": "?*" } },
+          { "/": "/update", "?": { "url": "?*" } },
+          { "/": "/go", "?": { "url": "?*" } },
+          { "/": "/snack", "?": { "url": "?*" } }
+        ]
+      }
+    ]
+  }
+}

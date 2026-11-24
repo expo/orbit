@@ -635,6 +635,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.expo.orbit;
 				PRODUCT_NAME = "Expo Orbit";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "Orbit Developer ID Provisioning Profile";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "ExpoMenuBar-macOS/ExpoMenuBar-macOS-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

@@ -203,6 +203,18 @@ describe('identifyAndParseDeeplinkURL', () => {
     });
   });
 
+  describe('Universal links', () => {
+    it('Should parse orbit.expo.dev URLs', () => {
+      const artifactURL = 'https://expo.dev/artifacts/eas/v3WshxGCF87UzsHSxfRnAh.tar.gz';
+      const universalLink = `https://orbit.expo.dev/download?url=${encodeURIComponent(artifactURL)}`;
+
+      expect(identifyAndParseDeeplinkURL(universalLink)).toEqual({
+        urlType: URLType.EXPO_BUILD,
+        url: artifactURL,
+      });
+    });
+  });
+
   describe('Unknown URLs', () => {
     it('Should throw for non-expo domains that are not using specific routes', () => {
       const unknownURL =

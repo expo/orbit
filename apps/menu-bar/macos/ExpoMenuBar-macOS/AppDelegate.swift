@@ -89,6 +89,30 @@ class AppDelegate: ExpoAppDelegate, NSUserNotificationCenterDelegate {
     RCTLinkingManager.getUrlEventHandler(event, withReplyEvent: replyEvent)
   }
 
+  // Universal links (https://orbit.expo.dev/download?url=...) arrive as a user activity. Repackage
+  // them as a GetURL Apple Event so RCTLinkingManager also stores them as the initial URL on cold launch.
+  override func application(
+    _ application: NSApplication,
+    continue userActivity: NSUserActivity,
+    restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void
+  ) -> Bool {
+    guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+          let url = userActivity.webpageURL else {
+      return super.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }
+
+    let event = NSAppleEventDescriptor(
+      eventClass: AEEventClass(kInternetEventClass),
+      eventID: AEEventID(kAEGetURL),
+      targetDescriptor: nil,
+      returnID: AEReturnID(kAutoGenerateReturnID),
+      transactionID: AETransactionID(kAnyTransactionID)
+    )
+    event.setDescriptor(NSAppleEventDescriptor(string: url.absoluteString), forKeyword: keyDirectObject)
+    getUrlEventHandler(event, withReplyEvent: NSAppleEventDescriptor.null())
+    return true
+  }
+
   @IBAction func showHelp(_ sender: Any) {
     if let url = URL(string: "https://docs.expo.dev/build/orbit/") {
       NSWorkspace.shared.open(url)
