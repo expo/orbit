@@ -10,6 +10,8 @@ import { Platform } from 'react-native';
 
 import { listDevicesAsync } from '../commands/listDevicesAsync';
 import { listRemoteSimulatorsAsync } from '../commands/remoteSimulatorAsync';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
+import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import {
   endedRemoteSessionsStorageKey,
@@ -18,6 +20,7 @@ import {
   storage,
 } from '../modules/Storage';
 import { DevicesPerPlatform, getDeviceId, getSectionsFromDeviceList } from '../utils/device';
+import { ONBOARDING_COMPLETED_EVENT, hasSeenOnboardingStorageKey } from '../utils/onboarding';
 import { EndedRemoteSession, getRemoteSessionsBadge } from '../utils/remoteSimulator';
 
 type ListDevicesContext = {
@@ -333,10 +336,35 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Listing devices reaches the local network (adb, Wi-Fi devices), so on macOS the first list
+  // shows the Local Network permission prompt. On the first launch, wait until the user leaves
+  // onboarding, opens the popover or opened Orbit from a link, so the prompt doesn't show over
+  // the Onboarding window as soon as the app starts.
+  const [shouldListDevices, setShouldListDevices] = useState(
+    () => !!storage.getBoolean(hasSeenOnboardingStorageKey)
+  );
   useEffect(() => {
+    if (shouldListDevices) {
+      return;
+    }
+    const start = () => setShouldListDevices(true);
+    const listeners = [ONBOARDING_COMPLETED_EVENT, 'popoverFocused'].map((event) =>
+      DeviceEventEmitter.addListener(event, start)
+    );
+    // The popover handles that link once devices are listed.
+    Linking.getInitialURL()
+      .then((url) => url && start())
+      .catch(() => {});
+    return () => listeners.forEach((listener) => listener.remove());
+  }, [shouldListDevices]);
+
+  useEffect(() => {
+    if (!shouldListDevices) {
+      return;
+    }
     updateDevicesList().finally(() => setHasInitialized(true));
     updateRemoteSimulators();
-  }, [updateDevicesList, updateRemoteSimulators]);
+  }, [shouldListDevices, updateDevicesList, updateRemoteSimulators]);
 
   const refetch = useCallback(async () => {
     await Promise.all([updateDevicesList(), updateRemoteSimulators()]);

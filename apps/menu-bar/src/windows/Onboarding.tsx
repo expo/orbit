@@ -13,13 +13,13 @@ import { Text, View } from '../components';
 import Button from '../components/Button';
 import CommandCheckItem from '../components/CommandCheckItem';
 import Alert from '../modules/Alert';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import { Linking } from '../modules/Linking';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { useWindowFocusEffect } from '../modules/WindowManager/useWindowFocus';
+import { ONBOARDING_COMPLETED_EVENT, hasSeenOnboardingStorageKey } from '../utils/onboarding';
 import { useExpoTheme } from '../utils/useExpoTheme';
-
-export const hasSeenOnboardingStorageKey = 'has-seen-onboarding';
 
 enum Status {
   IDLE,
@@ -39,7 +39,9 @@ const Onboarding = () => {
   const closeOnboarding = () => {
     storage.set(hasSeenOnboardingStorageKey, true);
     WindowsNavigator.close('Onboarding');
-    MenuBarModule.openPopover();
+    // Starts listing devices, which can show the macOS Local Network permission prompt, and
+    // the popover opens once the list is ready (see popover/index.tsx).
+    DeviceEventEmitter.emit(ONBOARDING_COMPLETED_EVENT);
   };
 
   const runChecks = useCallback(async ({ force = false }: { force?: boolean } = {}) => {

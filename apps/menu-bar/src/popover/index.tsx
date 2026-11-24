@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Core from './Core';
 import { ErrorBoundary, FallbackProps } from './ErrorBoundary';
 import Footer from './Footer';
 import { Text, View } from '../components';
 import { useSafeDisplayDimensions } from '../hooks/useSafeDisplayDimensions';
+import { DeviceEventEmitter } from '../modules/DeviceEventEmitter';
 import MenuBarModule from '../modules/MenuBarModule';
 import { storage } from '../modules/Storage';
 import { useListDevices } from '../providers/DevicesProvider';
+import { ONBOARDING_COMPLETED_EVENT, hasSeenOnboardingStorageKey } from '../utils/onboarding';
 import { WindowsNavigator } from '../windows';
-import { hasSeenOnboardingStorageKey } from '../windows/Onboarding';
 
 type Props = {
   isDevWindow: boolean;
@@ -19,18 +20,26 @@ function Popover(props: Props) {
   const { height } = useSafeDisplayDimensions();
   const { hasInitialized } = useListDevices();
 
-  useEffect(() => {
-    const hasSeenOnboarding = storage.getBoolean(hasSeenOnboardingStorageKey);
-    if (!hasSeenOnboarding) {
-      WindowsNavigator.open('Onboarding');
-    }
-  }, []);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(
+    () => !!storage.getBoolean(hasSeenOnboardingStorageKey)
+  );
 
   useEffect(() => {
-    if (hasInitialized && storage.getBoolean(hasSeenOnboardingStorageKey)) {
+    if (hasSeenOnboarding) {
+      return;
+    }
+    WindowsNavigator.open('Onboarding');
+    const listener = DeviceEventEmitter.addListener(ONBOARDING_COMPLETED_EVENT, () =>
+      setHasSeenOnboarding(true)
+    );
+    return () => listener.remove();
+  }, [hasSeenOnboarding]);
+
+  useEffect(() => {
+    if (hasInitialized && hasSeenOnboarding) {
       MenuBarModule.openPopover();
     }
-  }, [hasInitialized]);
+  }, [hasInitialized, hasSeenOnboarding]);
 
   if (!hasInitialized) {
     return null;
