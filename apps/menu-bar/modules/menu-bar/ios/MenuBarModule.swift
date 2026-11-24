@@ -235,6 +235,10 @@ public class MenuBarModule: Module {
     AsyncFunction("closePopover") {
       NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ExpoOrbit_ClosePopover"), object: nil)
     }.runOnQueue(.main)
+
+    AsyncFunction("setStatusItemBadge") { (text: String?) in
+      NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ExpoOrbit_SetStatusItemBadge"), object: text)
+    }.runOnQueue(.main)
     
     OnStartObserving {
       hasListeners = true
