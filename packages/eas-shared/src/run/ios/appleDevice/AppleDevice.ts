@@ -146,6 +146,20 @@ export async function getConnectedDevicesUsingCustomToolingAsync(): Promise<
   }
 }
 
+/** Whether usbmux lists the device: it is on a cable, or it syncs with this computer over Wi-Fi. */
+export async function isConnectedOverUsbmuxAsync(udid: string): Promise<boolean> {
+  try {
+    const client = new UsbmuxdClient(await connectUsbmuxdSocketAsync());
+    try {
+      return (await client.getDevices()).some((device) => device.Properties.SerialNumber === udid);
+    } finally {
+      client.socket.end();
+    }
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Upload an app bundle to the device's staging area over AFC and install it with
  * installation_proxy. Shared by the usbmux path and the Wi-Fi (RemotePairing) path,

@@ -95,21 +95,22 @@ export function connectTlsPsk(
   { connectTimeoutMs = 10_000, connect = null }: ConnectTlsPskOptions = {}
 ): Promise<tls.TLSSocket> {
   return new Promise((resolve, reject) => {
-    const settle =
-      <T>(fn: (value: T) => void) =>
-      (value: T): void => {
-        clearTimeout(timer);
-        fn(value);
-      };
+    // An open socket keeps the CLI process alive, so each failure closes both.
+    const fail = (error: Error): void => {
+      clearTimeout(timer);
+      secure.destroy();
+      tcp.destroy();
+      reject(error);
+    };
     const timer = setTimeout(
-      () => reject(new TunnelError(`timed out connecting to ${host}:${port}`)),
+      () => fail(new TunnelError(`timed out connecting to ${host}:${port}`)),
       connectTimeoutMs
     );
     const tcp: Duplex = connect ? connect(host, port) : net.connect({ host, port });
     const socketLike = tcp as Partial<Pick<net.Socket, 'setNoDelay' | 'setKeepAlive'>>;
     socketLike.setNoDelay?.(true);
     socketLike.setKeepAlive?.(true, 10_000);
-    tcp.once('error', settle(reject));
+    tcp.once('error', fail);
     const secure = tls.connect({
       socket: tcp,
       minVersion: 'TLSv1.2',
@@ -119,12 +120,11 @@ export function connectTlsPsk(
       checkServerIdentity: () => undefined,
       pskCallback: () => ({ psk, identity: '' }),
     });
-    secure.once('error', settle(reject));
+    secure.once('error', fail);
     secure.once('secureConnect', () => {
-      // Note: `settle(reject)` creates a new function, so this removes nothing (kept as in the
-      // source); the stale listener is harmless because the promise has already settled.
-      tcp.removeListener('error', settle(reject));
-      settle(resolve)(secure);
+      clearTimeout(timer);
+      tcp.removeListener('error', fail);
+      resolve(secure);
     });
   });
 }
@@ -135,7 +135,20 @@ export function connectTlsPsk(
  */
 export async function establishTunnel(
   secure: tls.TLSSocket,
-  { mtu = REQUESTED_MTU }: EstablishTunnelOptions = {}
+  options: EstablishTunnelOptions = {}
+): Promise<Tunnel> {
+  try {
+    return await establishTunnelOnSocket(secure, options);
+  } catch (error) {
+    // The caller has no tunnel to close yet.
+    secure.destroy();
+    throw error;
+  }
+}
+
+async function establishTunnelOnSocket(
+  secure: tls.TLSSocket,
+  { mtu = REQUESTED_MTU }: EstablishTunnelOptions
 ): Promise<Tunnel> {
   const handshake = await new Promise<{ body: CdTunnelHandshakeResponse; rest: Buffer }>(
     (resolve, reject) => {

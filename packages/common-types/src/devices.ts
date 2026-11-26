@@ -9,6 +9,8 @@ export interface AppleConnectedDevice {
   deviceType: 'device' | 'catalyst';
   /** @example `USB` */
   connectionType: 'USB' | 'Network';
+  /** Orbit has a Wi-Fi pairing (iOS 27 Remote Device Pairing) with this device. */
+  pairedOverWifi?: boolean;
   /** @example `15.4.1` */
   osVersion: string;
   osType: 'iOS';

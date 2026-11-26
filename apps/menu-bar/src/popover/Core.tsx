@@ -357,7 +357,7 @@ function Core(props: Props) {
     const addItem =
       key === 'android'
         ? { title: 'Pair a device', subtitle: 'Over Wi-Fi' }
-        : key === 'ios'
+        : key === 'ios' && devicesPerPlatform.ios.canPairOverWifi
           ? { title: 'Pair an iPhone', subtitle: 'Over Wi-Fi (iOS 27+)' }
           : key === 'remote' && !isLoading
             ? {
@@ -1568,14 +1568,8 @@ function Core(props: Props) {
   const showDeviceMenu = async (key: string, device: Device) => {
     const id = getDeviceId(device);
     const hasOrder = !!deviceList.order[key]?.length;
-    // An iPhone listed over the network is one paired over Wi-Fi from Orbit.
     const wifiPairedUdid =
-      'udid' in device &&
-      device.osType === 'iOS' &&
-      device.deviceType === 'device' &&
-      device.connectionType === 'Network'
-        ? device.udid
-        : undefined;
+      'pairedOverWifi' in device && device.pairedOverWifi ? device.udid : undefined;
     const items = [
       { title: device.name, header: true },
       { title: 'Hide from this list' },

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
 
 import Button from './Button';
-import { NumberedStep, StatusBadge, SuccessState } from './PairAndroidDeviceForm';
+import { NumberedStep, StatusBadge, SuccessState } from './PairingSteps';
 import { Text } from './Text';
 import { Row, Spacer, View } from './View';
 import { cancelIosPairingAsync, pairIosDeviceAsync } from '../commands/pairIosDeviceAsync';

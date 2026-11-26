@@ -25,8 +25,12 @@ export async function listDevicesAsync<P extends Platform>({
         try {
           const connectedDevices = await AppleDevice.getConnectedDevicesAsync();
           for (const connectedDevice of connectedDevices) {
-            if (!result.ios.devices.some(({ udid }) => udid === connectedDevice.udid)) {
+            // A device that is also listed over Wi-Fi shows as the USB or devicectl entry.
+            const index = result.ios.devices.findIndex(({ udid }) => udid === connectedDevice.udid);
+            if (index === -1) {
               result.ios.devices.push(connectedDevice);
+            } else {
+              result.ios.devices[index] = { ...connectedDevice, pairedOverWifi: true };
             }
           }
         } catch (error) {
@@ -60,12 +64,16 @@ export async function listDevicesAsync<P extends Platform>({
 
     // iPhones paired over Wi-Fi (iOS 27 Remote Device Pairing) on every platform, listed on
     // their own so a missing usbmux service doesn't hide them.
+    result.ios.canPairOverWifi = AppleDevice.isWirelessPairingSupported();
     tasks.push(
       (async () => {
         try {
           const wirelessDevices = await AppleDevice.getConnectedWirelessDevicesAsync();
           for (const device of wirelessDevices) {
-            if (!result.ios.devices.some(({ udid }) => udid === device.udid)) {
+            const listed = result.ios.devices.find(({ udid }) => udid === device.udid);
+            if (listed) {
+              (listed as Devices.AppleConnectedDevice).pairedOverWifi = true;
+            } else {
               result.ios.devices.push(device);
             }
           }

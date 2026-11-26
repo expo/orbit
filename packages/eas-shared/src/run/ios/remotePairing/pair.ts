@@ -1,6 +1,7 @@
 // Ported from remote-device (MIT, https://github.com/expo/appdrop).
 // The pairing flow: advertise this machine as a pairable DeviceHub host, accept the iPhone's
 // Pair-Setup, and persist the result.
+import { InternalError } from 'common-types';
 import crypto from 'crypto';
 import { EventEmitter } from 'events';
 import fs from 'fs';
@@ -121,7 +122,10 @@ export function pairDevice({
     // are not limited; a second PIN would replace the one the user is typing.
     let pinHolder: net.Socket | null = null;
     let failedPins = 0;
+    const sockets = new Set<net.Socket>();
     const server = net.createServer((socket) => {
+      sockets.add(socket);
+      socket.once('close', () => sockets.delete(socket));
       socket.setNoDelay(true);
       const remote = `${socket.remoteAddress}:${socket.remotePort}`;
       events.emit('connected', remote);
@@ -180,7 +184,13 @@ export function pairDevice({
       backend: responder.backend,
     });
     const timer = setTimeout(
-      () => rejectResult(new Error('timed out waiting for the iPhone to pair')),
+      () =>
+        rejectResult(
+          new InternalError(
+            'APPLE_WIRELESS_PAIRING_TIMEOUT',
+            'Timed out waiting for the iPhone to pair. Make sure it is on the same Wi-Fi network as this computer and open Remote Device Pairing in Developer Mode settings.'
+          )
+        ),
       timeoutMs
     );
     const superseded = setInterval(() => {
@@ -220,6 +230,9 @@ export function pairDevice({
       removeExitHook();
       responder.stop();
       server.close();
+      // `close()` only stops new connections. An attempt that waits for its next packet would
+      // keep the process alive, and could complete a pairing that is never saved.
+      for (const socket of sockets) socket.destroy();
     }
   })() as PairDeviceSession;
   promise.events = events;

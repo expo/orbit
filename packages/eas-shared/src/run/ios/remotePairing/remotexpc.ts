@@ -381,13 +381,6 @@ export class RemoteXpcConnection extends EventEmitter {
     return result;
   }
 
-  /** Run `fn` while holding the request lock (for streaming invocations). */
-  exclusive<T>(fn: () => Promise<T>): Promise<T> {
-    const result = this.queue.then(fn, fn);
-    this.queue = result.catch(() => {});
-    return result;
-  }
-
   close(): void {
     this.stream.destroy();
   }

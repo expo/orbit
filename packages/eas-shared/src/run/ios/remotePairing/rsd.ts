@@ -102,10 +102,6 @@ export class RemoteServiceDiscovery {
     return Number(this.serviceEntry(name).Port);
   }
 
-  serviceFeatures(name: string): Set<string> {
-    return new Set(this.serviceEntry(name).Properties?.Features || []);
-  }
-
   hasFeature(name: string, feature: string): boolean {
     const features = this.serviceEntry(name).Properties?.Features;
     return !features || features.length === 0 || features.includes(feature);

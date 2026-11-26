@@ -1,11 +1,12 @@
 import { InternalError } from 'common-types';
 import { AppleConnectedDevice } from 'common-types/build/devices';
+import crypto from 'crypto';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
-import { advertisementMatchesRecord, discoverOnLan, probe } from './discovery';
-import { cancelPairing, pairDevice } from './pair';
-import { RemoteDeviceSession, NotPairedError } from './session';
+// The rest of the stack (`discovery`, `pair`, `session`) is loaded with `import()` where it is
+// used, so a runtime that cannot run it still runs the USB and simulator commands.
+import type { RemoteDeviceSession } from './session';
 import { DeviceRecord, deleteDevice, listDevices, loadDevice } from './store';
 import { lookupInstalledAsync, uploadAndInstallAppAsync } from '../appleDevice/AppleDevice';
 import { AFCClient } from '../appleDevice/client/AFCClient';
@@ -22,8 +23,31 @@ const INSTALLATION_PROXY_SERVICE = 'com.apple.mobile.installation_proxy.shim.rem
 /** How long the device list waits for paired iPhones to answer on the network. */
 const DISCOVERY_TIMEOUT_MS = 2000;
 
+/**
+ * The RemotePairing stack needs `crypto` APIs (HKDF, Ed25519, X25519) and TLS-PSK. The macOS CLI
+ * runs on hermes-node, whose `crypto` shim does not have them yet. When this is false, no iPhone
+ * counts as paired over Wi-Fi and the stack is never loaded.
+ */
+export function isWirelessPairingSupported(): boolean {
+  return typeof crypto.hkdfSync === 'function' && typeof crypto.diffieHellman === 'function';
+}
+
+function toConnectedDevice(record: DeviceRecord): AppleConnectedDevice {
+  return {
+    udid: record.udid,
+    name: record.name ?? 'iPhone',
+    model: record.productType ?? record.model ?? 'iPhone',
+    deviceType: 'device',
+    connectionType: 'Network',
+    pairedOverWifi: true,
+    osVersion: record.osVersion ?? '',
+    osType: 'iOS',
+  };
+}
+
 /** iPhones paired with this computer over Wi-Fi (iOS 27 "Remote Device Pairing"). */
 export function getWirelessPairings(): DeviceRecord[] {
+  if (!isWirelessPairingSupported()) return [];
   try {
     return listDevices();
   } catch (error) {
@@ -34,7 +58,7 @@ export function getWirelessPairings(): DeviceRecord[] {
 
 export function hasWirelessPairing(udid: string): boolean {
   try {
-    return Boolean(loadDevice(udid));
+    return isWirelessPairingSupported() && Boolean(loadDevice(udid));
   } catch {
     return false;
   }
@@ -48,6 +72,7 @@ export function hasWirelessPairing(udid: string): boolean {
 export async function getConnectedWirelessDevicesAsync(): Promise<AppleConnectedDevice[]> {
   const records = getWirelessPairings();
   if (!records.length) return [];
+  const { advertisementMatchesRecord, discoverOnLan, probe } = await import('./discovery');
 
   const reachable = new Set<string>();
   // Ends the browse as soon as every paired phone answered at its last known address.
@@ -84,17 +109,7 @@ export async function getConnectedWirelessDevicesAsync(): Promise<AppleConnected
     }),
   ]);
 
-  return records
-    .filter((record) => reachable.has(record.udid))
-    .map((record) => ({
-      udid: record.udid,
-      name: record.name ?? 'iPhone',
-      model: record.productType ?? record.model ?? 'iPhone',
-      deviceType: 'device',
-      connectionType: 'Network',
-      osVersion: record.osVersion ?? '',
-      osType: 'iOS',
-    }));
+  return records.filter((record) => reachable.has(record.udid)).map(toConnectedDevice);
 }
 
 export type WirelessPairingEvents = {
@@ -120,6 +135,14 @@ export async function pairWirelessDeviceAsync({
   onPinRejected,
   onPaired,
 }: WirelessPairingEvents & { timeoutMs?: number } = {}): Promise<AppleConnectedDevice> {
+  if (!isWirelessPairingSupported()) {
+    throw new InternalError(
+      'APPLE_WIRELESS_PAIRING_UNSUPPORTED',
+      'This build of Orbit cannot pair an iPhone over Wi-Fi. Connect the iPhone with a cable.'
+    );
+  }
+  const { pairDevice } = await import('./pair');
+  const { RemoteDeviceSession } = await import('./session');
   const pairing = pairDevice({ timeoutMs });
   const events: EventEmitter = pairing.events;
   events.on('advertising', (info: { name: string }) => onAdvertising?.(info));
@@ -129,18 +152,7 @@ export async function pairWirelessDeviceAsync({
     if (pinShown) onPinRejected?.();
   });
 
-  let record: DeviceRecord;
-  try {
-    record = await pairing;
-  } catch (error) {
-    if (error instanceof Error && /timed out waiting for the iPhone/.test(error.message)) {
-      throw new InternalError(
-        'APPLE_WIRELESS_PAIRING_TIMEOUT',
-        'Timed out waiting for the iPhone to pair. Make sure it is on the same Wi-Fi network as this computer and open Remote Device Pairing in Developer Mode settings.'
-      );
-    }
-    throw error;
-  }
+  let record = await pairing;
   onPaired?.();
 
   // Pair-Setup may only identify the phone by account id. Connect once to learn its real UDID
@@ -156,19 +168,13 @@ export async function pairWirelessDeviceAsync({
     session.close();
   }
 
-  return {
-    udid: record.udid,
-    name: record.name ?? 'iPhone',
-    model: record.productType ?? record.model ?? 'iPhone',
-    deviceType: 'device',
-    connectionType: 'Network',
-    osVersion: record.osVersion ?? '',
-    osType: 'iOS',
-  };
+  return toConnectedDevice(record);
 }
 
 /** Stop the pairing session another process is running on this computer, if any. */
-export function cancelWirelessPairing() {
+export async function cancelWirelessPairing() {
+  if (!isWirelessPairingSupported()) return;
+  const { cancelPairing } = await import('./pair');
   cancelPairing();
 }
 
@@ -188,6 +194,7 @@ async function withSessionAsync<T>(
       'This iPhone is not paired with this computer over Wi-Fi.'
     );
   }
+  const { RemoteDeviceSession, NotPairedError } = await import('./session');
   const session = new RemoteDeviceSession(record);
   try {
     await session.connectAsync();
@@ -232,7 +239,15 @@ export async function installAndLaunchAppAsync({
       deltaPath,
       onProgress,
     });
-    await launchWithSessionAsync(session, { bundleId });
+    try {
+      await launchWithSessionAsync(session, { bundleId });
+    } catch (error) {
+      // The app is installed. Another install path would install it again and hide this error.
+      throw new InternalError(
+        'APPLE_APP_LAUNCH_FAILED',
+        `The app is installed, but it did not launch: ${error instanceof Error ? error.message : error}. Launch the app manually.`
+      );
+    }
   });
 }
 

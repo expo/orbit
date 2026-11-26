@@ -668,13 +668,14 @@ export class RemotePairingClient extends EventEmitter {
         sequenceNumber: this.sequence,
       });
       this.sequence += 1;
+      // The nonce is used once, even when no response arrives.
+      this.encryptedSequence += 1;
       const envelope = await this.reader.next(this.timeoutMs);
       const encrypted = envelope?.message?.streamEncrypted?._0;
       if (!encrypted) {
         throw new PairingError(`expected encrypted response, got ${describe(envelope)}`);
       }
       const plaintext = chachaOpen(this.serverKey!, nonceBuffer, unb64(encrypted));
-      this.encryptedSequence += 1;
       const response = JSON.parse(plaintext.toString('utf8'))?.response?._1;
       if (response?.errorExtended) {
         throw new PairingError(

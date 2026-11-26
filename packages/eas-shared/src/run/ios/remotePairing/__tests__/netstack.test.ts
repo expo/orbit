@@ -8,6 +8,7 @@ import {
   TunnelError,
   decodeCdTunnel,
   encodeCdTunnel,
+  connectTlsPsk,
 } from '../tunnel';
 
 const CLIENT_ADDRESS = 'fd00:1::2';
@@ -102,6 +103,16 @@ describe('CDTunnel framing', () => {
     expect(decodeCdTunnel(encoded.subarray(0, 5))).toBeNull();
     expect(decodeCdTunnel(encoded.subarray(0, encoded.length - 1))).toBeNull();
     expect(() => decodeCdTunnel(Buffer.from('NotATunnel'))).toThrow(TunnelError);
+  });
+});
+
+describe('connectTlsPsk', () => {
+  it('closes the socket when the handshake times out', async () => {
+    const tcp = new Duplex({ read() {}, write: (_chunk, _encoding, callback) => callback() });
+    await expect(
+      connectTlsPsk('fd00::1', 1, Buffer.alloc(32), { connectTimeoutMs: 20, connect: () => tcp })
+    ).rejects.toThrow(TunnelError);
+    expect(tcp.destroyed).toBe(true);
   });
 });
 

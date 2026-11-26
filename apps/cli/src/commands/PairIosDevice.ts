@@ -30,7 +30,7 @@ export async function pairIosDeviceAsync({
   cancel,
 }: PairIosDeviceOptions): Promise<PairIosDeviceResult> {
   if (cancel) {
-    AppleDevice.cancelWirelessPairing();
+    await AppleDevice.cancelWirelessPairing();
     return { success: true };
   }
   const timeoutMs = Number(timeout);

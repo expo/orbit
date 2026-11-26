@@ -543,7 +543,9 @@ export class TcpConnection extends Duplex {
       this.receiveBuffered += data.length;
       const chunk = Buffer.from(data);
       this.readWanted = this.push(chunk);
-      // Reading is asynchronous; credit the window back once the consumer drains.
+      // ponytail: the window is credited back on the next microtask, not when the consumer
+      // reads, so a slow reader buffers without limit. The device only sends small replies;
+      // credit from `_read()` if that changes.
       queueMicrotask(() => {
         this.receiveBuffered = Math.max(0, this.receiveBuffered - chunk.length);
         this.maybeWindowUpdate();

@@ -6,6 +6,7 @@ import {
   openURLAsync as openURLWithDevicectlAsync,
   ensureExpoClientInstalledAsync as ensureExpoClientInstalledOverUsbmuxAsync,
   checkIfAppIsInstalled,
+  isConnectedOverUsbmuxAsync,
   listFreeProfileAppsAsync,
   uninstallAppAsync as uninstallAppOverUsbmuxAsync,
 } from './appleDevice/AppleDevice';
@@ -39,20 +40,28 @@ async function launchAppAsync(options: { udid: string; bundleId: string; url?: s
   const { udid, bundleId, url } = options;
   if (await launchOverWifiAsync(options)) return;
   if (url) {
-    await openURLAsync({ udid, bundleId, url });
+    await openURLWithDevicectlAsync({ udid, bundleId, url });
   } else {
     await launchAppWithDeviceCtl(udid, bundleId);
   }
 }
 
 /**
- * Remove an app from a physical device: over Wi-Fi when paired that way, then usbmux
- * (every platform), falling back to devicectl when usbmux cannot reach the device.
+ * Whether to reach the iPhone through its Wi-Fi pairing. A phone that usbmux lists uses the
+ * paths it used before Wi-Fi pairing: a Wi-Fi attempt to a phone on another network is slow.
+ */
+async function shouldUseWifiAsync(udid: string) {
+  return WirelessAppleDevice.hasWirelessPairing(udid) && !(await isConnectedOverUsbmuxAsync(udid));
+}
+
+/**
+ * Remove an app from a physical device: over Wi-Fi when paired that way and not on a cable,
+ * then usbmux (every platform), falling back to devicectl when usbmux cannot reach the device.
  * Frees one of the three slots a free Apple ID gets.
  */
 async function uninstallAppAsync(options: { udid: string; bundleId: string }) {
   let wifiError: unknown;
-  if (WirelessAppleDevice.hasWirelessPairing(options.udid)) {
+  if (await shouldUseWifiAsync(options.udid)) {
     try {
       return await WirelessAppleDevice.uninstallAppAsync(options);
     } catch (error) {
@@ -73,15 +82,18 @@ async function uninstallAppAsync(options: { udid: string; bundleId: string }) {
 
 /**
  * Launch through the RemotePairing tunnel when the iPhone was paired over Wi-Fi. Resolves
- * false when it wasn't, or (on macOS) when the tunnel failed and devicectl can try instead.
+ * false when it wasn't, or (on macOS) when devicectl can do it: the phone is on a cable, or
+ * the tunnel failed.
  */
 async function launchOverWifiAsync(options: { udid: string; bundleId: string; url?: string }) {
   if (!WirelessAppleDevice.hasWirelessPairing(options.udid)) return false;
+  const hasDevicectl = process.platform === 'darwin' && hasDevicectlEverBeenInstalled();
+  if (hasDevicectl && (await isConnectedOverUsbmuxAsync(options.udid))) return false;
   try {
     await WirelessAppleDevice.launchAppAsync(options);
     return true;
   } catch (error) {
-    if (process.platform !== 'darwin' || !hasDevicectlEverBeenInstalled()) throw error;
+    if (!hasDevicectl) throw error;
     return false;
   }
 }
@@ -96,7 +108,7 @@ async function openExpoGoURLAsync(udid: string, url: string) {
 }
 
 async function ensureExpoClientInstalledAsync(udid: string) {
-  if (!WirelessAppleDevice.hasWirelessPairing(udid)) {
+  if (!(await shouldUseWifiAsync(udid))) {
     return await ensureExpoClientInstalledOverUsbmuxAsync(udid);
   }
   let installed: boolean;
@@ -139,6 +151,7 @@ const AppleDevice = {
   getUsbmuxdHelperGuidance,
   isAppleUsbDeviceConnectedAsync,
   getConnectedWirelessDevicesAsync: WirelessAppleDevice.getConnectedWirelessDevicesAsync,
+  isWirelessPairingSupported: WirelessAppleDevice.isWirelessPairingSupported,
   pairWirelessDeviceAsync: WirelessAppleDevice.pairWirelessDeviceAsync,
   cancelWirelessPairing: WirelessAppleDevice.cancelWirelessPairing,
   unpairWirelessDevice: WirelessAppleDevice.unpairWirelessDevice,
