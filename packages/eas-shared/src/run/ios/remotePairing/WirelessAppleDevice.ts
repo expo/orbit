@@ -1,11 +1,10 @@
 import { InternalError } from 'common-types';
 import { AppleConnectedDevice } from 'common-types/build/devices';
-import crypto from 'crypto';
 import debug from 'debug';
 import { EventEmitter } from 'events';
 
 // The rest of the stack (`discovery`, `pair`, `session`) is loaded with `import()` where it is
-// used, so a runtime that cannot run it still runs the USB and simulator commands.
+// used, so the USB and simulator commands do not load it.
 import type { RemoteDeviceSession } from './session';
 import { DeviceRecord, deleteDevice, listDevices, loadDevice } from './store';
 import { lookupInstalledAsync, uploadAndInstallAppAsync } from '../appleDevice/AppleDevice';
@@ -23,15 +22,6 @@ const INSTALLATION_PROXY_SERVICE = 'com.apple.mobile.installation_proxy.shim.rem
 /** How long the device list waits for paired iPhones to answer on the network. */
 const DISCOVERY_TIMEOUT_MS = 2000;
 
-/**
- * The RemotePairing stack needs `crypto` APIs (HKDF, Ed25519, X25519) and TLS-PSK. The macOS CLI
- * runs on hermes-node, whose `crypto` shim does not have them yet. When this is false, no iPhone
- * counts as paired over Wi-Fi and the stack is never loaded.
- */
-export function isWirelessPairingSupported(): boolean {
-  return typeof crypto.hkdfSync === 'function' && typeof crypto.diffieHellman === 'function';
-}
-
 function toConnectedDevice(record: DeviceRecord): AppleConnectedDevice {
   return {
     udid: record.udid,
@@ -47,7 +37,6 @@ function toConnectedDevice(record: DeviceRecord): AppleConnectedDevice {
 
 /** iPhones paired with this computer over Wi-Fi (iOS 27 "Remote Device Pairing"). */
 export function getWirelessPairings(): DeviceRecord[] {
-  if (!isWirelessPairingSupported()) return [];
   try {
     return listDevices();
   } catch (error) {
@@ -58,7 +47,7 @@ export function getWirelessPairings(): DeviceRecord[] {
 
 export function hasWirelessPairing(udid: string): boolean {
   try {
-    return isWirelessPairingSupported() && Boolean(loadDevice(udid));
+    return Boolean(loadDevice(udid));
   } catch {
     return false;
   }
@@ -135,12 +124,6 @@ export async function pairWirelessDeviceAsync({
   onPinRejected,
   onPaired,
 }: WirelessPairingEvents & { timeoutMs?: number } = {}): Promise<AppleConnectedDevice> {
-  if (!isWirelessPairingSupported()) {
-    throw new InternalError(
-      'APPLE_WIRELESS_PAIRING_UNSUPPORTED',
-      'This build of Orbit cannot pair an iPhone over Wi-Fi. Connect the iPhone with a cable.'
-    );
-  }
   const { pairDevice } = await import('./pair');
   const { RemoteDeviceSession } = await import('./session');
   const pairing = pairDevice({ timeoutMs });
@@ -173,7 +156,6 @@ export async function pairWirelessDeviceAsync({
 
 /** Stop the pairing session another process is running on this computer, if any. */
 export async function cancelWirelessPairing() {
-  if (!isWirelessPairingSupported()) return;
   const { cancelPairing } = await import('./pair');
   cancelPairing();
 }

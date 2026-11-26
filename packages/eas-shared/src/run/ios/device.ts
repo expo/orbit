@@ -151,7 +151,6 @@ const AppleDevice = {
   getUsbmuxdHelperGuidance,
   isAppleUsbDeviceConnectedAsync,
   getConnectedWirelessDevicesAsync: WirelessAppleDevice.getConnectedWirelessDevicesAsync,
-  isWirelessPairingSupported: WirelessAppleDevice.isWirelessPairingSupported,
   pairWirelessDeviceAsync: WirelessAppleDevice.pairWirelessDeviceAsync,
   cancelWirelessPairing: WirelessAppleDevice.cancelWirelessPairing,
   unpairWirelessDevice: WirelessAppleDevice.unpairWirelessDevice,

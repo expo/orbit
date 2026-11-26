@@ -64,7 +64,7 @@ export async function listDevicesAsync<P extends Platform>({
 
     // iPhones paired over Wi-Fi (iOS 27 Remote Device Pairing) on every platform, listed on
     // their own so a missing usbmux service doesn't hide them.
-    result.ios.canPairOverWifi = AppleDevice.isWirelessPairingSupported();
+    result.ios.canPairOverWifi = true;
     tasks.push(
       (async () => {
         try {
