@@ -93,7 +93,5 @@ dist/
 
 # Generated native helper binaries (anisette/zsign) — built via `yarn build:helpers`
 /bin/
-# anisette-js WASM assets copied from ipa-resign — also via `yarn build:helpers`
-/anisette/
 
 .zsign_cache/

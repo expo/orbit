@@ -10,6 +10,11 @@ import {
   trustedSourcesValidatorMiddleware,
 } from './commands/TrustedSources';
 
+// ipa-resign loads its anisette WASM assets from its own package. Older Orbit versions pointed
+// it at a copy they shipped through this variable, and an `orbit` launcher installed by one of
+// them still sets it to a directory that no longer exists.
+delete process.env.ORBIT_ANISETTE_ASSETS_DIR;
+
 const program = new Command();
 
 program.name('orbit').description('Expo Orbit command-line interface');

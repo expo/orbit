@@ -10,7 +10,7 @@ const COMMAND_NAME = 'orbit';
 
 // Set by the Electron main process for the CLI it forks (see electron/src/main.ts). A terminal
 // invocation doesn't go through the app, so the launcher has to carry them itself.
-const FORWARDED_ENV_VARS = ['ORBIT_HELPER_BIN_DIR', 'ORBIT_ANISETTE_ASSETS_DIR'];
+const FORWARDED_ENV_VARS = ['ORBIT_HELPER_BIN_DIR'];
 
 /** How to start this same CLI again from a terminal. */
 export type Launcher = {

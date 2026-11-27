@@ -55,10 +55,9 @@ const config: ForgeConfig = {
     // `yarn build:helpers`. Ship them as resources (copied to `<resources>/bin`,
     // outside the asar) so they stay directly executable; the bundled CLI is
     // pointed there via ORBIT_HELPER_BIN_DIR (see src/main.ts).
-    // `./anisette` holds the anisette-js WASM assets (Win/Linux anisette), also
-    // populated by `yarn build:helpers`; the CLI reads them via
-    // ORBIT_ANISETTE_ASSETS_DIR (see src/main.ts).
-    extraResource: ['./assets', './bin', './anisette'],
+    // Windows and Linux have no helper binaries: ipa-resign loads its WASM
+    // anisette and zsign from its own package in node_modules.
+    extraResource: ['./assets', './bin'],
     // Keep `/bin` out of the asar — it's shipped via extraResource above, so the
     // asar copy would be dead weight (and unexecutable).
     ignore: [/^\/bin(\/|$)/],
@@ -76,13 +75,12 @@ const config: ForgeConfig = {
         return;
       }
 
-      // `extraResource` copies ./bin and ./anisette verbatim and errors if a
-      // path is missing. `yarn build:helpers` populates them for real builds,
-      // but CI/E2E packaging runs without it — ensure they exist (empty is fine;
-      // the resign helpers just won't be present, which E2E never exercises) so
-      // packaging never fails with ENOENT.
+      // `extraResource` copies ./bin verbatim and errors if the path is missing.
+      // `yarn build:helpers` populates it for real builds, but CI/E2E packaging
+      // runs without it — ensure it exists (empty is fine; the resign helpers
+      // just won't be present, which E2E never exercises) so packaging never
+      // fails with ENOENT.
       fs.mkdirSync(path.join(__dirname, 'bin'), { recursive: true });
-      fs.mkdirSync(path.join(__dirname, 'anisette'), { recursive: true });
 
       console.log('Running custom pre-make command: yarn export-web');
 
