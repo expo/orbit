@@ -52,7 +52,8 @@ describe(withDeviceLoginParamsAsync, () => {
 
 describe(isSupportedVersion, () => {
   it('compares the version with the first supported one', () => {
-    expect(isSupportedVersion('58.0.22')).toBe(true);
+    expect(isSupportedVersion('58.1.0')).toBe(true);
+    expect(isSupportedVersion('58.1.1')).toBe(true);
     expect(isSupportedVersion('59.0.0')).toBe(true);
     expect(isSupportedVersion('58.0.21')).toBe(false);
     expect(isSupportedVersion('6.0.21')).toBe(false);

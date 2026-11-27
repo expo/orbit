@@ -5,8 +5,8 @@ import { getSessionSecret } from './storage';
 
 // TODO: Use a client ID of its own when the server has one for development builds.
 const CLIENT_ID = 'expo-go';
-// TODO: Replace with the first SDK 58 release of `expo-dev-launcher` that reads the params.
-const MIN_DEV_LAUNCHER_VERSION = [58, 0, 22];
+// The first release of `expo-dev-launcher` that reads the params.
+const MIN_DEV_LAUNCHER_VERSION = [58, 1, 0];
 
 export function isSupportedVersion(version: string | null): boolean {
   const parts = version?.split('.').map((part) => parseInt(part, 10)) ?? [];
