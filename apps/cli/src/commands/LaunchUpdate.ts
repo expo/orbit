@@ -3,6 +3,7 @@ import { Emulator, Simulator, ManifestUtils, Manifest } from 'eas-shared';
 import { graphqlSdk } from '../api/GraphqlClient';
 import { AppPlatform, DistributionType } from '../graphql/generated/graphql';
 import { downloadBuildAsync } from './DownloadBuild';
+import { withDeviceLoginParamsAsync } from '../deviceLogin';
 import { InternalError } from 'common-types';
 import { ClientError } from 'graphql-request';
 
@@ -130,14 +131,19 @@ async function launchUpdateOnAndroidAsync(
 ) {
   const device = await Emulator.getRunningDeviceAsync(deviceId);
 
-  await downloadAndInstallLatestDevBuildAsync({
+  const appPath = await downloadAndInstallLatestDevBuildAsync({
     deviceId,
     manifest,
     platform: AppPlatform.Android,
     distribution: DistributionType.Internal,
     appIdentifier,
   });
-  await Emulator.openURLAsync({ url: getUpdateDeeplink(updateURL, manifest), pid: device.pid });
+  let url = getUpdateDeeplink(updateURL, manifest);
+  // The launcher signs in only on an emulator, and leaves the approved code unused on a device.
+  if (appPath && device.deviceType === 'emulator') {
+    url = await withDeviceLoginParamsAsync(url, appPath);
+  }
+  await Emulator.openURLAsync({ url, pid: device.pid });
 }
 
 async function launchUpdateOnIOSAsync(
@@ -151,7 +157,7 @@ async function launchUpdateOnIOSAsync(
     throw new Error('Launching updates on iOS physical devices is not supported yet');
   }
 
-  await downloadAndInstallLatestDevBuildAsync({
+  const appPath = await downloadAndInstallLatestDevBuildAsync({
     deviceId,
     manifest,
     platform: AppPlatform.Ios,
@@ -159,10 +165,11 @@ async function launchUpdateOnIOSAsync(
     appIdentifier,
   });
 
-  await Simulator.openURLAsync({
-    url: getUpdateDeeplink(updateURL, manifest),
-    udid: deviceId,
-  });
+  let url = getUpdateDeeplink(updateURL, manifest);
+  if (appPath) {
+    url = await withDeviceLoginParamsAsync(url, appPath);
+  }
+  await Simulator.openURLAsync({ url, udid: deviceId });
 }
 
 function getExpoGoUpdateDeeplink(updateURL: string, manifest: Manifest) {
@@ -201,7 +208,7 @@ async function downloadAndInstallLatestDevBuildAsync({
   platform: AppPlatform;
   distribution: DistributionType;
   appIdentifier?: string;
-}) {
+}): Promise<string | undefined> {
   const build = await getBuildArtifactsForUpdateAsync({
     manifest,
     platform,
@@ -217,7 +224,7 @@ async function downloadAndInstallLatestDevBuildAsync({
       const device = await Emulator.getRunningDeviceAsync(deviceId);
       await Emulator.installAppAsync(device, buildLocalPath);
     }
-    return;
+    return buildLocalPath;
   }
 
   // EAS Build not available, check if the app is installed locally
@@ -242,7 +249,10 @@ async function downloadAndInstallLatestDevBuildAsync({
 
       if (supportsUpdate) {
         // App is already installed and compatible with the update runtime
-        return;
+        return (
+          (await Simulator.getContainerPathAsync({ udid: deviceId, bundleIdentifier: bundleId })) ??
+          undefined
+        );
       }
     }
 
@@ -262,8 +272,9 @@ async function downloadAndInstallLatestDevBuildAsync({
       });
 
       if (supportsUpdate) {
-        // App is already installed and compatible with the update runtime
-        return;
+        // App is already installed and compatible with the update runtime.
+        // ponytail: no device login here, the launcher version needs the APK pulled from the device.
+        return undefined;
       }
     }
 

@@ -289,7 +289,8 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
 export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
   await activateEmulatorWindowAsync({ pid, deviceType: 'emulator' });
 
-  console.log(`Opening url ${url}...`);
+  // Never log the approved device code of a development build sign in.
+  console.log(`Opening url ${url.replace(/&__expo_device_[a-z]+=[^&]*/g, '')}...`);
   try {
     const openProject = await adbAsync(
       '-s',
@@ -300,7 +301,8 @@ export async function openURLAsync({ pid, url }: { pid: string; url: string }) {
       '-a',
       'android.intent.action.VIEW',
       '-d',
-      url
+      // `adb shell` runs the command in the device shell: quote the URL so that `&` does not end it.
+      `'${url.replace(/'/g, `'\\''`)}'`
     );
     return openProject;
   } catch (error: any) {

@@ -8,6 +8,7 @@ import {
 import { Platform } from 'common-types/build/cli-commands';
 
 import { installOnRemoteSimulatorAsync, isRemoteSimulatorId } from './RemoteSimulator';
+import { withDeviceLoginParamsAsync } from '../deviceLogin';
 import { getPlatformFromURI } from '../utils';
 
 type InstallAndLaunchAppAsyncOptions = {
@@ -61,7 +62,10 @@ async function installAndLaunchIOSAppAsync(appPath: string, deviceId: string, la
 
     if (launchURL) {
       try {
-        await Simulator.openURLAsync({ udid: deviceId, url: launchURL });
+        await Simulator.openURLAsync({
+          udid: deviceId,
+          url: await withDeviceLoginParamsAsync(launchURL, appPath),
+        });
         return;
       } catch {
         // Fall back to normal launch
@@ -129,7 +133,12 @@ async function installAndLaunchAndroidAppAsync(
 
   if (launchURL) {
     try {
-      await Emulator.openURLAsync({ pid: device.pid, url: launchURL });
+      // The launcher signs in only on an emulator, and leaves the approved code unused on a device.
+      const url =
+        device.deviceType === 'emulator'
+          ? await withDeviceLoginParamsAsync(launchURL, appPath)
+          : launchURL;
+      await Emulator.openURLAsync({ pid: device.pid, url });
       return;
     } catch {
       // Fall back to normal launch
