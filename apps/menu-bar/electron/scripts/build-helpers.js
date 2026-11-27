@@ -20,10 +20,9 @@
 // Host build prerequisites:
 //   macOS: Xcode toolchain (anisette uses the Swift helper); `git` + clang for zsign.
 // Windows and Linux need NO toolchain: anisette runs the anisette-js WASM emulator
-// (its assets ship in the ipa-resign package and are copied into electron/anisette/
-// below) and re-signing uses the in-process WASM zsign signer (chosen in
-// apps/cli/src/commands/ResignIpa.ts). Both ship inside the ipa-resign package,
-// so no native binary is built on Windows/Linux.
+// and re-signing uses the in-process WASM zsign signer (chosen in
+// apps/cli/src/commands/ResignIpa.ts). ipa-resign loads both from its own
+// package in node_modules, so nothing is built or copied on Windows/Linux.
 
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -114,47 +113,22 @@ function copyPrebuiltIfPresent(artifact) {
 }
 
 function buildAnisette() {
-  // Windows/Linux (and macOS with ORBIT_ANISETTE_FORCE_WASM) run the anisette-js
-  // WASM emulator — copy its assets from the ipa-resign package into
-  // electron/anisette/ so they ship (extraResource) and the bundled CLI can load
-  // them via ORBIT_ANISETTE_ASSETS_DIR (see src/main.ts).
-  copyAnisetteWasmAssets();
-
-  if (platform === 'darwin') {
-    // macOS default provider: the native Swift helper.
-    const artifact = 'anisette';
-    if (have(artifact)) return log(`${artifact} already present — skipping (FORCE=1 to rebuild)`);
-    if (copyPrebuiltIfPresent(artifact)) return;
-    if (run('yarn', ['build:helper:macos'], { cwd: appleResign })) {
-      copy(path.join(appleResign, 'bin', artifact), path.join(binDir, artifact));
-    } else {
-      warn(
-        'Could not build the macOS anisette helper — check the Xcode toolchain. Apple ID auth will be unavailable.'
-      );
-    }
+  // Windows and Linux run the anisette-js WASM emulator, which ipa-resign loads
+  // from its own package — no native anisette binary to build, bundle, or ship.
+  // Only macOS uses the native Swift helper.
+  if (platform !== 'darwin') {
+    return log('anisette: Windows/Linux use the WASM emulator — skipping native anisette build.');
   }
-  // Windows / Linux: no native anisette binary — the WASM assets copied above are
-  // the provider.
-}
-
-// Copy the anisette-js WASM assets (assets/anisette/) from the resolved
-// ipa-resign package into electron/anisette/. Shipped via extraResource so the
-// packaged app has them; the CLI reads them through ORBIT_ANISETTE_ASSETS_DIR.
-function copyAnisetteWasmAssets() {
-  const src = path.join(appleResign, 'assets', 'anisette');
-  const dest = path.join(electronDir, 'anisette');
-  if (!fs.existsSync(src)) {
+  const artifact = 'anisette';
+  if (have(artifact)) return log(`${artifact} already present — skipping (FORCE=1 to rebuild)`);
+  if (copyPrebuiltIfPresent(artifact)) return;
+  if (run('yarn', ['build:helper:macos'], { cwd: appleResign })) {
+    copy(path.join(appleResign, 'bin', artifact), path.join(binDir, artifact));
+  } else {
     warn(
-      `anisette WASM assets not found at ${src} — run 'yarn build:anisette' in apple-resign (or reinstall). Apple ID auth on Windows/Linux will be unavailable.`
+      'Could not build the macOS anisette helper — check the Xcode toolchain. Apple ID auth will be unavailable.'
     );
-    return;
   }
-  if (!FORCE && fs.existsSync(path.join(dest, 'anisette_rs.wasm'))) {
-    return log('anisette WASM assets already present — skipping (FORCE=1 to refresh)');
-  }
-  fs.rmSync(dest, { recursive: true, force: true });
-  fs.cpSync(src, dest, { recursive: true });
-  log(`-> ${dest} (anisette WASM assets)`);
 }
 
 function buildZsign() {
