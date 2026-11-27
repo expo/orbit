@@ -1,0 +1,9 @@
+{
+  "name": "orbit-website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npx serve public --single",
+    "deploy": "rm -rf dist && cp -R public dist && cp dist/index.html dist/404.html && eas deploy --export-dir dist --prod"
+  }
+}

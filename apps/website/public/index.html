@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Expo Orbit</title>
+    <meta
+      name="description"
+      content="Accelerate your development workflow with one-click build launches and simulator management."
+    />
+    <meta property="og:title" content="Expo Orbit" />
+    <meta
+      property="og:description"
+      content="Accelerate your development workflow with one-click build launches and simulator management."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fff;
+        --text: #111;
+        --muted: #666;
+        --border: #e5e5e5;
+        --accent: #4630eb;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0a0a0a;
+          --text: #fafafa;
+          --muted: #a1a1a1;
+          --border: #262626;
+        }
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+      }
+      main {
+        max-width: 480px;
+      }
+      h1 {
+        font-size: 32px;
+        margin: 0 0 8px;
+      }
+      p {
+        color: var(--muted);
+        margin: 0 0 24px;
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .actions a {
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        color: inherit;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .actions a.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1 id="title">Expo Orbit</h1>
+      <p id="description">
+        One-click build launches and simulator management for macOS, Windows, and Linux.
+      </p>
+      <div class="actions">
+        <a id="open" class="primary" hidden>Open in Orbit</a>
+        <a href="https://github.com/expo/orbit/releases/latest">Download Orbit</a>
+        <a href="https://docs.expo.dev/build/orbit/">Docs</a>
+      </div>
+    </main>
+    <script>
+      // Turns https://orbit.expo.dev/<action>?url=... into expo-orbit:///<action>?url=...
+      // so links can be shared anywhere https links are clickable (Slack, GitHub, email).
+      const ACTIONS = {
+        download: 'Opening build in Expo Orbit',
+        update: 'Opening update in Expo Orbit',
+        go: 'Opening project in Expo Orbit',
+        snack: 'Opening Snack in Expo Orbit',
+      };
+      const action = location.pathname.split('/')[1];
+
+      if (ACTIONS[action] && new URLSearchParams(location.search).has('url')) {
+        const deeplink = `expo-orbit:///${action}${location.search}`;
+        const open = document.getElementById('open');
+        open.href = deeplink;
+        open.hidden = false;
+        document.title = ACTIONS[action];
+        document.getElementById('title').textContent = `${ACTIONS[action]}…`;
+        document.getElementById('description').textContent =
+          'Nothing happened? Click "Open in Orbit", or download Orbit if it is not installed.';
+        location.href = deeplink;
+      }
+    </script>
+  </body>
+</html>
