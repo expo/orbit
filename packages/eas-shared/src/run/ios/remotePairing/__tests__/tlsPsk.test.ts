@@ -10,7 +10,8 @@ const PSK = crypto.randomBytes(32);
 /** A TLS server from Node's own `tls` (OpenSSL), with the cipher suite that the iPhone uses. */
 function startServer(
   psk: Buffer,
-  onConnection: (socket: tls.TLSSocket) => void
+  onConnection: (socket: tls.TLSSocket) => void,
+  options: tls.TlsOptions = {}
 ): Promise<{ port: number; close: () => void }> {
   return new Promise((resolve) => {
     const server = tls.createServer({
@@ -18,6 +19,7 @@ function startServer(
       maxVersion: 'TLSv1.2',
       ciphers: 'PSK-AES128-GCM-SHA256',
       pskCallback: () => psk,
+      ...options,
     });
     server.on('secureConnection', onConnection);
     server.on('tlsClientError', () => {});
@@ -115,6 +117,51 @@ describe('TlsPskSocket', () => {
     }
   });
 
+  it('completes the handshake with a server that has no extended master secret', async () => {
+    // SSL_OP_NO_EXTENDED_MASTER_SECRET of OpenSSL 3, which `crypto.constants` does not have.
+    const server = await startServer(PSK, (socket) => socket.pipe(socket), { secureOptions: 1 });
+    try {
+      const socket = await connect(server.port, PSK);
+      expect(socket).toHaveProperty('useExtendedMasterSecret', false);
+      const echoed = readBytes(socket, 5);
+      socket.write('plain');
+      expect((await echoed).toString()).toBe('plain');
+      socket.destroy();
+    } finally {
+      server.close();
+    }
+  });
+
+  it('keeps the data that was not read when the server closes the connection', async () => {
+    const payload = crypto.randomBytes(100_000);
+    const server = await startServer(PSK, (socket) => socket.end(payload));
+    try {
+      const socket = await connect(server.port, PSK);
+      // The data and the end of the connection arrive while no one reads.
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const chunks: Buffer[] = [];
+      socket.on('data', (chunk: Buffer) => chunks.push(chunk));
+      await new Promise((resolve) => socket.once('close', resolve));
+      expect(Buffer.concat(chunks).equals(payload)).toBe(true);
+    } finally {
+      server.close();
+    }
+  });
+
+  it('closes the transport after an end before the handshake completed', async () => {
+    const server = await startServer(PSK, (socket) => socket.resume());
+    try {
+      const transport = net.connect({ host: '127.0.0.1', port: server.port });
+      const socket = new TlsPskSocket(transport, PSK);
+      socket.resume();
+      socket.end();
+      await new Promise((resolve) => transport.once('close', resolve));
+      expect(socket.destroyed).toBe(true);
+    } finally {
+      server.close();
+    }
+  });
+
   it('rejects a server that has a different key', async () => {
     const server = await startServer(crypto.randomBytes(32), () => {});
     try {
@@ -129,6 +176,14 @@ describe('TlsPskSocket', () => {
     const socket = new TlsPskSocket(transport, PSK);
     const failure = new Promise((resolve) => socket.once('error', resolve));
     transport.destroy();
+    expect(await failure).toBeInstanceOf(TlsPskError);
+  });
+
+  it('fails a write that waits for the handshake when the stream is destroyed', async () => {
+    const transport = new Duplex({ read() {}, write: (_chunk, _encoding, callback) => callback() });
+    const socket = new TlsPskSocket(transport, PSK);
+    const failure = new Promise((resolve) => socket.write('early', resolve));
+    socket.destroy();
     expect(await failure).toBeInstanceOf(TlsPskError);
   });
 });

@@ -9,7 +9,15 @@
 import crypto from 'crypto';
 import { Duplex } from 'stream';
 
-export class TlsPskError extends Error {}
+export class TlsPskError extends Error {
+  constructor(
+    message: string,
+    /** The alert that tells the peer about this error. */
+    readonly alert: number = ALERT_HANDSHAKE_FAILURE
+  ) {
+    super(message);
+  }
+}
 
 const TLS_1_2 = 0x0303;
 const TLS_PSK_WITH_AES_128_GCM_SHA256 = 0x00a8;
@@ -125,7 +133,7 @@ class RecordCipher {
       this.sequence += 1n;
       return plaintext;
     } catch {
-      throw new TlsPskError('TLS record failed authentication');
+      throw new TlsPskError('TLS record failed authentication', ALERT_BAD_RECORD_MAC);
     }
   }
 }
@@ -154,7 +162,8 @@ export class TlsPskSocket extends Duplex {
   private readCipher: RecordCipher | null = null;
   private writeCipher: RecordCipher | null = null;
   private pendingReadCipher: RecordCipher | null = null;
-  private pendingWrites: (() => void)[] = [];
+  /** Writes and the end of the stream that wait for the handshake. */
+  private pending: { run: () => void; callback: (error?: Error | null) => void }[] = [];
   private transportEnded = false;
 
   constructor(
@@ -206,7 +215,9 @@ export class TlsPskSocket extends Duplex {
       return;
     }
     this.endOfData();
-    this.destroy();
+    // Destroy after "end", so that data that is not read yet is not lost.
+    if (this.readableEnded) this.destroy();
+    else this.once('end', () => this.destroy());
   };
 
   private endOfData(): void {
@@ -232,14 +243,9 @@ export class TlsPskSocket extends Duplex {
   /** Tell the peer why, when possible, then fail the stream. */
   private fail(error: Error): void {
     if (this.destroyed) return;
-    const description =
-      error.message === 'TLS record failed authentication'
-        ? ALERT_BAD_RECORD_MAC
-        : this.state === 'finished'
-          ? ALERT_DECRYPT_ERROR
-          : ALERT_HANDSHAKE_FAILURE;
+    const alert = error instanceof TlsPskError ? error.alert : ALERT_HANDSHAKE_FAILURE;
     try {
-      this.writeRecord(RECORD_ALERT, Buffer.from([ALERT_LEVEL_FATAL, description]));
+      this.writeRecord(RECORD_ALERT, Buffer.from([ALERT_LEVEL_FATAL, alert]));
     } catch {
       // The transport is already closed.
     }
@@ -351,11 +357,11 @@ export class TlsPskSocket extends Duplex {
         VERIFY_DATA_LENGTH
       );
       if (body.length !== expected.length || !crypto.timingSafeEqual(body, expected)) {
-        throw new TlsPskError('The TLS server Finished message is not valid');
+        throw new TlsPskError('The TLS server Finished message is not valid', ALERT_DECRYPT_ERROR);
       }
       this.state = 'established';
       this.emit('secureConnect');
-      for (const write of this.pendingWrites.splice(0)) write();
+      for (const { run } of this.pending.splice(0)) run();
       if (this.transportEnded) this.push(null);
     } else {
       throw new TlsPskError(`Unexpected TLS handshake message ${type}`);
@@ -431,6 +437,15 @@ export class TlsPskSocket extends Duplex {
 
   // --- Duplex ---
 
+  /** Run now, or when the handshake completes. A stream that fails before that calls `callback`. */
+  private afterHandshake(run: () => void, callback: (error?: Error | null) => void): void {
+    if (this.state === 'established') {
+      run();
+    } else {
+      this.pending.push({ run, callback });
+    }
+  }
+
   override _read(): void {
     this.transport.resume();
   }
@@ -440,20 +455,17 @@ export class TlsPskSocket extends Duplex {
     _encoding: string,
     callback: (error?: Error | null) => void
   ): void {
-    const write = (): void => this.writeRecord(RECORD_APPLICATION_DATA, chunk, callback);
-    if (this.state === 'established') {
-      write();
-    } else {
-      this.pendingWrites.push(write);
-    }
+    this.afterHandshake(() => this.writeRecord(RECORD_APPLICATION_DATA, chunk, callback), callback);
   }
 
   override _final(callback: (error?: Error | null) => void): void {
-    if (this.state === 'established' && !this.transport.destroyed) {
-      this.writeRecord(RECORD_ALERT, Buffer.from([ALERT_LEVEL_WARNING, ALERT_CLOSE_NOTIFY]));
-      this.transport.end();
-    }
-    callback();
+    this.afterHandshake(() => {
+      if (!this.transport.destroyed) {
+        this.writeRecord(RECORD_ALERT, Buffer.from([ALERT_LEVEL_WARNING, ALERT_CLOSE_NOTIFY]));
+        this.transport.end();
+      }
+      callback();
+    }, callback);
   }
 
   override _destroy(error: Error | null, callback: (error?: Error | null) => void): void {
@@ -461,6 +473,9 @@ export class TlsPskSocket extends Duplex {
     this.transport.removeListener('end', this.onTransportEnd);
     this.transport.removeListener('close', this.onTransportClose);
     this.transport.destroy();
+    for (const pending of this.pending.splice(0)) {
+      pending.callback(error ?? new TlsPskError('The connection closed during the TLS handshake'));
+    }
     callback(error);
   }
 }
