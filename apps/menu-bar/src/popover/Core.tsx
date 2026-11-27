@@ -374,6 +374,7 @@ function Core(props: Props) {
       ...section,
       key,
       data: isExpanded ? devices : collapsed,
+      hasDevices: section.data.length > 0,
       hiddenCount,
       isExpanded,
       emptyText: emptyText || allHiddenText,
@@ -1744,7 +1745,7 @@ function Core(props: Props) {
               );
             }}
             renderSectionFooter={({
-              section: { key, data, error, hiddenCount, isExpanded, emptyText, addItem, gap },
+              section: { key, hasDevices, error, hiddenCount, isExpanded, emptyText, addItem, gap },
             }) => (
               <>
                 {emptyText ? (
@@ -1788,10 +1789,10 @@ function Core(props: Props) {
                     testID={`add-device-${key}`}
                   />
                 ) : null}
-                {/* With devices in the list (paired over Wi-Fi), the section header shows the
-                    usbmuxd error. The full prompt is only for an empty section. */}
+                {/* With devices in the section (paired over Wi-Fi), the section header shows the
+                    usbmuxd error. The full prompt is only for a section with no devices. */}
                 {key === 'ios' &&
-                !data.length &&
+                !hasDevices &&
                 error?.code === 'APPLE_DEVICE_USBMUXD_NOT_RUNNING' ? (
                   <AppleDeviceHelperPrompt error={error} onInstalled={refetch} />
                 ) : null}
