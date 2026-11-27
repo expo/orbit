@@ -12,6 +12,8 @@
 - Add an experimental virtual camera for iOS simulators on macOS. Settings → Experiments turns it on and picks what the camera shows: the Mac's camera, an image, a video or a QR code, with a separate source for the front camera. Apps launched in a booted simulator see a back and a front camera through AVFoundation, including photo capture, QR scanning, movie recording and `UIImagePickerController`, with no change to their code. (by [@gabrieldonadel](https://github.com/gabrieldonadel))
 - Show the number of remote sessions that start or run in a badge on the menu bar icon, on macOS. ([#396](https://github.com/expo/orbit/pull/396) by [@brentvatne](https://github.com/brentvatne))
 
+- Pair iPhones over Wi-Fi with iOS 27 Remote Device Pairing, then install and launch builds on them without a cable, on macOS and Windows. ([#400](https://github.com/expo/orbit/pull/400) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+
 ### 🐛 Bug fixes
 
 - Ask for local network access on first launch only after the user leaves onboarding, instead of showing the macOS permission prompt over the Onboarding window as soon as Orbit opens. ([#411](https://github.com/expo/orbit/pull/411) by [@gabrieldonadel](https://github.com/gabrieldonadel))

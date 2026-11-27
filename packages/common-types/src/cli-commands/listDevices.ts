@@ -40,5 +40,7 @@ export type DevicesPerPlatform = {
   [P in Exclude<Platform, Platform.All>]: {
     devices: Device<P>[];
     error?: DeviceListError;
+    /** iOS only: this CLI can pair an iPhone over Wi-Fi (iOS 27 Remote Device Pairing). */
+    canPairOverWifi?: boolean;
   };
 };

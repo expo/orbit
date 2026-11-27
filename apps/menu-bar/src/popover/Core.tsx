@@ -25,6 +25,7 @@ import { downloadBuildAsync } from '../commands/downloadBuildAsync';
 import { installAndLaunchAppAsync } from '../commands/installAndLaunchAppAsync';
 import { launchExpoGoAsync } from '../commands/launchExpoGoAsync';
 import { launchUpdateAsync } from '../commands/launchUpdateAsync';
+import { unpairIosDeviceAsync } from '../commands/pairIosDeviceAsync';
 import { stopRemoteSimulatorAsync } from '../commands/remoteSimulatorAsync';
 import {
   handleFreeAppLimitAsync,
@@ -352,21 +353,23 @@ function Core(props: Props) {
       key !== 'remote' && section.data.length && !devices.length
         ? 'All devices are hidden. Settings shows them again.'
         : '';
-    // The Android section and the Expo Simulators section end with a row that adds a device.
+    // The iOS, Android and Expo Simulators sections end with a row that adds a device.
     const addItem =
       key === 'android'
         ? { title: 'Pair a device', subtitle: 'Over Wi-Fi' }
-        : key === 'remote' && !isLoading
-          ? {
-              title: 'New session',
-              subtitle:
-                remoteStatus === 'signed-out'
-                  ? 'Log in to use Expo Simulators'
-                  : remoteStatus === 'no-access'
-                    ? 'Available on paid plans'
-                    : 'iOS Simulator or Android Emulator',
-            }
-          : undefined;
+        : key === 'ios' && devicesPerPlatform.ios.canPairOverWifi
+          ? { title: 'Pair an iPhone', subtitle: 'Over Wi-Fi (iOS 27+)' }
+          : key === 'remote' && !isLoading
+            ? {
+                title: 'New session',
+                subtitle:
+                  remoteStatus === 'signed-out'
+                    ? 'Log in to use Expo Simulators'
+                    : remoteStatus === 'no-access'
+                      ? 'Available on paid plans'
+                      : 'iOS Simulator or Android Emulator',
+              }
+            : undefined;
     return {
       ...section,
       key,
@@ -1565,12 +1568,19 @@ function Core(props: Props) {
   const showDeviceMenu = async (key: string, device: Device) => {
     const id = getDeviceId(device);
     const hasOrder = !!deviceList.order[key]?.length;
-    const index = await MenuBarModule.showMenu([
+    const wifiPairedUdid =
+      'pairedOverWifi' in device && device.pairedOverWifi ? device.udid : undefined;
+    const items = [
       { title: device.name, header: true },
       { title: 'Hide from this list' },
       ...(hasOrder ? [{ separator: true }, { title: 'Reset the order of this section' }] : []),
-    ]);
-    if (index === 1) {
+      ...(wifiPairedUdid ? [{ separator: true }, { title: 'Forget Wi-Fi pairing' }] : []),
+    ];
+    const index = await MenuBarModule.showMenu(items);
+    if (wifiPairedUdid && index === items.length - 1) {
+      await unpairIosDeviceAsync(wifiPairedUdid);
+      await refetch();
+    } else if (index === 1) {
       updateDeviceList((prev) => ({ ...prev, hidden: [...prev.hidden, id] }));
       // A hidden device is not the default device.
       const platform = getDeviceOS(device);
@@ -1582,7 +1592,7 @@ function Core(props: Props) {
         saveSelectedDevicesIds(newValue);
         return newValue;
       });
-    } else if (index === 3) {
+    } else if (hasOrder && index === 3) {
       updateDeviceList((prev) => {
         const { [key]: _removed, ...order } = prev.order;
         return { ...prev, order };
@@ -1771,7 +1781,9 @@ function Core(props: Props) {
                     onPress={
                       key === 'android'
                         ? () => WindowsNavigator.open('PairAndroidDevice')
-                        : startRemoteSimulator
+                        : key === 'ios'
+                          ? () => WindowsNavigator.open('PairIosDevice')
+                          : startRemoteSimulator
                     }
                     testID={`add-device-${key}`}
                   />

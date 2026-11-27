@@ -15,6 +15,8 @@ export type DevicesPerPlatform = {
   [P in Exclude<CliCommands.Platform, CliCommands.Platform.All>]: {
     devices: Map<string, CliCommands.ListDevices.Device<P>>;
     error?: CliCommands.ListDevices.DeviceListError;
+    /** iOS only: the CLI can pair an iPhone over Wi-Fi. */
+    canPairOverWifi?: boolean;
   };
 };
 
@@ -89,9 +91,13 @@ export function getSectionsFromDeviceList(
 
   // Keep the Android section visible even with no devices/errors when Android is
   // enabled, so the header's "+" stays available for pairing a device over Wi-Fi.
+  // The iOS section stays for the same reason: Windows has no simulators to keep it.
   return sections.filter(
     (section) =>
-      section.data.length > 0 || section.error || (section.key === 'android' && alwaysShowAndroid)
+      section.data.length > 0 ||
+      section.error ||
+      (section.key === 'android' && alwaysShowAndroid) ||
+      (section.key === 'ios' && devicesPerPlatform.ios.canPairOverWifi)
   );
 }
 

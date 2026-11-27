@@ -321,6 +321,7 @@ export function DevicesProvider({ children }: { children: React.ReactNode }) {
         ios: {
           error: devicesList.ios.error,
           devices: iosDevices,
+          canPairOverWifi: showIos && devicesList.ios.canPairOverWifi,
         },
         tvos: {
           error: devicesList.tvos.error,
