@@ -412,7 +412,7 @@ const DeviceItem = ({
                           ? `${device.accountName}/${device.projectSlug}`
                           : 'Not running'
                         : capitalize(device.deviceType))}
-                  {!status && 'osVersion' in device && ` · ${device.osVersion}`}
+                  {!status && 'osVersion' in device && device.osVersion && ` · ${device.osVersion}`}
                 </Text>
                 {elapsedTime && !status ? (
                   // A separate text that does not get shorter: when the row has little space,
