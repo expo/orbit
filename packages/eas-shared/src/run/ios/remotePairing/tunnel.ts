@@ -4,9 +4,9 @@
 import { EventEmitter } from 'events';
 import net from 'net';
 import { Duplex } from 'stream';
-import tls from 'tls';
 
 import { NetStack } from './netstack';
+import { TlsPskSocket } from './tlsPsk';
 
 export const CDTUNNEL_MAGIC = Buffer.from('CDTunnel', 'latin1');
 export const REQUESTED_MTU = 16000;
@@ -42,7 +42,7 @@ export interface Tunnel extends EventEmitter {
   serverAddress: string;
   rsdPort: number | undefined;
   mtu: number;
-  socket: tls.TLSSocket;
+  socket: TlsPskSocket;
   close(): void;
 }
 
@@ -87,13 +87,16 @@ export class Ipv6Splitter {
   }
 }
 
-/** TLS-PSK client connection to host:port. Resolves the TLSSocket once the handshake completes. */
+/**
+ * TLS-PSK client connection to host:port. Resolves the socket once the handshake completes.
+ * Uses Orbit's own TLS-PSK client: Node's `tls` cannot do this handshake on Electron's runtime.
+ */
 export function connectTlsPsk(
   host: string,
   port: number,
   psk: Buffer,
   { connectTimeoutMs = 10_000, connect = null }: ConnectTlsPskOptions = {}
-): Promise<tls.TLSSocket> {
+): Promise<TlsPskSocket> {
   return new Promise((resolve, reject) => {
     // An open socket keeps the CLI process alive, so each failure closes both.
     const fail = (error: Error): void => {
@@ -111,15 +114,7 @@ export function connectTlsPsk(
     socketLike.setNoDelay?.(true);
     socketLike.setKeepAlive?.(true, 10_000);
     tcp.once('error', fail);
-    const secure = tls.connect({
-      socket: tcp,
-      minVersion: 'TLSv1.2',
-      maxVersion: 'TLSv1.2',
-      ciphers: 'PSK',
-      rejectUnauthorized: false,
-      checkServerIdentity: () => undefined,
-      pskCallback: () => ({ psk, identity: '' }),
-    });
+    const secure = new TlsPskSocket(tcp, psk);
     secure.once('error', fail);
     secure.once('secureConnect', () => {
       clearTimeout(timer);
@@ -134,7 +129,7 @@ export function connectTlsPsk(
  * Resolves { stack, clientAddress, serverAddress, rsdPort, mtu, close } and emits "close".
  */
 export async function establishTunnel(
-  secure: tls.TLSSocket,
+  secure: TlsPskSocket,
   options: EstablishTunnelOptions = {}
 ): Promise<Tunnel> {
   try {
@@ -147,7 +142,7 @@ export async function establishTunnel(
 }
 
 async function establishTunnelOnSocket(
-  secure: tls.TLSSocket,
+  secure: TlsPskSocket,
   { mtu = REQUESTED_MTU }: EstablishTunnelOptions
 ): Promise<Tunnel> {
   const handshake = await new Promise<{ body: CdTunnelHandshakeResponse; rest: Buffer }>(
